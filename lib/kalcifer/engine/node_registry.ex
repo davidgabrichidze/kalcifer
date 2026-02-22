@@ -24,7 +24,11 @@ defmodule Kalcifer.Engine.NodeRegistry do
     "add_tag" => Kalcifer.Engine.Nodes.Action.Data.AddTag,
     "custom_code" => Kalcifer.Engine.Nodes.Action.Data.CustomCode,
     "exit" => Kalcifer.Engine.Nodes.End.Exit,
-    "goal_reached" => Kalcifer.Engine.Nodes.End.GoalReached
+    "goal_reached" => Kalcifer.Engine.Nodes.End.GoalReached,
+    "send_in_app" => Kalcifer.Engine.Nodes.Action.Channel.SendInApp,
+    "check_segment" => Kalcifer.Engine.Nodes.Condition.CheckSegment,
+    "preference_gate" => Kalcifer.Engine.Nodes.Condition.PreferenceGate,
+    "track_conversion" => Kalcifer.Engine.Nodes.Action.Data.TrackConversion
   }
 
   # --- Public API ---

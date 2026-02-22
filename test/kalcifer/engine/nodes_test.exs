@@ -3,15 +3,19 @@ defmodule Kalcifer.Engine.NodesTest do
 
   alias Kalcifer.Engine.Nodes.Action.Channel.CallWebhook
   alias Kalcifer.Engine.Nodes.Action.Channel.SendEmail
+  alias Kalcifer.Engine.Nodes.Action.Channel.SendInApp
   alias Kalcifer.Engine.Nodes.Action.Channel.SendPush
   alias Kalcifer.Engine.Nodes.Action.Channel.SendSms
   alias Kalcifer.Engine.Nodes.Action.Channel.SendWhatsapp
   alias Kalcifer.Engine.Nodes.Action.Data.AddTag
   alias Kalcifer.Engine.Nodes.Action.Data.CustomCode
+  alias Kalcifer.Engine.Nodes.Action.Data.TrackConversion
   alias Kalcifer.Engine.Nodes.Action.Data.UpdateProfile
   alias Kalcifer.Engine.Nodes.Condition.AbSplit
+  alias Kalcifer.Engine.Nodes.Condition.CheckSegment
   alias Kalcifer.Engine.Nodes.Condition.Condition
   alias Kalcifer.Engine.Nodes.Condition.FrequencyCap
+  alias Kalcifer.Engine.Nodes.Condition.PreferenceGate
   alias Kalcifer.Engine.Nodes.End.Exit
   alias Kalcifer.Engine.Nodes.End.GoalReached
   alias Kalcifer.Engine.Nodes.Trigger.EventEntry
@@ -174,6 +178,95 @@ defmodule Kalcifer.Engine.NodesTest do
     test "goal_reached returns completed with goal name" do
       assert {:completed, %{exit: true, goal: "purchase"}} =
                GoalReached.execute(%{"goal_name" => "purchase"}, %{})
+    end
+  end
+
+  describe "send_in_app node" do
+    test "returns completed with in_app channel" do
+      assert {:completed, %{sent: true, channel: "in_app"}} =
+               SendInApp.execute(%{"template_id" => "welcome_modal"}, %{})
+    end
+
+    test "category is :action" do
+      assert SendInApp.category() == :action
+    end
+  end
+
+  describe "check_segment node" do
+    test "branches true when customer is in segment" do
+      config = %{"segment_id" => "high_value"}
+      context = %{"segments" => ["high_value", "active"]}
+
+      assert {:branched, "true", %{in_segment: true, segment_id: "high_value"}} =
+               CheckSegment.execute(config, context)
+    end
+
+    test "branches false when customer is not in segment" do
+      config = %{"segment_id" => "high_value"}
+      context = %{"segments" => ["inactive"]}
+
+      assert {:branched, "false", %{in_segment: false, segment_id: "high_value"}} =
+               CheckSegment.execute(config, context)
+    end
+
+    test "branches false when no segments in context" do
+      config = %{"segment_id" => "high_value"}
+
+      assert {:branched, "false", %{in_segment: false}} =
+               CheckSegment.execute(config, %{})
+    end
+
+    test "category is :condition" do
+      assert CheckSegment.category() == :condition
+    end
+  end
+
+  describe "preference_gate node" do
+    test "branches true when customer opted in" do
+      config = %{"channel" => "email"}
+      context = %{"preferences" => %{"email" => true, "sms" => false}}
+
+      assert {:branched, "true", %{opted_in: true, channel: "email"}} =
+               PreferenceGate.execute(config, context)
+    end
+
+    test "branches false when customer opted out" do
+      config = %{"channel" => "sms"}
+      context = %{"preferences" => %{"email" => true, "sms" => false}}
+
+      assert {:branched, "false", %{opted_in: false, channel: "sms"}} =
+               PreferenceGate.execute(config, context)
+    end
+
+    test "defaults to opted in when no preferences in context" do
+      config = %{"channel" => "email"}
+
+      assert {:branched, "true", %{opted_in: true, channel: "email"}} =
+               PreferenceGate.execute(config, %{})
+    end
+
+    test "category is :condition" do
+      assert PreferenceGate.category() == :condition
+    end
+  end
+
+  describe "track_conversion node" do
+    test "returns completed with conversion data" do
+      config = %{"event_name" => "purchase", "revenue" => 49.99}
+
+      assert {:completed, %{conversion_tracked: true, event_name: "purchase", revenue: 49.99}} =
+               TrackConversion.execute(config, %{})
+    end
+
+    test "works without optional revenue" do
+      config = %{"event_name" => "signup"}
+
+      assert {:completed, %{conversion_tracked: true, event_name: "signup", revenue: nil}} =
+               TrackConversion.execute(config, %{})
+    end
+
+    test "category is :action" do
+      assert TrackConversion.category() == :action
     end
   end
 end

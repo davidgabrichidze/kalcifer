@@ -15,9 +15,9 @@ defmodule Kalcifer.Engine.NodeRegistryTest do
   end
 
   describe "list_all/0" do
-    test "includes at least 19 built-in node types" do
+    test "includes at least 23 built-in node types" do
       all = NodeRegistry.list_all()
-      assert length(all) >= 19
+      assert length(all) >= 23
     end
 
     test "includes all trigger nodes" do
@@ -53,6 +53,16 @@ defmodule Kalcifer.Engine.NodeRegistryTest do
       assert all["custom_code"] == Kalcifer.Engine.Nodes.Action.Data.CustomCode
       assert all["exit"] == Kalcifer.Engine.Nodes.End.Exit
       assert all["goal_reached"] == Kalcifer.Engine.Nodes.End.GoalReached
+    end
+  end
+
+  describe "marketing node types" do
+    test "includes all marketing-specific nodes" do
+      all = Map.new(NodeRegistry.list_all())
+      assert all["send_in_app"] == Kalcifer.Engine.Nodes.Action.Channel.SendInApp
+      assert all["check_segment"] == Kalcifer.Engine.Nodes.Condition.CheckSegment
+      assert all["preference_gate"] == Kalcifer.Engine.Nodes.Condition.PreferenceGate
+      assert all["track_conversion"] == Kalcifer.Engine.Nodes.Action.Data.TrackConversion
     end
   end
 

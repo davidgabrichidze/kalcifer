@@ -212,6 +212,61 @@ defmodule Kalcifer.Flows.FlowGraphTest do
     end
   end
 
+  describe "validate/1 — marketing branching nodes" do
+    test "accepts a graph with check_segment true/false branches" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "seg_1", "type" => "check_segment", "config" => %{"segment_id" => "vip"}},
+          %{"id" => "email_1", "type" => "send_email", "config" => %{}},
+          %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "seg_1"},
+          %{"id" => "e2", "source" => "seg_1", "target" => "email_1", "branch" => "true"},
+          %{"id" => "e3", "source" => "seg_1", "target" => "exit_1", "branch" => "false"}
+        ]
+      }
+
+      assert :ok = FlowGraph.validate(graph)
+    end
+
+    test "accepts a graph with preference_gate true/false branches" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "pref_1", "type" => "preference_gate", "config" => %{"channel" => "email"}},
+          %{"id" => "email_1", "type" => "send_email", "config" => %{}},
+          %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "pref_1"},
+          %{"id" => "e2", "source" => "pref_1", "target" => "email_1", "branch" => "true"},
+          %{"id" => "e3", "source" => "pref_1", "target" => "exit_1", "branch" => "false"}
+        ]
+      }
+
+      assert :ok = FlowGraph.validate(graph)
+    end
+
+    test "detects missing branch edges on check_segment" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "seg_1", "type" => "check_segment", "config" => %{"segment_id" => "vip"}},
+          %{"id" => "email_1", "type" => "send_email", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "seg_1"},
+          %{"id" => "e2", "source" => "seg_1", "target" => "email_1", "branch" => "true"}
+        ]
+      }
+
+      assert {:error, errors} = FlowGraph.validate(graph)
+      assert Enum.any?(errors, &String.contains?(&1, "missing branch"))
+    end
+  end
+
   describe "validate/1 — edge cases" do
     test "rejects non-map input" do
       assert {:error, ["graph must be a map"]} = FlowGraph.validate("not a map")

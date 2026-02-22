@@ -7,6 +7,7 @@ defmodule Kalcifer.Factory do
   alias Kalcifer.Flows.Flow
   alias Kalcifer.Flows.FlowInstance
   alias Kalcifer.Flows.FlowVersion
+  alias Kalcifer.Marketing.Journey
   alias Kalcifer.Tenants.Tenant
 
   def tenant_factory do
@@ -63,6 +64,20 @@ defmodule Kalcifer.Factory do
       started_at: DateTime.utc_now() |> DateTime.truncate(:second),
       completed_at: DateTime.utc_now() |> DateTime.truncate(:second),
       instance: build(:flow_instance)
+    }
+  end
+
+  def journey_factory do
+    %Journey{
+      name: sequence(:journey_name, &"Journey #{&1}"),
+      description: "A test journey",
+      status: "draft",
+      goal_config: %{},
+      schedule: %{},
+      audience_criteria: %{},
+      tags: [],
+      flow: build(:flow),
+      tenant: build(:tenant)
     }
   end
 
