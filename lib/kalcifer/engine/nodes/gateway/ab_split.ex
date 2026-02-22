@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Logic.AbSplit do
+defmodule Kalcifer.Engine.Nodes.Gateway.AbSplit do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

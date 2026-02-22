@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Logic.Condition do
+defmodule Kalcifer.Engine.Nodes.Gateway.Condition do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

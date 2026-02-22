@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Exit.JourneyExit do
+defmodule Kalcifer.Engine.Nodes.EndEvent.JourneyExit do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

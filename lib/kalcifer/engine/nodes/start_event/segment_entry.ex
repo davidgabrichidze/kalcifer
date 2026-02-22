@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Entry.SegmentEntry do
+defmodule Kalcifer.Engine.Nodes.StartEvent.SegmentEntry do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

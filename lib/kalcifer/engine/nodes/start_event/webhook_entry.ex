@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Entry.WebhookEntry do
+defmodule Kalcifer.Engine.Nodes.StartEvent.WebhookEntry do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

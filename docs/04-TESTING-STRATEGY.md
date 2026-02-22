@@ -43,7 +43,7 @@ Traditional pyramid: many unit tests, few integration tests, fewer E2E.
 **Coverage Target**: > 90% line coverage
 
 ```elixir
-# test/optio_flow/engine/nodes/logic/ab_split_test.exs
+# test/kalcifer/engine/nodes/logic/ab_split_test.exs
 defmodule Kalcifer.Engine.Nodes.Logic.ABSplitTest do
   use ExUnit.Case, async: true
 
@@ -117,7 +117,7 @@ end
 **Databases**: PostgreSQL (real), Elasticsearch (real via Docker), ClickHouse (real via Docker)
 
 ```elixir
-# test/optio_flow/engine/journey_server_integration_test.exs
+# test/kalcifer/engine/journey_server_integration_test.exs
 defmodule Kalcifer.Engine.JourneyServerIntegrationTest do
   use Kalcifer.DataCase  # Ecto sandbox
 
@@ -834,7 +834,7 @@ jobs:
 
       # Generate reliability report
       - name: Generate Reliability Report
-        run: mix optio_flow.reliability_report
+        run: mix kalcifer.reliability_report
 
       # Publish as GitHub release asset
       - name: Upload Report
@@ -928,8 +928,8 @@ Mox.defmock(MockPushProvider, for: Kalcifer.Channels.PushProvider)
 Mox.defmock(MockProfileStore, for: Kalcifer.Customers.ProfileStore)
 
 # In test config:
-config :optio_flow, :email_provider, MockEmailProvider
-config :optio_flow, :sms_provider, MockSmsProvider
+config :kalcifer, :email_provider, MockEmailProvider
+config :kalcifer, :sms_provider, MockSmsProvider
 ```
 
 ### 4.3 Performance Benchmark Suite

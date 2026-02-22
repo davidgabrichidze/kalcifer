@@ -1,27 +1,27 @@
 defmodule Kalcifer.Engine.NodesTest do
   use ExUnit.Case, async: true
 
-  alias Kalcifer.Engine.Nodes.Channel.CallWebhook
-  alias Kalcifer.Engine.Nodes.Channel.SendEmail
-  alias Kalcifer.Engine.Nodes.Channel.SendPush
-  alias Kalcifer.Engine.Nodes.Channel.SendSms
-  alias Kalcifer.Engine.Nodes.Channel.SendWhatsapp
-  alias Kalcifer.Engine.Nodes.Data.AddTag
-  alias Kalcifer.Engine.Nodes.Data.CustomCode
-  alias Kalcifer.Engine.Nodes.Data.UpdateProfile
-  alias Kalcifer.Engine.Nodes.Entry.EventEntry
-  alias Kalcifer.Engine.Nodes.Entry.SegmentEntry
-  alias Kalcifer.Engine.Nodes.Entry.WebhookEntry
-  alias Kalcifer.Engine.Nodes.Exit.GoalReached
-  alias Kalcifer.Engine.Nodes.Exit.JourneyExit
-  alias Kalcifer.Engine.Nodes.Logic.AbSplit
-  alias Kalcifer.Engine.Nodes.Logic.Condition
-  alias Kalcifer.Engine.Nodes.Logic.FrequencyCapNode
-  alias Kalcifer.Engine.Nodes.Logic.Wait
-  alias Kalcifer.Engine.Nodes.Logic.WaitForEvent
-  alias Kalcifer.Engine.Nodes.Logic.WaitUntil
+  alias Kalcifer.Engine.Nodes.EndEvent.GoalReached
+  alias Kalcifer.Engine.Nodes.EndEvent.JourneyExit
+  alias Kalcifer.Engine.Nodes.Gateway.AbSplit
+  alias Kalcifer.Engine.Nodes.Gateway.Condition
+  alias Kalcifer.Engine.Nodes.Gateway.FrequencyCap
+  alias Kalcifer.Engine.Nodes.IntermediateEvent.Wait
+  alias Kalcifer.Engine.Nodes.IntermediateEvent.WaitForEvent
+  alias Kalcifer.Engine.Nodes.IntermediateEvent.WaitUntil
+  alias Kalcifer.Engine.Nodes.StartEvent.EventEntry
+  alias Kalcifer.Engine.Nodes.StartEvent.SegmentEntry
+  alias Kalcifer.Engine.Nodes.StartEvent.WebhookEntry
+  alias Kalcifer.Engine.Nodes.Task.Channel.CallWebhook
+  alias Kalcifer.Engine.Nodes.Task.Channel.SendEmail
+  alias Kalcifer.Engine.Nodes.Task.Channel.SendPush
+  alias Kalcifer.Engine.Nodes.Task.Channel.SendSms
+  alias Kalcifer.Engine.Nodes.Task.Channel.SendWhatsapp
+  alias Kalcifer.Engine.Nodes.Task.Data.AddTag
+  alias Kalcifer.Engine.Nodes.Task.Data.CustomCode
+  alias Kalcifer.Engine.Nodes.Task.Data.UpdateProfile
 
-  describe "entry nodes" do
+  describe "start_event nodes" do
     test "event_entry returns completed with event_type" do
       assert {:completed, %{event_type: "signed_up"}} =
                EventEntry.execute(%{"event_type" => "signed_up"}, %{})
@@ -42,7 +42,7 @@ defmodule Kalcifer.Engine.NodesTest do
     end
   end
 
-  describe "channel nodes" do
+  describe "task/channel nodes" do
     test "send_email returns completed" do
       assert {:completed, %{sent: true, channel: "email"}} =
                SendEmail.execute(%{"template_id" => "t1"}, %{})
@@ -73,7 +73,7 @@ defmodule Kalcifer.Engine.NodesTest do
     end
   end
 
-  describe "logic nodes" do
+  describe "gateway nodes" do
     test "condition branches true when field matches" do
       config = %{"field" => "status", "value" => "active"}
       context = %{"status" => "active"}
@@ -106,6 +106,12 @@ defmodule Kalcifer.Engine.NodesTest do
       assert AbSplit.category() == :gateway
     end
 
+    test "frequency_cap returns branched allowed" do
+      assert {:branched, "allowed", %{capped: false}} = FrequencyCap.execute(%{}, %{})
+    end
+  end
+
+  describe "intermediate_event nodes" do
     test "wait returns waiting with duration" do
       assert {:waiting, %{duration: "3d"}} = Wait.execute(%{"duration" => "3d"}, %{})
     end
@@ -138,13 +144,9 @@ defmodule Kalcifer.Engine.NodesTest do
       assert {:branched, "timed_out", %{timed_out: true}} =
                WaitForEvent.resume(%{}, %{}, :timeout)
     end
-
-    test "frequency_cap returns branched allowed" do
-      assert {:branched, "allowed", %{capped: false}} = FrequencyCapNode.execute(%{}, %{})
-    end
   end
 
-  describe "data nodes" do
+  describe "task/data nodes" do
     test "update_profile returns completed" do
       assert {:completed, %{updated: true}} =
                UpdateProfile.execute(%{"fields" => %{"name" => "Test"}}, %{})
@@ -160,7 +162,7 @@ defmodule Kalcifer.Engine.NodesTest do
     end
   end
 
-  describe "exit nodes" do
+  describe "end_event nodes" do
     test "journey_exit returns completed with exit flag" do
       assert {:completed, %{exit: true}} = JourneyExit.execute(%{}, %{})
     end

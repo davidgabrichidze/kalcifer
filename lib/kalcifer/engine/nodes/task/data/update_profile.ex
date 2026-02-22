@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Data.UpdateProfile do
+defmodule Kalcifer.Engine.Nodes.Task.Data.UpdateProfile do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

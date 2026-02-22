@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Entry.EventEntry do
+defmodule Kalcifer.Engine.Nodes.StartEvent.EventEntry do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

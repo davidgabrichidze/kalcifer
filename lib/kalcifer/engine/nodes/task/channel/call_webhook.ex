@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Channel.CallWebhook do
+defmodule Kalcifer.Engine.Nodes.Task.Channel.CallWebhook do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

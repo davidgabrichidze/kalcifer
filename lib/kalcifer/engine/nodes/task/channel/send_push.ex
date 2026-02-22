@@ -1,11 +1,11 @@
-defmodule Kalcifer.Engine.Nodes.Channel.SendWhatsapp do
+defmodule Kalcifer.Engine.Nodes.Task.Channel.SendPush do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour
 
   @impl true
   def execute(config, _context) do
-    {:completed, %{sent: true, channel: "whatsapp", template_id: config["template_id"]}}
+    {:completed, %{sent: true, channel: "push", template_id: config["template_id"]}}
   end
 
   @impl true

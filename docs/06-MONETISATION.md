@@ -403,7 +403,7 @@ defmodule Kalcifer.Auth do
   # Default: API key authentication (open-source)
   # Enterprise: SSO/SAML/OIDC (proprietary module)
   def strategy do
-    Application.get_env(:optio_flow, :auth_strategy, Kalcifer.Auth.ApiKeyStrategy)
+    Application.get_env(:kalcifer, :auth_strategy, Kalcifer.Auth.ApiKeyStrategy)
   end
 end
 ```

@@ -6,25 +6,25 @@ defmodule Kalcifer.Engine.NodeRegistry do
   @table :kalcifer_node_registry
 
   @built_in_nodes %{
-    "event_entry" => Kalcifer.Engine.Nodes.Entry.EventEntry,
-    "segment_entry" => Kalcifer.Engine.Nodes.Entry.SegmentEntry,
-    "webhook_entry" => Kalcifer.Engine.Nodes.Entry.WebhookEntry,
-    "send_email" => Kalcifer.Engine.Nodes.Channel.SendEmail,
-    "send_sms" => Kalcifer.Engine.Nodes.Channel.SendSms,
-    "send_push" => Kalcifer.Engine.Nodes.Channel.SendPush,
-    "send_whatsapp" => Kalcifer.Engine.Nodes.Channel.SendWhatsapp,
-    "call_webhook" => Kalcifer.Engine.Nodes.Channel.CallWebhook,
-    "wait" => Kalcifer.Engine.Nodes.Logic.Wait,
-    "wait_until" => Kalcifer.Engine.Nodes.Logic.WaitUntil,
-    "wait_for_event" => Kalcifer.Engine.Nodes.Logic.WaitForEvent,
-    "condition" => Kalcifer.Engine.Nodes.Logic.Condition,
-    "ab_split" => Kalcifer.Engine.Nodes.Logic.AbSplit,
-    "frequency_cap" => Kalcifer.Engine.Nodes.Logic.FrequencyCapNode,
-    "update_profile" => Kalcifer.Engine.Nodes.Data.UpdateProfile,
-    "add_tag" => Kalcifer.Engine.Nodes.Data.AddTag,
-    "custom_code" => Kalcifer.Engine.Nodes.Data.CustomCode,
-    "journey_exit" => Kalcifer.Engine.Nodes.Exit.JourneyExit,
-    "goal_reached" => Kalcifer.Engine.Nodes.Exit.GoalReached
+    "event_entry" => Kalcifer.Engine.Nodes.StartEvent.EventEntry,
+    "segment_entry" => Kalcifer.Engine.Nodes.StartEvent.SegmentEntry,
+    "webhook_entry" => Kalcifer.Engine.Nodes.StartEvent.WebhookEntry,
+    "send_email" => Kalcifer.Engine.Nodes.Task.Channel.SendEmail,
+    "send_sms" => Kalcifer.Engine.Nodes.Task.Channel.SendSms,
+    "send_push" => Kalcifer.Engine.Nodes.Task.Channel.SendPush,
+    "send_whatsapp" => Kalcifer.Engine.Nodes.Task.Channel.SendWhatsapp,
+    "call_webhook" => Kalcifer.Engine.Nodes.Task.Channel.CallWebhook,
+    "wait" => Kalcifer.Engine.Nodes.IntermediateEvent.Wait,
+    "wait_until" => Kalcifer.Engine.Nodes.IntermediateEvent.WaitUntil,
+    "wait_for_event" => Kalcifer.Engine.Nodes.IntermediateEvent.WaitForEvent,
+    "condition" => Kalcifer.Engine.Nodes.Gateway.Condition,
+    "ab_split" => Kalcifer.Engine.Nodes.Gateway.AbSplit,
+    "frequency_cap" => Kalcifer.Engine.Nodes.Gateway.FrequencyCap,
+    "update_profile" => Kalcifer.Engine.Nodes.Task.Data.UpdateProfile,
+    "add_tag" => Kalcifer.Engine.Nodes.Task.Data.AddTag,
+    "custom_code" => Kalcifer.Engine.Nodes.Task.Data.CustomCode,
+    "journey_exit" => Kalcifer.Engine.Nodes.EndEvent.JourneyExit,
+    "goal_reached" => Kalcifer.Engine.Nodes.EndEvent.GoalReached
   }
 
   # --- Public API ---

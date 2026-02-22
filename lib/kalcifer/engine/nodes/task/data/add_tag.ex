@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Data.AddTag do
+defmodule Kalcifer.Engine.Nodes.Task.Data.AddTag do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

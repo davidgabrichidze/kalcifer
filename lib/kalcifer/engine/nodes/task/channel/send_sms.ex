@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Channel.SendSms do
+defmodule Kalcifer.Engine.Nodes.Task.Channel.SendSms do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

@@ -50,7 +50,7 @@ Kalcifer follows a **modular monolith** architecture deployed as a single Elixir
 **Responsibility**: HTTP API, WebSocket connections, authentication, rate limiting.
 
 ```
-lib/optio_flow_web/
+lib/kalcifer_web/
 ├── controllers/
 │   ├── journey_controller.ex        # CRUD journeys
 │   ├── execution_controller.ex      # Trigger/pause/resume
@@ -82,7 +82,7 @@ lib/optio_flow_web/
 This is the heart of Kalcifer and its primary differentiator.
 
 ```
-lib/optio_flow/engine/
+lib/kalcifer/engine/
 ├── journey_supervisor.ex            # DynamicSupervisor for journey instances
 ├── journey_server.ex                # GenServer per journey instance
 ├── journey_state.ex                 # State struct & transitions
@@ -269,7 +269,7 @@ EventRouter.unregister_wait(customer_id, event_type, instance_id, node_id)
 **Responsibility**: Convert natural language, conversation, and uploaded documents into valid journey graphs.
 
 ```
-lib/optio_flow/ai_designer/
+lib/kalcifer/ai_designer/
 ├── designer.ex                      # Main orchestrator — conversation → graph
 ├── conversation.ex                  # Multi-turn conversation state management
 ├── prompt_builder.ex                # System prompt + few-shot examples
@@ -368,12 +368,12 @@ defmodule Kalcifer.AiDesigner.LLMProvider do
 end
 
 # Users configure their preferred provider:
-# config :optio_flow, :llm_provider, Kalcifer.AiDesigner.Providers.Anthropic
-# config :optio_flow, :llm_api_key, System.get_env("ANTHROPIC_API_KEY")
+# config :kalcifer, :llm_provider, Kalcifer.AiDesigner.Providers.Anthropic
+# config :kalcifer, :llm_api_key, System.get_env("ANTHROPIC_API_KEY")
 #
 # Self-hosted option (no external API calls):
-# config :optio_flow, :llm_provider, Kalcifer.AiDesigner.Providers.Ollama
-# config :optio_flow, :llm_base_url, "http://localhost:11434"
+# config :kalcifer, :llm_provider, Kalcifer.AiDesigner.Providers.Ollama
+# config :kalcifer, :llm_base_url, "http://localhost:11434"
 ```
 
 ### 2.4 Journey Versioning & Live Migration
@@ -381,7 +381,7 @@ end
 **Responsibility**: Manage immutable journey versions and migrate active instances between versions.
 
 ```
-lib/optio_flow/versioning/
+lib/kalcifer/versioning/
 ├── version_manager.ex               # Create/publish/rollback versions
 ├── version_differ.ex                # Compute structural diff between versions
 ├── node_mapper.ex                   # Auto-detect + manual node mapping between versions
@@ -521,7 +521,7 @@ end
 **Responsibility**: Process journey execution events into analytics aggregations.
 
 ```
-lib/optio_flow/analytics/
+lib/kalcifer/analytics/
 ├── event_producer.ex                # Broadway producer from PG notifications
 ├── event_processor.ex               # Transform events for ClickHouse
 ├── clickhouse_writer.ex             # Batch writer to ClickHouse
@@ -1058,7 +1058,7 @@ end
 
 # Registration at startup:
 # config/runtime.exs
-config :optio_flow, :custom_nodes, [
+config :kalcifer, :custom_nodes, [
   MyApp.Nodes.SlackNotify,
   MyApp.Nodes.SegmentIdentify,
   MyApp.Nodes.CustomScoring
@@ -1160,11 +1160,11 @@ Kalcifer Application
     │   ├── phoenix.endpoint.*
     │   ├── ecto.repo.*
     │   ├── oban.job.*
-    │   ├── optio_flow.engine.*        ← custom
+    │   ├── kalcifer.engine.*        ← custom
     │   │   ├── node.execute.start/stop
     │   │   ├── journey.start/complete/fail
     │   │   └── event.dispatch
-    │   └── optio_flow.channel.*       ← custom
+    │   └── kalcifer.channel.*       ← custom
     │       └── send.start/stop/error
     │
     ├── OpenTelemetry (traces)

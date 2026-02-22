@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Data.CustomCode do
+defmodule Kalcifer.Engine.Nodes.Task.Data.CustomCode do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

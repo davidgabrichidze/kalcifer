@@ -52,7 +52,7 @@
 ## 2. Project Structure
 
 ```
-optio_flow/
+kalcifer/
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml                      # Test + lint + typecheck
@@ -69,7 +69,7 @@ optio_flow/
 │   └── runtime.exs                     # Runtime config (env vars)
 │
 ├── lib/
-│   ├── optio_flow/                     # Business logic
+│   ├── kalcifer/                     # Business logic
 │   │   ├── application.ex              # OTP application & supervision tree
 │   │   ├── repo.ex                     # Ecto repo with tenant scoping
 │   │   │
@@ -186,7 +186,7 @@ optio_flow/
 │   │   └── sandbox/                    # CustomCode node sandboxing
 │   │       └── lua_runner.ex          # Luerl-based Lua sandbox
 │   │
-│   └── optio_flow_web/                 # Phoenix web layer
+│   └── kalcifer_web/                 # Phoenix web layer
 │       ├── endpoint.ex
 │       ├── router.ex
 │       ├── controllers/
@@ -215,7 +215,7 @@ optio_flow/
 │       └── 003_materialized_views.sql
 │
 ├── test/
-│   ├── optio_flow/
+│   ├── kalcifer/
 │   │   ├── engine/                     # Engine unit tests
 │   │   │   ├── journey_server_test.exs
 │   │   │   ├── node_executor_test.exs
@@ -225,7 +225,7 @@ optio_flow/
 │   │   ├── journeys/                   # CRUD tests
 │   │   ├── channels/                   # Provider tests (with mocks)
 │   │   └── analytics/                  # Pipeline tests
-│   ├── optio_flow_web/                 # API tests
+│   ├── kalcifer_web/                 # API tests
 │   ├── property/                       # Property-based tests (StreamData)
 │   │   ├── journey_graph_test.exs
 │   │   ├── state_machine_test.exs
@@ -265,8 +265,8 @@ optio_flow/
 │   │   ├── web-component.ts           # Web Component wrapper
 │   │   └── index.ts                   # npm package entry
 │   └── dist/                          # Build output
-│       ├── optioflow-editor.js        # UMD bundle (Web Component)
-│       └── optioflow-editor.es.js     # ES Module
+│       ├── kalcifer-editor.js        # UMD bundle (Web Component)
+│       └── kalcifer-editor.es.js     # ES Module
 │
 ├── docker/
 │   ├── Dockerfile                     # Multi-stage Elixir release
@@ -757,16 +757,16 @@ end
 
 ```bash
 # Database
-DATABASE_URL=ecto://user:pass@localhost:5432/optio_flow
+DATABASE_URL=ecto://user:pass@localhost:5432/kalcifer
 DATABASE_POOL_SIZE=20
 
 # Elasticsearch
 ELASTICSEARCH_URL=http://localhost:9200
-ELASTICSEARCH_PREFIX=optioflow_          # Index prefix for multi-tenancy
+ELASTICSEARCH_PREFIX=kalcifer_          # Index prefix for multi-tenancy
 
 # ClickHouse
 CLICKHOUSE_URL=http://localhost:8123
-CLICKHOUSE_DATABASE=optio_flow
+CLICKHOUSE_DATABASE=kalcifer
 
 # Phoenix
 SECRET_KEY_BASE=...                       # Generate with mix phx.gen.secret
@@ -780,7 +780,7 @@ JWT_SECRET=...                            # JWT signing key
 # Clustering (optional)
 CLUSTER_ENABLED=false
 CLUSTER_STRATEGY=dns                      # dns | kubernetes | gossip
-CLUSTER_DNS_QUERY=optioflow.local
+CLUSTER_DNS_QUERY=kalcifer.local
 
 # Feature flags
 ENABLE_CUSTOM_CODE=false                  # Lua sandbox for CustomCode nodes
@@ -808,16 +808,16 @@ RATE_LIMIT_API_PER_MINUTE=600             # Per tenant
 # config/runtime.exs
 import Config
 
-config :optio_flow, Kalcifer.Repo,
+config :kalcifer, Kalcifer.Repo,
   url: System.fetch_env!("DATABASE_URL"),
   pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE", "20"))
 
-config :optio_flow, Kalcifer.Engine,
+config :kalcifer, Kalcifer.Engine,
   max_concurrent_instances: String.to_integer(System.get_env("MAX_INSTANCES", "100000")),
   recovery_batch_size: 1000,
   recovery_concurrency: 50
 
-config :optio_flow, Oban,
+config :kalcifer, Oban,
   repo: Kalcifer.Repo,
   queues: [
     journey_triggers: 10,

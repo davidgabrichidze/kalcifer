@@ -66,14 +66,14 @@ FROM alpine:3.20 AS runner
 RUN apk add --no-cache libstdc++ openssl ncurses-libs
 
 WORKDIR /app
-COPY --from=builder /app/_build/prod/rel/optio_flow ./
+COPY --from=builder /app/_build/prod/rel/kalcifer ./
 
 ENV PHX_HOST=localhost
 ENV PHX_PORT=4500
 
 EXPOSE 4500
 
-CMD ["bin/optio_flow", "start"]
+CMD ["bin/kalcifer", "start"]
 ```
 
 **Image size target**: < 100MB (Alpine-based, no dev dependencies)
@@ -84,9 +84,9 @@ For the simplest possible deployment (evaluation only):
 
 ```bash
 # Download and run — nothing else needed
-curl -L https://github.com/optioflow/optioflow/releases/latest/download/optioflow-linux-amd64 -o optioflow
-chmod +x optioflow
-./optioflow start
+curl -L https://github.com/kalcifer/kalcifer/releases/latest/download/kalcifer-linux-amd64 -o kalcifer
+chmod +x kalcifer
+./kalcifer start
 
 # Kalcifer starts on localhost:4500
 # Uses embedded SQLite for state (no PostgreSQL needed)
@@ -105,12 +105,12 @@ This is the recommended production deployment for most users.
 version: "3.8"
 
 services:
-  optioflow:
-    image: ghcr.io/optioflow/optioflow:latest
+  kalcifer:
+    image: ghcr.io/kalcifer/kalcifer:latest
     ports:
       - "4500:4500"
     environment:
-      DATABASE_URL: ecto://optioflow:optioflow@postgres:5432/optioflow
+      DATABASE_URL: ecto://kalcifer:kalcifer@postgres:5432/kalcifer
       ELASTICSEARCH_URL: http://elasticsearch:9200
       CLICKHOUSE_URL: http://clickhouse:8123
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
@@ -124,7 +124,7 @@ services:
       clickhouse:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "bin/optio_flow", "rpc", "Kalcifer.Health.check()"]
+      test: ["CMD", "bin/kalcifer", "rpc", "Kalcifer.Health.check()"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -137,13 +137,13 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: optioflow
-      POSTGRES_PASSWORD: optioflow
-      POSTGRES_DB: optioflow
+      POSTGRES_USER: kalcifer
+      POSTGRES_PASSWORD: kalcifer
+      POSTGRES_DB: kalcifer
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U optioflow"]
+      test: ["CMD-SHELL", "pg_isready -U kalcifer"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -216,18 +216,18 @@ docker compose up -d
 
 # Wait for health
 echo "Waiting for services to be healthy..."
-until docker compose exec optioflow bin/optio_flow rpc "Kalcifer.Health.check()" 2>/dev/null; do
+until docker compose exec kalcifer bin/kalcifer rpc "Kalcifer.Health.check()" 2>/dev/null; do
   sleep 2
 done
 
 # Run migrations
-docker compose exec optioflow bin/optio_flow eval "Kalcifer.Release.migrate()"
+docker compose exec kalcifer bin/kalcifer eval "Kalcifer.Release.migrate()"
 
 # Setup ClickHouse schema
-docker compose exec optioflow bin/optio_flow eval "Kalcifer.Release.setup_clickhouse()"
+docker compose exec kalcifer bin/kalcifer eval "Kalcifer.Release.setup_clickhouse()"
 
 # Create default tenant
-docker compose exec optioflow bin/optio_flow eval \
+docker compose exec kalcifer bin/kalcifer eval \
   "Kalcifer.Release.create_tenant(\"default\", \"Default Workspace\")"
 
 echo ""
@@ -260,20 +260,20 @@ For enterprise deployments requiring high availability, auto-scaling, and multi-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: optioflow
+  name: kalcifer
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: optioflow
+      app: kalcifer
   template:
     metadata:
       labels:
-        app: optioflow
+        app: kalcifer
     spec:
       containers:
-        - name: optioflow
-          image: ghcr.io/optioflow/optioflow:latest
+        - name: kalcifer
+          image: ghcr.io/kalcifer/kalcifer:latest
           ports:
             - containerPort: 4500
               name: http
@@ -283,14 +283,14 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: optioflow-secrets
+                  name: kalcifer-secrets
                   key: database-url
             - name: CLUSTER_ENABLED
               value: "true"
             - name: CLUSTER_STRATEGY
               value: "kubernetes"
             - name: CLUSTER_KUBERNETES_SELECTOR
-              value: "app=optioflow"
+              value: "app=kalcifer"
             - name: CLUSTER_KUBERNETES_NAMESPACE
               valueFrom:
                 fieldRef:
@@ -322,10 +322,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: optioflow
+  name: kalcifer
 spec:
   selector:
-    app: optioflow
+    app: kalcifer
   ports:
     - port: 4500
       targetPort: 4500
@@ -336,10 +336,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: optioflow-headless
+  name: kalcifer-headless
 spec:
   selector:
-    app: optioflow
+    app: kalcifer
   clusterIP: None
   ports:
     - port: 4369
@@ -348,19 +348,19 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: optioflow
+  name: kalcifer
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: optioflow
+    name: kalcifer
   minReplicas: 3
   maxReplicas: 20
   metrics:
     - type: Pods
       pods:
         metric:
-          name: optioflow_active_journey_instances
+          name: kalcifer_active_journey_instances
         target:
           type: AverageValue
           averageValue: "50000"    # Scale when avg instances per pod > 50K
@@ -382,8 +382,8 @@ if System.get_env("CLUSTER_ENABLED") == "true" do
       k8s: [
         strategy: Cluster.Strategy.Kubernetes.DNS,
         config: [
-          service: System.get_env("CLUSTER_KUBERNETES_SERVICE", "optioflow-headless"),
-          application_name: "optio_flow",
+          service: System.get_env("CLUSTER_KUBERNETES_SERVICE", "kalcifer-headless"),
+          application_name: "kalcifer",
           namespace: System.get_env("CLUSTER_KUBERNETES_NAMESPACE", "default"),
           polling_interval: 5_000
         ]
@@ -463,11 +463,11 @@ spec:
 
 ```bash
 # Automated daily backup (docker-compose example)
-# Add to crontab: 0 3 * * * /opt/optioflow/backup.sh
+# Add to crontab: 0 3 * * * /opt/kalcifer/backup.sh
 
 #!/bin/bash
 DATE=$(date +%Y%m%d_%H%M%S)
-docker compose exec -T postgres pg_dump -U optioflow optioflow | gzip > backups/pg_$DATE.sql.gz
+docker compose exec -T postgres pg_dump -U kalcifer kalcifer | gzip > backups/pg_$DATE.sql.gz
 
 # Keep 30 days
 find backups/ -name "pg_*.sql.gz" -mtime +30 -delete
@@ -544,28 +544,28 @@ Response:
 
 ```
 # Engine metrics
-optioflow_active_journey_instances            gauge
-optioflow_journey_starts_total                counter
-optioflow_journey_completions_total            counter
-optioflow_journey_failures_total               counter
-optioflow_node_executions_total{node_type}     counter
-optioflow_node_execution_duration_ms{node_type} histogram
-optioflow_event_dispatch_total                 counter
-optioflow_event_dispatch_duration_ms           histogram
-optioflow_crash_recoveries_total               counter
+kalcifer_active_journey_instances            gauge
+kalcifer_journey_starts_total                counter
+kalcifer_journey_completions_total            counter
+kalcifer_journey_failures_total               counter
+kalcifer_node_executions_total{node_type}     counter
+kalcifer_node_execution_duration_ms{node_type} histogram
+kalcifer_event_dispatch_total                 counter
+kalcifer_event_dispatch_duration_ms           histogram
+kalcifer_crash_recoveries_total               counter
 
 # Channel metrics
-optioflow_channel_sends_total{channel,provider}    counter
-optioflow_channel_deliveries_total{channel}         counter
-optioflow_channel_bounces_total{channel}            counter
-optioflow_channel_send_duration_ms{channel}         histogram
+kalcifer_channel_sends_total{channel,provider}    counter
+kalcifer_channel_deliveries_total{channel}         counter
+kalcifer_channel_bounces_total{channel}            counter
+kalcifer_channel_send_duration_ms{channel}         histogram
 
 # System metrics (via PromEx)
-optioflow_beam_process_count                   gauge
-optioflow_beam_memory_bytes{type}              gauge
-optioflow_ecto_query_duration_ms               histogram
-optioflow_oban_job_duration_ms{queue}          histogram
-optioflow_phoenix_request_duration_ms{path}    histogram
+kalcifer_beam_process_count                   gauge
+kalcifer_beam_memory_bytes{type}              gauge
+kalcifer_ecto_query_duration_ms               histogram
+kalcifer_oban_job_duration_ms{queue}          histogram
+kalcifer_phoenix_request_duration_ms{path}    histogram
 ```
 
 ### Grafana Dashboard (shipped with Docker Compose)
@@ -597,34 +597,34 @@ services:
 ```yaml
 # monitoring/alerts.yml
 groups:
-  - name: optioflow
+  - name: kalcifer
     rules:
       - alert: HighJourneyFailureRate
-        expr: rate(optioflow_journey_failures_total[5m]) / rate(optioflow_journey_starts_total[5m]) > 0.05
+        expr: rate(kalcifer_journey_failures_total[5m]) / rate(kalcifer_journey_starts_total[5m]) > 0.05
         for: 5m
         annotations:
           summary: "Journey failure rate above 5%"
 
       - alert: HighChannelBounceRate
-        expr: rate(optioflow_channel_bounces_total[5m]) / rate(optioflow_channel_sends_total[5m]) > 0.10
+        expr: rate(kalcifer_channel_bounces_total[5m]) / rate(kalcifer_channel_sends_total[5m]) > 0.10
         for: 5m
         annotations:
           summary: "Channel bounce rate above 10%"
 
       - alert: HighMemoryUsage
-        expr: optioflow_beam_memory_bytes{type="total"} / 1024 / 1024 > 3500
+        expr: kalcifer_beam_memory_bytes{type="total"} / 1024 / 1024 > 3500
         for: 5m
         annotations:
           summary: "Kalcifer memory above 3.5GB"
 
       - alert: SlowNodeExecution
-        expr: histogram_quantile(0.99, optioflow_node_execution_duration_ms) > 500
+        expr: histogram_quantile(0.99, kalcifer_node_execution_duration_ms) > 500
         for: 5m
         annotations:
           summary: "p99 node execution above 500ms"
 
       - alert: CrashRecoverySpike
-        expr: rate(optioflow_crash_recoveries_total[5m]) > 10
+        expr: rate(kalcifer_crash_recoveries_total[5m]) > 10
         for: 2m
         annotations:
           summary: "High crash recovery rate — possible systematic issue"
@@ -663,8 +663,8 @@ Semantic versioning: `MAJOR.MINOR.PATCH`
 
 ```bash
 # Docker Compose upgrade (zero-downtime)
-docker compose pull optioflow
-docker compose up -d optioflow
+docker compose pull kalcifer
+docker compose up -d kalcifer
 
 # Kalcifer auto-runs migrations on startup
 # Ecto migrations are backward compatible (additive only)

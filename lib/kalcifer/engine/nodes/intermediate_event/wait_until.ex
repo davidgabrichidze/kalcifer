@@ -1,11 +1,11 @@
-defmodule Kalcifer.Engine.Nodes.Logic.Wait do
+defmodule Kalcifer.Engine.Nodes.IntermediateEvent.WaitUntil do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour
 
   @impl true
   def execute(config, _context) do
-    {:waiting, %{duration: config["duration"]}}
+    {:waiting, %{until: config["datetime"]}}
   end
 
   @impl true
@@ -15,7 +15,7 @@ defmodule Kalcifer.Engine.Nodes.Logic.Wait do
 
   @impl true
   def config_schema do
-    %{"duration" => %{"type" => "string", "required" => true, "example" => "3d"}}
+    %{"datetime" => %{"type" => "string", "format" => "datetime", "required" => true}}
   end
 
   @impl true

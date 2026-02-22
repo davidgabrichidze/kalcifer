@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Logic.WaitForEvent do
+defmodule Kalcifer.Engine.Nodes.IntermediateEvent.WaitForEvent do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

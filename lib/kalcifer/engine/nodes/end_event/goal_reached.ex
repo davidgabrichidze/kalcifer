@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Exit.GoalReached do
+defmodule Kalcifer.Engine.Nodes.EndEvent.GoalReached do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

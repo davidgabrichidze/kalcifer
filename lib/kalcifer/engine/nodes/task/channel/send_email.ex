@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Channel.SendEmail do
+defmodule Kalcifer.Engine.Nodes.Task.Channel.SendEmail do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour

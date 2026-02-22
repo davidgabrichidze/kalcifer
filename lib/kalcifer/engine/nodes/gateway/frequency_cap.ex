@@ -1,4 +1,4 @@
-defmodule Kalcifer.Engine.Nodes.Logic.FrequencyCapNode do
+defmodule Kalcifer.Engine.Nodes.Gateway.FrequencyCap do
   @moduledoc false
 
   use Kalcifer.Engine.NodeBehaviour
