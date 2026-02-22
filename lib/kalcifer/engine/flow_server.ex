@@ -3,7 +3,9 @@ defmodule Kalcifer.Engine.FlowServer do
 
   use GenServer, restart: :transient
 
+  alias Kalcifer.Engine.Duration
   alias Kalcifer.Engine.GraphWalker
+  alias Kalcifer.Engine.Jobs.ResumeFlowJob
   alias Kalcifer.Engine.NodeExecutor
   alias Kalcifer.Engine.Persistence.InstanceStore
   alias Kalcifer.Engine.Persistence.StepStore
@@ -17,7 +19,8 @@ defmodule Kalcifer.Engine.FlowServer do
     :graph,
     :current_nodes,
     :context,
-    :status
+    :status,
+    :waiting_node_id
   ]
 
   # --- Public API ---
@@ -76,6 +79,37 @@ defmodule Kalcifer.Engine.FlowServer do
     {:reply, state, state}
   end
 
+  @impl true
+  def handle_cast({:resume, node_id, trigger}, state) do
+    node = GraphWalker.find_node(state.graph, node_id)
+    {:ok, step} = StepStore.record_step_start(state.instance_id, node, state.version_number)
+
+    case NodeExecutor.resume(node, state.context, trigger) do
+      {:completed, result} ->
+        StepStore.record_step_complete(step, result)
+        state = accumulate_context(state, node_id, result)
+        state = %{state | status: :running, waiting_node_id: nil}
+        next = resolve_next_nodes(state.graph, node, nil)
+        state = continue_from_resume(state, next)
+        maybe_stop(state)
+
+      {:branched, branch_key, result} ->
+        StepStore.record_step_complete(step, result)
+        state = accumulate_context(state, node_id, result)
+        state = %{state | status: :running, waiting_node_id: nil}
+        next = resolve_next_nodes(state.graph, node, branch_key)
+        state = continue_from_resume(state, next)
+        maybe_stop(state)
+
+      {:failed, reason} ->
+        error = normalize_error(reason)
+        StepStore.record_step_fail(step, error)
+        state = %{state | status: :failed, waiting_node_id: nil}
+        InstanceStore.fail_instance(get_instance(state), inspect(reason))
+        maybe_stop(state)
+    end
+  end
+
   # --- Execution loop ---
 
   defp execute_nodes(state, []) do
@@ -115,8 +149,9 @@ defmodule Kalcifer.Engine.FlowServer do
 
       {:waiting, wait_config} ->
         StepStore.record_step_complete(step, wait_config)
-        state = %{state | status: :waiting}
+        state = %{state | status: :waiting, waiting_node_id: node["id"]}
         persist_current_state(state)
+        schedule_resume(node, wait_config, state)
         {:waiting, state}
 
       {:failed, reason} ->
@@ -175,6 +210,63 @@ defmodule Kalcifer.Engine.FlowServer do
 
   defp get_instance(state) do
     InstanceStore.get_instance(state.instance_id)
+  end
+
+  # --- Resume helpers ---
+
+  defp continue_from_resume(state, []) do
+    state = %{state | current_nodes: [], status: :completed}
+    InstanceStore.complete_instance(get_instance(state))
+    state
+  end
+
+  defp continue_from_resume(state, next_nodes) do
+    next_ids = Enum.map(next_nodes, & &1["id"])
+    state = %{state | current_nodes: next_ids}
+    execute_nodes(state, next_ids)
+  end
+
+  # --- Timer scheduling ---
+
+  defp schedule_resume(node, wait_config, state) do
+    case node["type"] do
+      "wait" ->
+        schedule_timer(state, node["id"], wait_config.duration, "timer_expired")
+
+      "wait_until" ->
+        schedule_at(state, node["id"], wait_config.until, "timer_expired")
+
+      "wait_for_event" ->
+        timeout = node["config"]["timeout"]
+        if timeout, do: schedule_timer(state, node["id"], timeout, "timeout")
+
+      _ ->
+        :ok
+    end
+  end
+
+  defp schedule_timer(state, node_id, duration, trigger) do
+    case Duration.to_seconds(duration) do
+      {:ok, seconds} ->
+        scheduled_at = DateTime.add(DateTime.utc_now(), seconds, :second)
+        insert_resume_job(state, node_id, trigger, scheduled_at)
+
+      _ ->
+        :ok
+    end
+  end
+
+  defp schedule_at(state, node_id, datetime_string, trigger) do
+    case DateTime.from_iso8601(datetime_string) do
+      {:ok, dt, _} -> insert_resume_job(state, node_id, trigger, dt)
+      _ -> :ok
+    end
+  end
+
+  defp insert_resume_job(state, node_id, trigger, scheduled_at) do
+    %{instance_id: state.instance_id, node_id: node_id, trigger: trigger}
+    |> ResumeFlowJob.new(scheduled_at: scheduled_at)
+    |> Oban.insert()
   end
 
   defp normalize_error(%{} = error), do: error

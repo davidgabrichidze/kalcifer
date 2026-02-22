@@ -90,16 +90,90 @@ defmodule Kalcifer.Engine.FlowServerTest do
     end
   end
 
-  describe "waiting node" do
-    test "server stays alive when encountering a wait node" do
+  describe "wait and resume" do
+    test "server enters waiting state on wait node" do
       graph = wait_graph()
       {pid, ref, _args} = start_server(graph)
 
       result = wait_for_completion(pid, ref, 500)
       assert result == :still_running
 
-      # Clean up
+      state = GenServer.call(pid, :get_state)
+      assert state.status == :waiting
+      assert state.waiting_node_id == "wait_1"
+
       GenServer.stop(pid, :normal)
+    end
+
+    test "wait node resumes on cast and completes flow" do
+      graph = wait_graph()
+      {pid, ref, _args} = start_server(graph)
+
+      # Wait for server to reach waiting state
+      :still_running = wait_for_completion(pid, ref, 500)
+
+      # Manually send resume (simulates what ResumeFlowJob does)
+      GenServer.cast(pid, {:resume, "wait_1", :timer_expired})
+      assert :ok = wait_for_completion(pid, ref)
+
+      steps = Repo.all(from(s in ExecutionStep))
+      node_types = MapSet.new(steps, & &1.node_type)
+
+      assert "event_entry" in node_types
+      assert "wait" in node_types
+      assert "exit" in node_types
+    end
+
+    test "wait_until node resumes on cast and completes" do
+      graph = wait_until_graph()
+      {pid, ref, _args} = start_server(graph)
+      :still_running = wait_for_completion(pid, ref, 500)
+
+      GenServer.cast(pid, {:resume, "wait_1", :timer_expired})
+      assert :ok = wait_for_completion(pid, ref)
+
+      instance =
+        Repo.one(
+          from i in Kalcifer.Flows.FlowInstance,
+            order_by: [desc: i.inserted_at],
+            limit: 1
+        )
+
+      assert instance.status == "completed"
+    end
+
+    test "wait_for_event resumes on timeout and follows timed_out branch" do
+      graph = wait_for_event_timeout_graph()
+      {pid, ref, _args} = start_server(graph)
+      :still_running = wait_for_completion(pid, ref, 500)
+
+      GenServer.cast(pid, {:resume, "wait_1", :timeout})
+      assert :ok = wait_for_completion(pid, ref)
+
+      steps = Repo.all(from(s in ExecutionStep))
+      node_ids = Enum.map(steps, & &1.node_id)
+
+      # Should follow timed_out branch (send_sms), not event_received branch (send_email)
+      assert "sms_1" in node_ids
+      refute "email_1" in node_ids
+    end
+
+    test "instance is marked completed after wait + resume" do
+      graph = wait_graph()
+      {pid, ref, _args} = start_server(graph)
+      :still_running = wait_for_completion(pid, ref, 500)
+
+      GenServer.cast(pid, {:resume, "wait_1", :timer_expired})
+      assert :ok = wait_for_completion(pid, ref)
+
+      instance =
+        Repo.one(
+          from i in Kalcifer.Flows.FlowInstance,
+            order_by: [desc: i.inserted_at],
+            limit: 1
+        )
+
+      assert instance.status == "completed"
     end
   end
 
@@ -289,6 +363,50 @@ defmodule Kalcifer.Engine.FlowServerTest do
       "edges" => [
         %{"id" => "e1", "source" => "entry_1", "target" => "wait_1"},
         %{"id" => "e2", "source" => "wait_1", "target" => "exit_1"}
+      ]
+    }
+  end
+
+  defp wait_until_graph do
+    future = DateTime.utc_now() |> DateTime.add(86_400, :second) |> DateTime.to_iso8601()
+
+    %{
+      "nodes" => [
+        %{"id" => "entry_1", "type" => "event_entry", "config" => %{"event_type" => "signed_up"}},
+        %{"id" => "wait_1", "type" => "wait_until", "config" => %{"datetime" => future}},
+        %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+      ],
+      "edges" => [
+        %{"id" => "e1", "source" => "entry_1", "target" => "wait_1"},
+        %{"id" => "e2", "source" => "wait_1", "target" => "exit_1"}
+      ]
+    }
+  end
+
+  defp wait_for_event_timeout_graph do
+    %{
+      "nodes" => [
+        %{"id" => "entry_1", "type" => "event_entry", "config" => %{"event_type" => "signed_up"}},
+        %{
+          "id" => "wait_1",
+          "type" => "wait_for_event",
+          "config" => %{"event_type" => "email_opened", "timeout" => "3d"}
+        },
+        %{"id" => "email_1", "type" => "send_email", "config" => %{"template_id" => "followup"}},
+        %{"id" => "sms_1", "type" => "send_sms", "config" => %{"template_id" => "reminder"}},
+        %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+      ],
+      "edges" => [
+        %{"id" => "e1", "source" => "entry_1", "target" => "wait_1"},
+        %{
+          "id" => "e2",
+          "source" => "wait_1",
+          "target" => "email_1",
+          "branch" => "event_received"
+        },
+        %{"id" => "e3", "source" => "wait_1", "target" => "sms_1", "branch" => "timed_out"},
+        %{"id" => "e4", "source" => "email_1", "target" => "exit_1"},
+        %{"id" => "e5", "source" => "sms_1", "target" => "exit_1"}
       ]
     }
   end
