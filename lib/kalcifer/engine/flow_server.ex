@@ -40,6 +40,23 @@ defmodule Kalcifer.Engine.FlowServer do
   # --- GenServer callbacks ---
 
   @impl true
+  def init(%{recovery: true} = args) do
+    state = %__MODULE__{
+      instance_id: args.instance_id,
+      flow_id: args.flow_id,
+      customer_id: args.customer_id,
+      tenant_id: args.tenant_id,
+      version_number: args.version_number,
+      graph: args.graph,
+      current_nodes: args.current_nodes,
+      context: args.context,
+      status: :waiting,
+      waiting_node_id: args.waiting_node_id
+    }
+
+    {:ok, state}
+  end
+
   def init(args) do
     entry_nodes = GraphWalker.entry_nodes(args.graph)
     entry_node_ids = Enum.map(entry_nodes, & &1["id"])
@@ -149,8 +166,10 @@ defmodule Kalcifer.Engine.FlowServer do
 
       {:waiting, wait_config} ->
         StepStore.record_step_complete(step, wait_config)
-        state = %{state | status: :waiting, waiting_node_id: node["id"]}
-        persist_current_state(state)
+        scheduled_at = calculate_scheduled_at(node, wait_config)
+        context = put_waiting_metadata(state.context, node["id"], scheduled_at)
+        state = %{state | status: :waiting, waiting_node_id: node["id"], context: context}
+        persist_waiting_state(state)
         schedule_resume(node, wait_config, state)
         {:waiting, state}
 
@@ -205,6 +224,45 @@ defmodule Kalcifer.Engine.FlowServer do
 
     if instance do
       InstanceStore.update_current_nodes(instance, state.current_nodes)
+    end
+  end
+
+  defp persist_waiting_state(state) do
+    instance = get_instance(state)
+
+    if instance do
+      InstanceStore.persist_waiting(instance, state.current_nodes, state.context)
+    end
+  end
+
+  defp put_waiting_metadata(context, node_id, scheduled_at) do
+    context
+    |> Map.put("_waiting_node_id", node_id)
+    |> Map.put("_resume_scheduled_at", scheduled_at && DateTime.to_iso8601(scheduled_at))
+  end
+
+  defp calculate_scheduled_at(%{"type" => "wait"}, wait_config) do
+    duration_to_datetime(wait_config.duration)
+  end
+
+  defp calculate_scheduled_at(%{"type" => "wait_until"}, wait_config) do
+    case DateTime.from_iso8601(wait_config.until) do
+      {:ok, dt, _} -> dt
+      _ -> nil
+    end
+  end
+
+  defp calculate_scheduled_at(%{"type" => "wait_for_event"} = node, _wait_config) do
+    timeout = node["config"]["timeout"]
+    if timeout, do: duration_to_datetime(timeout)
+  end
+
+  defp calculate_scheduled_at(_node, _wait_config), do: nil
+
+  defp duration_to_datetime(duration) do
+    case Duration.to_seconds(duration) do
+      {:ok, seconds} -> DateTime.add(DateTime.utc_now(), seconds, :second)
+      _ -> nil
     end
   end
 

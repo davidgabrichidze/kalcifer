@@ -175,6 +175,32 @@ defmodule Kalcifer.Engine.FlowServerTest do
 
       assert instance.status == "completed"
     end
+
+    test "persists waiting status and context to DB" do
+      graph = wait_graph()
+      {pid, _ref, _args} = start_server(graph)
+
+      # Wait for server to reach waiting state
+      Process.sleep(200)
+      assert Process.alive?(pid)
+
+      state = GenServer.call(pid, :get_state)
+      assert state.status == :waiting
+
+      instance =
+        Repo.one(
+          from i in Kalcifer.Flows.FlowInstance,
+            order_by: [desc: i.inserted_at],
+            limit: 1
+        )
+
+      assert instance.status == "waiting"
+      assert instance.context["_waiting_node_id"] == "wait_1"
+      assert instance.context["_resume_scheduled_at"] != nil
+      assert instance.context["accumulated"] != nil
+
+      GenServer.stop(pid, :normal)
+    end
   end
 
   describe "context accumulation" do

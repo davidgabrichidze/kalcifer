@@ -45,7 +45,7 @@ defmodule Kalcifer.Flows.FlowInstance do
 
   def status_changeset(instance, new_status, attrs \\ %{}) do
     instance
-    |> cast(attrs, [:completed_at, :exited_at, :exit_reason, :current_nodes])
+    |> cast(attrs, [:completed_at, :exited_at, :exit_reason, :current_nodes, :context])
     |> put_change(:status, new_status)
     |> validate_inclusion(:status, @statuses)
   end

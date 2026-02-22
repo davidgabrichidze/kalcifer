@@ -1,6 +1,8 @@
 defmodule Kalcifer.Engine.Persistence.InstanceStore do
   @moduledoc false
 
+  import Ecto.Query
+
   alias Kalcifer.Flows.FlowInstance
   alias Kalcifer.Repo
 
@@ -37,6 +39,33 @@ defmodule Kalcifer.Engine.Persistence.InstanceStore do
     instance
     |> FlowInstance.status_changeset("failed", %{
       exit_reason: reason,
+      exited_at: now,
+      current_nodes: []
+    })
+    |> Repo.update()
+  end
+
+  def persist_waiting(instance, current_nodes, context) do
+    instance
+    |> FlowInstance.status_changeset("waiting", %{
+      current_nodes: current_nodes,
+      context: context
+    })
+    |> Repo.update()
+  end
+
+  def list_recoverable_instances do
+    FlowInstance
+    |> where([i], i.status in ["running", "waiting"])
+    |> Repo.all()
+  end
+
+  def mark_crashed(instance) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    instance
+    |> FlowInstance.status_changeset("failed", %{
+      exit_reason: "server_crashed",
       exited_at: now,
       current_nodes: []
     })
