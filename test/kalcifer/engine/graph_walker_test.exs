@@ -73,6 +73,40 @@ defmodule Kalcifer.Engine.GraphWalkerTest do
     end
   end
 
+  describe "entry_nodes/1 — multiple entry types" do
+    test "returns all three entry types" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "e1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "e2", "type" => "segment_entry", "config" => %{}},
+          %{"id" => "e3", "type" => "webhook_entry", "config" => %{}},
+          %{"id" => "exit", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => []
+      }
+
+      entries = GraphWalker.entry_nodes(graph)
+      types = Enum.map(entries, & &1["type"]) |> Enum.sort()
+      assert types == ["event_entry", "segment_entry", "webhook_entry"]
+    end
+  end
+
+  describe "next_nodes/3 — condition branches" do
+    test "follows true branch on condition node" do
+      graph = condition_graph()
+      next = GraphWalker.next_nodes(graph, "cond_1", "true")
+      assert length(next) == 1
+      assert hd(next)["id"] == "email_1"
+    end
+
+    test "follows false branch on condition node" do
+      graph = condition_graph()
+      next = GraphWalker.next_nodes(graph, "cond_1", "false")
+      assert length(next) == 1
+      assert hd(next)["id"] == "exit_1"
+    end
+  end
+
   describe "outgoing_edges/2" do
     test "returns outgoing edges for a node" do
       edges = GraphWalker.outgoing_edges(valid_graph(), "entry_1")
@@ -88,5 +122,22 @@ defmodule Kalcifer.Engine.GraphWalkerTest do
     test "returns empty list for terminal node" do
       assert GraphWalker.outgoing_edges(valid_graph(), "exit_1") == []
     end
+  end
+
+  defp condition_graph do
+    %{
+      "nodes" => [
+        %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+        %{"id" => "cond_1", "type" => "condition", "config" => %{}},
+        %{"id" => "email_1", "type" => "send_email", "config" => %{}},
+        %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+      ],
+      "edges" => [
+        %{"id" => "e1", "source" => "entry_1", "target" => "cond_1"},
+        %{"id" => "e2", "source" => "cond_1", "target" => "email_1", "branch" => "true"},
+        %{"id" => "e3", "source" => "cond_1", "target" => "exit_1", "branch" => "false"},
+        %{"id" => "e4", "source" => "email_1", "target" => "exit_1"}
+      ]
+    }
   end
 end

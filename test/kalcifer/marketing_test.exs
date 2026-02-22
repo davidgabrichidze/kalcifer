@@ -197,4 +197,25 @@ defmodule Kalcifer.MarketingTest do
       assert archived.status == "archived"
     end
   end
+
+  describe "cascade constraints" do
+    test "cannot delete a flow that has journeys (on_delete: :restrict)" do
+      tenant = insert(:tenant)
+      flow = insert(:flow, tenant: tenant)
+      _journey = insert(:journey, tenant: tenant, flow: flow)
+
+      assert_raise Ecto.ConstraintError, fn ->
+        Kalcifer.Repo.delete!(flow)
+      end
+    end
+
+    test "can delete a flow after its journeys are removed" do
+      tenant = insert(:tenant)
+      flow = insert(:flow, tenant: tenant)
+      journey = insert(:journey, tenant: tenant, flow: flow)
+
+      {:ok, _} = Kalcifer.Repo.delete(journey)
+      assert {:ok, _} = Kalcifer.Repo.delete(flow)
+    end
+  end
 end

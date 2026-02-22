@@ -278,4 +278,146 @@ defmodule Kalcifer.Flows.FlowGraphTest do
       assert "graph must have at least one entry node" in errors
     end
   end
+
+  describe "validate/1 — parallel entries" do
+    test "accepts graph with multiple entry nodes converging to a single exit" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "entry_2", "type" => "segment_entry", "config" => %{}},
+          %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "exit_1"},
+          %{"id" => "e2", "source" => "entry_2", "target" => "exit_1"}
+        ]
+      }
+
+      assert :ok = FlowGraph.validate(graph)
+    end
+
+    test "accepts graph with three different entry types" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "entry_2", "type" => "segment_entry", "config" => %{}},
+          %{"id" => "entry_3", "type" => "webhook_entry", "config" => %{}},
+          %{"id" => "email_1", "type" => "send_email", "config" => %{}},
+          %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "email_1"},
+          %{"id" => "e2", "source" => "entry_2", "target" => "email_1"},
+          %{"id" => "e3", "source" => "entry_3", "target" => "email_1"},
+          %{"id" => "e4", "source" => "email_1", "target" => "exit_1"}
+        ]
+      }
+
+      assert :ok = FlowGraph.validate(graph)
+    end
+  end
+
+  describe "validate/1 — ab_split with 3+ variants" do
+    test "accepts ab_split with 3 variants" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{
+            "id" => "split_1",
+            "type" => "ab_split",
+            "config" => %{
+              "variants" => [
+                %{"key" => "a", "weight" => 34},
+                %{"key" => "b", "weight" => 33},
+                %{"key" => "c", "weight" => 33}
+              ]
+            }
+          },
+          %{"id" => "email_a", "type" => "send_email", "config" => %{}},
+          %{"id" => "email_b", "type" => "send_email", "config" => %{}},
+          %{"id" => "email_c", "type" => "send_email", "config" => %{}},
+          %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "split_1"},
+          %{"id" => "e2", "source" => "split_1", "target" => "email_a", "branch" => "a"},
+          %{"id" => "e3", "source" => "split_1", "target" => "email_b", "branch" => "b"},
+          %{"id" => "e4", "source" => "split_1", "target" => "email_c", "branch" => "c"},
+          %{"id" => "e5", "source" => "email_a", "target" => "exit_1"},
+          %{"id" => "e6", "source" => "email_b", "target" => "exit_1"},
+          %{"id" => "e7", "source" => "email_c", "target" => "exit_1"}
+        ]
+      }
+
+      assert :ok = FlowGraph.validate(graph)
+    end
+
+    test "accepts ab_split with 4 variants" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{
+            "id" => "split_1",
+            "type" => "ab_split",
+            "config" => %{
+              "variants" => [
+                %{"key" => "a", "weight" => 25},
+                %{"key" => "b", "weight" => 25},
+                %{"key" => "c", "weight" => 25},
+                %{"key" => "d", "weight" => 25}
+              ]
+            }
+          },
+          %{"id" => "node_a", "type" => "send_email", "config" => %{}},
+          %{"id" => "node_b", "type" => "send_sms", "config" => %{}},
+          %{"id" => "node_c", "type" => "send_push", "config" => %{}},
+          %{"id" => "node_d", "type" => "send_whatsapp", "config" => %{}},
+          %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "split_1"},
+          %{"id" => "e2", "source" => "split_1", "target" => "node_a", "branch" => "a"},
+          %{"id" => "e3", "source" => "split_1", "target" => "node_b", "branch" => "b"},
+          %{"id" => "e4", "source" => "split_1", "target" => "node_c", "branch" => "c"},
+          %{"id" => "e5", "source" => "split_1", "target" => "node_d", "branch" => "d"},
+          %{"id" => "e6", "source" => "node_a", "target" => "exit_1"},
+          %{"id" => "e7", "source" => "node_b", "target" => "exit_1"},
+          %{"id" => "e8", "source" => "node_c", "target" => "exit_1"},
+          %{"id" => "e9", "source" => "node_d", "target" => "exit_1"}
+        ]
+      }
+
+      assert :ok = FlowGraph.validate(graph)
+    end
+
+    test "detects missing branch on 3-variant ab_split" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{
+            "id" => "split_1",
+            "type" => "ab_split",
+            "config" => %{
+              "variants" => [
+                %{"key" => "a", "weight" => 34},
+                %{"key" => "b", "weight" => 33},
+                %{"key" => "c", "weight" => 33}
+              ]
+            }
+          },
+          %{"id" => "email_a", "type" => "send_email", "config" => %{}},
+          %{"id" => "email_b", "type" => "send_email", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "split_1"},
+          %{"id" => "e2", "source" => "split_1", "target" => "email_a", "branch" => "a"},
+          %{"id" => "e3", "source" => "split_1", "target" => "email_b", "branch" => "b"}
+          # Missing "c" branch
+        ]
+      }
+
+      assert {:error, errors} = FlowGraph.validate(graph)
+      assert Enum.any?(errors, &String.contains?(&1, "missing branch"))
+    end
+  end
 end

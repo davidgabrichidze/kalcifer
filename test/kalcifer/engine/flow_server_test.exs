@@ -122,7 +122,137 @@ defmodule Kalcifer.Engine.FlowServerTest do
     end
   end
 
+  describe "full path integration (entry → action → condition → branch → exit)" do
+    test "executes complete path through preference_gate true branch" do
+      graph = full_path_graph()
+      {pid, ref, _args} = start_server(graph)
+      assert :ok = wait_for_completion(pid, ref)
+
+      steps = Repo.all(from(s in ExecutionStep))
+      node_types = MapSet.new(steps, & &1.node_type)
+
+      # Preference gate defaults to true when no preferences in context,
+      # so the path is: event_entry, send_email, preference_gate, send_sms, exit
+      expected = MapSet.new(["event_entry", "send_email", "preference_gate", "send_sms", "exit"])
+      assert node_types == expected
+      assert Enum.all?(steps, fn s -> s.status == "completed" end)
+    end
+
+    test "false branch is not executed" do
+      graph = full_path_graph()
+      {pid, ref, _args} = start_server(graph)
+      assert :ok = wait_for_completion(pid, ref)
+
+      steps = Repo.all(from(s in ExecutionStep))
+      node_ids = Enum.map(steps, & &1.node_id)
+
+      # exit_false should never be reached (preference_gate defaults to true)
+      refute "exit_false" in node_ids
+      assert "exit_1" in node_ids
+    end
+
+    test "records correct step count" do
+      graph = full_path_graph()
+      {pid, ref, _args} = start_server(graph)
+      assert :ok = wait_for_completion(pid, ref)
+
+      step_count = Repo.aggregate(ExecutionStep, :count)
+      assert step_count == 5
+    end
+  end
+
+  describe "error handling" do
+    test "marks instance as failed when graph contains unknown node type" do
+      graph = unknown_node_graph()
+      {pid, ref, _args} = start_server(graph)
+      assert :ok = wait_for_completion(pid, ref)
+
+      instance =
+        Repo.one(
+          from i in Kalcifer.Flows.FlowInstance,
+            order_by: [desc: i.inserted_at],
+            limit: 1
+        )
+
+      assert instance.status == "failed"
+    end
+
+    test "records failed step for unknown node type" do
+      graph = unknown_node_graph()
+      {pid, ref, _args} = start_server(graph)
+      assert :ok = wait_for_completion(pid, ref)
+
+      failed_steps =
+        Repo.all(from s in ExecutionStep, where: s.status == "failed")
+
+      assert length(failed_steps) == 1
+      assert hd(failed_steps).node_type == "nonexistent_type"
+    end
+
+    test "server stops after failure" do
+      graph = unknown_node_graph()
+      {pid, ref, _args} = start_server(graph)
+      assert :ok = wait_for_completion(pid, ref)
+
+      refute Process.alive?(pid)
+    end
+  end
+
   # --- Test graph helpers ---
+
+  defp unknown_node_graph do
+    %{
+      "nodes" => [
+        %{
+          "id" => "entry_1",
+          "type" => "event_entry",
+          "config" => %{"event_type" => "signed_up"}
+        },
+        %{"id" => "bad_1", "type" => "nonexistent_type", "config" => %{}},
+        %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+      ],
+      "edges" => [
+        %{"id" => "e1", "source" => "entry_1", "target" => "bad_1"},
+        %{"id" => "e2", "source" => "bad_1", "target" => "exit_1"}
+      ]
+    }
+  end
+
+  defp full_path_graph do
+    %{
+      "nodes" => [
+        %{
+          "id" => "entry_1",
+          "type" => "event_entry",
+          "config" => %{"event_type" => "signed_up"}
+        },
+        %{
+          "id" => "email_1",
+          "type" => "send_email",
+          "config" => %{"template_id" => "welcome"}
+        },
+        %{
+          "id" => "pref_1",
+          "type" => "preference_gate",
+          "config" => %{"channel" => "email"}
+        },
+        %{
+          "id" => "sms_1",
+          "type" => "send_sms",
+          "config" => %{"template_id" => "confirm"}
+        },
+        %{"id" => "exit_1", "type" => "exit", "config" => %{}},
+        %{"id" => "exit_false", "type" => "exit", "config" => %{}}
+      ],
+      "edges" => [
+        %{"id" => "e1", "source" => "entry_1", "target" => "email_1"},
+        %{"id" => "e2", "source" => "email_1", "target" => "pref_1"},
+        %{"id" => "e3", "source" => "pref_1", "target" => "sms_1", "branch" => "true"},
+        %{"id" => "e4", "source" => "pref_1", "target" => "exit_false", "branch" => "false"},
+        %{"id" => "e5", "source" => "sms_1", "target" => "exit_1"}
+      ]
+    }
+  end
 
   defp condition_graph do
     %{
