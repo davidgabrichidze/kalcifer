@@ -6,8 +6,14 @@ defmodule Kalcifer.Engine.Persistence.InstanceStore do
   alias Kalcifer.Flows.FlowInstance
   alias Kalcifer.Repo
 
-  def create_instance(attrs) do
-    %FlowInstance{}
+  def create_instance(attrs, opts \\ []) do
+    base =
+      case Keyword.get(opts, :id) do
+        nil -> %FlowInstance{}
+        id -> %FlowInstance{id: id}
+      end
+
+    base
     |> FlowInstance.create_changeset(attrs)
     |> Repo.insert()
   end
@@ -52,6 +58,12 @@ defmodule Kalcifer.Engine.Persistence.InstanceStore do
       context: context
     })
     |> Repo.update()
+  end
+
+  def list_waiting_for_customer(customer_id) do
+    FlowInstance
+    |> where([i], i.customer_id == ^customer_id and i.status == "waiting")
+    |> Repo.all()
   end
 
   def list_recoverable_instances do

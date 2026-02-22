@@ -14,8 +14,9 @@ config :kalcifer, KalciferWeb.Endpoint,
   secret_key_base: "sLhN+b1jztN1IAzg+jYE5V0tz5+kEPdyCqhqjBOXVnDOlHIEUmsQ6Z40X03GdGiG",
   server: false
 
-# Oban testing mode
-config :kalcifer, Oban, testing: :inline
+# Oban testing mode — :manual stores jobs without executing them.
+# Tests that need job execution call perform() directly or use GenServer.cast.
+config :kalcifer, Oban, testing: :manual
 
 # Print only warnings and errors during test
 config :logger, level: :warning

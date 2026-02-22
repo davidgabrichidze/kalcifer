@@ -62,13 +62,16 @@ defmodule Kalcifer.Engine.FlowServer do
     entry_node_ids = Enum.map(entry_nodes, & &1["id"])
 
     {:ok, instance} =
-      InstanceStore.create_instance(%{
-        flow_id: args.flow_id,
-        version_number: args.version_number,
-        customer_id: args.customer_id,
-        tenant_id: args.tenant_id,
-        current_nodes: entry_node_ids
-      })
+      InstanceStore.create_instance(
+        %{
+          flow_id: args.flow_id,
+          version_number: args.version_number,
+          customer_id: args.customer_id,
+          tenant_id: args.tenant_id,
+          current_nodes: entry_node_ids
+        },
+        id: args.instance_id
+      )
 
     state = %__MODULE__{
       instance_id: instance.id,
@@ -97,7 +100,10 @@ defmodule Kalcifer.Engine.FlowServer do
   end
 
   @impl true
-  def handle_cast({:resume, node_id, trigger}, state) do
+  def handle_cast(
+        {:resume, node_id, trigger},
+        %{status: :waiting, waiting_node_id: node_id} = state
+      ) do
     node = GraphWalker.find_node(state.graph, node_id)
     {:ok, step} = StepStore.record_step_start(state.instance_id, node, state.version_number)
 
@@ -125,6 +131,11 @@ defmodule Kalcifer.Engine.FlowServer do
         InstanceStore.fail_instance(get_instance(state), inspect(reason))
         maybe_stop(state)
     end
+  end
+
+  @impl true
+  def handle_cast({:resume, _node_id, _trigger}, state) do
+    {:noreply, state}
   end
 
   # --- Execution loop ---
@@ -167,7 +178,7 @@ defmodule Kalcifer.Engine.FlowServer do
       {:waiting, wait_config} ->
         StepStore.record_step_complete(step, wait_config)
         scheduled_at = calculate_scheduled_at(node, wait_config)
-        context = put_waiting_metadata(state.context, node["id"], scheduled_at)
+        context = put_waiting_metadata(state.context, node, scheduled_at)
         state = %{state | status: :waiting, waiting_node_id: node["id"], context: context}
         persist_waiting_state(state)
         schedule_resume(node, wait_config, state)
@@ -235,10 +246,14 @@ defmodule Kalcifer.Engine.FlowServer do
     end
   end
 
-  defp put_waiting_metadata(context, node_id, scheduled_at) do
+  defp put_waiting_metadata(context, node, scheduled_at) do
+    event_type =
+      if node["type"] == "wait_for_event", do: node["config"]["event_type"]
+
     context
-    |> Map.put("_waiting_node_id", node_id)
+    |> Map.put("_waiting_node_id", node["id"])
     |> Map.put("_resume_scheduled_at", scheduled_at && DateTime.to_iso8601(scheduled_at))
+    |> Map.put("_waiting_event_type", event_type)
   end
 
   defp calculate_scheduled_at(%{"type" => "wait"}, wait_config) do

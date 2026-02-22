@@ -201,6 +201,22 @@ defmodule Kalcifer.Engine.FlowServerTest do
 
       GenServer.stop(pid, :normal)
     end
+
+    test "ignores duplicate resume cast" do
+      graph = wait_graph()
+      {pid, ref, _args} = start_server(graph)
+      :still_running = wait_for_completion(pid, ref, 500)
+
+      # Send two resume casts rapidly — second should be ignored
+      GenServer.cast(pid, {:resume, "wait_1", :timer_expired})
+      GenServer.cast(pid, {:resume, "wait_1", :timer_expired})
+      assert :ok = wait_for_completion(pid, ref)
+
+      steps = Repo.all(from(s in ExecutionStep))
+      # wait_1 should appear at most twice (initial execute + one resume), not three times
+      wait_steps = Enum.filter(steps, &(&1.node_id == "wait_1"))
+      assert length(wait_steps) <= 2
+    end
   end
 
   describe "context accumulation" do
