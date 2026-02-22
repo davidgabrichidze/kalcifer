@@ -14,6 +14,6 @@ RUN mix deps.get && mix deps.compile
 # Copy application code
 COPY . .
 
-EXPOSE 4000
+EXPOSE 6000
 
 CMD ["mix", "phx.server"]

@@ -771,7 +771,7 @@ CLICKHOUSE_DATABASE=optio_flow
 # Phoenix
 SECRET_KEY_BASE=...                       # Generate with mix phx.gen.secret
 PHX_HOST=localhost
-PHX_PORT=4000
+PHX_PORT=6000
 
 # Security
 ENCRYPTION_KEY=...                        # 32-byte AES key for Cloak.Ecto

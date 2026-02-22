@@ -10,7 +10,7 @@ config :kalcifer, Kalcifer.Repo,
   pool_size: System.schedulers_online() * 2
 
 config :kalcifer, KalciferWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 4002],
+  http: [ip: {127, 0, 0, 1}, port: 6002],
   secret_key_base: "sLhN+b1jztN1IAzg+jYE5V0tz5+kEPdyCqhqjBOXVnDOlHIEUmsQ6Z40X03GdGiG",
   server: false
 

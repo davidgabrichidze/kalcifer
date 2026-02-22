@@ -69,9 +69,9 @@ WORKDIR /app
 COPY --from=builder /app/_build/prod/rel/optio_flow ./
 
 ENV PHX_HOST=localhost
-ENV PHX_PORT=4000
+ENV PHX_PORT=6000
 
-EXPOSE 4000
+EXPOSE 6000
 
 CMD ["bin/optio_flow", "start"]
 ```
@@ -88,7 +88,7 @@ curl -L https://github.com/optioflow/optioflow/releases/latest/download/optioflo
 chmod +x optioflow
 ./optioflow start
 
-# Kalcifer starts on localhost:4000
+# Kalcifer starts on localhost:6000
 # Uses embedded SQLite for state (no PostgreSQL needed)
 # Elasticsearch and ClickHouse features disabled
 # Perfect for: evaluation, demos, single-user testing
@@ -108,7 +108,7 @@ services:
   optioflow:
     image: ghcr.io/optioflow/optioflow:latest
     ports:
-      - "4000:4000"
+      - "6000:6000"
     environment:
       DATABASE_URL: ecto://optioflow:optioflow@postgres:5432/optioflow
       ELASTICSEARCH_URL: http://elasticsearch:9200
@@ -232,8 +232,8 @@ docker compose exec optioflow bin/optio_flow eval \
 
 echo ""
 echo "=== Kalcifer is ready! ==="
-echo "Dashboard: http://localhost:4000"
-echo "API: http://localhost:4000/api/v1"
+echo "Dashboard: http://localhost:6000"
+echo "API: http://localhost:6000/api/v1"
 echo "API Key: (check output above)"
 ```
 
@@ -275,7 +275,7 @@ spec:
         - name: optioflow
           image: ghcr.io/optioflow/optioflow:latest
           ports:
-            - containerPort: 4000
+            - containerPort: 6000
               name: http
             - containerPort: 4369
               name: epmd
@@ -309,13 +309,13 @@ spec:
           readinessProbe:
             httpGet:
               path: /health/ready
-              port: 4000
+              port: 6000
             initialDelaySeconds: 10
             periodSeconds: 5
           livenessProbe:
             httpGet:
               path: /health
-              port: 4000
+              port: 6000
             initialDelaySeconds: 30
             periodSeconds: 10
 ---
@@ -327,8 +327,8 @@ spec:
   selector:
     app: optioflow
   ports:
-    - port: 4000
-      targetPort: 4000
+    - port: 6000
+      targetPort: 6000
       name: http
   type: ClusterIP
 ---
@@ -452,7 +452,7 @@ spec:
         preStop:
           httpGet:
             path: /health/drain
-            port: 4000
+            port: 6000
 ```
 
 ---
@@ -671,5 +671,5 @@ docker compose up -d optioflow
 # ClickHouse schema changes applied automatically
 
 # Verify
-curl http://localhost:4000/health/ready
+curl http://localhost:6000/health/ready
 ```
