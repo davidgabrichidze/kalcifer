@@ -16,11 +16,11 @@ Kalcifer's testing strategy is not a development aid — it is a **product featu
 
 Traditional pyramid: many unit tests, few integration tests, fewer E2E.
 
-**Kalcifer pyramid**: unit tests are table stakes. The real value is in property-based tests, chaos tests, and load tests — because a customer journey engine's correctness cannot be proven by unit tests alone.
+**Kalcifer pyramid**: unit tests are table stakes. The real value is in property-based tests, chaos tests, and load tests — because a customer journey orchestration engine's correctness cannot be proven by unit tests alone.
 
 ```
 ┌─────────────────────────────┐
-│     Load & Stress Tests     │  ← "Can it handle 100K concurrent journeys?"
+│     Load & Stress Tests     │  ← "Can it handle 100K concurrent flows?"
 ├─────────────────────────────┤
 │       Chaos Tests           │  ← "What happens when things break?"
 ├─────────────────────────────┤
@@ -56,10 +56,10 @@ defmodule Kalcifer.Engine.Nodes.Logic.ABSplitTest do
         %{"key" => "B", "weight" => 50}
       ]}
 
-      context1 = %{customer_id: "customer_1", journey_id: "j1"}
-      context2 = %{customer_id: "customer_1", journey_id: "j1"}
+      context1 = %{customer_id: "customer_1", flow_id: "j1"}
+      context2 = %{customer_id: "customer_1", flow_id: "j1"}
 
-      # Same customer + journey = same variant (deterministic)
+      # Same customer + flow = same variant (deterministic)
       assert ABSplit.execute(config, context1) == ABSplit.execute(config, context2)
     end
 
@@ -72,7 +72,7 @@ defmodule Kalcifer.Engine.Nodes.Logic.ABSplitTest do
       results =
         1..10_000
         |> Enum.map(fn i ->
-          context = %{customer_id: "c#{i}", journey_id: "j1"}
+          context = %{customer_id: "c#{i}", flow_id: "j1"}
           {:branched, variant, _} = ABSplit.execute(config, context)
           variant
         end)
@@ -103,7 +103,7 @@ end
 **What unit tests cover**:
 - Node execution logic (all 20 nodes)
 - Graph validation (cycles, orphans, branch completeness)
-- Journey state transitions
+- Flow state transitions
 - Template rendering
 - Segment query building
 - Config validation
@@ -117,16 +117,16 @@ end
 **Databases**: PostgreSQL (real), Elasticsearch (real via Docker), ClickHouse (real via Docker)
 
 ```elixir
-# test/kalcifer/engine/journey_server_integration_test.exs
-defmodule Kalcifer.Engine.JourneyServerIntegrationTest do
+# test/kalcifer/engine/flow_server_integration_test.exs
+defmodule Kalcifer.Engine.FlowServerIntegrationTest do
   use Kalcifer.DataCase  # Ecto sandbox
 
-  alias Kalcifer.Engine.{JourneyServer, EventRouter}
+  alias Kalcifer.Engine.{FlowServer, EventRouter}
 
-  describe "full journey execution" do
-    test "executes entry → email → wait → goal journey" do
+  describe "full flow execution" do
+    test "executes entry → email → wait → goal flow" do
       # Setup
-      journey = Factory.insert(:journey, graph: Fixtures.simple_email_journey())
+      flow = Factory.insert(:flow, graph: Fixtures.simple_email_flow())
       customer = Factory.insert(:customer, %{email: "test@example.com"})
 
       # Mock email provider
@@ -134,12 +134,12 @@ defmodule Kalcifer.Engine.JourneyServerIntegrationTest do
         {:ok, "msg_123"}
       end)
 
-      # Start journey instance
-      {:ok, pid} = JourneyServer.start_link(%{
-        journey_id: journey.id,
+      # Start flow instance
+      {:ok, pid} = FlowServer.start_link(%{
+        flow_id: flow.id,
         customer_id: customer.id,
         entry_node_id: "entry_1",
-        tenant_id: journey.tenant_id
+        tenant_id: flow.tenant_id
       })
 
       # Wait for email node to execute
@@ -149,25 +149,25 @@ defmodule Kalcifer.Engine.JourneyServerIntegrationTest do
       assert_received {:mock_email_sent, "test@example.com"}
 
       # Verify instance is now waiting at wait_for_event node
-      state = JourneyServer.get_state(pid)
+      state = FlowServer.get_state(pid)
       assert state.state == :waiting
       assert "wait_1" in state.current_nodes
 
       # Simulate customer event
-      EventRouter.dispatch(journey.tenant_id, customer.id, %{
+      EventRouter.dispatch(flow.tenant_id, customer.id, %{
         event_type: "email_opened",
         data: %{}
       })
 
-      # Verify journey continued on "event_received" branch
+      # Verify flow continued on "event_received" branch
       assert_receive {:node_executed, "goal_1", :completed}, 1_000
 
       # Verify instance completed
-      state = JourneyServer.get_state(pid)
+      state = FlowServer.get_state(pid)
       assert state.state == :completed
 
       # Verify persistence
-      instance = Repo.get!(JourneyInstance, state.instance_id)
+      instance = Repo.get!(FlowInstance, state.instance_id)
       assert instance.status == :completed
       assert instance.completed_at != nil
 
@@ -178,14 +178,14 @@ defmodule Kalcifer.Engine.JourneyServerIntegrationTest do
     end
 
     test "wait_for_event times out and takes timeout branch" do
-      journey = Factory.insert(:journey, graph: Fixtures.wait_for_event_journey(timeout: "100ms"))
+      flow = Factory.insert(:flow, graph: Fixtures.wait_for_event_flow(timeout: "100ms"))
       customer = Factory.insert(:customer)
 
-      {:ok, pid} = JourneyServer.start_link(%{
-        journey_id: journey.id,
+      {:ok, pid} = FlowServer.start_link(%{
+        flow_id: flow.id,
         customer_id: customer.id,
         entry_node_id: "entry_1",
-        tenant_id: journey.tenant_id
+        tenant_id: flow.tenant_id
       })
 
       # Don't send any event — let it timeout
@@ -202,12 +202,12 @@ end
 ```
 
 **What integration tests cover**:
-- Full journey execution (entry → nodes → exit)
+- Full flow execution (entry → nodes → exit)
 - WaitForEvent with real event dispatch
 - Timeout behavior
 - Parallel branch execution
 - Exit criteria triggering
-- Frequency cap enforcement across journeys
+- Frequency cap enforcement across flows
 - State persistence and recovery
 - Analytics pipeline (PG → Broadway → ClickHouse)
 - API endpoints with real database
@@ -223,15 +223,15 @@ end
 This is where Kalcifer's testing becomes extraordinary.
 
 ```elixir
-# test/property/journey_graph_test.exs
-defmodule Kalcifer.Property.JourneyGraphTest do
+# test/property/flow_graph_test.exs
+defmodule Kalcifer.Property.FlowGraphTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  alias Kalcifer.Journeys.JourneyGraph
+  alias Kalcifer.Flows.FlowGraph
 
-  # Generator: random valid journey graph
-  defp journey_graph_gen do
+  # Generator: random valid flow graph
+  defp flow_graph_gen do
     gen all num_nodes <- integer(2..20),
             nodes <- list_of(node_gen(), length: num_nodes),
             edges <- valid_edges_gen(nodes) do
@@ -242,14 +242,14 @@ defmodule Kalcifer.Property.JourneyGraphTest do
   # PROPERTY: Valid graphs always pass validation
   property "valid DAG graphs pass validation" do
     check all graph <- valid_dag_gen() do
-      assert :ok = JourneyGraph.validate(graph)
+      assert :ok = FlowGraph.validate(graph)
     end
   end
 
   # PROPERTY: Graphs with cycles always fail validation
   property "graphs with cycles are always rejected" do
     check all graph <- graph_with_cycle_gen() do
-      assert {:error, errors} = JourneyGraph.validate(graph)
+      assert {:error, errors} = FlowGraph.validate(graph)
       assert Enum.any?(errors, &String.contains?(&1, "cycle"))
     end
   end
@@ -259,7 +259,7 @@ defmodule Kalcifer.Property.JourneyGraphTest do
     check all graph <- valid_dag_gen(),
               orphan <- node_gen() do
       graph_with_orphan = add_orphan_node(graph, orphan)
-      assert {:error, errors} = JourneyGraph.validate(graph_with_orphan)
+      assert {:error, errors} = FlowGraph.validate(graph_with_orphan)
       assert Enum.any?(errors, &String.contains?(&1, "unreachable"))
     end
   end
@@ -272,7 +272,7 @@ defmodule Kalcifer.Property.StateMachineTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  alias Kalcifer.Engine.JourneyState
+  alias Kalcifer.Engine.FlowState
 
   # Generator: random sequence of valid commands
   defp command_sequence_gen do
@@ -295,17 +295,17 @@ defmodule Kalcifer.Property.StateMachineTest do
   # PROPERTY: State machine never reaches an invalid state
   property "state machine always transitions to valid states" do
     check all commands <- command_sequence_gen() do
-      state = JourneyState.initial()
+      state = FlowState.initial()
 
       final_state =
         Enum.reduce(commands, state, fn command, acc ->
-          case JourneyState.apply_command(acc, command) do
+          case FlowState.apply_command(acc, command) do
             {:ok, new_state} -> new_state
             {:error, :invalid_transition} -> acc  # Invalid commands are no-ops
           end
         end)
 
-      assert final_state.status in JourneyState.valid_states()
+      assert final_state.status in FlowState.valid_states()
     end
   end
 
@@ -313,19 +313,19 @@ defmodule Kalcifer.Property.StateMachineTest do
   property "completed/failed states cannot be transitioned from" do
     check all commands <- command_sequence_gen(),
               terminal <- one_of([constant(:completed), constant(:failed)]) do
-      state = %JourneyState{status: terminal}
+      state = %FlowState{status: terminal}
 
       for command <- commands do
-        assert {:error, :invalid_transition} = JourneyState.apply_command(state, command)
+        assert {:error, :invalid_transition} = FlowState.apply_command(state, command)
       end
     end
   end
 
   # PROPERTY: Idempotent persistence — saving and loading state is identity
   property "persisted state roundtrips correctly" do
-    check all state <- journey_state_gen() do
-      serialized = JourneyState.serialize(state)
-      deserialized = JourneyState.deserialize(serialized)
+    check all state <- flow_state_gen() do
+      serialized = FlowState.serialize(state)
+      deserialized = FlowState.deserialize(serialized)
       assert state == deserialized
     end
   end
@@ -426,7 +426,7 @@ end
 | 10 | A/B split is deterministic per customer | Business Logic |
 | 11 | A/B split distribution matches weights (statistical) | Business Logic |
 | 12 | Deduplication prevents duplicate sends | Reliability |
-| 13 | Journey exit criteria always checked at every step | Business Logic |
+| 13 | Flow exit criteria always checked at every step | Business Logic |
 | 14 | Multi-tenant queries never leak data | Security |
 | 15 | Concurrent event dispatch doesn't lose events | Concurrency |
 | 16 | Version migration preserves customer position (mapped nodes) | Versioning |
@@ -449,15 +449,15 @@ end
 defmodule Kalcifer.Chaos.ProcessKillTest do
   use Kalcifer.DataCase
 
-  describe "JourneyServer crash recovery" do
-    test "journey resumes after JourneyServer process is killed" do
-      # Start a journey that reaches WaitForEvent
-      {:ok, pid} = start_journey_until_waiting()
-      instance_id = JourneyServer.get_state(pid).instance_id
+  describe "FlowServer crash recovery" do
+    test "flow resumes after FlowServer process is killed" do
+      # Start a flow that reaches WaitForEvent
+      {:ok, pid} = start_flow_until_waiting()
+      instance_id = FlowServer.get_state(pid).instance_id
 
       # Verify it's waiting
       assert Process.alive?(pid)
-      state_before = JourneyServer.get_state(pid)
+      state_before = FlowServer.get_state(pid)
       assert state_before.state == :waiting
 
       # KILL the process (simulate crash)
@@ -468,11 +468,11 @@ defmodule Kalcifer.Chaos.ProcessKillTest do
       Process.sleep(500)
 
       # Verify instance was recovered
-      recovered_pid = JourneyServer.whereis(instance_id)
+      recovered_pid = FlowServer.whereis(instance_id)
       assert recovered_pid != nil
       assert recovered_pid != pid  # New process
 
-      recovered_state = JourneyServer.get_state(recovered_pid)
+      recovered_state = FlowServer.get_state(recovered_pid)
       assert recovered_state.state == :waiting
       assert recovered_state.current_nodes == state_before.current_nodes
 
@@ -486,11 +486,11 @@ defmodule Kalcifer.Chaos.ProcessKillTest do
       assert_receive {:node_executed, "goal_1", :completed}, 2_000
     end
 
-    test "mass process kill — 1000 journeys recover" do
-      # Start 1000 journey instances
+    test "mass process kill — 1000 flows recover" do
+      # Start 1000 flow instances
       instances = Enum.map(1..1000, fn i ->
-        {:ok, pid} = start_journey_until_waiting(customer_id: "c#{i}")
-        {pid, JourneyServer.get_state(pid).instance_id}
+        {:ok, pid} = start_flow_until_waiting(customer_id: "c#{i}")
+        {pid, FlowServer.get_state(pid).instance_id}
       end)
 
       # Kill ALL of them simultaneously
@@ -501,21 +501,21 @@ defmodule Kalcifer.Chaos.ProcessKillTest do
       # Wait for recovery
       Process.sleep(5_000)
 
-      # Verify ALL recovered
+      # Verify all recovered
       recovered = Enum.count(instances, fn {_, instance_id} ->
-        JourneyServer.whereis(instance_id) != nil
+        FlowServer.whereis(instance_id) != nil
       end)
 
       assert recovered == 1000
     end
 
     test "rapid kill-restart cycle doesn't corrupt state" do
-      {:ok, pid} = start_journey_until_waiting()
-      instance_id = JourneyServer.get_state(pid).instance_id
+      {:ok, pid} = start_flow_until_waiting()
+      instance_id = FlowServer.get_state(pid).instance_id
 
       # Kill and let recover 10 times rapidly
       for _ <- 1..10 do
-        current_pid = JourneyServer.whereis(instance_id)
+        current_pid = FlowServer.whereis(instance_id)
         if current_pid, do: Process.exit(current_pid, :kill)
         Process.sleep(200)
       end
@@ -523,13 +523,13 @@ defmodule Kalcifer.Chaos.ProcessKillTest do
       Process.sleep(2_000)
 
       # State should still be consistent
-      final_pid = JourneyServer.whereis(instance_id)
+      final_pid = FlowServer.whereis(instance_id)
       assert final_pid != nil
-      state = JourneyServer.get_state(final_pid)
+      state = FlowServer.get_state(final_pid)
       assert state.state in [:waiting, :running]
 
       # Database should be consistent with process state
-      db_instance = Repo.get!(JourneyInstance, instance_id)
+      db_instance = Repo.get!(FlowInstance, instance_id)
       assert db_instance.status == state.state
     end
   end
@@ -542,8 +542,8 @@ defmodule Kalcifer.Chaos.DbDisconnectTest do
   use Kalcifer.DataCase
 
   describe "PostgreSQL disconnect" do
-    test "journey execution pauses during DB outage and resumes after" do
-      {:ok, pid} = start_journey_at_node("email_1")
+    test "flow execution pauses during DB outage and resumes after" do
+      {:ok, pid} = start_flow_at_node("email_1")
 
       # Simulate DB disconnect by checking out all connections
       exhaust_db_pool()
@@ -588,17 +588,17 @@ defmodule Kalcifer.Chaos.ConcurrentStressTest do
   use Kalcifer.DataCase
 
   describe "concurrent operations" do
-    test "same customer entering same journey twice is handled correctly" do
-      journey = Factory.insert(:journey, graph: Fixtures.simple_journey())
+    test "same customer entering same flow twice is handled correctly" do
+      flow = Factory.insert(:flow, graph: Fixtures.simple_flow())
 
       # Two concurrent entry attempts for same customer
       tasks = for _ <- 1..2 do
         Task.async(fn ->
-          JourneyServer.start_link(%{
-            journey_id: journey.id,
+          FlowServer.start_link(%{
+            flow_id: flow.id,
             customer_id: "same_customer",
             entry_node_id: "entry_1",
-            tenant_id: journey.tenant_id
+            tenant_id: flow.tenant_id
           })
         end)
       end
@@ -611,7 +611,7 @@ defmodule Kalcifer.Chaos.ConcurrentStressTest do
     end
 
     test "100 events dispatched simultaneously for same customer" do
-      {:ok, _pid} = start_journey_until_waiting(
+      {:ok, _pid} = start_flow_until_waiting(
         customer_id: "c1",
         waiting_for: "purchase"
       )
@@ -629,7 +629,7 @@ defmodule Kalcifer.Chaos.ConcurrentStressTest do
       Task.await_many(tasks)
       Process.sleep(1_000)
 
-      # Journey should have continued exactly once (first event wins)
+      # Flow should have continued exactly once (first event wins)
       steps = get_execution_steps_for_customer("c1")
       goal_steps = Enum.filter(steps, &(&1.node_type == "goal_reached"))
       assert length(goal_steps) == 1
@@ -642,8 +642,8 @@ end
 
 | # | Scenario | Expectation |
 |---|----------|-------------|
-| 1 | Kill single JourneyServer process | Recovers from DB within 5s |
-| 2 | Kill 1000 JourneyServer processes simultaneously | All recover within 30s |
+| 1 | Kill single FlowServer process | Recovers from DB within 5s |
+| 2 | Kill 1000 FlowServer processes simultaneously | All recover within 30s |
 | 3 | Rapid kill-restart cycle (10x) | State remains consistent |
 | 4 | PostgreSQL connection pool exhausted | Execution queues, doesn't crash |
 | 5 | PostgreSQL goes down for 30s | Buffered operations complete after reconnect |
@@ -651,8 +651,8 @@ end
 | 7 | Elasticsearch unavailable | Segment evaluation fails gracefully, non-segment nodes continue |
 | 8 | EventRouter process crash | Supervisor restarts, waits re-register from DB |
 | 9 | OTP node restart | All running instances recovered from DB |
-| 10 | Duplicate event dispatch (100x same event) | Journey continues exactly once |
-| 11 | Same customer enters same journey concurrently | Exactly one instance created |
+| 10 | Duplicate event dispatch (100x same event) | Flow continues exactly once |
+| 11 | Same customer enters same flow concurrently | Exactly one instance created |
 | 12 | Memory pressure (10M processes) | Graceful degradation with backpressure |
 | 13 | Migration mid-flight + process crash | Instance recovers on correct version |
 | 14 | Migration + simultaneous new entries | New entries use latest version, migration continues |
@@ -667,24 +667,24 @@ end
 **Reports**: Published with each release
 
 ```elixir
-# test/load/concurrent_journeys_test.exs
-defmodule Kalcifer.Load.ConcurrentJourneysTest do
+# test/load/concurrent_flows_test.exs
+defmodule Kalcifer.Load.ConcurrentFlowsTest do
   use Kalcifer.DataCase, async: false
 
   @tag :load
   @tag timeout: 300_000  # 5 minutes
 
-  describe "concurrent journey capacity" do
-    test "sustain 100K concurrent journey instances" do
-      journey = Factory.insert(:journey, graph: Fixtures.wait_journey())
+  describe "concurrent flow capacity" do
+    test "sustain 100K concurrent flow instances" do
+      flow = Factory.insert(:flow, graph: Fixtures.wait_flow())
 
       # Start instances in batches of 1000
       started = for batch <- 1..100 do
         tasks = for i <- 1..1000 do
           customer_id = "c_#{batch}_#{i}"
           Task.async(fn ->
-            JourneyServer.start_link(%{
-              journey_id: journey.id,
+            FlowServer.start_link(%{
+              flow_id: flow.id,
               customer_id: customer_id,
               entry_node_id: "entry_1",
               tenant_id: "load_test"
@@ -723,7 +723,7 @@ defmodule Kalcifer.Load.ConcurrentJourneysTest do
 
   describe "event throughput" do
     test "sustain 10K events/second" do
-      # Start 10K journey instances waiting for events
+      # Start 10K flow instances waiting for events
       start_waiting_instances(10_000)
 
       # Fire 10K events in 1 second
@@ -758,7 +758,7 @@ end
 | Event dispatch latency (p50) | μs | < 5,000 |
 | Event dispatch latency (p99) | μs | < 50,000 |
 | Events/second sustained | Count/s | > 10,000 |
-| Journey start latency (p99) | ms | < 200 |
+| Flow start latency (p99) | ms | < 200 |
 | Node execution latency (p99) | ms | < 50 |
 | Crash recovery time (1000 instances) | seconds | < 30 |
 | Zero-downtime deploy verified | boolean | true |
@@ -899,12 +899,12 @@ Every release includes a markdown report:
 defmodule Kalcifer.Factory do
   use ExMachina.Ecto, repo: Kalcifer.Repo
 
-  def journey_factory do
-    %Kalcifer.Journeys.Journey{
+  def flow_factory do
+    %Kalcifer.Flows.Flow{
       tenant_id: "test_tenant",
-      name: sequence(:name, &"Journey #{&1}"),
+      name: sequence(:name, &"Flow #{&1}"),
       status: :draft,
-      graph: Fixtures.simple_journey()
+      graph: Fixtures.simple_flow()
     }
   end
 

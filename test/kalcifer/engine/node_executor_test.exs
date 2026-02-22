@@ -10,7 +10,7 @@ defmodule Kalcifer.Engine.NodeExecutorTest.CrashingNode do
   def config_schema, do: %{}
 
   @impl true
-  def category, do: :task
+  def category, do: :action
 end
 
 defmodule Kalcifer.Engine.NodeExecutorTest do
@@ -53,7 +53,7 @@ defmodule Kalcifer.Engine.NodeExecutorTest do
     end
 
     test "handles nil config gracefully" do
-      node = %{"type" => "journey_exit"}
+      node = %{"type" => "exit"}
       assert {:completed, %{exit: true}} = NodeExecutor.execute(node, %{})
     end
   end

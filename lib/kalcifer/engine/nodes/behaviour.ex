@@ -24,7 +24,7 @@ defmodule Kalcifer.Engine.NodeBehaviour do
 
   @callback config_schema() :: map()
 
-  @callback category() :: :start_event | :end_event | :task | :gateway | :intermediate_event
+  @callback category() :: :trigger | :end | :action | :condition | :wait
 
   @optional_callbacks [resume: 3, validate: 1]
 

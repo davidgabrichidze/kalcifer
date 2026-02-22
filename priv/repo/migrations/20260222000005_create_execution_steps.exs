@@ -5,7 +5,7 @@ defmodule Kalcifer.Repo.Migrations.CreateExecutionSteps do
     create table(:execution_steps, primary_key: false) do
       add :id, :binary_id, primary_key: true
 
-      add :instance_id, references(:journey_instances, type: :binary_id, on_delete: :delete_all),
+      add :instance_id, references(:flow_instances, type: :binary_id, on_delete: :delete_all),
         null: false
 
       add :node_id, :string, null: false

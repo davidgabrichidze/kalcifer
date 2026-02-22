@@ -27,7 +27,7 @@
 
 | Store | Technology | Version | Purpose |
 |-------|-----------|---------|---------|
-| Primary DB | PostgreSQL | 16+ | Journey definitions, execution state, tenants, config, Oban jobs |
+| Primary DB | PostgreSQL | 16+ | Flow definitions, execution state, tenants, config, Oban jobs |
 | Search/Segments | Elasticsearch | 8.x | Customer profiles, segment evaluation |
 | Analytics | ClickHouse | 24.x | Execution events, channel events, materialized aggregations |
 
@@ -78,13 +78,13 @@ kalcifer/
 │   │   │   ├── tenant_context.ex      # Process dictionary tenant context
 │   │   │   └── tenants.ex             # Context module
 │   │   │
-│   │   ├── journeys/                   # Journey definitions (CRUD)
-│   │   │   ├── journey.ex             # Schema
-│   │   │   ├── journey_graph.ex       # Graph validation (DAG check, orphan nodes)
-│   │   │   ├── journey_version.ex     # Version schema (immutable snapshots)
-│   │   │   └── journeys.ex            # Context module
+│   │   ├── flows/                      # Flow definitions (CRUD)
+│   │   │   ├── flow.ex                # Schema
+│   │   │   ├── flow_graph.ex          # Graph validation (DAG check, orphan nodes)
+│   │   │   ├── flow_version.ex        # Version schema (immutable snapshots)
+│   │   │   └── flows.ex               # Context module
 │   │   │
-│   │   ├── versioning/                 # Journey versioning & live migration
+│   │   ├── versioning/                 # Flow versioning & live migration
 │   │   │   ├── version_manager.ex     # Create/publish/rollback versions
 │   │   │   ├── version_differ.ex      # Structural diff between versions
 │   │   │   ├── node_mapper.ex         # Auto + manual node mapping (old→new)
@@ -93,7 +93,7 @@ kalcifer/
 │   │   │   ├── migration_monitor.ex   # Track progress, detect anomalies
 │   │   │   └── ai_mapper.ex           # AI-assisted node mapping for complex diffs
 │   │   │
-│   │   ├── ai_designer/               # AI journey design (conversation + documents)
+│   │   ├── ai_designer/               # AI flow design (conversation + documents)
 │   │   │   ├── designer.ex           # Main orchestrator
 │   │   │   ├── conversation.ex       # Multi-turn state, context accumulation
 │   │   │   ├── prompt_builder.ex     # System prompt + node catalog + few-shot
@@ -108,13 +108,13 @@ kalcifer/
 │   │   │
 │   │   ├── engine/                     # Execution engine (OTP core)
 │   │   │   ├── supervisor.ex          # Engine supervisor (rest_for_one)
-│   │   │   ├── journey_supervisor.ex  # DynamicSupervisor for instances
-│   │   │   ├── journey_server.ex      # GenServer per instance
-│   │   │   ├── journey_state.ex       # State struct & transitions
+│   │   │   ├── flow_supervisor.ex     # DynamicSupervisor for instances
+│   │   │   ├── flow_server.ex         # GenServer per instance
+│   │   │   ├── flow_state.ex          # State struct & transitions
 │   │   │   ├── node_registry.ex       # Node type catalog (ETS)
 │   │   │   ├── node_executor.ex       # Dispatch config → node module → execute
 │   │   │   ├── event_router.ex        # Customer event routing (ETS + PubSub)
-│   │   │   ├── frequency_cap.ex       # Cross-journey frequency enforcement
+│   │   │   ├── frequency_cap.ex       # Cross-flow frequency enforcement
 │   │   │   ├── recovery.ex            # Post-crash state recovery
 │   │   │   ├── deduplication.ex       # Exactly-once channel send guard
 │   │   │   │
@@ -143,10 +143,10 @@ kalcifer/
 │   │   │   │   │   └── custom_code.ex
 │   │   │   │   └── exit/
 │   │   │   │       ├── goal_reached.ex
-│   │   │   │       └── journey_exit.ex
+│   │   │   │       └── exit.ex
 │   │   │   │
 │   │   │   └── persistence/           # Engine state persistence
-│   │   │       ├── instance_store.ex  # journey_instances CRUD
+│   │   │       ├── instance_store.ex  # flow_instances CRUD
 │   │   │       └── step_store.ex      # execution_steps CRUD
 │   │   │
 │   │   ├── customers/                  # Customer profile abstraction
@@ -190,7 +190,7 @@ kalcifer/
 │       ├── endpoint.ex
 │       ├── router.ex
 │       ├── controllers/
-│       │   ├── journey_controller.ex
+│       │   ├── flow_controller.ex
 │       │   ├── execution_controller.ex
 │       │   ├── event_controller.ex
 │       │   ├── webhook_controller.ex
@@ -199,7 +199,7 @@ kalcifer/
 │       │   └── health_controller.ex
 │       ├── channels/
 │       │   ├── user_socket.ex
-│       │   ├── journey_channel.ex
+│       │   ├── flow_channel.ex
 │       │   └── execution_channel.ex
 │       ├── plugs/
 │       │   ├── authenticate.ex
@@ -217,17 +217,17 @@ kalcifer/
 ├── test/
 │   ├── kalcifer/
 │   │   ├── engine/                     # Engine unit tests
-│   │   │   ├── journey_server_test.exs
+│   │   │   ├── flow_server_test.exs
 │   │   │   ├── node_executor_test.exs
 │   │   │   ├── event_router_test.exs
 │   │   │   ├── recovery_test.exs
 │   │   │   └── nodes/                  # Per-node tests
-│   │   ├── journeys/                   # CRUD tests
+│   │   ├── flows/                      # CRUD tests
 │   │   ├── channels/                   # Provider tests (with mocks)
 │   │   └── analytics/                  # Pipeline tests
 │   ├── kalcifer_web/                 # API tests
 │   ├── property/                       # Property-based tests (StreamData)
-│   │   ├── journey_graph_test.exs
+│   │   ├── flow_graph_test.exs
 │   │   ├── state_machine_test.exs
 │   │   └── event_routing_test.exs
 │   ├── chaos/                          # Chaos tests
@@ -235,7 +235,7 @@ kalcifer/
 │   │   ├── db_disconnect_test.exs
 │   │   └── network_partition_test.exs
 │   ├── load/                           # Load/stress tests
-│   │   ├── concurrent_journeys_test.exs
+│   │   ├── concurrent_flows_test.exs
 │   │   └── event_throughput_test.exs
 │   ├── support/
 │   │   ├── factory.ex                  # ExMachina factories
@@ -249,14 +249,14 @@ kalcifer/
 │   ├── vite.config.ts
 │   ├── src/
 │   │   ├── editor/                     # ReactFlow-based editor
-│   │   │   ├── JourneyEditor.tsx       # Main editor component
+│   │   │   ├── FlowEditor.tsx          # Main editor component
 │   │   │   ├── nodes/                  # Custom ReactFlow nodes
 │   │   │   ├── edges/                  # Custom edges (conditional)
 │   │   │   ├── panels/                 # Node config panels
 │   │   │   ├── toolbar/                # Editor toolbar
 │   │   │   └── validation.ts           # Client-side graph validation
 │   │   ├── monitor/                    # Real-time monitoring views
-│   │   │   ├── JourneyMonitor.tsx      # Live journey view
+│   │   │   ├── FlowMonitor.tsx         # Live flow view
 │   │   │   ├── CustomerTrace.tsx       # Individual customer trace
 │   │   │   └── Analytics.tsx           # Dashboard
 │   │   ├── api/                        # API client
@@ -301,64 +301,64 @@ kalcifer/
 
 Base URL: `/api/v1`
 
-#### Journeys
+#### Flows
 
 ```
-POST   /journeys                    Create journey (manual or from AI)
-GET    /journeys                    List journeys (paginated, filtered)
-GET    /journeys/:id                Get journey with current version graph
-PUT    /journeys/:id                Update journey draft
-DELETE /journeys/:id                Delete journey (draft only)
-POST   /journeys/:id/activate       Activate journey (publish current draft version)
-POST   /journeys/:id/pause          Pause journey (active → paused)
-POST   /journeys/:id/resume         Resume journey (paused → active)
-POST   /journeys/:id/archive        Archive journey (any → archived)
-POST   /journeys/:id/duplicate      Clone journey as new draft
+POST   /flows                       Create flow (manual or from AI)
+GET    /flows                       List flows (paginated, filtered)
+GET    /flows/:id                   Get flow with current version graph
+PUT    /flows/:id                   Update flow draft
+DELETE /flows/:id                   Delete flow (draft only)
+POST   /flows/:id/activate          Activate flow (publish current draft version)
+POST   /flows/:id/pause             Pause flow (active → paused)
+POST   /flows/:id/resume            Resume flow (paused → active)
+POST   /flows/:id/archive           Archive flow (any → archived)
+POST   /flows/:id/duplicate         Clone flow as new draft
 ```
 
 #### AI Designer
 
 ```
 POST   /ai/conversations             Start new AI conversation
-         Body: { journey_id?: "j1", message: "create a 30-day onboarding..." }
+         Body: { flow_id?: "j1", message: "create a 30-day onboarding..." }
          Response: streaming SSE { graph, explanation, follow_up_questions }
 
 POST   /ai/conversations/:id/message  Continue conversation
          Body: { message: "add SMS fallback" }
          Response: streaming SSE { updated_graph, diff, explanation }
 
-POST   /ai/upload                     Upload document → generate journey
+POST   /ai/upload                     Upload document → generate flow
          Body: multipart { file: campaign.xlsx, instructions?: "..." }
          Response: { graph, explanation, detected_steps: [...] }
 
-POST   /ai/explain                    Explain existing journey in natural language
-         Body: { journey_id: "j1" }
-         Response: { explanation: "This journey..." }
+POST   /ai/explain                    Explain existing flow in natural language
+         Body: { flow_id: "j1" }
+         Response: { explanation: "This flow..." }
 
 POST   /ai/suggest                    Get AI optimization suggestions
-         Body: { journey_id: "j1" }
+         Body: { flow_id: "j1" }
          Response: { suggestions: [{ type, description, proposed_diff }] }
 ```
 
 #### Versioning
 
 ```
-GET    /journeys/:id/versions                List all versions
-GET    /journeys/:id/versions/:v             Get specific version (with graph)
-POST   /journeys/:id/versions                Create new draft version
+GET    /flows/:id/versions                   List all versions
+GET    /flows/:id/versions/:v                Get specific version (with graph)
+POST   /flows/:id/versions                   Create new draft version
          Body: { graph: {...}, changelog: "Added SMS step" }
 
-POST   /journeys/:id/versions/:v/publish     Publish version with migration strategy
+POST   /flows/:id/versions/:v/publish        Publish version with migration strategy
          Body: {
            migration_strategy: "migrate_all" | "new_entries_only" | "gradual",
            migration_config: { rollout_percent: 10, batch_size: 1000 },
            node_mapping: { "old_node_1": "new_node_1", ... }
          }
 
-GET    /journeys/:id/versions/:v/diff/:v2    Diff between two versions
+GET    /flows/:id/versions/:v/diff/:v2       Diff between two versions
          Response: { added_nodes, removed_nodes, changed_nodes, changed_edges }
 
-POST   /journeys/:id/versions/:v/rollback    Rollback to this version
+POST   /flows/:id/versions/:v/rollback       Rollback to this version
          Body: { migration_strategy: "migrate_all" }
 
 POST   /ai/node-mapping                       AI-assisted node mapping
@@ -369,23 +369,23 @@ POST   /ai/node-mapping                       AI-assisted node mapping
 #### Migrations
 
 ```
-GET    /journeys/:id/migrations              List migrations (history)
+GET    /flows/:id/migrations                 List migrations (history)
 GET    /migrations/:id                        Migration detail + progress
 POST   /migrations/:id/pause                  Pause active migration
 POST   /migrations/:id/resume                 Resume paused migration
 POST   /migrations/:id/abort                  Abort and rollback migration
 
-GET    /journeys/:id/instances/by-version     Instance count per version
+GET    /flows/:id/instances/by-version        Instance count per version
          Response: { "v1": 12340, "v2": 37660 }
 ```
 
 #### Execution
 
 ```
-POST   /journeys/:id/trigger        Manually enroll customer(s)
+POST   /flows/:id/trigger             Manually enroll customer(s)
          Body: { customer_ids: ["c1", "c2"] }
 
-GET    /journeys/:id/instances       List active instances (paginated, filterable by version)
+GET    /flows/:id/instances          List active instances (paginated, filterable by version)
 GET    /instances/:id                Get instance detail with step history + version transitions
 POST   /instances/:id/pause          Pause specific instance
 POST   /instances/:id/resume         Resume specific instance
@@ -405,18 +405,18 @@ POST   /events/batch                 Ingest batch of events
 #### Webhooks (entry triggers)
 
 ```
-POST   /webhooks/:journey_id         Journey-specific webhook entry
+POST   /webhooks/:flow_id            Flow-specific webhook entry
          Body: { customer_id: "c123", data: {...} }
 ```
 
 #### Analytics
 
 ```
-GET    /journeys/:id/analytics       Journey-level metrics
-GET    /journeys/:id/funnel          Node-by-node funnel
-GET    /journeys/:id/nodes/:nid/metrics   Per-node metrics
-GET    /instances/:id/trace          Customer journey trace (timeline)
-GET    /analytics/channels            Cross-journey channel metrics
+GET    /flows/:id/analytics           Flow-level metrics
+GET    /flows/:id/funnel             Node-by-node funnel
+GET    /flows/:id/nodes/:nid/metrics Per-node metrics
+GET    /instances/:id/trace          Customer flow trace (timeline)
+GET    /analytics/channels            Cross-flow channel metrics
 ```
 
 #### Customers
@@ -424,7 +424,7 @@ GET    /analytics/channels            Cross-journey channel metrics
 ```
 GET    /customers/:id/profile        Get customer profile
 PATCH  /customers/:id/profile        Update customer attributes
-GET    /customers/:id/journeys       List customer's active journeys
+GET    /customers/:id/flows          List customer's active flows
 ```
 
 #### System
@@ -438,16 +438,16 @@ GET    /info                         System info (version, uptime, stats)
 
 ### 3.2 WebSocket API
 
-Channel: `journey:{journey_id}`
+Channel: `flow:{flow_id}`
 
 ```
-# Join channel to receive real-time updates for a journey
-{ topic: "journey:j123", event: "phx_join" }
+# Join channel to receive real-time updates for a flow
+{ topic: "flow:j123", event: "phx_join" }
 
 # Server pushes:
 { event: "node_counts", payload: { node_id: count, ... } }          # Every 1s
 { event: "instance_event", payload: { instance_id, node_id, type } } # Per event
-{ event: "journey_stats", payload: { active, completed, failed } }   # Every 5s
+{ event: "flow_stats", payload: { active, completed, failed } }      # Every 5s
 ```
 
 Channel: `instance:{instance_id}`
@@ -460,7 +460,7 @@ Channel: `instance:{instance_id}`
 
 ### 3.3 Webhook Callbacks (Outgoing)
 
-Kalcifer can notify external systems about journey events:
+Kalcifer can notify external systems about flow events:
 
 ```
 POST {callback_url}
@@ -469,7 +469,7 @@ X-Kalcifer-Signature: sha256=...
 
 {
   "event_type": "customer.goal_reached",
-  "journey_id": "j123",
+  "flow_id": "j123",
   "instance_id": "i456",
   "customer_id": "c789",
   "node_id": "goal_1",
@@ -480,9 +480,9 @@ X-Kalcifer-Signature: sha256=...
 
 ---
 
-## 4. Journey Graph Specification
+## 4. Flow Graph Specification
 
-### 4.1 Graph Format (stored in `journeys.graph` JSONB column)
+### 4.1 Graph Format (stored in `flows.graph` JSONB column)
 
 ```json
 {
@@ -563,8 +563,8 @@ X-Kalcifer-Signature: sha256=...
 ### 4.2 Graph Validation Rules
 
 ```elixir
-defmodule Kalcifer.Journeys.JourneyGraph do
-  @doc "Validates journey graph structure"
+defmodule Kalcifer.Flows.FlowGraph do
+  @doc "Validates flow graph structure"
   def validate(graph) do
     with :ok <- validate_has_entry(graph),
          :ok <- validate_no_cycles(graph),
@@ -597,7 +597,7 @@ Every node receives:
     customer_id: String.t(),
     customer: map(),     # Customer profile (fetched from ProfileStore)
     tenant_id: String.t(),
-    journey_id: String.t(),
+    flow_id: String.t(),
     instance_id: String.t(),
     accumulated: map()   # Data from previous nodes
   }
@@ -671,7 +671,7 @@ defmodule Kalcifer.Engine.Nodes.Logic.ABSplit do
   def execute(config, context) do
     variants = config["variants"]
     # Deterministic hash-based assignment (same customer always gets same variant)
-    hash = :erlang.phash2({context.customer_id, context.journey_id})
+    hash = :erlang.phash2({context.customer_id, context.flow_id})
     total_weight = Enum.sum(Enum.map(variants, & &1["weight"]))
     point = rem(hash, total_weight)
 
@@ -720,13 +720,13 @@ end
 
 | Component | Per-unit Memory | Max Units | Total |
 |-----------|----------------|-----------|-------|
-| Idle JourneyServer | ~2-3 KB | 100,000 | ~250 MB |
-| Active JourneyServer (executing node) | ~10-50 KB | 1,000 | ~50 MB |
+| Idle FlowServer | ~2-3 KB | 100,000 | ~250 MB |
+| Active FlowServer (executing node) | ~10-50 KB | 1,000 | ~50 MB |
 | EventRouter ETS table | ~100 bytes/entry | 500,000 | ~50 MB |
 | NodeRegistry ETS | ~1 KB/node type | 50 | ~50 KB |
 | Phoenix connections (WS) | ~10 KB | 10,000 | ~100 MB |
 | Ecto connection pool | ~5 MB/conn | 20 | ~100 MB |
-| **Total (100K journeys)** | | | **~600 MB** |
+| **Total (100K flows)** | | | **~600 MB** |
 
 ### 6.2 Latency Targets
 
@@ -744,7 +744,7 @@ end
 | Metric | Target (single node) | Target (3-node cluster) |
 |--------|---------------------|------------------------|
 | Events ingested/sec | 10,000 | 25,000 |
-| Journey instances started/sec | 1,000 | 3,000 |
+| Flow instances started/sec | 1,000 | 3,000 |
 | Node executions/sec | 50,000 | 150,000 |
 | Channel sends/sec | 5,000 | 15,000 |
 | ClickHouse batch inserts/sec | 100 (batched) | 300 |
@@ -791,7 +791,7 @@ DEFAULT_EMAIL_PROVIDER=sendgrid
 DEFAULT_SMS_PROVIDER=twilio
 
 # Oban
-OBAN_QUEUES=journey_triggers:10,delayed_resume:20,maintenance:5
+OBAN_QUEUES=flow_triggers:10,delayed_resume:20,maintenance:5
 
 # Broadway (Analytics pipeline)
 ANALYTICS_BATCH_SIZE=1000
@@ -820,7 +820,7 @@ config :kalcifer, Kalcifer.Engine,
 config :kalcifer, Oban,
   repo: Kalcifer.Repo,
   queues: [
-    journey_triggers: 10,
+    flow_triggers: 10,
     delayed_resume: 20,
     maintenance: 5
   ],

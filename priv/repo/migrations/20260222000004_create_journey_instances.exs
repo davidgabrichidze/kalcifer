@@ -1,10 +1,10 @@
-defmodule Kalcifer.Repo.Migrations.CreateJourneyInstances do
+defmodule Kalcifer.Repo.Migrations.CreateFlowInstances do
   use Ecto.Migration
 
   def change do
-    create table(:journey_instances, primary_key: false) do
+    create table(:flow_instances, primary_key: false) do
       add :id, :binary_id, primary_key: true
-      add :journey_id, references(:journeys, type: :binary_id, on_delete: :restrict), null: false
+      add :flow_id, references(:flows, type: :binary_id, on_delete: :restrict), null: false
       add :version_number, :integer, null: false
       add :customer_id, :string, null: false
       add :tenant_id, references(:tenants, type: :binary_id, on_delete: :restrict), null: false
@@ -21,22 +21,22 @@ defmodule Kalcifer.Repo.Migrations.CreateJourneyInstances do
       timestamps(type: :utc_datetime)
     end
 
-    create index(:journey_instances, [:tenant_id])
+    create index(:flow_instances, [:tenant_id])
 
     # Partial indexes for performance-critical queries
-    create index(:journey_instances, [:journey_id, :customer_id],
+    create index(:flow_instances, [:flow_id, :customer_id],
              where: "status = 'running'",
-             name: :journey_instances_running_customer
+             name: :flow_instances_running_customer
            )
 
-    create index(:journey_instances, [:status],
+    create index(:flow_instances, [:status],
              where: "status IN ('running', 'waiting')",
-             name: :journey_instances_active
+             name: :flow_instances_active
            )
 
-    create index(:journey_instances, [:journey_id, :version_number],
+    create index(:flow_instances, [:flow_id, :version_number],
              where: "status IN ('running', 'waiting')",
-             name: :journey_instances_version_active
+             name: :flow_instances_version_active
            )
   end
 end

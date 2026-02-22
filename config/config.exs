@@ -18,7 +18,7 @@ config :kalcifer, KalciferWeb.Endpoint,
 config :kalcifer, Oban,
   repo: Kalcifer.Repo,
   queues: [
-    journey_triggers: 10,
+    flow_triggers: 10,
     delayed_resume: 20,
     maintenance: 5
   ]

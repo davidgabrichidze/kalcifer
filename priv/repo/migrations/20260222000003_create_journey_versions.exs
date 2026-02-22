@@ -1,12 +1,11 @@
-defmodule Kalcifer.Repo.Migrations.CreateJourneyVersions do
+defmodule Kalcifer.Repo.Migrations.CreateFlowVersions do
   use Ecto.Migration
 
   def change do
-    create table(:journey_versions, primary_key: false) do
+    create table(:flow_versions, primary_key: false) do
       add :id, :binary_id, primary_key: true
 
-      add :journey_id, references(:journeys, type: :binary_id, on_delete: :delete_all),
-        null: false
+      add :flow_id, references(:flows, type: :binary_id, on_delete: :delete_all), null: false
 
       add :version_number, :integer, null: false
       add :graph, :map, null: false
@@ -21,6 +20,6 @@ defmodule Kalcifer.Repo.Migrations.CreateJourneyVersions do
       timestamps(type: :utc_datetime)
     end
 
-    create unique_index(:journey_versions, [:journey_id, :version_number])
+    create unique_index(:flow_versions, [:flow_id, :version_number])
   end
 end

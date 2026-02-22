@@ -60,11 +60,11 @@ Kalcifer follows the **Open Core** model, proven by PostHog, GitLab, Supabase, a
 |---------|----------|
 | Execution engine (full) | Yes |
 | All 20 nodes | Yes |
-| Visual journey editor | Yes |
-| **AI journey designer** (bring your own LLM API key) | **Yes** |
-| **Journey versioning** (immutable versions, diff view) | **Yes** |
+| Visual flow editor | Yes |
+| **AI flow designer** (bring your own LLM API key) | **Yes** |
+| **Flow versioning** (immutable versions, diff view) | **Yes** |
 | **Live migration** (new-entries-only strategy) | **Yes** |
-| **Document upload** (Excel/CSV/Word → journey) | **Yes** |
+| **Document upload** (Excel/CSV/Word → flow) | **Yes** |
 | REST + WebSocket API | Yes |
 | Plugin SDK | Yes |
 | PostgreSQL + ES + ClickHouse | Yes |
@@ -72,7 +72,7 @@ Kalcifer follows the **Open Core** model, proven by PostHog, GitLab, Supabase, a
 | Prometheus metrics | Yes |
 | Real-time monitoring | Yes |
 | Single workspace | Yes |
-| Unlimited journeys | Yes |
+| Unlimited flows | Yes |
 | Unlimited customers | Yes |
 | Community support (GitHub) | Yes |
 
@@ -88,7 +88,7 @@ Kalcifer follows the **Open Core** model, proven by PostHog, GitLab, Supabase, a
 | **AI optimization suggestions** (based on analytics) | **Yes** |
 | Managed hosting (single region) | Yes |
 | Automatic backups (daily) | Yes |
-| Auto-scaling (up to 50K concurrent journeys) | Yes |
+| Auto-scaling (up to 50K concurrent flows) | Yes |
 | Email support (48h response) | Yes |
 | 99.5% uptime SLA | Yes |
 | 3 workspaces | Yes |
@@ -105,7 +105,7 @@ Kalcifer follows the **Open Core** model, proven by PostHog, GitLab, Supabase, a
 | Everything in Starter | Yes |
 | Multi-region deployment | Yes |
 | Automatic backups (hourly) | Yes |
-| Auto-scaling (up to 500K concurrent journeys) | Yes |
+| Auto-scaling (up to 500K concurrent flows) | Yes |
 | Priority email support (24h response) | Yes |
 | 99.9% uptime SLA | Yes |
 | 10 workspaces | Yes |
@@ -124,7 +124,7 @@ Kalcifer follows the **Open Core** model, proven by PostHog, GitLab, Supabase, a
 | Everything in Growth | Yes |
 | Dedicated infrastructure | Yes |
 | Automatic backups (continuous WAL) | Yes |
-| Unlimited concurrent journeys | Yes |
+| Unlimited concurrent flows | Yes |
 | Dedicated support engineer | Yes |
 | 99.95% uptime SLA | Yes |
 | Unlimited workspaces | Yes |

@@ -1,7 +1,7 @@
 defmodule Kalcifer.Engine.Persistence.StepStore do
   @moduledoc false
 
-  alias Kalcifer.Journeys.ExecutionStep
+  alias Kalcifer.Flows.ExecutionStep
   alias Kalcifer.Repo
 
   def record_step_start(instance_id, node, version_number) do

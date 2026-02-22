@@ -7,7 +7,7 @@ defmodule Kalcifer.Engine.Persistence.StepStoreTest do
 
   describe "record_step_start/3" do
     test "records a step start" do
-      instance = insert(:journey_instance)
+      instance = insert(:flow_instance)
 
       node = %{
         "id" => "entry_1",
@@ -25,7 +25,7 @@ defmodule Kalcifer.Engine.Persistence.StepStoreTest do
 
   describe "record_step_complete/2" do
     test "marks step as completed with output" do
-      instance = insert(:journey_instance)
+      instance = insert(:flow_instance)
       node = %{"id" => "entry_1", "type" => "event_entry", "config" => %{}}
       {:ok, step} = StepStore.record_step_start(instance.id, node, 1)
 
@@ -38,7 +38,7 @@ defmodule Kalcifer.Engine.Persistence.StepStoreTest do
 
   describe "record_step_fail/2" do
     test "marks step as failed with error" do
-      instance = insert(:journey_instance)
+      instance = insert(:flow_instance)
       node = %{"id" => "entry_1", "type" => "event_entry", "config" => %{}}
       {:ok, step} = StepStore.record_step_start(instance.id, node, 1)
 

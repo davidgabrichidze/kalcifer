@@ -15,7 +15,7 @@ Kalcifer follows a **modular monolith** architecture deployed as a single Elixir
 │                        Kalcifer System                           │
 │                                                                  │
 │  ┌─────────────┐ ┌──────────────┐ ┌────────────┐ ┌───────────┐  │
-│  │   Phoenix    │ │   Journey    │ │  AI        │ │ Analytics │  │
+│  │   Phoenix    │ │   Flow       │ │  AI        │ │ Analytics │  │
 │  │   Web API    │ │   Engine     │ │  Designer  │ │ Pipeline  │  │
 │  │             │ │   (OTP)      │ │  (LLM)     │ │ (Broadway)│  │
 │  └──────┬──────┘ └──────┬───────┘ └─────┬──────┘ └─────┬─────┘  │
@@ -23,7 +23,7 @@ Kalcifer follows a **modular monolith** architecture deployed as a single Elixir
 │  ┌──────┴───────────────┴───────────────┴───────────────┴─────┐  │
 │  │                   Core Domain Services                      │  │
 │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐  │  │
-│  │  │ Journeys │ │ Customers│ │ Channels │ │  Versioning  │  │  │
+│  │  │  Flows   │ │ Customers│ │ Channels │ │  Versioning  │  │  │
 │  │  └──────────┘ └──────────┘ └──────────┘ └──────────────┘  │  │
 │  └──────────────────────────┬─────────────────────────────────┘  │
 │                              │                                   │
@@ -52,7 +52,7 @@ Kalcifer follows a **modular monolith** architecture deployed as a single Elixir
 ```
 lib/kalcifer_web/
 ├── controllers/
-│   ├── journey_controller.ex        # CRUD journeys
+│   ├── flow_controller.ex           # CRUD flows
 │   ├── execution_controller.ex      # Trigger/pause/resume
 │   ├── customer_controller.ex       # Customer profile API
 │   ├── event_controller.ex          # Event ingestion API
@@ -60,8 +60,8 @@ lib/kalcifer_web/
 │   ├── analytics_controller.ex      # Metrics & reporting
 │   └── admin_controller.ex          # System administration
 ├── channels/
-│   ├── journey_channel.ex           # Real-time journey monitoring
-│   └── execution_channel.ex         # Per-journey live updates
+│   ├── flow_channel.ex              # Real-time flow monitoring
+│   └── execution_channel.ex         # Per-flow live updates
 ├── plugs/
 │   ├── authenticate.ex              # API key / JWT verification
 │   ├── rate_limit.ex                # Per-tenant rate limiting
@@ -75,21 +75,21 @@ lib/kalcifer_web/
 - Plug pipeline for cross-cutting concerns (auth, rate limiting, tenant isolation)
 - No server-side rendering — frontend is a separate SPA/component
 
-### 2.2 Journey Engine (OTP Core)
+### 2.2 Flow Engine (OTP Core)
 
-**Responsibility**: Journey execution, state management, node dispatching, event handling.
+**Responsibility**: Flow execution, state management, node dispatching, event handling.
 
 This is the heart of Kalcifer and its primary differentiator.
 
 ```
 lib/kalcifer/engine/
-├── journey_supervisor.ex            # DynamicSupervisor for journey instances
-├── journey_server.ex                # GenServer per journey instance
-├── journey_state.ex                 # State struct & transitions
+├── flow_supervisor.ex               # DynamicSupervisor for flow instances
+├── flow_server.ex                   # GenServer per flow instance
+├── flow_state.ex                    # State struct & transitions
 ├── node_registry.ex                 # Node type registry
 ├── node_executor.ex                 # Node dispatch & execution
-├── event_router.ex                  # Customer event → journey instance routing
-├── frequency_cap.ex                 # Cross-journey frequency enforcement
+├── event_router.ex                  # Customer event → flow instance routing
+├── frequency_cap.ex                 # Cross-flow frequency enforcement
 ├── recovery.ex                      # Crash recovery from persistent state
 └── nodes/
     ├── behaviour.ex                 # @behaviour NodeBehaviour
@@ -116,7 +116,7 @@ lib/kalcifer/engine/
     │   └── custom_code.ex
     └── exit/
         ├── goal_reached.ex
-        └── journey_exit.ex
+        └── exit.ex
 ```
 
 #### 2.2.1 Process Architecture
@@ -126,25 +126,25 @@ lib/kalcifer/engine/
                          │
           ┌──────────────┼──────────────────┐
           │              │                  │
-    JourneySupervisor  EventRouter     RecoveryManager
+    FlowSupervisor   EventRouter     RecoveryManager
     (DynamicSupervisor)  (GenServer)    (GenServer)
           │
     ┌─────┼─────┬─────┐
     │     │     │     │
-  JS-1  JS-2  JS-3  JS-N     ← One GenServer per active journey instance
+  FS-1  FS-2  FS-3  FS-N     ← One GenServer per active flow instance
   (customer A) (customer B) ...
 ```
 
-**JourneyServer (GenServer)** — One process per active customer-in-journey:
+**FlowServer (GenServer)** — One process per active customer-in-flow:
 
 ```elixir
-defmodule Kalcifer.Engine.JourneyServer do
+defmodule Kalcifer.Engine.FlowServer do
   use GenServer, restart: :transient
 
   defstruct [
-    :journey_id,           # Journey definition ID
+    :flow_id,              # Flow definition ID
     :instance_id,          # This execution instance ID
-    :customer_id,          # Customer in this journey
+    :customer_id,          # Customer in this flow
     :current_nodes,        # Set of node IDs currently active (supports parallel branches)
     :state,                # :running | :paused | :waiting | :completed | :failed
     :context,              # Accumulated data from node executions
@@ -160,7 +160,7 @@ defmodule Kalcifer.Engine.JourneyServer do
 
   def init(args) do
     state = %__MODULE__{
-      journey_id: args.journey_id,
+      flow_id: args.flow_id,
       instance_id: args.instance_id,
       customer_id: args.customer_id,
       current_nodes: MapSet.new([args.entry_node_id]),
@@ -203,9 +203,9 @@ defmodule Kalcifer.Engine.JourneyServer do
 end
 ```
 
-**Key Property**: Each JourneyServer is **completely isolated**. A crash in one customer's journey execution:
+**Key Property**: Each FlowServer is **completely isolated**. A crash in one customer's flow execution:
 - Is caught by DynamicSupervisor
-- Does NOT affect any other customer's journey
+- Does NOT affect any other customer's flow
 - Can be restarted from last persisted state via RecoveryManager
 
 #### 2.2.2 Node Behaviour
@@ -255,8 +255,8 @@ EventRouter.register_wait(customer_id, event_type, instance_id, node_id)
 # When a customer event arrives (via API):
 EventRouter.dispatch(%{customer_id: "c123", event_type: "email_opened", data: %{...}})
 # → Finds all instances waiting for this customer+event
-# → Sends message to each JourneyServer
-# → JourneyServer resumes the WaitForEvent node
+# → Sends message to each FlowServer
+# → FlowServer resumes the WaitForEvent node
 
 # When wait completes or times out:
 EventRouter.unregister_wait(customer_id, event_type, instance_id, node_id)
@@ -264,16 +264,16 @@ EventRouter.unregister_wait(customer_id, event_type, instance_id, node_id)
 
 **Implementation**: ETS table for O(1) lookup, backed by periodic persistence to PostgreSQL.
 
-### 2.3 AI Journey Designer
+### 2.3 AI Flow Designer
 
-**Responsibility**: Convert natural language, conversation, and uploaded documents into valid journey graphs.
+**Responsibility**: Convert natural language, conversation, and uploaded documents into valid flow graphs.
 
 ```
 lib/kalcifer/ai_designer/
 ├── designer.ex                      # Main orchestrator — conversation → graph
 ├── conversation.ex                  # Multi-turn conversation state management
 ├── prompt_builder.ex                # System prompt + few-shot examples
-├── graph_generator.ex               # LLM response → validated journey graph
+├── graph_generator.ex               # LLM response → validated flow graph
 ├── document_parser.ex               # Excel/CSV/Word/PDF → structured intent
 ├── graph_differ.ex                  # Compute visual diff between two versions
 ├── suggestion_engine.ex             # Analytics-based optimization suggestions
@@ -312,7 +312,7 @@ User: "I want a 30-day onboarding journey. Start with a welcome email.
          │
          ▼
 ┌──────────────────┐
-│  GraphGenerator  │  Parse LLM response → journey graph JSON
+│  GraphGenerator  │  Parse LLM response → flow graph JSON
 │                  │  Validate graph (DAG, no orphans, valid node configs)
 │                  │  If invalid → re-prompt LLM with validation errors
 │                  │  Return valid graph + natural language explanation
@@ -320,7 +320,7 @@ User: "I want a 30-day onboarding journey. Start with a welcome email.
          │
          ▼
 ┌──────────────────┐
-│  GraphDiffer     │  If modifying existing journey:
+│  GraphDiffer     │  If modifying existing flow:
 │                  │  Compute diff (added/removed/changed nodes)
 │                  │  Present visual diff to user for approval
 └──────────────────┘
@@ -349,7 +349,7 @@ User uploads: "Q1_Onboarding_Campaign.xlsx"
 │  PromptBuilder   │  Inject structured intent into prompt:
 │                  │  "User uploaded a campaign document. Here is the
 │                  │   parsed content: {steps, timing, channels...}
-│                  │   Generate a journey graph that implements this."
+│                  │   Generate a flow graph that implements this."
 └────────┬─────────┘
          │
          ▼
@@ -376,9 +376,9 @@ end
 # config :kalcifer, :llm_base_url, "http://localhost:11434"
 ```
 
-### 2.4 Journey Versioning & Live Migration
+### 2.4 Flow Versioning & Live Migration
 
-**Responsibility**: Manage immutable journey versions and migrate active instances between versions.
+**Responsibility**: Manage immutable flow versions and migrate active instances between versions.
 
 ```
 lib/kalcifer/versioning/
@@ -394,7 +394,7 @@ lib/kalcifer/versioning/
 #### 2.4.1 Version Model
 
 ```
-Journey (mutable metadata: name, status)
+Flow (mutable metadata: name, status)
   │
   ├── Version 1 (immutable graph snapshot)
   │     ├── graph: { nodes: [...], edges: [...] }
@@ -453,7 +453,7 @@ Version 1:                    Version 2:
 Migration Strategy: "migrate_all" with batch_size: 1000
 
 Step 1: Identify all running instances on Version 1
-        SELECT * FROM journey_instances WHERE journey_id = ? AND version = 1 AND status IN ('running', 'waiting')
+        SELECT * FROM flow_instances WHERE flow_id = ? AND version = 1 AND status IN ('running', 'waiting')
 
 Step 2: For each batch of 1000 instances:
         For each instance:
@@ -465,7 +465,7 @@ Step 2: For each batch of 1000 instances:
              → Update instance.graph_snapshot = version_2.graph
              → If node was WaitForEvent: re-register with EventRouter
              → If node was Wait: recalculate timer if duration changed
-             → Send :version_migrated message to JourneyServer process
+             → Send :version_migrated message to FlowServer process
           d. If mapped_node does NOT exist (node was removed):
              → Apply removal policy (skip_to_next | exit | hold)
           e. Persist migration event to execution_steps (audit trail)
@@ -481,10 +481,10 @@ Step 4: If migration_strategy is :gradual:
         → If anomalies: pause migration, alert operator
 ```
 
-#### 2.4.4 Version Migration in JourneyServer
+#### 2.4.4 Version Migration in FlowServer
 
 ```elixir
-# In JourneyServer (GenServer):
+# In FlowServer (GenServer):
 
 def handle_cast({:migrate_version, %{new_version: v2, node_mapping: mapping}}, state) do
   old_node = hd(MapSet.to_list(state.current_nodes))
@@ -518,7 +518,7 @@ end
 
 ### 2.5 Analytics Pipeline (Broadway)
 
-**Responsibility**: Process journey execution events into analytics aggregations.
+**Responsibility**: Process flow execution events into analytics aggregations.
 
 ```
 lib/kalcifer/analytics/
@@ -530,9 +530,9 @@ lib/kalcifer/analytics/
 
 **Flow**:
 ```
-JourneyServer executes node
+FlowServer executes node
     → Persists execution event to PostgreSQL (synchronous, guaranteed)
-    → PG NOTIFY on `journey_events` channel
+    → PG NOTIFY on `flow_events` channel
     → Broadway producer picks up notification
     → Batch processes events
     → Writes to ClickHouse (async, eventually consistent)
@@ -558,7 +558,7 @@ PostgreSQL stores all operational data. Ecto with migrations.
 │                      PostgreSQL Schema                       │
 │                                                             │
 │  ┌──────────────┐    ┌──────────────────┐                   │
-│  │   tenants    │───<│    journeys      │                   │
+│  │   tenants    │───<│    flows         │                   │
 │  │              │    │                  │                   │
 │  │ id           │    │ id               │                   │
 │  │ name         │    │ tenant_id (FK)   │                   │
@@ -573,10 +573,10 @@ PostgreSQL stores all operational data. Ecto with migrations.
 │                      └──┬──────────┬────┘                   │
 │                         │          │                        │
 │               ┌─────────▼───────┐  │                        │
-│               │journey_versions │  │                        │
+│               │flow_versions    │  │                        │
 │               │                 │  │                        │
 │               │ id              │  │                        │
-│               │ journey_id (FK) │  │                        │
+│               │ flow_id (FK)    │  │                        │
 │               │ version_number  │  │  ← sequential          │
 │               │ graph (jsonb)   │  │  ← immutable snapshot  │
 │               │ status (enum)   │  │  ← draft/published/    │
@@ -591,10 +591,10 @@ PostgreSQL stores all operational data. Ecto with migrations.
 │               └─────────────────┘  │                        │
 │                                    │                        │
 │               ┌────────────────────▼────┐                   │
-│               │   journey_instances     │                   │
+│               │   flow_instances        │                   │
 │               │                         │                   │
 │               │ id                      │                   │
-│               │ journey_id (FK)         │                   │
+│               │ flow_id (FK)            │                   │
 │               │ version_number          │  ← pinned version │
 │               │ customer_id             │                   │
 │               │ tenant_id (FK)          │                   │
@@ -626,10 +626,10 @@ PostgreSQL stores all operational data. Ecto with migrations.
 │               └─────────────────────────┘                   │
 │                                                             │
 │  ┌──────────────────────┐                                   │
-│  │  journey_migrations  │  ← migration execution log        │
+│  │  flow_migrations     │  ← migration execution log        │
 │  │                      │                                   │
 │  │ id                   │                                   │
-│  │ journey_id (FK)      │                                   │
+│  │ flow_id (FK)         │                                   │
 │  │ from_version         │                                   │
 │  │ to_version           │                                   │
 │  │ strategy             │                                   │
@@ -648,7 +648,7 @@ PostgreSQL stores all operational data. Ecto with migrations.
 │  │                      │                                   │
 │  │ id                   │                                   │
 │  │ tenant_id (FK)       │                                   │
-│  │ journey_id (FK)      │  ← nullable (new journey)         │
+│  │ flow_id (FK)         │  ← nullable (new flow)         │
 │  │ messages (jsonb[])   │  ← conversation history           │
 │  │ generated_graphs     │  ← jsonb[] (each AI response)     │
 │  │ inserted_at          │                                   │
@@ -673,7 +673,7 @@ PostgreSQL stores all operational data. Ecto with migrations.
 │  │ customer_id      │  │ actor_id           │               │
 │  │ channel          │  │ action             │               │
 │  │ sent_at          │  │ resource_type      │               │
-│  │ journey_id       │  │ resource_id        │               │
+│  │ flow_id          │  │ resource_id        │               │
 │  │                  │  │ changes (jsonb)    │               │
 │  │ INDEX: (tenant,  │  │ inserted_at        │               │
 │  │  customer, chan,  │  │                    │               │
@@ -689,26 +689,26 @@ PostgreSQL stores all operational data. Ecto with migrations.
 
 **Key Indexes**:
 ```sql
--- Journey instances: lookup by customer in journey
-CREATE INDEX idx_instances_journey_customer ON journey_instances(journey_id, customer_id) WHERE status = 'running';
+-- Flow instances: lookup by customer in flow
+CREATE INDEX idx_instances_flow_customer ON flow_instances(flow_id, customer_id) WHERE status = 'running';
 
--- Journey instances: recovery after restart
-CREATE INDEX idx_instances_running ON journey_instances(status) WHERE status IN ('running', 'waiting');
+-- Flow instances: recovery after restart
+CREATE INDEX idx_instances_running ON flow_instances(status) WHERE status IN ('running', 'waiting');
 
--- Journey instances: per-version count (for migration progress)
-CREATE INDEX idx_instances_version ON journey_instances(journey_id, version_number) WHERE status IN ('running', 'waiting');
+-- Flow instances: per-version count (for migration progress)
+CREATE INDEX idx_instances_version ON flow_instances(flow_id, version_number) WHERE status IN ('running', 'waiting');
 
--- Journey versions: lookup by journey
-CREATE INDEX idx_versions_journey ON journey_versions(journey_id, version_number);
+-- Flow versions: lookup by flow
+CREATE INDEX idx_versions_flow ON flow_versions(flow_id, version_number);
 
 -- Frequency cap: check recent sends
 CREATE INDEX idx_frequency_log ON frequency_log(tenant_id, customer_id, channel, sent_at DESC);
 
--- Execution steps: trace customer journey (including version)
+-- Execution steps: trace customer flow (including version)
 CREATE INDEX idx_steps_instance ON execution_steps(instance_id, started_at);
 
 -- Migrations: active migrations
-CREATE INDEX idx_migrations_active ON journey_migrations(journey_id) WHERE status IN ('pending', 'running');
+CREATE INDEX idx_migrations_active ON flow_migrations(flow_id) WHERE status IN ('pending', 'running');
 ```
 
 ### 3.2 Elasticsearch — Customer Profiles & Segments
@@ -759,7 +759,7 @@ ClickHouse stores high-volume execution events for analytics dashboards.
 -- Raw execution events (append-only)
 CREATE TABLE execution_events (
     tenant_id       LowCardinality(String),
-    journey_id      String,
+    flow_id         String,
     instance_id     String,
     customer_id     String,
     node_id         String,
@@ -771,12 +771,12 @@ CREATE TABLE execution_events (
     date            Date MATERIALIZED toDate(timestamp)
 ) ENGINE = MergeTree()
 PARTITION BY (tenant_id, toYYYYMM(timestamp))
-ORDER BY (tenant_id, journey_id, timestamp, instance_id);
+ORDER BY (tenant_id, flow_id, timestamp, instance_id);
 
 -- Channel delivery events (append-only)
 CREATE TABLE channel_events (
     tenant_id       LowCardinality(String),
-    journey_id      String,
+    flow_id         String,
     instance_id     String,
     customer_id     String,
     node_id         String,
@@ -788,15 +788,15 @@ CREATE TABLE channel_events (
     date            Date MATERIALIZED toDate(timestamp)
 ) ENGINE = MergeTree()
 PARTITION BY (tenant_id, toYYYYMM(timestamp))
-ORDER BY (tenant_id, journey_id, timestamp);
+ORDER BY (tenant_id, flow_id, timestamp);
 
 -- Materialized view: per-node aggregation (auto-updated on insert)
 CREATE MATERIALIZED VIEW node_metrics_mv
 ENGINE = AggregatingMergeTree()
-ORDER BY (tenant_id, journey_id, node_id, date)
+ORDER BY (tenant_id, flow_id, node_id, date)
 AS SELECT
     tenant_id,
-    journey_id,
+    flow_id,
     node_id,
     date,
     countState() AS total_entered,
@@ -804,21 +804,21 @@ AS SELECT
     countIfState(event_type = 'failed') AS total_failed,
     avgIfState(duration_ms, event_type = 'completed') AS avg_duration_ms
 FROM execution_events
-GROUP BY tenant_id, journey_id, node_id, date;
+GROUP BY tenant_id, flow_id, node_id, date;
 
--- Materialized view: journey-level funnel
-CREATE MATERIALIZED VIEW journey_funnel_mv
+-- Materialized view: flow-level funnel
+CREATE MATERIALIZED VIEW flow_funnel_mv
 ENGINE = AggregatingMergeTree()
-ORDER BY (tenant_id, journey_id, date)
+ORDER BY (tenant_id, flow_id, date)
 AS SELECT
     tenant_id,
-    journey_id,
+    flow_id,
     date,
     uniqState(customer_id) AS unique_customers,
     countIfState(event_type = 'entered' AND node_type = 'goal_reached') AS conversions,
-    countIfState(event_type = 'completed' AND node_type = 'journey_exit') AS exits
+    countIfState(event_type = 'completed' AND node_type = 'exit') AS exits
 FROM execution_events
-GROUP BY tenant_id, journey_id, date;
+GROUP BY tenant_id, flow_id, date;
 
 -- Materialized view: channel performance
 CREATE MATERIALIZED VIEW channel_metrics_mv
@@ -856,21 +856,21 @@ Kalcifer.Application
 │   ├── Kalcifer.Engine.NodeRegistry (GenServer — ETS-backed node type catalog)
 │   ├── Kalcifer.Engine.EventRouter (GenServer — customer event → instance routing)
 │   ├── Kalcifer.Engine.FrequencyCapServer (GenServer — ETS-backed frequency tracking)
-│   ├── Kalcifer.Engine.JourneySupervisor (DynamicSupervisor)
-│   │   ├── JourneyServer-{instance-1} (GenServer)
-│   │   ├── JourneyServer-{instance-2} (GenServer)
+│   ├── Kalcifer.Engine.FlowSupervisor (DynamicSupervisor)
+│   │   ├── FlowServer-{instance-1} (GenServer)
+│   │   ├── FlowServer-{instance-2} (GenServer)
 │   │   └── ... (up to 100K+ per node)
 │   └── Kalcifer.Engine.RecoveryManager (GenServer — startup recovery)
 │
 ├── Kalcifer.Scheduler.Supervisor (one_for_one)
 │   └── Oban (PostgreSQL-backed job processing)
-│       ├── Oban.Queue.JourneyTriggers (cron/scheduled entry evaluation)
+│       ├── Oban.Queue.FlowTriggers (cron/scheduled entry evaluation)
 │       ├── Oban.Queue.DelayedResume (Wait/WaitUntil node timeouts)
 │       └── Oban.Queue.Maintenance (cleanup, archival)
 │
 ├── Kalcifer.Analytics.Supervisor (one_for_one)
 │   └── Kalcifer.Analytics.Pipeline (Broadway)
-│       ├── Producer (PG LISTEN on journey_events)
+│       ├── Producer (PG LISTEN on flow_events)
 │       ├── Processors (configurable concurrency)
 │       └── Batcher → ClickHouse bulk insert
 │
@@ -881,8 +881,8 @@ Kalcifer.Application
 ```
 
 **Supervision Strategies**:
-- `Engine.Supervisor`: `rest_for_one` — if EventRouter crashes, JourneySupervisor restarts (instances re-register)
-- `JourneySupervisor`: `DynamicSupervisor` with `:transient` restart — only restart on abnormal exit
+- `Engine.Supervisor`: `rest_for_one` — if EventRouter crashes, FlowSupervisor restarts (instances re-register)
+- `FlowSupervisor`: `DynamicSupervisor` with `:transient` restart — only restart on abnormal exit
 - `Analytics.Supervisor`: `one_for_one` — analytics failure doesn't affect engine
 - `Integrations.Supervisor`: `one_for_one` — one provider pool crash doesn't affect others
 
@@ -890,7 +890,7 @@ Kalcifer.Application
 
 ## 5. Data Flow Patterns
 
-### 5.1 Customer Enters Journey (Event-triggered)
+### 5.1 Customer Enters Flow (Event-triggered)
 
 ```
 1. External system POST /api/v1/events
@@ -903,15 +903,15 @@ Kalcifer.Application
 
 4. EventRouter checks:
    a. Active WaitForEvent nodes waiting for this customer+event?
-      → Send message to each JourneyServer
-   b. Journey entry triggers matching this event type?
-      → For each matching journey: start new JourneyServer
+      → Send message to each FlowServer
+   b. Flow entry triggers matching this event type?
+      → For each matching flow: start new FlowServer
 
-5. JourneyServer starts:
-   a. DynamicSupervisor.start_child(JourneySupervisor, {JourneyServer, args})
-   b. JourneyServer.init:
-      - Persist journey_instance to PostgreSQL
-      - PG NOTIFY 'journey_events' (for analytics pipeline)
+5. FlowServer starts:
+   a. DynamicSupervisor.start_child(FlowSupervisor, {FlowServer, args})
+   b. FlowServer.init:
+      - Persist flow_instance to PostgreSQL
+      - PG NOTIFY 'flow_events' (for analytics pipeline)
       - Execute entry node
       - Discover next nodes from edges
       - Execute next nodes (continue until async node or completion)
@@ -925,30 +925,30 @@ Kalcifer.Application
 ### 5.2 WaitForEvent Flow
 
 ```
-1. JourneyServer reaches WaitForEvent node:
+1. FlowServer reaches WaitForEvent node:
    WaitForEvent.execute(%{event: "email_opened", timeout: 3_days})
    → Returns {:waiting, %{event: "email_opened", timeout: 259_200_000}}
 
-2. JourneyServer:
+2. FlowServer:
    a. Registers with EventRouter: {customer_id, "email_opened"} → instance_id
    b. Schedules timeout via Oban: %{instance_id: id, node_id: nid} | schedule_in: 259_200
    c. Persists state to PostgreSQL (status: :waiting, current_nodes: [wait_node_id])
-   d. JourneyServer stays alive but idle (minimal memory — just a GenServer with state)
+   d. FlowServer stays alive but idle (minimal memory — just a GenServer with state)
 
 3a. Customer opens email (event arrives first):
-    EventRouter.dispatch → JourneyServer receives {:customer_event, event}
+    EventRouter.dispatch → FlowServer receives {:customer_event, event}
     → Cancel Oban timeout job
     → WaitForEvent.resume(config, context, {:event, event_data})
     → Returns {:branched, :event_received, result}
-    → JourneyServer follows "event_received" edge
+    → FlowServer follows "event_received" edge
 
 3b. Timeout fires first:
-    Oban executes job → sends message to JourneyServer
-    → JourneyServer receives {:timer_expired, node_id}
+    Oban executes job → sends message to FlowServer
+    → FlowServer receives {:timer_expired, node_id}
     → Unregister from EventRouter
     → WaitForEvent.resume(config, context, :timeout)
     → Returns {:branched, :timed_out, result}
-    → JourneyServer follows "timed_out" edge
+    → FlowServer follows "timed_out" edge
 ```
 
 ### 5.3 Crash Recovery Flow
@@ -959,9 +959,9 @@ Kalcifer.Application
 2. Application starts → Supervision tree initializes
 
 3. RecoveryManager starts:
-   a. Query PostgreSQL: SELECT * FROM journey_instances WHERE status IN ('running', 'waiting')
+   a. Query PostgreSQL: SELECT * FROM flow_instances WHERE status IN ('running', 'waiting')
    b. For each instance:
-      - Start JourneyServer with persisted state
+      - Start FlowServer with persisted state
       - Re-register WaitForEvent subscriptions with EventRouter
       - Re-check Oban jobs (Oban handles its own recovery)
       - Resume execution from last persisted node
@@ -1072,7 +1072,7 @@ config :kalcifer, :custom_nodes, [
 ### 7.1 Single Node (Default)
 
 Most deployments run on a single node. A single BEAM node can handle:
-- 100K+ concurrent journey instances
+- 100K+ concurrent flow instances
 - 10K+ events/second
 - This covers the majority of use cases
 
@@ -1085,7 +1085,7 @@ For larger deployments, distributed Erlang clustering:
 │   Node 1     │    │   Node 2     │    │   Node 3     │
 │              │    │              │    │              │
 │ Phoenix API  │    │ Phoenix API  │    │ Phoenix API  │
-│ JourneyServers│   │ JourneyServers│   │ JourneyServers│
+│ FlowServers   │   │ FlowServers   │   │ FlowServers   │
 │ EventRouter  │    │ EventRouter  │    │ EventRouter  │
 │ (local)      │    │ (local)      │    │ (local)      │
 └──────┬───────┘    └──────┬───────┘    └──────┬───────┘
@@ -1102,7 +1102,7 @@ For larger deployments, distributed Erlang clustering:
 
 **Distribution Strategy**:
 - **Phoenix PubSub**: pg adapter (distributed Erlang) — events broadcast to all nodes
-- **JourneyServer placement**: Consistent hashing on customer_id — each customer's journeys run on one node
+- **FlowServer placement**: Consistent hashing on customer_id — each customer's flows run on one node
 - **EventRouter**: Local per node + PubSub broadcast for cross-node event routing
 - **Oban**: Built-in distributed job processing (PostgreSQL as coordination layer)
 - **libcluster**: Automatic node discovery (Kubernetes DNS, EC2 tags, etc.)
@@ -1137,7 +1137,7 @@ defmodule Kalcifer.Repo do
   end
 end
 
-# Every JourneyServer verifies tenant on every operation
+# Every FlowServer verifies tenant on every operation
 # Every Elasticsearch query includes tenant_id filter
 # Every ClickHouse query includes tenant_id in WHERE
 ```
@@ -1162,7 +1162,7 @@ Kalcifer Application
     │   ├── oban.job.*
     │   ├── kalcifer.engine.*        ← custom
     │   │   ├── node.execute.start/stop
-    │   │   ├── journey.start/complete/fail
+    │   │   ├── flow.start/complete/fail
     │   │   └── event.dispatch
     │   └── kalcifer.channel.*       ← custom
     │       └── send.start/stop/error
@@ -1192,7 +1192,7 @@ Kalcifer Application
 ### ADR-002: PostgreSQL as Primary, not Elasticsearch
 
 **Decision**: PostgreSQL for all operational data. Elasticsearch only for customer profile queries/segments.
-**Rationale**: ACID transactions for journey state, Ecto migrations for schema evolution, foreign keys for data integrity. Elasticsearch excels at search and segment evaluation but is not designed for stateful CRUD operations.
+**Rationale**: ACID transactions for flow state, Ecto migrations for schema evolution, foreign keys for data integrity. Elasticsearch excels at search and segment evaluation but is not designed for stateful CRUD operations.
 
 ### ADR-003: Oban over Custom Scheduler
 
@@ -1204,9 +1204,9 @@ Kalcifer Application
 **Decision**: Broadway for PG → ClickHouse event pipeline.
 **Rationale**: Built-in batching (ClickHouse performs best with batch inserts), backpressure, rate limiting, and graceful shutdown. Lighter than Kafka for this use case.
 
-### ADR-005: Process-per-Journey-Instance
+### ADR-005: Process-per-Flow-Instance
 
-**Decision**: Each active journey instance is a dedicated GenServer process.
+**Decision**: Each active flow instance is a dedicated GenServer process.
 **Rationale**: Complete isolation (one crash doesn't affect others), natural concurrency model, built-in state management, efficient memory usage (~2KB per idle process), BEAM scheduler handles fairness.
 
 ### ADR-006: Apache 2.0 License
@@ -1214,10 +1214,10 @@ Kalcifer Application
 **Decision**: Permissive open-source license.
 **Rationale**: Maximum adoption. Allows embedding in commercial products without restriction. Monetization via managed cloud offering and enterprise features, not license restrictions.
 
-### ADR-007: AI-first Journey Design over Visual-first
+### ADR-007: AI-first Flow Design over Visual-first
 
-**Decision**: AI conversational interface is the primary journey creation method. Visual editor is for refinement.
-**Rationale**: Visual drag-and-drop is the industry default but is universally disliked for complex journeys. Marketing teams think in strategy documents and verbal descriptions, not node graphs. AI translates natural intent into executable graphs, then the visual editor allows fine-tuning. This inverts the traditional flow and removes the biggest friction point in journey creation.
+**Decision**: AI conversational interface is the primary flow creation method. Visual editor is for refinement.
+**Rationale**: Visual drag-and-drop is the industry default but is universally disliked for complex flows. Marketing teams think in strategy documents and verbal descriptions, not node graphs. AI translates natural intent into executable graphs, then the visual editor allows fine-tuning. This inverts the traditional workflow and removes the biggest friction point in flow creation.
 
 ### ADR-008: Pluggable LLM Provider
 
@@ -1226,8 +1226,8 @@ Kalcifer Application
 
 ### ADR-009: Immutable Versions with Live Migration
 
-**Decision**: Journey versions are immutable snapshots. Active instances can migrate between versions via configurable strategies.
-**Rationale**: The alternative (mutable journeys with "save and pray") is what every competitor does, and it's broken. A 6-month journey with 50K active customers cannot be safely modified without understanding where each customer is and how changes affect them. Immutable versions + explicit node mapping + migration strategies make this safe, auditable, and reversible. This is Kalcifer's strongest operational differentiator.
+**Decision**: Flow versions are immutable snapshots. Active instances can migrate between versions via configurable strategies.
+**Rationale**: The alternative (mutable flows with "save and pray") is what every competitor does, and it's broken. A 6-month flow with 50K active customers cannot be safely modified without understanding where each customer is and how changes affect them. Immutable versions + explicit node mapping + migration strategies make this safe, auditable, and reversible. This is Kalcifer's strongest operational differentiator.
 
 ### ADR-010: AI-assisted Node Mapping
 

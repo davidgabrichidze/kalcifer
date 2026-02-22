@@ -27,7 +27,7 @@ Tier 1: Single Machine        Tier 2: Docker Compose       Tier 3: Kubernetes
                                                            │  └────┘              │
                                                            └──────────────────────┘
 
-Target: 1K journeys           Target: 100K journeys        Target: 1M+ journeys
+Target: 1K flows           Target: 100K flows        Target: 1M+ flows
 Setup: 2 minutes              Setup: 5 minutes             Setup: 30 minutes
 ```
 
@@ -247,7 +247,7 @@ echo "API Key: (check output above)"
 | ClickHouse | 1 core | 1 GB | 10 GB |
 | **Total** | **4 cores** | **5 GB** | **31 GB** |
 
-Recommended: 8 cores, 16 GB RAM for production loads up to 100K concurrent journeys.
+Recommended: 8 cores, 16 GB RAM for production loads up to 100K concurrent flows.
 
 ---
 
@@ -360,7 +360,7 @@ spec:
     - type: Pods
       pods:
         metric:
-          name: kalcifer_active_journey_instances
+          name: kalcifer_active_flow_instances
         target:
           type: AverageValue
           averageValue: "50000"    # Scale when avg instances per pod > 50K
@@ -414,7 +414,7 @@ Pod 2 (v2):                                   ████████
 Pod 3 (v1): ████████████████████████████████████░░
 Pod 3 (v2):                                        ███
 
-Journey instances migrate via Horde (distributed supervisor):
+Flow instances migrate via Horde (distributed supervisor):
 - Pod going down → instances gracefully handed off to remaining pods
 - New pod joins → rebalances instances from other pods
 ```
@@ -427,8 +427,8 @@ def stop(_state) do
   # 1. Stop accepting new HTTP connections
   KalciferWeb.Endpoint.config_change(%{draining: true}, [])
 
-  # 2. Stop starting new journey instances
-  Kalcifer.Engine.JourneySupervisor.drain()
+  # 2. Stop starting new flow instances
+  Kalcifer.Engine.FlowSupervisor.drain()
 
   # 3. Wait for active nodes to complete (up to 30s)
   Kalcifer.Engine.await_active_nodes(timeout: 30_000)
@@ -544,10 +544,10 @@ Response:
 
 ```
 # Engine metrics
-kalcifer_active_journey_instances            gauge
-kalcifer_journey_starts_total                counter
-kalcifer_journey_completions_total            counter
-kalcifer_journey_failures_total               counter
+kalcifer_active_flow_instances               gauge
+kalcifer_flow_starts_total                   counter
+kalcifer_flow_completions_total               counter
+kalcifer_flow_failures_total                  counter
 kalcifer_node_executions_total{node_type}     counter
 kalcifer_node_execution_duration_ms{node_type} histogram
 kalcifer_event_dispatch_total                 counter
@@ -599,11 +599,11 @@ services:
 groups:
   - name: kalcifer
     rules:
-      - alert: HighJourneyFailureRate
-        expr: rate(kalcifer_journey_failures_total[5m]) / rate(kalcifer_journey_starts_total[5m]) > 0.05
+      - alert: HighFlowFailureRate
+        expr: rate(kalcifer_flow_failures_total[5m]) / rate(kalcifer_flow_starts_total[5m]) > 0.05
         for: 5m
         annotations:
-          summary: "Journey failure rate above 5%"
+          summary: "Flow failure rate above 5%"
 
       - alert: HighChannelBounceRate
         expr: rate(kalcifer_channel_bounces_total[5m]) / rate(kalcifer_channel_sends_total[5m]) > 0.10

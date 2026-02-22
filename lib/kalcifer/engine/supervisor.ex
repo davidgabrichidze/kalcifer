@@ -12,7 +12,7 @@ defmodule Kalcifer.Engine.Supervisor do
     children = [
       {Registry, keys: :unique, name: Kalcifer.Engine.ProcessRegistry},
       Kalcifer.Engine.NodeRegistry,
-      {DynamicSupervisor, name: Kalcifer.Engine.JourneySupervisor, strategy: :one_for_one}
+      {DynamicSupervisor, name: Kalcifer.Engine.FlowSupervisor, strategy: :one_for_one}
     ]
 
     Supervisor.init(children, strategy: :rest_for_one)

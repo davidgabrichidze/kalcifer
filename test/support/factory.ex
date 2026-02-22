@@ -3,10 +3,10 @@ defmodule Kalcifer.Factory do
 
   use ExMachina.Ecto, repo: Kalcifer.Repo
 
-  alias Kalcifer.Journeys.ExecutionStep
-  alias Kalcifer.Journeys.Journey
-  alias Kalcifer.Journeys.JourneyInstance
-  alias Kalcifer.Journeys.JourneyVersion
+  alias Kalcifer.Flows.ExecutionStep
+  alias Kalcifer.Flows.Flow
+  alias Kalcifer.Flows.FlowInstance
+  alias Kalcifer.Flows.FlowVersion
   alias Kalcifer.Tenants.Tenant
 
   def tenant_factory do
@@ -17,10 +17,10 @@ defmodule Kalcifer.Factory do
     }
   end
 
-  def journey_factory do
-    %Journey{
-      name: sequence(:journey_name, &"Journey #{&1}"),
-      description: "A test journey",
+  def flow_factory do
+    %Flow{
+      name: sequence(:flow_name, &"Flow #{&1}"),
+      description: "A test flow",
       status: "draft",
       tenant: build(:tenant),
       entry_config: %{},
@@ -29,25 +29,25 @@ defmodule Kalcifer.Factory do
     }
   end
 
-  def journey_version_factory do
-    %JourneyVersion{
+  def flow_version_factory do
+    %FlowVersion{
       version_number: 1,
       graph: valid_graph(),
       status: "draft",
       changelog: "Initial version",
-      journey: build(:journey)
+      flow: build(:flow)
     }
   end
 
-  def journey_instance_factory do
-    %JourneyInstance{
+  def flow_instance_factory do
+    %FlowInstance{
       version_number: 1,
       customer_id: sequence(:customer_id, &"customer_#{&1}"),
       status: "running",
       current_nodes: ["entry_1"],
       context: %{},
       entered_at: DateTime.utc_now() |> DateTime.truncate(:second),
-      journey: build(:journey),
+      flow: build(:flow),
       tenant: build(:tenant)
     }
   end
@@ -62,12 +62,12 @@ defmodule Kalcifer.Factory do
       output: %{},
       started_at: DateTime.utc_now() |> DateTime.truncate(:second),
       completed_at: DateTime.utc_now() |> DateTime.truncate(:second),
-      instance: build(:journey_instance)
+      instance: build(:flow_instance)
     }
   end
 
   @doc """
-  Returns a minimal valid journey graph: entry → exit.
+  Returns a minimal valid flow graph: entry → exit.
   """
   def valid_graph do
     %{
@@ -80,7 +80,7 @@ defmodule Kalcifer.Factory do
         },
         %{
           "id" => "exit_1",
-          "type" => "journey_exit",
+          "type" => "exit",
           "position" => %{"x" => 200, "y" => 0},
           "config" => %{}
         }
@@ -105,7 +105,7 @@ defmodule Kalcifer.Factory do
         },
         %{"id" => "email_1", "type" => "send_email", "config" => %{"template_id" => "followup"}},
         %{"id" => "email_2", "type" => "send_email", "config" => %{"template_id" => "reminder"}},
-        %{"id" => "exit_1", "type" => "journey_exit", "config" => %{}}
+        %{"id" => "exit_1", "type" => "exit", "config" => %{}}
       ],
       "edges" => [
         %{"id" => "e1", "source" => "entry_1", "target" => "wait_1"},
