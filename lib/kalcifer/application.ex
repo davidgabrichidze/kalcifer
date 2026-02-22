@@ -12,6 +12,7 @@ defmodule Kalcifer.Application do
       {Phoenix.PubSub, name: Kalcifer.PubSub},
       {Finch, name: Kalcifer.Finch},
       {Oban, Application.fetch_env!(:kalcifer, Oban)},
+      Kalcifer.Engine.Supervisor,
       KalciferWeb.Endpoint
     ]
 
