@@ -66,4 +66,36 @@ defmodule KalciferWeb.TriggerControllerTest do
 
     assert json_response(conn, 422) == %{"error" => "flow_not_active"}
   end
+
+  test "rejects trigger for paused flow", %{conn: conn, tenant: tenant} do
+    flow = insert(:flow, tenant: tenant, status: "paused")
+
+    conn =
+      post(conn, "/api/v1/flows/#{flow.id}/trigger", %{
+        "customer_id" => "cust_123"
+      })
+
+    assert json_response(conn, 422) == %{"error" => "flow_not_active"}
+  end
+
+  test "trigger passes initial context to instance", %{conn: conn, tenant: tenant} do
+    flow = insert(:flow, tenant: tenant)
+    insert(:flow_version, flow: flow, graph: valid_graph())
+    {:ok, flow} = Kalcifer.Flows.activate_flow(flow)
+
+    conn =
+      post(conn, "/api/v1/flows/#{flow.id}/trigger", %{
+        "customer_id" => "cust_ctx",
+        "context" => %{"source" => "api", "campaign" => "summer"}
+      })
+
+    body = json_response(conn, 201)
+    instance_id = body["instance_id"]
+
+    Process.sleep(200)
+
+    instance = Kalcifer.Repo.get(Kalcifer.Flows.FlowInstance, instance_id)
+    assert instance
+    assert instance.customer_id == "cust_ctx"
+  end
 end

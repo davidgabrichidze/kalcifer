@@ -52,4 +52,18 @@ defmodule Kalcifer.Engine.DurationTest do
       assert {:error, :invalid_duration} = Duration.to_datetime("invalid")
     end
   end
+
+  describe "boundary values" do
+    test "parses zero duration" do
+      assert {:ok, 0} = Duration.to_seconds("0s")
+    end
+
+    test "rejects whitespace-padded string" do
+      assert {:error, :invalid_duration} = Duration.to_seconds(" 30s ")
+    end
+
+    test "rejects negative-like string" do
+      assert {:error, :invalid_duration} = Duration.to_seconds("-5d")
+    end
+  end
 end

@@ -124,6 +124,75 @@ defmodule Kalcifer.Engine.GraphWalkerTest do
     end
   end
 
+  describe "edge cases" do
+    test "find_node returns nil for node without id field" do
+      graph = %{
+        "nodes" => [%{"type" => "exit", "config" => %{}}],
+        "edges" => []
+      }
+
+      assert GraphWalker.find_node(graph, "anything") == nil
+    end
+
+    test "next_nodes returns empty for orphan node" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "orphan", "type" => "send_email", "config" => %{}},
+          %{"id" => "other", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "other", "target" => "orphan"}
+        ]
+      }
+
+      assert GraphWalker.next_nodes(graph, "orphan") == []
+    end
+
+    test "entry_nodes returns empty when no entry types exist" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "a", "type" => "send_email", "config" => %{}},
+          %{"id" => "b", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [%{"id" => "e1", "source" => "a", "target" => "b"}]
+      }
+
+      assert GraphWalker.entry_nodes(graph) == []
+    end
+
+    test "handles graph with missing nodes key" do
+      graph = %{"edges" => [%{"id" => "e1", "source" => "a", "target" => "b"}]}
+
+      assert GraphWalker.entry_nodes(graph) == []
+      assert GraphWalker.find_node(graph, "a") == nil
+      assert GraphWalker.next_nodes(graph, "a") == []
+    end
+
+    test "handles graph with missing edges key" do
+      graph = %{
+        "nodes" => [%{"id" => "a", "type" => "event_entry", "config" => %{}}]
+      }
+
+      assert GraphWalker.entry_nodes(graph) == [%{"id" => "a", "type" => "event_entry", "config" => %{}}]
+      assert GraphWalker.next_nodes(graph, "a") == []
+      assert GraphWalker.outgoing_edges(graph, "a") == []
+    end
+
+    test "next_nodes with branch_key returns empty when no branch matches" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "a", "type" => "condition", "config" => %{}},
+          %{"id" => "b", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "a", "target" => "b", "branch" => "true"}
+        ]
+      }
+
+      assert GraphWalker.next_nodes(graph, "a", "false") == []
+    end
+  end
+
   defp condition_graph do
     %{
       "nodes" => [

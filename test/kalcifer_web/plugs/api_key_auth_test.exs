@@ -46,4 +46,22 @@ defmodule KalciferWeb.Plugs.ApiKeyAuthTest do
 
     assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
   end
+
+  test "rejects empty bearer token", %{conn: conn} do
+    conn =
+      conn
+      |> put_req_header("authorization", "Bearer ")
+      |> get("/api/v1/flows")
+
+    assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
+  end
+
+  test "rejects lowercase bearer prefix", %{conn: conn} do
+    conn =
+      conn
+      |> put_req_header("authorization", "bearer #{@raw_api_key}")
+      |> get("/api/v1/flows")
+
+    assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
+  end
 end

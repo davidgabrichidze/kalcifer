@@ -21,6 +21,13 @@ defmodule Kalcifer.Engine.FlowServerTest do
       graph: graph
     }
 
+    args =
+      if Keyword.has_key?(opts, :initial_context) do
+        Map.put(args, :initial_context, Keyword.get(opts, :initial_context))
+      else
+        args
+      end
+
     {:ok, pid} =
       DynamicSupervisor.start_child(
         Kalcifer.Engine.FlowSupervisor,
@@ -314,6 +321,53 @@ defmodule Kalcifer.Engine.FlowServerTest do
     end
   end
 
+  describe "edge cases" do
+    test "executes flow with multiple entry nodes" do
+      graph = multi_entry_graph()
+      {pid, ref, _args} = start_server(graph)
+      assert :ok = wait_for_completion(pid, ref)
+
+      steps = Repo.all(from(s in ExecutionStep, order_by: [asc: s.started_at]))
+      node_types = Enum.map(steps, & &1.node_type)
+
+      assert "event_entry" in node_types
+      assert "segment_entry" in node_types
+      assert "exit" in node_types
+    end
+
+    test "merges initial_context into starting context" do
+      graph = wait_graph()
+      {pid, _ref, _args} = start_server(graph, initial_context: %{"source" => "api"})
+
+      Process.sleep(100)
+      state = GenServer.call(pid, :get_state)
+
+      # initial_context keys should be present alongside accumulated
+      assert state.context["source"] == "api"
+      assert state.context["accumulated"] != nil
+
+      GenServer.stop(pid, :normal)
+    end
+
+    test "resume with non-matching node_id is silently ignored" do
+      graph = wait_graph()
+      {pid, ref, _args} = start_server(graph)
+      :still_running = wait_for_completion(pid, ref, 500)
+
+      # Send resume for wrong node
+      GenServer.cast(pid, {:resume, "wrong_node_id", :timer_expired})
+
+      # Server should still be waiting
+      Process.sleep(100)
+      assert Process.alive?(pid)
+      state = GenServer.call(pid, :get_state)
+      assert state.status == :waiting
+      assert state.waiting_node_id == "wait_1"
+
+      GenServer.stop(pid, :normal)
+    end
+  end
+
   # --- Test graph helpers ---
 
   defp unknown_node_graph do
@@ -421,6 +475,20 @@ defmodule Kalcifer.Engine.FlowServerTest do
       "edges" => [
         %{"id" => "e1", "source" => "entry_1", "target" => "wait_1"},
         %{"id" => "e2", "source" => "wait_1", "target" => "exit_1"}
+      ]
+    }
+  end
+
+  defp multi_entry_graph do
+    %{
+      "nodes" => [
+        %{"id" => "entry_1", "type" => "event_entry", "config" => %{"event_type" => "signed_up"}},
+        %{"id" => "entry_2", "type" => "segment_entry", "config" => %{"segment_id" => "vip"}},
+        %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+      ],
+      "edges" => [
+        %{"id" => "e1", "source" => "entry_1", "target" => "exit_1"},
+        %{"id" => "e2", "source" => "entry_2", "target" => "exit_1"}
       ]
     }
   end

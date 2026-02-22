@@ -145,6 +145,66 @@ defmodule Kalcifer.Engine.EventRouterTest do
     end
   end
 
+  describe "edge cases" do
+    test "skips instance with nil _waiting_event_type in context" do
+      flow = insert(:flow)
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        status: "waiting",
+        customer_id: "cust_nil_type",
+        version_number: 1,
+        current_nodes: ["wait_1"],
+        context: %{
+          "_waiting_node_id" => "wait_1"
+          # no _waiting_event_type
+        }
+      )
+
+      result = EventRouter.route_event("cust_nil_type", "email_opened")
+      assert result == []
+    end
+
+    test "handles instance with nil _waiting_node_id in context" do
+      flow = insert(:flow)
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        status: "waiting",
+        customer_id: "cust_nil_node",
+        version_number: 1,
+        current_nodes: ["wait_1"],
+        context: %{
+          "_waiting_event_type" => "email_opened",
+          "_waiting_node_id" => nil
+        }
+      )
+
+      # Instance matches event type but node_id is nil — should still return result
+      result = EventRouter.route_event("cust_nil_node", "email_opened")
+      assert [{:not_alive, _}] = result
+    end
+
+    test "routes to multiple matching instances for same customer" do
+      flow = insert(:flow)
+
+      {pid1, _ref1, _args1} = start_server(wait_for_event_graph(), customer_id: "cust_multi", flow: flow)
+      {pid2, _ref2, _args2} = start_server(wait_for_event_graph(), customer_id: "cust_multi", flow: flow)
+
+      wait_for_waiting(pid1)
+      wait_for_waiting(pid2)
+
+      result = EventRouter.route_event("cust_multi", "email_opened", %{})
+      ok_results = Enum.filter(result, fn {status, _} -> status == :ok end)
+
+      assert length(ok_results) == 2
+
+      Process.sleep(500)
+    end
+  end
+
   describe "idempotent resume" do
     test "stale timeout is ignored after event resume" do
       {pid, ref, _args} = start_server(wait_for_event_graph(), customer_id: "cust_5")

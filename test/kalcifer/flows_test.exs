@@ -132,6 +132,42 @@ defmodule Kalcifer.FlowsTest do
       assert {:ok, archived} = Flows.archive_flow(flow)
       assert archived.status == "archived"
     end
+
+    test "resume_flow rejects archived flow" do
+      flow = insert(:flow, status: "archived")
+      assert {:error, changeset} = Flows.resume_flow(flow)
+      assert %{status: _} = errors_on(changeset)
+    end
+
+    test "archive_flow rejects draft flow" do
+      flow = insert(:flow, status: "draft")
+      assert {:error, changeset} = Flows.archive_flow(flow)
+      assert %{status: _} = errors_on(changeset)
+    end
+
+    test "activate_flow rejects when no draft version exists on active flow" do
+      flow = insert(:flow, status: "draft")
+      insert(:flow_version, flow: flow, version_number: 1, status: "draft")
+      {:ok, active_flow} = Flows.activate_flow(flow)
+
+      assert {:error, :no_draft_version} = Flows.activate_flow(active_flow)
+    end
+
+    test "activate_flow with invalid graph rolls back transaction" do
+      flow = insert(:flow, status: "draft")
+
+      bad_graph = %{
+        "nodes" => [%{"id" => "x", "type" => "send_email", "config" => %{}}],
+        "edges" => []
+      }
+
+      insert(:flow_version, flow: flow, version_number: 1, status: "draft", graph: bad_graph)
+
+      assert {:error, _} = Flows.activate_flow(flow)
+
+      reloaded = Flows.get_flow(flow.id)
+      assert reloaded.status == "draft"
+    end
   end
 
   describe "version management" do

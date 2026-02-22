@@ -66,5 +66,23 @@ defmodule Kalcifer.Engine.FlowTriggerTest do
     test "rejects non-existent flow" do
       assert {:error, :not_found} = FlowTrigger.trigger(Ecto.UUID.generate(), "customer_123")
     end
+
+    test "rejects paused flow" do
+      flow = insert(:flow, status: "paused")
+
+      assert {:error, :flow_not_active} = FlowTrigger.trigger(flow.id, "customer_123")
+    end
+
+    test "rejects archived flow" do
+      flow = insert(:flow, status: "archived")
+
+      assert {:error, :flow_not_active} = FlowTrigger.trigger(flow.id, "customer_123")
+    end
+
+    test "rejects flow with deleted active version" do
+      flow = insert(:flow, status: "active", active_version_id: Ecto.UUID.generate())
+
+      assert {:error, :no_active_version} = FlowTrigger.trigger(flow.id, "customer_123")
+    end
   end
 end
