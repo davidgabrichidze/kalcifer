@@ -14,7 +14,13 @@ defmodule Kalcifer.Engine.RecoveryManager do
   require Logger
 
   def start_link(_opts) do
-    Task.start_link(__MODULE__, :recover, [])
+    Task.start_link(__MODULE__, :maybe_recover, [])
+  end
+
+  def maybe_recover do
+    unless Application.get_env(:kalcifer, :skip_recovery, false) do
+      recover()
+    end
   end
 
   def recover do

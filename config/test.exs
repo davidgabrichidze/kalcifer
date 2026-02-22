@@ -18,6 +18,9 @@ config :kalcifer, KalciferWeb.Endpoint,
 # Tests that need job execution call perform() directly or use GenServer.cast.
 config :kalcifer, Oban, testing: :manual
 
+# Skip automatic recovery on boot — tests call RecoveryManager.recover() manually.
+config :kalcifer, skip_recovery: true
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 
