@@ -31,8 +31,8 @@ WORKDIR /app
 COPY --from=builder /app/_build/prod/rel/kalcifer ./
 
 ENV PHX_HOST=localhost
-ENV PHX_PORT=6000
+ENV PHX_PORT=4500
 
-EXPOSE 6000
+EXPOSE 4500
 
 CMD ["bin/kalcifer", "start"]

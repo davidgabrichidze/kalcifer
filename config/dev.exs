@@ -11,7 +11,7 @@ config :kalcifer, Kalcifer.Repo,
   pool_size: 10
 
 config :kalcifer, KalciferWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 6000],
+  http: [ip: {0, 0, 0, 0, 0, 0, 0, 0}, port: 4500],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,

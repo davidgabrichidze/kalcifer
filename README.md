@@ -39,7 +39,7 @@ mix setup
 mix phx.server
 ```
 
-The API will be available at `http://localhost:6000/api/v1`.
+The API will be available at `http://localhost:4500/api/v1`.
 
 ### With Docker
 
@@ -55,7 +55,7 @@ mix phx.server
 ### Health Check
 
 ```bash
-curl http://localhost:6000/api/v1/health
+curl http://localhost:4500/api/v1/health
 # => {"status":"ok"}
 ```
 

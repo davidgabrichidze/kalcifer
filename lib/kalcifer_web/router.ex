@@ -9,5 +9,6 @@ defmodule KalciferWeb.Router do
     pipe_through :api
 
     get "/health", HealthController, :show
+    get "/health/metrics", HealthController, :metrics
   end
 end
