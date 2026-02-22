@@ -10,7 +10,7 @@ defmodule Kalcifer.Engine.EventRouterTest do
   import Ecto.Query
   import Kalcifer.Factory
 
-  defp start_server(graph, opts \\ []) do
+  defp start_server(graph, opts) do
     flow = Keyword.get_lazy(opts, :flow, fn -> insert(:flow) end)
     customer_id = Keyword.get(opts, :customer_id, "customer_1")
 

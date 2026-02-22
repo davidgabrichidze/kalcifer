@@ -81,7 +81,7 @@ defmodule Kalcifer.Engine.FlowServer do
       version_number: args.version_number,
       graph: args.graph,
       current_nodes: entry_node_ids,
-      context: %{},
+      context: Map.get(args, :initial_context, %{}),
       status: :running
     }
 
