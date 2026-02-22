@@ -1,0 +1,15 @@
+_build/
+deps/
+cover/
+doc/
+.git/
+.elixir_ls/
+.vscode/
+tmp/
+*.ez
+erl_crash.dump
+.env
+.env.*
+node_modules/
+frontend/dist/
+frontend/node_modules/
