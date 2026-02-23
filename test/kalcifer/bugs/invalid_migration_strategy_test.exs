@@ -1,8 +1,8 @@
 defmodule Kalcifer.Bugs.InvalidMigrationStrategyTest do
   @moduledoc """
-  I5: MigrationController passes unvalidated strategy string to Migrator.
-  Migrator.do_migrate_instance pattern-matches on "new_entries_only" and "migrate_all" only.
-  Any other value causes a FunctionClauseError crash.
+  I5: Regression test for migration strategy validation.
+  MigrationController validates strategy via validate_strategy/1 before
+  passing to Migrator. Invalid values return 422.
   """
   use KalciferWeb.ConnCase, async: false
 
@@ -60,7 +60,6 @@ defmodule Kalcifer.Bugs.InvalidMigrationStrategyTest do
     }
   end
 
-  @tag :known_bug
   test "migrate with invalid strategy should return 422, not crash with 500", %{
     conn: conn,
     tenant: tenant
@@ -76,11 +75,6 @@ defmodule Kalcifer.Bugs.InvalidMigrationStrategyTest do
         "strategy" => "invalid_strategy_value"
       })
 
-    # BUG: Currently this crashes with FunctionClauseError (500).
-    # Should return 422 with a descriptive error.
-    status = conn_resp.status
-
-    assert status == 422,
-           "BUG: Invalid strategy caused HTTP #{status} — should return 422 with error message"
+    assert conn_resp.status == 422
   end
 end

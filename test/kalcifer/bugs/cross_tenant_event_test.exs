@@ -1,8 +1,8 @@
 defmodule Kalcifer.Bugs.CrossTenantEventTest do
   @moduledoc """
-  C1: Cross-tenant event injection vulnerability.
-  EventRouter.route_event does not filter by tenant_id, so Tenant A can
-  resume Tenant B's waiting flow instances by sending events with a known customer_id.
+  C1: Regression test for cross-tenant event isolation.
+  EventRouter.route_event filters by tenant_id, preventing Tenant A from
+  resuming Tenant B's waiting flow instances.
   """
   use KalciferWeb.ConnCase, async: false
 
@@ -49,7 +49,6 @@ defmodule Kalcifer.Bugs.CrossTenantEventTest do
     }
   end
 
-  @tag :known_bug
   test "tenant A should NOT be able to resume tenant B's waiting instance via events" do
     # Setup Tenant B with a waiting flow instance
     hash_b = Tenants.hash_api_key(@tenant_b_key)
@@ -95,9 +94,7 @@ defmodule Kalcifer.Bugs.CrossTenantEventTest do
 
     body = json_response(conn_resp, 202)
 
-    # BUG: This should be 0 — Tenant A should not be able to route events to Tenant B's instances.
-    # Currently it routes to ALL tenants' instances for this customer_id.
     assert body["routed"] == 0,
-           "SECURITY BUG: Tenant A routed #{body["routed"]} event(s) to Tenant B's instance!"
+           "Tenant A routed #{body["routed"]} event(s) to Tenant B's instance!"
   end
 end

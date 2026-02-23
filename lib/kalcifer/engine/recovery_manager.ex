@@ -63,7 +63,12 @@ defmodule Kalcifer.Engine.RecoveryManager do
 
         case start_flow_server(args) do
           {:ok, _pid} ->
-            ensure_resume_scheduled(instance, waiting_node_id, waiting_node_type, scheduled_at_str)
+            ensure_resume_scheduled(
+              instance,
+              waiting_node_id,
+              waiting_node_type,
+              scheduled_at_str
+            )
 
           {:error, reason} ->
             Logger.warning(

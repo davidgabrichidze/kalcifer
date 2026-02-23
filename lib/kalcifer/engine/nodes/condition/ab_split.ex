@@ -6,9 +6,16 @@ defmodule Kalcifer.Engine.Nodes.Condition.AbSplit do
   @impl true
   def execute(config, _context) do
     variants = config["variants"] || []
-    selected = weighted_random(variants)
-    key = selected["key"]
-    {:branched, key, %{selected_variant: key}}
+
+    case variants do
+      [] ->
+        {:failed, :no_variants}
+
+      _ ->
+        selected = weighted_random(variants)
+        key = selected["key"]
+        {:branched, key, %{selected_variant: key}}
+    end
   end
 
   @impl true

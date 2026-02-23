@@ -1,29 +1,19 @@
 defmodule Kalcifer.Bugs.AbSplitEmptyVariantsTest do
   @moduledoc """
-  N4: AbSplit.weighted_random crashes with :rand.uniform(0) when variants list is empty.
-  Every customer hitting this node fails the instance.
+  N4: AbSplit previously crashed with :rand.uniform(0) when variants list was
+  empty. Fixed to return {:failed, :no_variants}.
   """
   use ExUnit.Case, async: true
 
   alias Kalcifer.Engine.Nodes.Condition.AbSplit
 
-  @tag :known_bug
-  test "execute with empty variants should return error, not crash" do
+  test "execute with empty variants returns error" do
     config = %{"variants" => []}
-
-    # BUG: :rand.uniform(0) raises FunctionClauseError
-    # Should return {:failed, :no_variants} or similar
-    assert_raise FunctionClauseError, fn ->
-      AbSplit.execute(config, %{})
-    end
+    assert {:failed, :no_variants} = AbSplit.execute(config, %{})
   end
 
-  @tag :known_bug
-  test "execute with missing variants key should return error, not crash" do
+  test "execute with missing variants key returns error" do
     config = %{}
-
-    assert_raise FunctionClauseError, fn ->
-      AbSplit.execute(config, %{})
-    end
+    assert {:failed, :no_variants} = AbSplit.execute(config, %{})
   end
 end
