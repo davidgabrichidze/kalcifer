@@ -1,6 +1,10 @@
 defmodule KalciferWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :kalcifer
 
+  socket "/socket", KalciferWeb.UserSocket,
+    websocket: true,
+    longpoll: false
+
   if code_reloading? do
     plug Phoenix.CodeReloader
     plug Phoenix.Ecto.CheckRepoStatus, otp_app: :kalcifer

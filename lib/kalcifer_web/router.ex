@@ -43,6 +43,11 @@ defmodule KalciferWeb.Router do
     post "/customers/:customer_id/tags", CustomerController, :add_tags
     put "/customers/:customer_id/preferences", CustomerController, :update_preferences
 
+    get "/flows/:flow_id/instances", InstanceController, :index
+    get "/instances/:id", InstanceController, :show
+    get "/instances/:id/timeline", InstanceController, :timeline
+    post "/instances/:id/cancel", InstanceController, :cancel
+
     get "/flows/:flow_id/analytics/summary", AnalyticsController, :summary
     get "/flows/:flow_id/analytics/nodes", AnalyticsController, :nodes
     get "/flows/:flow_id/analytics/funnel", AnalyticsController, :funnel

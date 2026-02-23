@@ -4,6 +4,7 @@ defmodule Kalcifer.Engine.FlowServer do
   use GenServer, restart: :transient
 
   alias Kalcifer.Engine.Duration
+  alias Kalcifer.Engine.EventBroadcaster
   alias Kalcifer.Engine.GraphWalker
   alias Kalcifer.Engine.Jobs.ResumeFlowJob
   alias Kalcifer.Engine.NodeExecutor
@@ -94,6 +95,7 @@ defmodule Kalcifer.Engine.FlowServer do
     }
 
     emit_instance_event(state, :entered)
+    EventBroadcaster.broadcast_instance_started(state)
     {:ok, state, {:continue, :execute_current}}
   end
 
@@ -123,6 +125,7 @@ defmodule Kalcifer.Engine.FlowServer do
         {:resume, node_id, trigger},
         %{status: :waiting, waiting_node_id: node_id} = state
       ) do
+    EventBroadcaster.broadcast_node_resumed(state, node_id)
     node = GraphWalker.find_node(state.graph, node_id)
     {:ok, step} = StepStore.record_step_start(state.instance_id, node, state.version_number)
 
@@ -188,6 +191,7 @@ defmodule Kalcifer.Engine.FlowServer do
       {:completed, result} ->
         StepStore.record_step_complete(step, result)
         emit_step_event(state, node, :completed, nil)
+        EventBroadcaster.broadcast_node_executed(state, node, result)
         state = accumulate_context(state, node["id"], result)
         next = resolve_next_nodes(state.graph, node, nil)
         handle_next(state, next)
@@ -195,6 +199,7 @@ defmodule Kalcifer.Engine.FlowServer do
       {:branched, branch_key, result} ->
         StepStore.record_step_complete(step, result)
         emit_step_event(state, node, :completed, branch_key)
+        EventBroadcaster.broadcast_node_executed(state, node, result)
         state = accumulate_context(state, node["id"], result)
         next = resolve_next_nodes(state.graph, node, branch_key)
         handle_next(state, next)
@@ -206,6 +211,7 @@ defmodule Kalcifer.Engine.FlowServer do
         state = %{state | status: :waiting, waiting_node_id: node["id"], context: context}
         persist_waiting_state(state)
         schedule_resume(node, wait_config, state)
+        EventBroadcaster.broadcast_node_waiting(state, node)
         {:waiting, state}
 
       {:failed, reason} ->
@@ -215,6 +221,7 @@ defmodule Kalcifer.Engine.FlowServer do
         state = %{state | status: :failed}
         InstanceStore.fail_instance(get_instance(state), inspect(reason))
         emit_instance_event(state, :failed)
+        EventBroadcaster.broadcast_instance_failed(state)
         {:failed, state}
 
       {:error, {:unknown_node_type, _type}} = error ->
@@ -224,6 +231,7 @@ defmodule Kalcifer.Engine.FlowServer do
         state = %{state | status: :failed}
         InstanceStore.fail_instance(get_instance(state), inspect(error))
         emit_instance_event(state, :failed)
+        EventBroadcaster.broadcast_instance_failed(state)
         {:failed, state}
     end
   end
@@ -233,6 +241,7 @@ defmodule Kalcifer.Engine.FlowServer do
     state = %{state | current_nodes: [], status: :completed}
     InstanceStore.complete_instance(get_instance(state))
     emit_instance_event(state, :completed)
+    EventBroadcaster.broadcast_instance_completed(state)
     {:continue, state, []}
   end
 
