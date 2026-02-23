@@ -173,8 +173,8 @@ defmodule Kalcifer.Flows do
     Repo.transaction(fn ->
       published = ensure_published(new_version)
 
-      old_version |> FlowVersion.deprecate_changeset() |> Repo.update!()
-      flow |> Flow.active_version_changeset(published.id) |> Repo.update!()
+      old_version |> FlowVersion.deprecate_changeset() |> safe_update!()
+      flow |> Flow.active_version_changeset(published.id) |> safe_update!()
 
       {old_version.version_number, published.version_number}
     end)
@@ -195,17 +195,17 @@ defmodule Kalcifer.Flows do
       # Mark current as rolled back
       current_version
       |> FlowVersion.rollback_changeset()
-      |> Repo.update!()
+      |> safe_update!()
 
       # Republish target
       target_version
       |> FlowVersion.republish_changeset()
-      |> Repo.update!()
+      |> safe_update!()
 
       # Update flow's active version
       flow
       |> Flow.active_version_changeset(target_version.id)
-      |> Repo.update!()
+      |> safe_update!()
 
       {current_version.version_number, target_version.version_number}
     end)
@@ -225,6 +225,14 @@ defmodule Kalcifer.Flows do
   end
 
   # --- Private ---
+
+  # Like Repo.update! but rolls back the transaction on invalid changeset
+  # instead of raising Ecto.InvalidChangesetError (which bypasses fallback handling)
+  defp safe_update!(%Ecto.Changeset{valid?: false} = cs) do
+    Repo.rollback({:invalid_changeset, cs})
+  end
+
+  defp safe_update!(%Ecto.Changeset{} = cs), do: Repo.update!(cs)
 
   defp maybe_filter_status(query, nil), do: query
   defp maybe_filter_status(query, status), do: where(query, status: ^status)

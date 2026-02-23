@@ -79,6 +79,14 @@ defmodule KalciferWeb.FallbackController do
     |> json(%{error: "cannot_migrate_to_same_version"})
   end
 
+  def call(conn, {:error, {:invalid_changeset, %Ecto.Changeset{} = changeset}}) do
+    errors = format_errors(changeset)
+
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{errors: errors})
+  end
+
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     errors = format_errors(changeset)
 
