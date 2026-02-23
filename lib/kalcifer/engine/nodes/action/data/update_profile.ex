@@ -3,9 +3,25 @@ defmodule Kalcifer.Engine.Nodes.Action.Data.UpdateProfile do
 
   use Kalcifer.Engine.NodeBehaviour
 
+  alias Kalcifer.Customers
+
   @impl true
-  def execute(_config, _context) do
-    {:completed, %{updated: true}}
+  def execute(config, context) do
+    fields = config["fields"] || %{}
+
+    case get_customer(context) do
+      nil ->
+        {:completed, %{updated: false, reason: "no_customer"}}
+
+      customer ->
+        case Customers.update_customer(customer, fields) do
+          {:ok, _updated} ->
+            {:completed, %{updated: true, fields: Map.keys(fields)}}
+
+          {:error, _changeset} ->
+            {:failed, :update_failed}
+        end
+    end
   end
 
   @impl true
@@ -15,4 +31,10 @@ defmodule Kalcifer.Engine.Nodes.Action.Data.UpdateProfile do
 
   @impl true
   def category, do: :action
+
+  defp get_customer(%{"_customer" => %{"id" => id}}) when is_binary(id) do
+    Customers.get_customer(id)
+  end
+
+  defp get_customer(_context), do: nil
 end

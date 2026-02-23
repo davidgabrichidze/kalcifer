@@ -1,6 +1,7 @@
 defmodule Kalcifer.Engine.FlowTrigger do
   @moduledoc false
 
+  alias Kalcifer.Customers
   alias Kalcifer.Engine.FrequencyCapHelpers
   alias Kalcifer.Engine.Persistence.InstanceStore
   alias Kalcifer.Engine.Persistence.StepStore
@@ -13,6 +14,7 @@ defmodule Kalcifer.Engine.FlowTrigger do
          {:ok, version} <- fetch_active_version(flow),
          :ok <- check_not_in_flow(flow_id, customer_id),
          :ok <- check_flow_frequency_cap(flow, customer_id) do
+      initial_context = enrich_customer_context(flow.tenant_id, customer_id, initial_context)
       instance_id = Ecto.UUID.generate()
 
       args = %{
@@ -83,5 +85,29 @@ defmodule Kalcifer.Engine.FlowTrigger do
       nil -> {:error, :no_active_version}
       version -> {:ok, version}
     end
+  end
+
+  defp enrich_customer_context(tenant_id, customer_id, context) do
+    case Customers.get_customer_by_external_id(tenant_id, customer_id) do
+      nil -> context
+      customer -> put_customer_in_context(context, customer)
+    end
+  end
+
+  defp put_customer_in_context(context, customer) do
+    customer_map = %{
+      "id" => customer.id,
+      "external_id" => customer.external_id,
+      "email" => customer.email,
+      "phone" => customer.phone,
+      "name" => customer.name,
+      "properties" => customer.properties || %{},
+      "tags" => customer.tags || [],
+      "preferences" => customer.preferences || %{}
+    }
+
+    context
+    |> Map.put("_customer", customer_map)
+    |> Map.put_new("preferences", customer.preferences || %{})
   end
 end

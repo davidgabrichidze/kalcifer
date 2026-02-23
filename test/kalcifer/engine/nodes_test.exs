@@ -169,14 +169,30 @@ defmodule Kalcifer.Engine.NodesTest do
   end
 
   describe "action/data nodes" do
-    test "update_profile returns completed" do
-      assert {:completed, %{updated: true}} =
+    test "update_profile without customer returns no_customer" do
+      assert {:completed, %{updated: false, reason: "no_customer"}} =
                UpdateProfile.execute(%{"fields" => %{"name" => "Test"}}, %{})
     end
 
-    test "add_tag returns completed" do
-      assert {:completed, %{tagged: true, tag: "vip"}} =
+    test "update_profile with customer updates profile" do
+      customer = insert(:customer, name: "Old Name")
+      ctx = %{"_customer" => %{"id" => customer.id}}
+
+      assert {:completed, %{updated: true}} =
+               UpdateProfile.execute(%{"fields" => %{name: "New Name"}}, ctx)
+    end
+
+    test "add_tag without customer returns no_customer" do
+      assert {:completed, %{tagged: false, tag: "vip", reason: "no_customer"}} =
                AddTag.execute(%{"tag" => "vip"}, %{})
+    end
+
+    test "add_tag with customer adds tag" do
+      customer = insert(:customer, tags: [])
+      ctx = %{"_customer" => %{"id" => customer.id}}
+
+      assert {:completed, %{tagged: true, tag: "vip"}} =
+               AddTag.execute(%{"tag" => "vip"}, ctx)
     end
 
     test "custom_code returns completed" do

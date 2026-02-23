@@ -3,6 +3,7 @@ defmodule Kalcifer.Factory do
 
   use ExMachina.Ecto, repo: Kalcifer.Repo
 
+  alias Kalcifer.Customers.Customer
   alias Kalcifer.Flows.ExecutionStep
   alias Kalcifer.Flows.Flow
   alias Kalcifer.Flows.FlowInstance
@@ -64,6 +65,19 @@ defmodule Kalcifer.Factory do
       started_at: DateTime.utc_now() |> DateTime.truncate(:second),
       completed_at: DateTime.utc_now() |> DateTime.truncate(:second),
       instance: build(:flow_instance)
+    }
+  end
+
+  def customer_factory do
+    %Customer{
+      external_id: sequence(:external_id, &"ext_#{&1}"),
+      email: sequence(:customer_email, &"customer_#{&1}@example.com"),
+      phone: sequence(:customer_phone, &"+1555000#{String.pad_leading("#{&1}", 4, "0")}"),
+      name: sequence(:customer_name, &"Customer #{&1}"),
+      properties: %{},
+      tags: [],
+      preferences: %{"email" => true, "sms" => true, "push" => true},
+      tenant: build(:tenant)
     }
   end
 
