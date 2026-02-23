@@ -13,6 +13,12 @@ defmodule KalciferWeb.FallbackController do
     |> json(%{error: "flow_not_draft"})
   end
 
+  def call(conn, {:error, :journey_not_draft}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "journey_not_draft"})
+  end
+
   def call(conn, {:error, :no_draft_version}) do
     conn
     |> put_status(:unprocessable_entity)
@@ -29,6 +35,18 @@ defmodule KalciferWeb.FallbackController do
     conn
     |> put_status(:unprocessable_entity)
     |> json(%{error: "no_active_version"})
+  end
+
+  def call(conn, {:error, :already_in_flow}) do
+    conn
+    |> put_status(:conflict)
+    |> json(%{error: "already_in_flow"})
+  end
+
+  def call(conn, {:error, :frequency_cap_exceeded}) do
+    conn
+    |> put_status(:too_many_requests)
+    |> json(%{error: "frequency_cap_exceeded"})
   end
 
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do

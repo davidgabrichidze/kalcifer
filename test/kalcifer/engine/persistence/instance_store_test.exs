@@ -64,4 +64,63 @@ defmodule Kalcifer.Engine.Persistence.InstanceStoreTest do
       assert failed.exited_at != nil
     end
   end
+
+  describe "customer_active_in_flow?/2" do
+    test "returns false when no instances exist" do
+      flow = insert(:flow)
+      refute InstanceStore.customer_active_in_flow?(flow.id, "nobody")
+    end
+
+    test "returns true for running instance" do
+      flow = insert(:flow)
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "cust_1",
+        status: "running"
+      )
+
+      assert InstanceStore.customer_active_in_flow?(flow.id, "cust_1")
+    end
+
+    test "returns true for waiting instance" do
+      flow = insert(:flow)
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "cust_1",
+        status: "waiting"
+      )
+
+      assert InstanceStore.customer_active_in_flow?(flow.id, "cust_1")
+    end
+
+    test "returns false for completed instance" do
+      flow = insert(:flow)
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "cust_1",
+        status: "completed"
+      )
+
+      refute InstanceStore.customer_active_in_flow?(flow.id, "cust_1")
+    end
+
+    test "returns false for different customer" do
+      flow = insert(:flow)
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "cust_1",
+        status: "running"
+      )
+
+      refute InstanceStore.customer_active_in_flow?(flow.id, "cust_2")
+    end
+  end
 end

@@ -73,6 +73,12 @@ defmodule Kalcifer.Engine.FlowServer do
         id: args.instance_id
       )
 
+    initial_context =
+      Map.get(args, :initial_context, %{})
+      |> Map.put("_customer_id", args.customer_id)
+      |> Map.put("_flow_id", args.flow_id)
+      |> Map.put("_tenant_id", args.tenant_id)
+
     state = %__MODULE__{
       instance_id: instance.id,
       flow_id: args.flow_id,
@@ -81,7 +87,7 @@ defmodule Kalcifer.Engine.FlowServer do
       version_number: args.version_number,
       graph: args.graph,
       current_nodes: entry_node_ids,
-      context: Map.get(args, :initial_context, %{}),
+      context: initial_context,
       status: :running
     }
 

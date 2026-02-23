@@ -349,6 +349,20 @@ defmodule Kalcifer.Engine.FlowServerTest do
       GenServer.stop(pid, :normal)
     end
 
+    test "injects _customer_id, _flow_id, _tenant_id into context" do
+      graph = wait_graph()
+      {pid, _ref, _args} = start_server(graph)
+
+      Process.sleep(100)
+      state = GenServer.call(pid, :get_state)
+
+      assert state.context["_customer_id"] == state.customer_id
+      assert state.context["_flow_id"] == state.flow_id
+      assert state.context["_tenant_id"] == state.tenant_id
+
+      GenServer.stop(pid, :normal)
+    end
+
     test "resume with non-matching node_id is silently ignored" do
       graph = wait_graph()
       {pid, ref, _args} = start_server(graph)

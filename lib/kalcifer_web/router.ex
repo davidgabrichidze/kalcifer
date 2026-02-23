@@ -31,5 +31,11 @@ defmodule KalciferWeb.Router do
 
     post "/flows/:flow_id/trigger", TriggerController, :create
     post "/events", EventController, :create
+
+    resources "/journeys", JourneyController, except: [:new, :edit]
+
+    post "/journeys/:id/launch", JourneyController, :launch
+    post "/journeys/:id/pause", JourneyController, :pause
+    post "/journeys/:id/archive", JourneyController, :archive
   end
 end

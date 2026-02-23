@@ -14,7 +14,7 @@ defmodule Kalcifer.Engine.NodesTest do
   alias Kalcifer.Engine.Nodes.Condition.AbSplit
   alias Kalcifer.Engine.Nodes.Condition.CheckSegment
   alias Kalcifer.Engine.Nodes.Condition.Condition
-  alias Kalcifer.Engine.Nodes.Condition.FrequencyCap
+
   alias Kalcifer.Engine.Nodes.Condition.PreferenceGate
   alias Kalcifer.Engine.Nodes.End.Exit
   alias Kalcifer.Engine.Nodes.End.GoalReached
@@ -110,9 +110,6 @@ defmodule Kalcifer.Engine.NodesTest do
       assert AbSplit.category() == :condition
     end
 
-    test "frequency_cap returns branched allowed" do
-      assert {:branched, "allowed", %{capped: false}} = FrequencyCap.execute(%{}, %{})
-    end
   end
 
   describe "wait nodes" do

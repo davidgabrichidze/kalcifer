@@ -60,6 +60,14 @@ defmodule Kalcifer.Engine.Persistence.InstanceStore do
     |> Repo.update()
   end
 
+  def customer_active_in_flow?(flow_id, customer_id) do
+    FlowInstance
+    |> where([i], i.flow_id == ^flow_id)
+    |> where([i], i.customer_id == ^customer_id)
+    |> where([i], i.status in ["running", "waiting"])
+    |> Repo.exists?()
+  end
+
   def list_waiting_for_customer(customer_id) do
     FlowInstance
     |> where([i], i.customer_id == ^customer_id and i.status == "waiting")

@@ -128,7 +128,7 @@ defmodule Kalcifer.MarketingTest do
 
     test "rejects update on non-draft journey" do
       journey = insert(:journey, status: "active")
-      assert {:error, :not_draft} = Marketing.update_journey(journey, %{name: "Nope"})
+      assert {:error, :journey_not_draft} = Marketing.update_journey(journey, %{name: "Nope"})
     end
   end
 
@@ -141,7 +141,7 @@ defmodule Kalcifer.MarketingTest do
 
     test "rejects delete on non-draft journey" do
       journey = insert(:journey, status: "active")
-      assert {:error, :not_draft} = Marketing.delete_journey(journey)
+      assert {:error, :journey_not_draft} = Marketing.delete_journey(journey)
     end
   end
 
@@ -195,6 +195,34 @@ defmodule Kalcifer.MarketingTest do
 
       assert {:ok, archived} = Marketing.archive_journey(journey)
       assert archived.status == "archived"
+    end
+  end
+
+  describe "lifecycle edge cases" do
+    test "launch_journey rejects already-active journey" do
+      tenant = insert(:tenant)
+      flow = insert(:flow, tenant: tenant, status: "draft")
+      insert(:flow_version, flow: flow, version_number: 1, status: "draft")
+      journey = insert(:journey, tenant: tenant, flow: flow, status: "draft")
+      {:ok, journey} = Marketing.launch_journey(journey)
+
+      assert {:error, :no_draft_version} = Marketing.launch_journey(journey)
+    end
+
+    test "pause_journey rejects draft journey" do
+      tenant = insert(:tenant)
+      flow = insert(:flow, tenant: tenant, status: "draft")
+      journey = insert(:journey, tenant: tenant, flow: flow, status: "draft")
+
+      assert {:error, _reason} = Marketing.pause_journey(journey)
+    end
+
+    test "archive_journey rejects draft journey" do
+      tenant = insert(:tenant)
+      flow = insert(:flow, tenant: tenant, status: "draft")
+      journey = insert(:journey, tenant: tenant, flow: flow, status: "draft")
+
+      assert {:error, _reason} = Marketing.archive_journey(journey)
     end
   end
 

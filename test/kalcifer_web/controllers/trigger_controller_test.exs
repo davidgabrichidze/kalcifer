@@ -78,6 +78,61 @@ defmodule KalciferWeb.TriggerControllerTest do
     assert json_response(conn, 422) == %{"error" => "flow_not_active"}
   end
 
+  test "returns 409 when customer already in flow", %{conn: conn, tenant: tenant} do
+    flow = insert(:flow, tenant: tenant)
+    insert(:flow_version, flow: flow, graph: valid_graph())
+    {:ok, flow} = Flows.activate_flow(flow)
+
+    insert(:flow_instance,
+      flow: flow,
+      tenant: tenant,
+      customer_id: "cust_dedup",
+      status: "running"
+    )
+
+    conn =
+      post(conn, "/api/v1/flows/#{flow.id}/trigger", %{
+        "customer_id" => "cust_dedup"
+      })
+
+    assert json_response(conn, 409) == %{"error" => "already_in_flow"}
+  end
+
+  test "returns 429 when customer exceeds frequency cap", %{conn: conn, tenant: tenant} do
+    flow =
+      insert(:flow,
+        tenant: tenant,
+        frequency_cap: %{"max_messages" => 1, "time_window" => "24h", "channel" => "email"}
+      )
+
+    insert(:flow_version, flow: flow, graph: valid_graph())
+    {:ok, flow} = Flows.activate_flow(flow)
+
+    instance =
+      insert(:flow_instance,
+        flow: flow,
+        tenant: tenant,
+        customer_id: "cust_capped",
+        status: "completed"
+      )
+
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    insert(:execution_step,
+      instance: instance,
+      node_type: "send_email",
+      status: "completed",
+      completed_at: now
+    )
+
+    conn =
+      post(conn, "/api/v1/flows/#{flow.id}/trigger", %{
+        "customer_id" => "cust_capped"
+      })
+
+    assert json_response(conn, 429) == %{"error" => "frequency_cap_exceeded"}
+  end
+
   test "trigger passes initial context to instance", %{conn: conn, tenant: tenant} do
     flow = insert(:flow, tenant: tenant)
     insert(:flow_version, flow: flow, graph: valid_graph())

@@ -85,4 +85,140 @@ defmodule Kalcifer.Engine.FlowTriggerTest do
       assert {:error, :no_active_version} = FlowTrigger.trigger(flow.id, "customer_123")
     end
   end
+
+  describe "deduplication" do
+    test "rejects trigger when customer has a running instance" do
+      flow = insert(:flow)
+      insert(:flow_version, flow: flow, graph: valid_graph())
+      {:ok, flow} = Flows.activate_flow(flow)
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "cust_1",
+        status: "running"
+      )
+
+      assert {:error, :already_in_flow} = FlowTrigger.trigger(flow.id, "cust_1")
+    end
+
+    test "rejects trigger when customer has a waiting instance" do
+      flow = insert(:flow)
+      insert(:flow_version, flow: flow, graph: valid_graph())
+      {:ok, flow} = Flows.activate_flow(flow)
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "cust_1",
+        status: "waiting"
+      )
+
+      assert {:error, :already_in_flow} = FlowTrigger.trigger(flow.id, "cust_1")
+    end
+
+    test "allows trigger when customer's previous instance completed" do
+      flow = insert(:flow)
+      insert(:flow_version, flow: flow, graph: valid_graph())
+      {:ok, flow} = Flows.activate_flow(flow)
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "cust_1",
+        status: "completed"
+      )
+
+      assert {:ok, _instance_id} = FlowTrigger.trigger(flow.id, "cust_1")
+      Process.sleep(100)
+    end
+
+    test "allows different customer to trigger same flow" do
+      flow = insert(:flow)
+      insert(:flow_version, flow: flow, graph: valid_graph())
+      {:ok, flow} = Flows.activate_flow(flow)
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "cust_1",
+        status: "running"
+      )
+
+      assert {:ok, _instance_id} = FlowTrigger.trigger(flow.id, "cust_2")
+      Process.sleep(100)
+    end
+  end
+
+  describe "flow-level frequency cap" do
+    test "allows trigger when frequency_cap is empty" do
+      flow = insert(:flow, frequency_cap: %{})
+      insert(:flow_version, flow: flow, graph: valid_graph())
+      {:ok, flow} = Flows.activate_flow(flow)
+
+      assert {:ok, _instance_id} = FlowTrigger.trigger(flow.id, "cust_1")
+      Process.sleep(100)
+    end
+
+    test "allows trigger when customer is under the cap" do
+      flow =
+        insert(:flow,
+          frequency_cap: %{"max_messages" => 5, "time_window" => "24h", "channel" => "all"}
+        )
+
+      insert(:flow_version, flow: flow, graph: valid_graph())
+      {:ok, flow} = Flows.activate_flow(flow)
+
+      assert {:ok, _instance_id} = FlowTrigger.trigger(flow.id, "cust_1")
+      Process.sleep(100)
+    end
+
+    test "rejects trigger when customer exceeds the cap" do
+      flow =
+        insert(:flow,
+          frequency_cap: %{"max_messages" => 2, "time_window" => "24h", "channel" => "email"}
+        )
+
+      insert(:flow_version, flow: flow, graph: valid_graph())
+      {:ok, flow} = Flows.activate_flow(flow)
+
+      # Seed completed email steps for this customer
+      instance =
+        insert(:flow_instance,
+          flow: flow,
+          tenant: flow.tenant,
+          customer_id: "cust_1",
+          status: "completed"
+        )
+
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      insert(:execution_step,
+        instance: instance,
+        node_type: "send_email",
+        status: "completed",
+        completed_at: now
+      )
+
+      insert(:execution_step,
+        instance: instance,
+        node_type: "send_email",
+        status: "completed",
+        completed_at: now
+      )
+
+      assert {:error, :frequency_cap_exceeded} = FlowTrigger.trigger(flow.id, "cust_1")
+    end
+
+    test "allows trigger when frequency_cap config is malformed (fail open)" do
+      flow =
+        insert(:flow, frequency_cap: %{"max_messages" => "not_a_number", "time_window" => "???"})
+
+      insert(:flow_version, flow: flow, graph: valid_graph())
+      {:ok, flow} = Flows.activate_flow(flow)
+
+      assert {:ok, _instance_id} = FlowTrigger.trigger(flow.id, "cust_1")
+      Process.sleep(100)
+    end
+  end
 end

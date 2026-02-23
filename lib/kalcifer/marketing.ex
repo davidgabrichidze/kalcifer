@@ -48,7 +48,7 @@ defmodule Kalcifer.Marketing do
   end
 
   def update_journey(%Journey{}, _attrs) do
-    {:error, :not_draft}
+    {:error, :journey_not_draft}
   end
 
   def delete_journey(%Journey{status: "draft"} = journey) do
@@ -56,7 +56,7 @@ defmodule Kalcifer.Marketing do
   end
 
   def delete_journey(%Journey{}) do
-    {:error, :not_draft}
+    {:error, :journey_not_draft}
   end
 
   # --- Lifecycle ---
