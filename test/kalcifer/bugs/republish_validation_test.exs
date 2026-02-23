@@ -1,19 +1,15 @@
 defmodule Kalcifer.Bugs.RepublishValidationTest do
   @moduledoc """
-  I2: FlowVersion.republish_changeset skips graph validation.
-  publish_changeset validates the graph, but republish_changeset does not.
-  A version with an invalid graph can be republished and become the active version.
-
-  I3: rollback_changeset and republish_changeset have no status guards.
-  Any version status can be rolled back or republished regardless of current status.
+  Regression tests for FlowVersion changeset guards (originally I2/I3).
+  These bugs have been FIXED:
+  - republish_changeset now validates graph
+  - rollback_changeset and republish_changeset now have status guards
   """
   use Kalcifer.DataCase, async: true
 
   alias Kalcifer.Flows.FlowVersion
 
-  @tag :known_bug
-  test "republish_changeset should validate graph like publish_changeset does" do
-    # Create a version with an invalid graph (no entry node)
+  test "republish_changeset validates graph (rejects invalid graph)" do
     bad_graph = %{
       "nodes" => [%{"id" => "x", "type" => "send_email", "config" => %{}}],
       "edges" => []
@@ -27,15 +23,10 @@ defmodule Kalcifer.Bugs.RepublishValidationTest do
     }
 
     changeset = FlowVersion.republish_changeset(version)
-
-    # BUG: republish_changeset does NOT call validate_graph.
-    # This changeset should be invalid because the graph has no entry node.
-    refute changeset.valid?,
-           "BUG: republish_changeset accepted invalid graph without validation"
+    refute changeset.valid?
   end
 
-  @tag :known_bug
-  test "rollback_changeset should reject draft version (never was published)" do
+  test "rollback_changeset rejects draft version" do
     version = %FlowVersion{
       id: Ecto.UUID.generate(),
       version_number: 1,
@@ -44,15 +35,10 @@ defmodule Kalcifer.Bugs.RepublishValidationTest do
     }
 
     changeset = FlowVersion.rollback_changeset(version)
-
-    # BUG: rollback_changeset has no status guard.
-    # A draft version was never published, so rolling it back is semantically wrong.
-    refute changeset.valid?,
-           "BUG: rollback_changeset accepted a draft version — should only accept published/deprecated"
+    refute changeset.valid?
   end
 
-  @tag :known_bug
-  test "republish_changeset should reject draft version (never was published)" do
+  test "republish_changeset rejects draft version" do
     version = %FlowVersion{
       id: Ecto.UUID.generate(),
       version_number: 1,
@@ -61,11 +47,31 @@ defmodule Kalcifer.Bugs.RepublishValidationTest do
     }
 
     changeset = FlowVersion.republish_changeset(version)
+    refute changeset.valid?
+  end
 
-    # BUG: republish_changeset has no status guard.
-    # A draft version should not be republished — it was never published.
-    refute changeset.valid?,
-           "BUG: republish_changeset accepted a draft version — should only accept deprecated/rolled_back"
+  test "republish_changeset accepts deprecated version with valid graph" do
+    version = %FlowVersion{
+      id: Ecto.UUID.generate(),
+      version_number: 1,
+      graph: valid_graph(),
+      status: "deprecated"
+    }
+
+    changeset = FlowVersion.republish_changeset(version)
+    assert changeset.valid?
+  end
+
+  test "rollback_changeset accepts published version" do
+    version = %FlowVersion{
+      id: Ecto.UUID.generate(),
+      version_number: 1,
+      graph: valid_graph(),
+      status: "published"
+    }
+
+    changeset = FlowVersion.rollback_changeset(version)
+    assert changeset.valid?
   end
 
   defp valid_graph do

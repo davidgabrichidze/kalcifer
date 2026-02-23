@@ -45,6 +45,7 @@ defmodule Kalcifer.Engine.RecoveryManager do
 
       graph ->
         waiting_node_id = instance.context["_waiting_node_id"]
+        waiting_node_type = instance.context["_waiting_node_type"]
         scheduled_at_str = instance.context["_resume_scheduled_at"]
 
         args = %{
@@ -62,7 +63,7 @@ defmodule Kalcifer.Engine.RecoveryManager do
 
         case start_flow_server(args) do
           {:ok, _pid} ->
-            ensure_resume_scheduled(instance, waiting_node_id, scheduled_at_str)
+            ensure_resume_scheduled(instance, waiting_node_id, waiting_node_type, scheduled_at_str)
 
           {:error, reason} ->
             Logger.warning(
@@ -86,11 +87,11 @@ defmodule Kalcifer.Engine.RecoveryManager do
     end
   end
 
-  defp ensure_resume_scheduled(instance, node_id, scheduled_at_str) do
+  defp ensure_resume_scheduled(instance, node_id, node_type, scheduled_at_str) do
     if has_pending_oban_job?(instance.id) do
       :ok
     else
-      resume_or_reschedule(instance, node_id, scheduled_at_str)
+      resume_or_reschedule(instance, node_id, node_type, scheduled_at_str)
     end
   end
 
@@ -103,8 +104,9 @@ defmodule Kalcifer.Engine.RecoveryManager do
     )
   end
 
-  defp resume_or_reschedule(instance, node_id, scheduled_at_str) do
+  defp resume_or_reschedule(instance, node_id, node_type, scheduled_at_str) do
     scheduled_at = parse_scheduled_at(scheduled_at_str)
+    trigger = resume_trigger(node_type)
     now = DateTime.utc_now()
 
     cond do
@@ -113,14 +115,17 @@ defmodule Kalcifer.Engine.RecoveryManager do
 
       is_nil(scheduled_at) || DateTime.compare(scheduled_at, now) != :gt ->
         via = {:via, Registry, {Kalcifer.Engine.ProcessRegistry, instance.id}}
-        GenServer.cast(via, {:resume, node_id, :timer_expired})
+        GenServer.cast(via, {:resume, node_id, trigger})
 
       true ->
-        %{instance_id: instance.id, node_id: node_id, trigger: "timer_expired"}
+        %{instance_id: instance.id, node_id: node_id, trigger: Atom.to_string(trigger)}
         |> ResumeFlowJob.new(scheduled_at: scheduled_at)
         |> Oban.insert()
     end
   end
+
+  defp resume_trigger("wait_for_event"), do: :timeout
+  defp resume_trigger(_node_type), do: :timer_expired
 
   defp parse_scheduled_at(nil), do: nil
 

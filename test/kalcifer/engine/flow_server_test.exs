@@ -228,21 +228,25 @@ defmodule Kalcifer.Engine.FlowServerTest do
   end
 
   describe "context accumulation" do
-    test "accumulates node results in context" do
-      {pid, ref, _args} = start_server(valid_graph())
+    test "accumulates node results in context (persisted at wait)" do
+      # Use a wait graph so context is persisted via persist_waiting_state
+      {pid, _ref, args} = start_server(wait_graph())
 
-      # Wait briefly for execution to start, then check if server is still alive or completed
-      _result = wait_for_completion(pid, ref, 500)
+      # Give server time to reach the wait node
+      Process.sleep(200)
+      assert Process.alive?(pid)
 
-      # Whether completed or not, check the instance was created with context
-      instance =
-        Repo.one(
-          from i in Kalcifer.Flows.FlowInstance,
-            order_by: [desc: i.inserted_at],
-            limit: 1
-        )
-
+      instance = Repo.get(Kalcifer.Flows.FlowInstance, args.instance_id)
       assert instance != nil
+      assert instance.status == "waiting"
+
+      # Verify accumulated context contains entry node result
+      accumulated = instance.context["accumulated"]
+      assert is_map(accumulated), "context should have 'accumulated' map with node results"
+      assert Map.has_key?(accumulated, "entry_1"), "accumulated should contain entry_1 result"
+
+      # Clean up — stop the waiting server
+      GenServer.stop(pid, :normal)
     end
   end
 

@@ -269,6 +269,7 @@ defmodule Kalcifer.Engine.FlowServer do
 
     context
     |> Map.put("_waiting_node_id", node["id"])
+    |> Map.put("_waiting_node_type", node["type"])
     |> Map.put("_resume_scheduled_at", scheduled_at && DateTime.to_iso8601(scheduled_at))
     |> Map.put("_waiting_event_type", event_type)
   end

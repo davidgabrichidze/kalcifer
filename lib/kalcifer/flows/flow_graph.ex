@@ -2,7 +2,7 @@ defmodule Kalcifer.Flows.FlowGraph do
   @moduledoc false
 
   @entry_types ~w(segment_entry event_entry webhook_entry)
-  @branching_types ~w(condition ab_split wait_for_event check_segment preference_gate)
+  @branching_types ~w(condition ab_split wait_for_event check_segment preference_gate frequency_cap)
 
   @doc """
   Validates a flow graph structure.
@@ -216,6 +216,7 @@ defmodule Kalcifer.Flows.FlowGraph do
 
   defp required_branches(%{"type" => "check_segment"}), do: MapSet.new(["true", "false"])
   defp required_branches(%{"type" => "preference_gate"}), do: MapSet.new(["true", "false"])
+  defp required_branches(%{"type" => "frequency_cap"}), do: MapSet.new(["capped", "allowed"])
 
   defp required_branches(_), do: MapSet.new()
 end
