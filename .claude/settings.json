@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//private/tmp/**)",
+      "Read(//tmp/kalcifer_gen/**)",
+      "Read(//private/tmp/kalcifer_gen/**)",
+      "Read(//tmp/kalcifer_gen/config/**)",
+      "Read(//private/tmp/kalcifer_gen/config/**)"
+    ]
+  }
+}

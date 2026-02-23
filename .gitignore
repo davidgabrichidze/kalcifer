@@ -37,7 +37,9 @@ kalcifer-*.tar
 .elixir_ls/
 .vscode/
 .idea/
-.claude/
+# .claude/ — keep skills and settings in repo, ignore local overrides
+!.claude/
+.claude/settings.local.json
 *.swp
 *.swo
 *~
