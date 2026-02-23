@@ -3,9 +3,11 @@ defmodule Kalcifer.Engine.Nodes.Action.Channel.SendInApp do
 
   use Kalcifer.Engine.NodeBehaviour
 
+  alias Kalcifer.Channels.ChannelSender
+
   @impl true
-  def execute(_config, _context) do
-    {:completed, %{sent: true, channel: "in_app"}}
+  def execute(config, context) do
+    ChannelSender.send(:in_app, config, context)
   end
 
   @impl true

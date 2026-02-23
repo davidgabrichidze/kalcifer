@@ -14,6 +14,9 @@ defmodule KalciferWeb.Router do
 
     get "/health", HealthController, :show
     get "/health/metrics", HealthController, :metrics
+
+    post "/webhooks/sendgrid", WebhookController, :sendgrid
+    post "/webhooks/twilio", WebhookController, :twilio
   end
 
   scope "/api/v1", KalciferWeb do

@@ -20,8 +20,19 @@ config :kalcifer, Oban,
   queues: [
     flow_triggers: 10,
     delayed_resume: 20,
+    channel_delivery: 50,
     maintenance: 5
   ]
+
+# Channel providers — channel atom → provider module
+config :kalcifer, :channel_providers, %{
+  email: Kalcifer.Channels.Providers.LogProvider,
+  sms: Kalcifer.Channels.Providers.LogProvider,
+  push: Kalcifer.Channels.Providers.LogProvider,
+  whatsapp: Kalcifer.Channels.Providers.LogProvider,
+  in_app: Kalcifer.Channels.Providers.LogProvider,
+  webhook: Kalcifer.Channels.Providers.LogProvider
+}
 
 # Configure Elixir's Logger
 config :logger, :default_formatter,

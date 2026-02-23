@@ -3,9 +3,11 @@ defmodule Kalcifer.Engine.Nodes.Action.Channel.SendEmail do
 
   use Kalcifer.Engine.NodeBehaviour
 
+  alias Kalcifer.Channels.ChannelSender
+
   @impl true
-  def execute(_config, _context) do
-    {:completed, %{sent: true, channel: "email"}}
+  def execute(config, context) do
+    ChannelSender.send(:email, config, context)
   end
 
   @impl true

@@ -79,6 +79,7 @@ defmodule Kalcifer.Engine.FlowServer do
       |> Map.put("_customer_id", args.customer_id)
       |> Map.put("_flow_id", args.flow_id)
       |> Map.put("_tenant_id", args.tenant_id)
+      |> Map.put("_instance_id", instance.id)
 
     state = %__MODULE__{
       instance_id: instance.id,

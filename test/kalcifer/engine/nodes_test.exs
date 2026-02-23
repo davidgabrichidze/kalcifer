@@ -1,5 +1,7 @@
 defmodule Kalcifer.Engine.NodesTest do
-  use ExUnit.Case, async: true
+  use Kalcifer.DataCase, async: true
+
+  import Kalcifer.Factory
 
   alias Kalcifer.Engine.Nodes.Action.Channel.CallWebhook
   alias Kalcifer.Engine.Nodes.Action.Channel.SendEmail
@@ -14,7 +16,6 @@ defmodule Kalcifer.Engine.NodesTest do
   alias Kalcifer.Engine.Nodes.Condition.AbSplit
   alias Kalcifer.Engine.Nodes.Condition.CheckSegment
   alias Kalcifer.Engine.Nodes.Condition.Condition
-
   alias Kalcifer.Engine.Nodes.Condition.PreferenceGate
   alias Kalcifer.Engine.Nodes.End.Exit
   alias Kalcifer.Engine.Nodes.End.GoalReached
@@ -24,6 +25,17 @@ defmodule Kalcifer.Engine.NodesTest do
   alias Kalcifer.Engine.Nodes.Wait.Wait
   alias Kalcifer.Engine.Nodes.Wait.WaitForEvent
   alias Kalcifer.Engine.Nodes.Wait.WaitUntil
+
+  defp channel_context do
+    tenant = insert(:tenant)
+    instance = insert(:flow_instance, tenant: tenant)
+
+    %{
+      "_tenant_id" => tenant.id,
+      "_instance_id" => instance.id,
+      "_customer_id" => instance.customer_id
+    }
+  end
 
   describe "trigger nodes" do
     test "event_entry returns completed with event_type" do
@@ -47,33 +59,43 @@ defmodule Kalcifer.Engine.NodesTest do
   end
 
   describe "action/channel nodes" do
-    test "send_email returns completed" do
-      assert {:completed, %{sent: true, channel: "email"}} =
-               SendEmail.execute(%{"template_id" => "t1"}, %{})
+    test "send_email returns completed with delivery" do
+      ctx = channel_context()
+
+      assert {:completed, %{delivery_id: _, channel: "email", status: "pending"}} =
+               SendEmail.execute(%{"template_id" => "t1"}, ctx)
     end
 
     test "send_email category is :action" do
       assert SendEmail.category() == :action
     end
 
-    test "send_sms returns completed" do
-      assert {:completed, %{sent: true, channel: "sms"}} =
-               SendSms.execute(%{"template_id" => "t1"}, %{})
+    test "send_sms returns completed with delivery" do
+      ctx = channel_context()
+
+      assert {:completed, %{delivery_id: _, channel: "sms", status: "pending"}} =
+               SendSms.execute(%{"template_id" => "t1"}, ctx)
     end
 
-    test "send_push returns completed" do
-      assert {:completed, %{sent: true, channel: "push"}} =
-               SendPush.execute(%{"template_id" => "t1"}, %{})
+    test "send_push returns completed with delivery" do
+      ctx = channel_context()
+
+      assert {:completed, %{delivery_id: _, channel: "push", status: "pending"}} =
+               SendPush.execute(%{"template_id" => "t1"}, ctx)
     end
 
-    test "send_whatsapp returns completed" do
-      assert {:completed, %{sent: true, channel: "whatsapp"}} =
-               SendWhatsapp.execute(%{"template_id" => "t1"}, %{})
+    test "send_whatsapp returns completed with delivery" do
+      ctx = channel_context()
+
+      assert {:completed, %{delivery_id: _, channel: "whatsapp", status: "pending"}} =
+               SendWhatsapp.execute(%{"template_id" => "t1"}, ctx)
     end
 
-    test "call_webhook returns completed" do
-      assert {:completed, %{sent: true, channel: "webhook"}} =
-               CallWebhook.execute(%{"url" => "https://example.com"}, %{})
+    test "call_webhook returns completed with delivery" do
+      ctx = channel_context()
+
+      assert {:completed, %{delivery_id: _, channel: "webhook", status: "pending"}} =
+               CallWebhook.execute(%{"url" => "https://example.com"}, ctx)
     end
   end
 
@@ -178,9 +200,11 @@ defmodule Kalcifer.Engine.NodesTest do
   end
 
   describe "send_in_app node" do
-    test "returns completed with in_app channel" do
-      assert {:completed, %{sent: true, channel: "in_app"}} =
-               SendInApp.execute(%{"template_id" => "welcome_modal"}, %{})
+    test "returns completed with delivery" do
+      ctx = channel_context()
+
+      assert {:completed, %{delivery_id: _, channel: "in_app", status: "pending"}} =
+               SendInApp.execute(%{"template_id" => "welcome_modal"}, ctx)
     end
 
     test "category is :action" do
