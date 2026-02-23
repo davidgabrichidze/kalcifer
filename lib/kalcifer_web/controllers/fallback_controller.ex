@@ -95,6 +95,13 @@ defmodule KalciferWeb.FallbackController do
     |> json(%{errors: errors})
   end
 
+  # Catch-all for unhandled error atoms
+  def call(conn, {:error, reason}) when is_atom(reason) do
+    conn
+    |> put_status(:internal_server_error)
+    |> json(%{error: to_string(reason)})
+  end
+
   defp format_errors(changeset) do
     Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
       Regex.replace(~r"%{(\w+)}", msg, fn _, key ->

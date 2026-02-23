@@ -22,7 +22,21 @@ config :kalcifer, Oban,
     delayed_resume: 20,
     channel_delivery: 50,
     maintenance: 5
+  ],
+  plugins: [
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"0 3 * * *", Kalcifer.Engine.Jobs.CleanupJob},
+       {"*/5 * * * *", Kalcifer.Engine.Jobs.StatsRollupJob}
+     ]}
   ]
+
+# Rate limiting — {max_requests, window_seconds}
+config :kalcifer, :rate_limits, %{
+  trigger: {100, 60},
+  events: {1000, 60},
+  default: {500, 60}
+}
 
 # Channel providers — channel atom → provider module
 config :kalcifer, :channel_providers, %{

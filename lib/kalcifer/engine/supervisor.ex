@@ -14,6 +14,7 @@ defmodule Kalcifer.Engine.Supervisor do
       Kalcifer.Engine.NodeRegistry,
       Kalcifer.Channels.ProviderRegistry,
       Kalcifer.Analytics.Collector,
+      Kalcifer.Engine.CircuitBreaker,
       {DynamicSupervisor, name: Kalcifer.Engine.FlowSupervisor, strategy: :one_for_one},
       Kalcifer.Engine.RecoveryManager
     ]
