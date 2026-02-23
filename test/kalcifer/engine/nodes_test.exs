@@ -37,6 +37,18 @@ defmodule Kalcifer.Engine.NodesTest do
     }
   end
 
+  defp flow_context do
+    tenant = insert(:tenant)
+    instance = insert(:flow_instance, tenant: tenant)
+
+    %{
+      "_tenant_id" => tenant.id,
+      "_instance_id" => instance.id,
+      "_flow_id" => instance.flow_id,
+      "_customer_id" => instance.customer_id
+    }
+  end
+
   describe "trigger nodes" do
     test "event_entry returns completed with event_type" do
       assert {:completed, %{event_type: "signed_up"}} =
@@ -210,8 +222,10 @@ defmodule Kalcifer.Engine.NodesTest do
     end
 
     test "goal_reached returns completed with goal name" do
+      ctx = flow_context()
+
       assert {:completed, %{exit: true, goal: "purchase"}} =
-               GoalReached.execute(%{"goal_name" => "purchase"}, %{})
+               GoalReached.execute(%{"goal_name" => "purchase"}, ctx)
     end
   end
 
@@ -289,16 +303,18 @@ defmodule Kalcifer.Engine.NodesTest do
   describe "track_conversion node" do
     test "returns completed with conversion data" do
       config = %{"event_name" => "purchase", "revenue" => 49.99}
+      ctx = flow_context()
 
       assert {:completed, %{conversion_tracked: true, event_name: "purchase", revenue: 49.99}} =
-               TrackConversion.execute(config, %{})
+               TrackConversion.execute(config, ctx)
     end
 
     test "works without optional revenue" do
       config = %{"event_name" => "signup"}
+      ctx = flow_context()
 
       assert {:completed, %{conversion_tracked: true, event_name: "signup", revenue: nil}} =
-               TrackConversion.execute(config, %{})
+               TrackConversion.execute(config, ctx)
     end
 
     test "category is :action" do

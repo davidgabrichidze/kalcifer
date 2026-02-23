@@ -13,6 +13,7 @@ defmodule Kalcifer.Engine.Supervisor do
       {Registry, keys: :unique, name: Kalcifer.Engine.ProcessRegistry},
       Kalcifer.Engine.NodeRegistry,
       Kalcifer.Channels.ProviderRegistry,
+      Kalcifer.Analytics.Collector,
       {DynamicSupervisor, name: Kalcifer.Engine.FlowSupervisor, strategy: :one_for_one},
       Kalcifer.Engine.RecoveryManager
     ]

@@ -93,6 +93,7 @@ defmodule Kalcifer.Engine.FlowServer do
       status: :running
     }
 
+    emit_instance_event(state, :entered)
     {:ok, state, {:continue, :execute_current}}
   end
 
@@ -186,12 +187,14 @@ defmodule Kalcifer.Engine.FlowServer do
     case NodeExecutor.execute(node, state.context) do
       {:completed, result} ->
         StepStore.record_step_complete(step, result)
+        emit_step_event(state, node, :completed, nil)
         state = accumulate_context(state, node["id"], result)
         next = resolve_next_nodes(state.graph, node, nil)
         handle_next(state, next)
 
       {:branched, branch_key, result} ->
         StepStore.record_step_complete(step, result)
+        emit_step_event(state, node, :completed, branch_key)
         state = accumulate_context(state, node["id"], result)
         next = resolve_next_nodes(state.graph, node, branch_key)
         handle_next(state, next)
@@ -208,15 +211,19 @@ defmodule Kalcifer.Engine.FlowServer do
       {:failed, reason} ->
         error = normalize_error(reason)
         StepStore.record_step_fail(step, error)
+        emit_step_event(state, node, :failed, nil)
         state = %{state | status: :failed}
         InstanceStore.fail_instance(get_instance(state), inspect(reason))
+        emit_instance_event(state, :failed)
         {:failed, state}
 
       {:error, {:unknown_node_type, _type}} = error ->
         error_map = %{reason: inspect(error)}
         StepStore.record_step_fail(step, error_map)
+        emit_step_event(state, node, :failed, nil)
         state = %{state | status: :failed}
         InstanceStore.fail_instance(get_instance(state), inspect(error))
+        emit_instance_event(state, :failed)
         {:failed, state}
     end
   end
@@ -225,6 +232,7 @@ defmodule Kalcifer.Engine.FlowServer do
     # No more nodes — check if this is an exit node result
     state = %{state | current_nodes: [], status: :completed}
     InstanceStore.complete_instance(get_instance(state))
+    emit_instance_event(state, :completed)
     {:continue, state, []}
   end
 
@@ -366,6 +374,38 @@ defmodule Kalcifer.Engine.FlowServer do
 
   defp normalize_error(%{} = error), do: error
   defp normalize_error(reason), do: %{reason: inspect(reason)}
+
+  # --- Telemetry ---
+
+  defp emit_step_event(state, node, status, branch_key) do
+    :telemetry.execute(
+      [:kalcifer, :step, :complete],
+      %{system_time: System.system_time()},
+      %{
+        flow_id: state.flow_id,
+        version_number: state.version_number,
+        instance_id: state.instance_id,
+        node_id: node["id"],
+        node_type: node["type"],
+        status: status,
+        branch_key: branch_key
+      }
+    )
+  end
+
+  defp emit_instance_event(state, type) do
+    :telemetry.execute(
+      [:kalcifer, :instance, type],
+      %{system_time: System.system_time()},
+      %{
+        flow_id: state.flow_id,
+        version_number: state.version_number,
+        instance_id: state.instance_id,
+        customer_id: state.customer_id,
+        tenant_id: state.tenant_id
+      }
+    )
+  end
 
   defp maybe_stop(%{status: :completed} = state), do: {:stop, :normal, state}
   defp maybe_stop(%{status: :failed} = state), do: {:stop, :normal, state}
