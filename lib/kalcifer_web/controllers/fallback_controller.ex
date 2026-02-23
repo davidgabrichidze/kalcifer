@@ -49,6 +49,24 @@ defmodule KalciferWeb.FallbackController do
     |> json(%{error: "frequency_cap_exceeded"})
   end
 
+  def call(conn, {:error, :version_not_found}) do
+    conn
+    |> put_status(:not_found)
+    |> json(%{error: "version_not_found"})
+  end
+
+  def call(conn, {:error, :version_not_publishable}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "version_not_publishable"})
+  end
+
+  def call(conn, {:error, :invalid_version}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "invalid_version_number"})
+  end
+
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     errors = format_errors(changeset)
 

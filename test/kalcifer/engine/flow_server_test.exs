@@ -4,6 +4,7 @@ defmodule Kalcifer.Engine.FlowServerTest do
   alias Kalcifer.Engine.FlowServer
   alias Kalcifer.Flows.ExecutionStep
   alias Kalcifer.Repo
+  alias Kalcifer.Versioning.NodeMapper
 
   import Ecto.Query
   import Kalcifer.Factory
@@ -359,6 +360,47 @@ defmodule Kalcifer.Engine.FlowServerTest do
       assert state.context["_customer_id"] == state.customer_id
       assert state.context["_flow_id"] == state.flow_id
       assert state.context["_tenant_id"] == state.tenant_id
+
+      GenServer.stop(pid, :normal)
+    end
+
+    test "migrate swaps graph and version in waiting state" do
+      graph_v1 = wait_for_event_timeout_graph()
+      {pid, _ref, _args} = start_server(graph_v1)
+      Process.sleep(100)
+
+      state = GenServer.call(pid, :get_state)
+      assert state.status == :waiting
+      assert state.version_number == 1
+
+      # Build v2 graph with different event_type
+      graph_v2 = put_in(graph_v1, ["nodes", Access.at(1), "config", "event_type"], "push_opened")
+
+      node_map = NodeMapper.build_mapping(graph_v1, graph_v2)
+      :ok = GenServer.call(pid, {:migrate, graph_v2, 2, node_map})
+
+      new_state = GenServer.call(pid, :get_state)
+      assert new_state.version_number == 2
+      assert new_state.graph == graph_v2
+      assert new_state.context["_waiting_event_type"] == "push_opened"
+
+      GenServer.stop(pid, :normal)
+    end
+
+    test "migrate with no wait changes keeps context unchanged" do
+      graph = wait_for_event_timeout_graph()
+      {pid, _ref, _args} = start_server(graph)
+      Process.sleep(100)
+
+      state_before = GenServer.call(pid, :get_state)
+
+      # Same graph, no changes
+      node_map = NodeMapper.build_mapping(graph, graph)
+      :ok = GenServer.call(pid, {:migrate, graph, 2, node_map})
+
+      state_after = GenServer.call(pid, :get_state)
+      assert state_after.version_number == 2
+      assert state_after.context["_waiting_event_type"] == state_before.context["_waiting_event_type"]
 
       GenServer.stop(pid, :normal)
     end

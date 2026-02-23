@@ -4,8 +4,10 @@ defmodule Kalcifer.Flows do
   import Ecto.Query
 
   alias Kalcifer.Flows.Flow
+  alias Kalcifer.Flows.FlowInstance
   alias Kalcifer.Flows.FlowVersion
   alias Kalcifer.Repo
+  alias Kalcifer.Versioning.Migrator
 
   # --- Flow CRUD ---
 
@@ -126,6 +128,98 @@ defmodule Kalcifer.Flows do
 
   def publish_version(%FlowVersion{}) do
     {:error, :not_draft}
+  end
+
+  # --- Version Migration ---
+
+  def migrate_flow_version(%Flow{} = flow, new_version_number, strategy \\ "new_entries_only") do
+    new_version = get_version(flow.id, new_version_number)
+    old_version = get_active_version(flow)
+
+    with {:ok, _} <- validate_versions(new_version, old_version),
+         {:ok, {old_vn, new_vn}} <- do_version_transition(flow, old_version, new_version) do
+      Migrator.migrate(flow.id, old_vn, new_vn, strategy)
+    end
+  end
+
+  def rollback_flow_version(%Flow{} = flow, target_version_number) do
+    current_version = get_active_version(flow)
+    target_version = get_version(flow.id, target_version_number)
+
+    cond do
+      is_nil(current_version) -> {:error, :no_active_version}
+      is_nil(target_version) -> {:error, :version_not_found}
+      true -> do_rollback(flow, current_version, target_version)
+    end
+  end
+
+  def migration_status(flow_id) do
+    FlowInstance
+    |> where([i], i.flow_id == ^flow_id)
+    |> where([i], i.status in ["running", "waiting"])
+    |> group_by(:version_number)
+    |> select([i], {i.version_number, count(i.id)})
+    |> Repo.all()
+    |> Map.new()
+  end
+
+  defp validate_versions(nil, _old), do: {:error, :version_not_found}
+  defp validate_versions(_new, nil), do: {:error, :no_active_version}
+  defp validate_versions(_new, _old), do: {:ok, :valid}
+
+  defp do_version_transition(flow, old_version, new_version) do
+    Repo.transaction(fn ->
+      published = ensure_published(new_version)
+
+      old_version |> FlowVersion.deprecate_changeset() |> Repo.update!()
+      flow |> Flow.active_version_changeset(published.id) |> Repo.update!()
+
+      {old_version.version_number, published.version_number}
+    end)
+  end
+
+  defp ensure_published(%FlowVersion{status: "draft"} = version) do
+    case publish_version(version) do
+      {:ok, v} -> v
+      {:error, reason} -> Repo.rollback(reason)
+    end
+  end
+
+  defp ensure_published(%FlowVersion{status: "published"} = version), do: version
+  defp ensure_published(%FlowVersion{}), do: Repo.rollback(:version_not_publishable)
+
+  defp do_rollback(flow, current_version, target_version) do
+    Repo.transaction(fn ->
+      # Mark current as rolled back
+      current_version
+      |> FlowVersion.rollback_changeset()
+      |> Repo.update!()
+
+      # Republish target
+      target_version
+      |> FlowVersion.republish_changeset()
+      |> Repo.update!()
+
+      # Update flow's active version
+      flow
+      |> Flow.active_version_changeset(target_version.id)
+      |> Repo.update!()
+
+      {current_version.version_number, target_version.version_number}
+    end)
+    |> case do
+      {:ok, {from_vn, to_vn}} ->
+        Migrator.rollback(flow.id, from_vn, to_vn)
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp get_active_version(%Flow{active_version_id: nil}), do: nil
+
+  defp get_active_version(%Flow{active_version_id: id}) do
+    Repo.get(FlowVersion, id)
   end
 
   # --- Private ---

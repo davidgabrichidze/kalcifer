@@ -50,5 +50,16 @@ defmodule Kalcifer.Flows.FlowInstance do
     |> validate_inclusion(:status, @statuses)
   end
 
+  def migration_changeset(instance, new_version_number, old_version_number) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    instance
+    |> change(
+      version_number: new_version_number,
+      migrated_from_version: old_version_number,
+      migrated_at: now
+    )
+  end
+
   def statuses, do: @statuses
 end

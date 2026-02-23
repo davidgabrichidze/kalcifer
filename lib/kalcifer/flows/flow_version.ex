@@ -51,6 +51,19 @@ defmodule Kalcifer.Flows.FlowVersion do
     |> validate_graph()
   end
 
+  def deprecate_changeset(version) do
+    change(version, status: "deprecated")
+  end
+
+  def rollback_changeset(version) do
+    change(version, status: "rolled_back")
+  end
+
+  def republish_changeset(version) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    change(version, status: "published", published_at: now)
+  end
+
   def statuses, do: @statuses
 
   defp validate_graph(changeset) do

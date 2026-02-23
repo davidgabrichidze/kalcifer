@@ -227,4 +227,76 @@ defmodule Kalcifer.FlowsTest do
       assert {:error, :not_draft} = Flows.publish_version(version)
     end
   end
+
+  describe "migrate_flow_version/3" do
+    test "returns error when target version does not exist" do
+      flow = insert(:flow)
+      insert(:flow_version, flow: flow, version_number: 1, graph: valid_graph())
+      {:ok, flow} = Flows.activate_flow(flow)
+
+      assert {:error, :version_not_found} = Flows.migrate_flow_version(flow, 99)
+    end
+
+    test "returns error when flow has no active version" do
+      flow = insert(:flow, status: "draft", active_version_id: nil)
+      insert(:flow_version, flow: flow, version_number: 1, graph: valid_graph())
+
+      assert {:error, :no_active_version} = Flows.migrate_flow_version(flow, 1)
+    end
+  end
+
+  describe "rollback_flow_version/2" do
+    test "returns error when flow has no active version" do
+      flow = insert(:flow, status: "draft", active_version_id: nil)
+      assert {:error, :no_active_version} = Flows.rollback_flow_version(flow, 1)
+    end
+
+    test "returns error when target version does not exist" do
+      flow = insert(:flow)
+      insert(:flow_version, flow: flow, version_number: 1, graph: valid_graph())
+      {:ok, flow} = Flows.activate_flow(flow)
+
+      assert {:error, :version_not_found} = Flows.rollback_flow_version(flow, 99)
+    end
+  end
+
+  describe "migration_status/1" do
+    test "returns instance counts grouped by version" do
+      flow = insert(:flow)
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "c1",
+        status: "waiting",
+        version_number: 1
+      )
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "c2",
+        status: "running",
+        version_number: 2
+      )
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "c3",
+        status: "completed",
+        version_number: 1
+      )
+
+      status = Flows.migration_status(flow.id)
+      assert status[1] == 1
+      assert status[2] == 1
+      refute Map.has_key?(status, 3)
+    end
+
+    test "returns empty map when no active instances" do
+      flow = insert(:flow)
+      assert Flows.migration_status(flow.id) == %{}
+    end
+  end
 end

@@ -9,6 +9,7 @@ defmodule Kalcifer.Engine.FlowServer do
   alias Kalcifer.Engine.NodeExecutor
   alias Kalcifer.Engine.Persistence.InstanceStore
   alias Kalcifer.Engine.Persistence.StepStore
+  alias Kalcifer.Versioning.NodeMapper
 
   defstruct [
     :instance_id,
@@ -103,6 +104,16 @@ defmodule Kalcifer.Engine.FlowServer do
   @impl true
   def handle_call(:get_state, _from, state) do
     {:reply, state, state}
+  end
+
+  @impl true
+  def handle_call({:migrate, new_graph, new_version, node_map}, _from, state) do
+    wait_changes = NodeMapper.detect_wait_changes(node_map)
+
+    new_state = %{state | graph: new_graph, version_number: new_version}
+    new_state = handle_wait_migration(new_state, state, wait_changes)
+
+    {:reply, :ok, new_state}
   end
 
   @impl true
@@ -354,4 +365,62 @@ defmodule Kalcifer.Engine.FlowServer do
   defp maybe_stop(%{status: :completed} = state), do: {:stop, :normal, state}
   defp maybe_stop(%{status: :failed} = state), do: {:stop, :normal, state}
   defp maybe_stop(state), do: {:noreply, state}
+
+  # --- Version migration helpers ---
+
+  defp handle_wait_migration(new_state, old_state, wait_changes) do
+    case old_state.waiting_node_id do
+      nil ->
+        new_state
+
+      node_id ->
+        relevant = Enum.find(wait_changes, fn {id, _} -> id == node_id end)
+        apply_wait_change(new_state, old_state, node_id, relevant)
+    end
+  end
+
+  defp apply_wait_change(new_state, _old_state, _node_id, nil), do: new_state
+
+  defp apply_wait_change(new_state, _old_state, node_id, {_, :event_type_changed}) do
+    new_node = GraphWalker.find_node(new_state.graph, node_id)
+    new_event_type = new_node["config"]["event_type"]
+    context = Map.put(new_state.context, "_waiting_event_type", new_event_type)
+    new_state = %{new_state | context: context}
+    persist_waiting_state(new_state)
+    new_state
+  end
+
+  defp apply_wait_change(new_state, old_state, node_id, {_, change})
+       when change in [:duration_changed, :timeout_changed] do
+    cancel_pending_resume_job(old_state.instance_id)
+    new_node = GraphWalker.find_node(new_state.graph, node_id)
+
+    case new_node["type"] do
+      "wait" ->
+        duration = new_node["config"]["duration"]
+        if duration, do: schedule_timer(new_state, node_id, duration, "timer_expired")
+
+      "wait_for_event" ->
+        timeout = new_node["config"]["timeout"]
+        if timeout, do: schedule_timer(new_state, node_id, timeout, "timeout")
+
+      _ ->
+        :ok
+    end
+
+    new_state
+  end
+
+  defp cancel_pending_resume_job(instance_id) do
+    import Ecto.Query
+
+    Kalcifer.Repo.update_all(
+      from(j in Oban.Job,
+        where: j.worker == "Kalcifer.Engine.Jobs.ResumeFlowJob",
+        where: j.state in ["scheduled", "available"],
+        where: fragment("? ->> 'instance_id' = ?", j.args, ^instance_id)
+      ),
+      set: [state: "cancelled"]
+    )
+  end
 end

@@ -80,6 +80,34 @@ defmodule Kalcifer.Engine.Persistence.InstanceStore do
     |> Repo.all()
   end
 
+  def list_active_for_version(flow_id, version_number) do
+    FlowInstance
+    |> where([i], i.flow_id == ^flow_id)
+    |> where([i], i.version_number == ^version_number)
+    |> where([i], i.status in ["running", "waiting"])
+    |> Repo.all()
+  end
+
+  def migrate_instance(instance, new_version_number) do
+    old_version = instance.version_number
+
+    instance
+    |> FlowInstance.migration_changeset(new_version_number, old_version)
+    |> Repo.update()
+  end
+
+  def exit_instance(instance, reason) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    instance
+    |> FlowInstance.status_changeset("exited", %{
+      exit_reason: reason,
+      exited_at: now,
+      current_nodes: []
+    })
+    |> Repo.update()
+  end
+
   def mark_crashed(instance) do
     now = DateTime.utc_now() |> DateTime.truncate(:second)
 

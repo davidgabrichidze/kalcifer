@@ -65,6 +65,69 @@ defmodule Kalcifer.Engine.Persistence.InstanceStoreTest do
     end
   end
 
+  describe "list_active_for_version/2" do
+    test "returns running and waiting instances for specific version" do
+      flow = insert(:flow)
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "c1",
+        status: "waiting",
+        version_number: 1
+      )
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "c2",
+        status: "running",
+        version_number: 1
+      )
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "c3",
+        status: "completed",
+        version_number: 1
+      )
+
+      insert(:flow_instance,
+        flow: flow,
+        tenant: flow.tenant,
+        customer_id: "c4",
+        status: "waiting",
+        version_number: 2
+      )
+
+      result = InstanceStore.list_active_for_version(flow.id, 1)
+      assert length(result) == 2
+      assert Enum.all?(result, &(&1.version_number == 1))
+    end
+  end
+
+  describe "migrate_instance/2" do
+    test "updates version and records migration metadata" do
+      instance = insert(:flow_instance, version_number: 1)
+      assert {:ok, migrated} = InstanceStore.migrate_instance(instance, 2)
+      assert migrated.version_number == 2
+      assert migrated.migrated_from_version == 1
+      assert migrated.migrated_at != nil
+    end
+  end
+
+  describe "exit_instance/2" do
+    test "sets status to exited with reason" do
+      instance = insert(:flow_instance, status: "waiting")
+      assert {:ok, exited} = InstanceStore.exit_instance(instance, "node_removed")
+      assert exited.status == "exited"
+      assert exited.exit_reason == "node_removed"
+      assert exited.exited_at != nil
+      assert exited.current_nodes == []
+    end
+  end
+
   describe "customer_active_in_flow?/2" do
     test "returns false when no instances exist" do
       flow = insert(:flow)
