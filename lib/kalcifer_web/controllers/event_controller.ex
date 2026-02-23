@@ -3,15 +3,24 @@ defmodule KalciferWeb.EventController do
 
   alias Kalcifer.Engine.EventRouter
 
-  def create(conn, params) do
-    customer_id = params["customer_id"]
-    event_type = params["event_type"]
+  action_fallback KalciferWeb.FallbackController
+
+  def create(conn, %{"customer_id" => cid, "event_type" => et} = params)
+      when is_binary(cid) and cid != "" and is_binary(et) and et != "" do
+    tenant = conn.assigns.current_tenant
     event_data = params["data"] || %{}
 
-    results = EventRouter.route_event(customer_id, event_type, event_data)
+    results = EventRouter.route_event(tenant.id, cid, et, event_data)
+    routed = Enum.count(results, &match?({:ok, _}, &1))
 
     conn
     |> put_status(:accepted)
-    |> json(%{routed: length(results)})
+    |> json(%{routed: routed})
+  end
+
+  def create(conn, _params) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "customer_id and event_type are required"})
   end
 end

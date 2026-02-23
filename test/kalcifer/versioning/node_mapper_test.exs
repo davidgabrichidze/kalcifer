@@ -99,8 +99,10 @@ defmodule Kalcifer.Versioning.NodeMapperTest do
         matched: [
           %{
             id: "w",
-            v1_node: node("w", "wait_for_event", %{"event_type" => "email_opened", "timeout" => "3d"}),
-            v2_node: node("w", "wait_for_event", %{"event_type" => "push_opened", "timeout" => "3d"}),
+            v1_node:
+              node("w", "wait_for_event", %{"event_type" => "email_opened", "timeout" => "3d"}),
+            v2_node:
+              node("w", "wait_for_event", %{"event_type" => "push_opened", "timeout" => "3d"}),
             changes: [:config_changed]
           }
         ],

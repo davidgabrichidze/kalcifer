@@ -28,38 +28,31 @@ defmodule Kalcifer.Bugs.NilCustomerIdTest do
     {:ok, conn: conn, tenant: tenant}
   end
 
-  @tag :known_bug
   test "trigger without customer_id should return 400/422, not crash", %{
     conn: conn,
     tenant: tenant
   } do
     flow = insert(:flow, tenant: tenant)
     insert(:flow_version, flow: flow, graph: valid_graph())
-    {:ok, flow} = Flows.activate_flow(flow)
+    {:ok, _flow} = Flows.activate_flow(flow)
 
-    # Missing customer_id entirely — should return a clean 400/422 error,
-    # not crash with Ecto ArgumentError (comparing nil in where clause).
-    # BUG: Currently raises ArgumentError because Ecto rejects nil comparison.
-    # The controller should validate customer_id before passing to the engine.
-    assert_raise ArgumentError, fn ->
-      post(conn, "/api/v1/flows/#{flow.id}/trigger", %{})
-    end
+    # Missing customer_id entirely — should return a clean 400 error
+    conn_resp = post(conn, "/api/v1/flows/#{flow.id}/trigger", %{})
+    status = conn_resp.status
+    assert status in [400, 422], "Expected 400/422, got HTTP #{status}"
   end
 
-  @tag :known_bug
   test "event without customer_id should return 400, not crash with Ecto error", %{conn: conn} do
-    # BUG: Should return 400 for missing customer_id.
-    # Currently crashes because Ecto rejects nil in where clause comparison.
-    # The controller should validate presence of customer_id before hitting the DB.
-    assert_raise ArgumentError, fn ->
+    conn_resp =
       post(conn, "/api/v1/events", %{
         "event_type" => "email_opened",
         "data" => %{}
       })
-    end
+
+    status = conn_resp.status
+    assert status == 400, "Expected 400, got HTTP #{status}"
   end
 
-  @tag :known_bug
   test "event without event_type should return 400, not 202", %{conn: conn} do
     conn_resp =
       post(conn, "/api/v1/events", %{

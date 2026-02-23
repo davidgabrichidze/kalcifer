@@ -165,6 +165,8 @@ defmodule Kalcifer.Flows do
 
   defp validate_versions(nil, _old), do: {:error, :version_not_found}
   defp validate_versions(_new, nil), do: {:error, :no_active_version}
+
+  defp validate_versions(%{id: id}, %{id: id}), do: {:error, :same_version}
   defp validate_versions(_new, _old), do: {:ok, :valid}
 
   defp do_version_transition(flow, old_version, new_version) do

@@ -108,7 +108,7 @@ defmodule Kalcifer.Versioning.NodeMapper do
 
   defp specific_changes(id, %{"type" => "wait_until"} = v1, v2) do
     if v1["config"]["datetime"] != v2["config"]["datetime"] do
-      [{id, :duration_changed}]
+      [{id, :datetime_changed}]
     else
       []
     end

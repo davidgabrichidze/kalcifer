@@ -173,7 +173,10 @@ defmodule Kalcifer.Engine.GraphWalkerTest do
         "nodes" => [%{"id" => "a", "type" => "event_entry", "config" => %{}}]
       }
 
-      assert GraphWalker.entry_nodes(graph) == [%{"id" => "a", "type" => "event_entry", "config" => %{}}]
+      assert GraphWalker.entry_nodes(graph) == [
+               %{"id" => "a", "type" => "event_entry", "config" => %{}}
+             ]
+
       assert GraphWalker.next_nodes(graph, "a") == []
       assert GraphWalker.outgoing_edges(graph, "a") == []
     end

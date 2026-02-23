@@ -12,13 +12,12 @@ defmodule Kalcifer.Engine.Jobs.ResumeFlowJob do
 
     case GenServer.whereis(via) do
       nil ->
-        # Server not alive; RecoveryManager will handle later
-        :ok
+        # Server not alive — snooze so Oban retries after RecoveryManager has a chance
+        {:snooze, 30}
 
       _pid ->
         GenServer.cast(via, {:resume, node_id, trigger_atom})
+        :ok
     end
-
-    :ok
   end
 end

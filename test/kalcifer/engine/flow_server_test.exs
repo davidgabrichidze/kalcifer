@@ -400,7 +400,9 @@ defmodule Kalcifer.Engine.FlowServerTest do
 
       state_after = GenServer.call(pid, :get_state)
       assert state_after.version_number == 2
-      assert state_after.context["_waiting_event_type"] == state_before.context["_waiting_event_type"]
+
+      assert state_after.context["_waiting_event_type"] ==
+               state_before.context["_waiting_event_type"]
 
       GenServer.stop(pid, :normal)
     end

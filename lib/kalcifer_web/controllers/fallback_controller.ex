@@ -61,10 +61,22 @@ defmodule KalciferWeb.FallbackController do
     |> json(%{error: "version_not_publishable"})
   end
 
+  def call(conn, {:error, :invalid_strategy}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "invalid_strategy"})
+  end
+
   def call(conn, {:error, :invalid_version}) do
     conn
     |> put_status(:unprocessable_entity)
     |> json(%{error: "invalid_version_number"})
+  end
+
+  def call(conn, {:error, :same_version}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "cannot_migrate_to_same_version"})
   end
 
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do

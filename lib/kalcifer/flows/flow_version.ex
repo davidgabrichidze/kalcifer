@@ -55,13 +55,31 @@ defmodule Kalcifer.Flows.FlowVersion do
     change(version, status: "deprecated")
   end
 
-  def rollback_changeset(version) do
+  @rollbackable_statuses ~w(published deprecated)
+  @republishable_statuses ~w(deprecated rolled_back)
+
+  def rollback_changeset(%{status: status} = version) when status in @rollbackable_statuses do
     change(version, status: "rolled_back")
   end
 
-  def republish_changeset(version) do
+  def rollback_changeset(version) do
+    version
+    |> change()
+    |> add_error(:status, "only published or deprecated versions can be rolled back")
+  end
+
+  def republish_changeset(%{status: status} = version) when status in @republishable_statuses do
     now = DateTime.utc_now() |> DateTime.truncate(:second)
-    change(version, status: "published", published_at: now)
+
+    version
+    |> change(status: "published", published_at: now)
+    |> validate_graph()
+  end
+
+  def republish_changeset(version) do
+    version
+    |> change()
+    |> add_error(:status, "only deprecated or rolled_back versions can be republished")
   end
 
   def statuses, do: @statuses

@@ -68,8 +68,9 @@ defmodule Kalcifer.Engine.Persistence.InstanceStore do
     |> Repo.exists?()
   end
 
-  def list_waiting_for_customer(customer_id) do
+  def list_waiting_for_customer(tenant_id, customer_id) do
     FlowInstance
+    |> where([i], i.tenant_id == ^tenant_id)
     |> where([i], i.customer_id == ^customer_id and i.status == "waiting")
     |> Repo.all()
   end

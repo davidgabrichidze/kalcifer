@@ -5,10 +5,13 @@ defmodule KalciferWeb.MigrationController do
 
   action_fallback KalciferWeb.FallbackController
 
+  @valid_strategies ~w(new_entries_only migrate_all)
+
   def migrate(conn, %{"flow_id" => flow_id, "version_number" => vn_str} = params) do
     strategy = Map.get(params, "strategy", "new_entries_only")
 
-    with {:ok, flow} <- fetch_tenant_flow(conn, flow_id),
+    with {:ok, _} <- validate_strategy(strategy),
+         {:ok, flow} <- fetch_tenant_flow(conn, flow_id),
          {:ok, vn} <- parse_version_number(vn_str),
          {:ok, result} <- Flows.migrate_flow_version(flow, vn, strategy) do
       json(conn, %{data: serialize_result(result)})
@@ -38,6 +41,9 @@ defmodule KalciferWeb.MigrationController do
       _ -> {:error, :not_found}
     end
   end
+
+  defp validate_strategy(strategy) when strategy in @valid_strategies, do: {:ok, strategy}
+  defp validate_strategy(_), do: {:error, :invalid_strategy}
 
   defp parse_version_number(str) do
     case Integer.parse(str) do

@@ -3,9 +3,9 @@ defmodule Kalcifer.Engine.EventRouter do
 
   alias Kalcifer.Engine.Persistence.InstanceStore
 
-  def route_event(customer_id, event_type, event_data \\ %{}) do
-    customer_id
-    |> InstanceStore.list_waiting_for_customer()
+  def route_event(tenant_id, customer_id, event_type, event_data \\ %{}) do
+    tenant_id
+    |> InstanceStore.list_waiting_for_customer(customer_id)
     |> Enum.filter(&matches_event?(&1, event_type))
     |> Enum.map(&resume_instance(&1, event_data))
   end

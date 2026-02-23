@@ -12,6 +12,22 @@ defmodule Kalcifer.Flows.FlowInstance do
 
   @statuses ~w(running waiting paused completed failed exited)
 
+  # Valid status transitions: {from, to}
+  @valid_transitions MapSet.new([
+                       {"running", "waiting"},
+                       {"running", "paused"},
+                       {"running", "completed"},
+                       {"running", "failed"},
+                       {"running", "exited"},
+                       {"waiting", "running"},
+                       {"waiting", "paused"},
+                       {"waiting", "completed"},
+                       {"waiting", "failed"},
+                       {"waiting", "exited"},
+                       {"paused", "running"},
+                       {"paused", "exited"}
+                     ])
+
   schema "flow_instances" do
     field :version_number, :integer
     field :customer_id, :string
@@ -48,6 +64,18 @@ defmodule Kalcifer.Flows.FlowInstance do
     |> cast(attrs, [:completed_at, :exited_at, :exit_reason, :current_nodes, :context])
     |> put_change(:status, new_status)
     |> validate_inclusion(:status, @statuses)
+    |> validate_transition(instance.status, new_status)
+  end
+
+  # Same-status "transition" is a no-op (e.g. update_current_nodes while running)
+  defp validate_transition(changeset, same, same), do: changeset
+
+  defp validate_transition(changeset, from, to) do
+    if MapSet.member?(@valid_transitions, {from, to}) do
+      changeset
+    else
+      add_error(changeset, :status, "invalid transition from #{from} to #{to}")
+    end
   end
 
   def migration_changeset(instance, new_version_number, old_version_number) do

@@ -43,7 +43,9 @@ defmodule Kalcifer.Versioning.NodeMapperPropertyTest do
   defp config_for_type(_), do: constant(%{})
 
   defp graph_gen do
-    gen all(nodes <- uniq_list_of(node_gen(), min_length: 1, max_length: 10, uniq_fun: & &1["id"])) do
+    gen all(
+          nodes <- uniq_list_of(node_gen(), min_length: 1, max_length: 10, uniq_fun: & &1["id"])
+        ) do
       %{"nodes" => nodes, "edges" => []}
     end
   end
@@ -153,7 +155,8 @@ defmodule Kalcifer.Versioning.NodeMapperPropertyTest do
           assert change_type in [
                    :event_type_changed,
                    :duration_changed,
-                   :timeout_changed
+                   :timeout_changed,
+                   :datetime_changed
                  ]
         end)
       end

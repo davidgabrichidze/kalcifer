@@ -411,6 +411,14 @@ defmodule Kalcifer.Engine.FlowServer do
     new_state
   end
 
+  defp apply_wait_change(new_state, old_state, node_id, {_, :datetime_changed}) do
+    cancel_pending_resume_job(old_state.instance_id)
+    new_node = GraphWalker.find_node(new_state.graph, node_id)
+    datetime = new_node["config"]["datetime"]
+    if datetime, do: schedule_at(new_state, node_id, datetime, "timer_expired")
+    new_state
+  end
+
   defp cancel_pending_resume_job(instance_id) do
     import Ecto.Query
 

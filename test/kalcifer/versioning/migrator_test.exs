@@ -91,7 +91,8 @@ defmodule Kalcifer.Versioning.MigratorTest do
         setup_flow_with_waiting_instance(wait_graph("email_opened"))
 
       # Create v2 with different event_type
-      {:ok, _v2} = Flows.create_version(flow, %{graph: wait_graph("push_opened"), changelog: "v2"})
+      {:ok, _v2} =
+        Flows.create_version(flow, %{graph: wait_graph("push_opened"), changelog: "v2"})
 
       assert {:ok, result} = Migrator.migrate(flow.id, 1, 2, "migrate_all")
       assert instance_id in result.migrated
@@ -147,7 +148,8 @@ defmodule Kalcifer.Versioning.MigratorTest do
       %{flow: flow, instance_id: instance_id} =
         setup_flow_with_waiting_instance(wait_graph("email_opened"))
 
-      {:ok, _v2} = Flows.create_version(flow, %{graph: wait_graph("push_opened"), changelog: "v2"})
+      {:ok, _v2} =
+        Flows.create_version(flow, %{graph: wait_graph("push_opened"), changelog: "v2"})
 
       assert {:ok, result} = Migrator.migrate(flow.id, 1, 2, "new_entries_only")
       assert instance_id in result.skipped
@@ -186,7 +188,8 @@ defmodule Kalcifer.Versioning.MigratorTest do
       %{flow: flow, instance_id: instance_id} =
         setup_flow_with_waiting_instance(wait_graph("email_opened"))
 
-      {:ok, _v2} = Flows.create_version(flow, %{graph: wait_graph("push_opened"), changelog: "v2"})
+      {:ok, _v2} =
+        Flows.create_version(flow, %{graph: wait_graph("push_opened"), changelog: "v2"})
 
       # Kill the FlowServer before migration
       via = {:via, Registry, {Kalcifer.Engine.ProcessRegistry, instance_id}}
@@ -236,7 +239,8 @@ defmodule Kalcifer.Versioning.MigratorTest do
       %{flow: flow, instance_id: instance_id} =
         setup_flow_with_waiting_instance(wait_graph("email_opened"))
 
-      {:ok, _v2} = Flows.create_version(flow, %{graph: wait_graph("push_opened"), changelog: "v2"})
+      {:ok, _v2} =
+        Flows.create_version(flow, %{graph: wait_graph("push_opened"), changelog: "v2"})
 
       # Migrate to v2
       {:ok, _} = Migrator.migrate(flow.id, 1, 2, "migrate_all")

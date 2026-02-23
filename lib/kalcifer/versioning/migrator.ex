@@ -53,6 +53,10 @@ defmodule Kalcifer.Versioning.Migrator do
     end
   end
 
+  defp do_migrate_instance(instance, _new_graph, _node_map, _to_version, strategy) do
+    {:failed, instance.id, {:invalid_strategy, strategy}}
+  end
+
   defp migrate_single(instance, new_graph, node_map, to_version) do
     case InstanceStore.migrate_instance(instance, to_version) do
       {:ok, _} ->

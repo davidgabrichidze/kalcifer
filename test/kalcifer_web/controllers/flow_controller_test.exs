@@ -184,7 +184,10 @@ defmodule KalciferWeb.FlowControllerTest do
   end
 
   describe "lifecycle edge cases" do
-    test "activate rejects already-active flow without draft version", %{conn: conn, tenant: tenant} do
+    test "activate rejects already-active flow without draft version", %{
+      conn: conn,
+      tenant: tenant
+    } do
       flow = insert(:flow, tenant: tenant)
       insert(:flow_version, flow: flow, graph: valid_graph())
       {:ok, _} = Kalcifer.Flows.activate_flow(flow)

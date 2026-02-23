@@ -84,10 +84,16 @@ defmodule Kalcifer.Integration.LiveMigrationTest do
     cust2 = "mig_e2e_2_#{System.unique_integer([:positive])}"
 
     %{"instance_id" => id1} =
-      json_response(post(conn, "/api/v1/flows/#{flow_id}/trigger", %{"customer_id" => cust1}), 201)
+      json_response(
+        post(conn, "/api/v1/flows/#{flow_id}/trigger", %{"customer_id" => cust1}),
+        201
+      )
 
     %{"instance_id" => id2} =
-      json_response(post(conn, "/api/v1/flows/#{flow_id}/trigger", %{"customer_id" => cust2}), 201)
+      json_response(
+        post(conn, "/api/v1/flows/#{flow_id}/trigger", %{"customer_id" => cust2}),
+        201
+      )
 
     Process.sleep(200)
 

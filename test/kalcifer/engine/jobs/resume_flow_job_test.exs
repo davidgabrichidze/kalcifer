@@ -4,7 +4,7 @@ defmodule Kalcifer.Engine.Jobs.ResumeFlowJobTest do
   alias Kalcifer.Engine.Jobs.ResumeFlowJob
 
   describe "perform/1" do
-    test "succeeds when FlowServer is not alive" do
+    test "snoozes when FlowServer is not alive" do
       # Oban serializes args as JSON (string keys)
       args = %{
         "instance_id" => Ecto.UUID.generate(),
@@ -12,7 +12,9 @@ defmodule Kalcifer.Engine.Jobs.ResumeFlowJobTest do
         "trigger" => "timer_expired"
       }
 
-      assert :ok = ResumeFlowJob.perform(%Oban.Job{args: args})
+      # When FlowServer is dead, job should snooze to retry later
+      # (gives RecoveryManager time to restart the process)
+      assert {:snooze, 30} = ResumeFlowJob.perform(%Oban.Job{args: args})
     end
   end
 end

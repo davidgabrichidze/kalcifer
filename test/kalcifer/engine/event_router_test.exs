@@ -83,12 +83,14 @@ defmodule Kalcifer.Engine.EventRouterTest do
     }
   end
 
-  describe "route_event/3" do
+  describe "route_event/4" do
     test "routes event to waiting FlowServer and follows event_received branch" do
-      {pid, ref, _args} = start_server(wait_for_event_graph(), customer_id: "cust_1")
+      {pid, ref, args} = start_server(wait_for_event_graph(), customer_id: "cust_1")
       wait_for_waiting(pid)
 
-      result = EventRouter.route_event("cust_1", "email_opened", %{email_id: "abc"})
+      result =
+        EventRouter.route_event(args.tenant_id, "cust_1", "email_opened", %{email_id: "abc"})
+
       assert [{:ok, _instance_id}] = result
 
       assert :ok = wait_for_completion(pid, ref)
@@ -102,10 +104,10 @@ defmodule Kalcifer.Engine.EventRouterTest do
     end
 
     test "ignores instances waiting for different event type" do
-      {pid, _ref, _args} = start_server(wait_for_event_graph(), customer_id: "cust_2")
+      {pid, _ref, args} = start_server(wait_for_event_graph(), customer_id: "cust_2")
       wait_for_waiting(pid)
 
-      result = EventRouter.route_event("cust_2", "purchase_completed")
+      result = EventRouter.route_event(args.tenant_id, "cust_2", "purchase_completed")
       assert result == []
 
       state = GenServer.call(pid, :get_state)
@@ -115,10 +117,10 @@ defmodule Kalcifer.Engine.EventRouterTest do
     end
 
     test "returns empty list for non-waiting instances" do
-      {pid, ref, _args} = start_server(valid_graph(), customer_id: "cust_3")
+      {pid, ref, args} = start_server(valid_graph(), customer_id: "cust_3")
       assert :ok = wait_for_completion(pid, ref)
 
-      result = EventRouter.route_event("cust_3", "email_opened")
+      result = EventRouter.route_event(args.tenant_id, "cust_3", "email_opened")
       assert result == []
     end
 
@@ -140,7 +142,7 @@ defmodule Kalcifer.Engine.EventRouterTest do
         )
 
       instance_id = instance.id
-      result = EventRouter.route_event("cust_4", "email_opened")
+      result = EventRouter.route_event(flow.tenant_id, "cust_4", "email_opened")
       assert [{:not_alive, ^instance_id}] = result
     end
   end
@@ -162,7 +164,7 @@ defmodule Kalcifer.Engine.EventRouterTest do
         }
       )
 
-      result = EventRouter.route_event("cust_nil_type", "email_opened")
+      result = EventRouter.route_event(flow.tenant_id, "cust_nil_type", "email_opened")
       assert result == []
     end
 
@@ -183,20 +185,23 @@ defmodule Kalcifer.Engine.EventRouterTest do
       )
 
       # Instance matches event type but node_id is nil — should still return result
-      result = EventRouter.route_event("cust_nil_node", "email_opened")
+      result = EventRouter.route_event(flow.tenant_id, "cust_nil_node", "email_opened")
       assert [{:not_alive, _}] = result
     end
 
     test "routes to multiple matching instances for same customer" do
       flow = insert(:flow)
 
-      {pid1, _ref1, _args1} = start_server(wait_for_event_graph(), customer_id: "cust_multi", flow: flow)
-      {pid2, _ref2, _args2} = start_server(wait_for_event_graph(), customer_id: "cust_multi", flow: flow)
+      {pid1, _ref1, _args1} =
+        start_server(wait_for_event_graph(), customer_id: "cust_multi", flow: flow)
+
+      {pid2, _ref2, _args2} =
+        start_server(wait_for_event_graph(), customer_id: "cust_multi", flow: flow)
 
       wait_for_waiting(pid1)
       wait_for_waiting(pid2)
 
-      result = EventRouter.route_event("cust_multi", "email_opened", %{})
+      result = EventRouter.route_event(flow.tenant_id, "cust_multi", "email_opened", %{})
       ok_results = Enum.filter(result, fn {status, _} -> status == :ok end)
 
       assert length(ok_results) == 2
@@ -207,11 +212,11 @@ defmodule Kalcifer.Engine.EventRouterTest do
 
   describe "idempotent resume" do
     test "stale timeout is ignored after event resume" do
-      {pid, ref, _args} = start_server(wait_for_event_graph(), customer_id: "cust_5")
+      {pid, ref, args} = start_server(wait_for_event_graph(), customer_id: "cust_5")
       wait_for_waiting(pid)
 
       # Resume via event
-      EventRouter.route_event("cust_5", "email_opened", %{email_id: "abc"})
+      EventRouter.route_event(args.tenant_id, "cust_5", "email_opened", %{email_id: "abc"})
       assert :ok = wait_for_completion(pid, ref)
 
       # Stale timeout cast to a dead process — no crash

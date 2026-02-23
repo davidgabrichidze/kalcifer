@@ -109,7 +109,6 @@ defmodule Kalcifer.Engine.NodesTest do
     test "ab_split category is :condition" do
       assert AbSplit.category() == :condition
     end
-
   end
 
   describe "wait nodes" do
