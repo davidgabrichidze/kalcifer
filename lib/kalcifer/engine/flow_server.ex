@@ -165,6 +165,9 @@ defmodule Kalcifer.Engine.FlowServer do
     node = GraphWalker.find_node(state.graph, node_id)
 
     case execute_single_node(state, node) do
+      {:continue, %{status: :completed} = state, _next_node_ids} ->
+        state
+
       {:continue, state, next_node_ids} ->
         execute_nodes(state, rest ++ next_node_ids)
 

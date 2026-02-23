@@ -1,12 +1,7 @@
 defmodule Kalcifer.Bugs.ExitNodeParallelQueueTest do
   @moduledoc """
-  N1: Exit node in parallel execution queue marks instance completed,
-  but execute_nodes continues processing remaining nodes in the queue.
-
-  When a non-branching node has multiple outgoing edges (e.g. entry → exit
-  AND entry → email), next_nodes returns both targets. The exit node fires
-  first and calls complete_instance, but the loop continues to execute_single_node
-  on remaining queue items — recording execution steps after completion.
+  N1 regression: execute_nodes must stop after exit node completes the instance.
+  When entry fans out to [exit, email], only exit should execute.
   """
   use Kalcifer.DataCase, async: false
 
@@ -34,8 +29,7 @@ defmodule Kalcifer.Bugs.ExitNodeParallelQueueTest do
     }
   end
 
-  @tag :known_bug
-  test "exit node should stop execution of remaining queued nodes" do
+  test "exit node stops execution of remaining queued nodes" do
     flow = insert(:flow)
 
     args = %{
@@ -61,7 +55,6 @@ defmodule Kalcifer.Bugs.ExitNodeParallelQueueTest do
       2000 -> :ok
     end
 
-    # Get all execution steps for this instance
     steps =
       ExecutionStep
       |> where(instance_id: ^args.instance_id)
@@ -70,10 +63,9 @@ defmodule Kalcifer.Bugs.ExitNodeParallelQueueTest do
 
     executed_ids = Enum.map(steps, & &1.node_id)
 
-    # BUG: email_1 should NOT have been executed after exit_1 completed the instance.
-    # Currently, execute_nodes continues processing the queue even after completion.
-    refute "email_1" in executed_ids,
-           "BUG: email_1 executed after exit_1 already completed the instance — " <>
-             "execute_nodes should stop after exit/completion"
+    # After exit_1 completes the instance, email_1 must NOT execute
+    refute "email_1" in executed_ids
+    assert "entry_1" in executed_ids
+    assert "exit_1" in executed_ids
   end
 end
