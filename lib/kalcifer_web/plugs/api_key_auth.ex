@@ -3,6 +3,8 @@ defmodule KalciferWeb.Plugs.ApiKeyAuth do
 
   import Plug.Conn
 
+  require Logger
+
   alias Kalcifer.Tenants
 
   def init(opts), do: opts
@@ -11,6 +13,7 @@ defmodule KalciferWeb.Plugs.ApiKeyAuth do
     with {:ok, raw_key} <- extract_token(conn),
          hash = Tenants.hash_api_key(raw_key),
          %{} = tenant <- Tenants.get_tenant_by_api_key_hash(hash) do
+      Logger.metadata(tenant_id: tenant.id)
       assign(conn, :current_tenant, tenant)
     else
       _ ->

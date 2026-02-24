@@ -174,15 +174,15 @@ defmodule Kalcifer.Flows.FlowGraph do
           |> Enum.filter(fn e -> e["source"] == node["id"] end)
           |> Enum.map(fn e -> e["branch"] end)
           |> Enum.reject(&is_nil/1)
-          |> MapSet.new()
+          |> Enum.uniq()
 
         required = required_branches(node)
-        missing = MapSet.difference(required, outgoing_branches)
+        missing = required -- outgoing_branches
 
-        if MapSet.size(missing) == 0 do
+        if missing == [] do
           []
         else
-          missing_list = MapSet.to_list(missing) |> Enum.join(", ")
+          missing_list = Enum.join(missing, ", ")
           ["node #{node["id"]} (#{node["type"]}) missing branch edges: #{missing_list}"]
         end
       end)
@@ -193,30 +193,31 @@ defmodule Kalcifer.Flows.FlowGraph do
     end
   end
 
-  defp required_branches(%{"type" => "condition"}), do: MapSet.new(["true", "false"])
+  @spec required_branches(map()) :: [String.t()]
+  defp required_branches(%{"type" => "condition"}), do: ["true", "false"]
 
   defp required_branches(%{"type" => "wait_for_event", "config" => config}) when is_map(config) do
     timeout = Map.get(config, "timeout_branch", "timed_out")
     event = Map.get(config, "event_branch", "event_received")
-    MapSet.new([timeout, event])
+    [timeout, event]
   end
 
   defp required_branches(%{"type" => "wait_for_event"}) do
-    MapSet.new(["timed_out", "event_received"])
+    ["timed_out", "event_received"]
   end
 
   defp required_branches(%{"type" => "ab_split", "config" => %{"variants" => variants}})
        when is_list(variants) do
-    variants |> Enum.map(& &1["key"]) |> Enum.reject(&is_nil/1) |> MapSet.new()
+    variants |> Enum.map(& &1["key"]) |> Enum.reject(&is_nil/1)
   end
 
   defp required_branches(%{"type" => "ab_split"}) do
-    MapSet.new()
+    []
   end
 
-  defp required_branches(%{"type" => "check_segment"}), do: MapSet.new(["true", "false"])
-  defp required_branches(%{"type" => "preference_gate"}), do: MapSet.new(["true", "false"])
-  defp required_branches(%{"type" => "frequency_cap"}), do: MapSet.new(["capped", "allowed"])
+  defp required_branches(%{"type" => "check_segment"}), do: ["true", "false"]
+  defp required_branches(%{"type" => "preference_gate"}), do: ["true", "false"]
+  defp required_branches(%{"type" => "frequency_cap"}), do: ["capped", "allowed"]
 
-  defp required_branches(_), do: MapSet.new()
+  defp required_branches(_), do: []
 end

@@ -66,6 +66,7 @@ defmodule Kalcifer.MixProject do
       # Observability
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
+      {:logger_json, "~> 7.0"},
 
       # Clustering
       {:dns_cluster, "~> 0.2.0"},

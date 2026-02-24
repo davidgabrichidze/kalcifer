@@ -3,6 +3,8 @@ defmodule Kalcifer.Engine.FlowServer do
 
   use GenServer, restart: :transient
 
+  require Logger
+
   alias Kalcifer.Engine.Duration
   alias Kalcifer.Engine.EventBroadcaster
   alias Kalcifer.Engine.GraphWalker
@@ -43,6 +45,9 @@ defmodule Kalcifer.Engine.FlowServer do
 
   @impl true
   def init(%{recovery: true} = args) do
+    set_logger_metadata(args)
+    Logger.info("flow recovered from waiting state")
+
     state = %__MODULE__{
       instance_id: args.instance_id,
       flow_id: args.flow_id,
@@ -94,6 +99,8 @@ defmodule Kalcifer.Engine.FlowServer do
       status: :running
     }
 
+    set_logger_metadata(args, instance.id)
+    Logger.info("flow instance started")
     emit_instance_event(state, :entered)
     EventBroadcaster.broadcast_instance_started(state)
     {:ok, state, {:continue, :execute_current}}
@@ -218,6 +225,13 @@ defmodule Kalcifer.Engine.FlowServer do
         error = normalize_error(reason)
         StepStore.record_step_fail(step, error)
         emit_step_event(state, node, :failed, nil)
+
+        Logger.warning("node execution failed",
+          node_id: node["id"],
+          node_type: node["type"],
+          reason: inspect(reason)
+        )
+
         state = %{state | status: :failed}
         InstanceStore.fail_instance(get_instance(state), inspect(reason))
         emit_instance_event(state, :failed)
@@ -228,6 +242,12 @@ defmodule Kalcifer.Engine.FlowServer do
         error_map = %{reason: inspect(error)}
         StepStore.record_step_fail(step, error_map)
         emit_step_event(state, node, :failed, nil)
+
+        Logger.error("unknown node type",
+          node_id: node["id"],
+          node_type: node["type"]
+        )
+
         state = %{state | status: :failed}
         InstanceStore.fail_instance(get_instance(state), inspect(error))
         emit_instance_event(state, :failed)
@@ -237,9 +257,9 @@ defmodule Kalcifer.Engine.FlowServer do
   end
 
   defp handle_next(state, []) do
-    # No more nodes — check if this is an exit node result
     state = %{state | current_nodes: [], status: :completed}
     InstanceStore.complete_instance(get_instance(state))
+    Logger.info("flow instance completed")
     emit_instance_event(state, :completed)
     EventBroadcaster.broadcast_instance_completed(state)
     {:continue, state, []}
@@ -419,6 +439,25 @@ defmodule Kalcifer.Engine.FlowServer do
   defp maybe_stop(%{status: :completed} = state), do: {:stop, :normal, state}
   defp maybe_stop(%{status: :failed} = state), do: {:stop, :normal, state}
   defp maybe_stop(state), do: {:noreply, state}
+
+  # Sets Logger metadata for all log lines in this process
+  defp set_logger_metadata(%{recovery: true} = args) do
+    Logger.metadata(
+      flow_id: args.flow_id,
+      instance_id: args.instance_id,
+      tenant_id: args.tenant_id,
+      customer_id: args.customer_id
+    )
+  end
+
+  defp set_logger_metadata(args, instance_id) do
+    Logger.metadata(
+      flow_id: args.flow_id,
+      instance_id: instance_id,
+      tenant_id: args.tenant_id,
+      customer_id: args.customer_id
+    )
+  end
 
   # --- Version migration helpers ---
 

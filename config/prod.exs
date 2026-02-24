@@ -9,5 +9,8 @@ config :kalcifer, KalciferWeb.Endpoint,
 # Do not print debug messages in production
 config :logger, level: :info
 
+# JSON structured logging for production
+config :logger, :default_handler, formatter: {LoggerJSON.Formatters.Basic, metadata: :all}
+
 # Runtime production configuration, including reading
 # of environment variables, is done on config/runtime.exs.

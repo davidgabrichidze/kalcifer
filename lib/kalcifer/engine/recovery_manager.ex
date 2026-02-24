@@ -37,8 +37,9 @@ defmodule Kalcifer.Engine.RecoveryManager do
   defp recover_waiting(instance) do
     case load_graph(instance) do
       nil ->
-        Logger.warning(
-          "RecoveryManager: no graph found for instance #{instance.id}, marking crashed"
+        Logger.warning("no graph found for instance, marking crashed",
+          instance_id: instance.id,
+          flow_id: instance.flow_id
         )
 
         mark_crashed(instance)
@@ -71,8 +72,10 @@ defmodule Kalcifer.Engine.RecoveryManager do
             )
 
           {:error, reason} ->
-            Logger.warning(
-              "RecoveryManager: failed to start FlowServer for #{instance.id}: #{inspect(reason)}"
+            Logger.warning("failed to start FlowServer for recovery",
+              instance_id: instance.id,
+              flow_id: instance.flow_id,
+              reason: inspect(reason)
             )
         end
     end
@@ -142,7 +145,11 @@ defmodule Kalcifer.Engine.RecoveryManager do
   end
 
   defp mark_crashed(instance) do
-    Logger.info("RecoveryManager: marking instance #{instance.id} as crashed")
+    Logger.info("marking instance as crashed",
+      instance_id: instance.id,
+      flow_id: instance.flow_id
+    )
+
     InstanceStore.mark_crashed(instance)
   end
 end
