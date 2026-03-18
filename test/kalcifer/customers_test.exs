@@ -96,6 +96,53 @@ defmodule Kalcifer.CustomersTest do
     end
   end
 
+  describe "field_coverage/2" do
+    test "returns 100% coverage for fields all customers have" do
+      tenant = insert(:tenant)
+      insert(:customer, tenant: tenant, email: "a@test.com")
+      insert(:customer, tenant: tenant, email: "b@test.com")
+
+      result = Customers.field_coverage(tenant.id, ["email"])
+      assert result["email"] == 100.0
+    end
+
+    test "returns 0% coverage when no customers exist" do
+      tenant = insert(:tenant)
+
+      result = Customers.field_coverage(tenant.id, ["email"])
+      assert result["email"] == 0.0
+    end
+
+    test "returns correct percentage for partially populated fields" do
+      tenant = insert(:tenant)
+      insert(:customer, tenant: tenant, email: "a@test.com", phone: "+1234")
+      insert(:customer, tenant: tenant, email: "b@test.com", phone: nil)
+
+      result = Customers.field_coverage(tenant.id, ["phone"])
+      assert result["phone"] == 50.0
+    end
+
+    test "checks properties JSONB column for non-schema fields" do
+      tenant = insert(:tenant)
+      insert(:customer, tenant: tenant, properties: %{"plan" => "pro"})
+      insert(:customer, tenant: tenant, properties: %{"plan" => "free"})
+      insert(:customer, tenant: tenant, properties: %{})
+
+      result = Customers.field_coverage(tenant.id, ["plan"])
+      assert_in_delta result["plan"], 66.7, 0.1
+    end
+
+    test "handles multiple fields at once" do
+      tenant = insert(:tenant)
+      insert(:customer, tenant: tenant, email: "a@test.com", properties: %{"city" => "NYC"})
+      insert(:customer, tenant: tenant, email: nil, properties: %{})
+
+      result = Customers.field_coverage(tenant.id, ["email", "city"])
+      assert result["email"] == 50.0
+      assert result["city"] == 50.0
+    end
+  end
+
   describe "preferences" do
     test "update_preferences merges with existing" do
       customer = insert(:customer, preferences: %{"email" => true, "sms" => false})

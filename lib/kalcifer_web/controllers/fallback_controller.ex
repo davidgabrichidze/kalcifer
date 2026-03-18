@@ -95,6 +95,12 @@ defmodule KalciferWeb.FallbackController do
     |> json(%{errors: errors})
   end
 
+  def call(conn, {:error, {:preflight_failed, errors}}) when is_list(errors) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "preflight_failed", details: errors})
+  end
+
   # Catch-all for unhandled error atoms
   def call(conn, {:error, reason}) when is_atom(reason) do
     conn

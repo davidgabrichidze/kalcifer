@@ -22,6 +22,105 @@ defmodule Kalcifer.Flows.FlowGraph do
 
   def validate(_), do: {:error, ["graph must be a map"]}
 
+  @doc """
+  Validates that all node types in the graph are registered in the given registry.
+
+  Returns `:ok` or `{:error, [String.t()]}` with unknown type errors.
+  The registry must implement `lookup/1` returning `{:ok, module}` or `:error`.
+  """
+  def validate_node_types(graph, registry) when is_map(graph) do
+    errors =
+      nodes(graph)
+      |> Enum.flat_map(fn node ->
+        type = node["type"]
+
+        case registry.lookup(type) do
+          {:ok, _module} -> []
+          :error -> ["unknown node type: #{type}"]
+        end
+      end)
+      |> Enum.uniq()
+
+    case errors do
+      [] -> :ok
+      _ -> {:error, errors}
+    end
+  end
+
+  @doc """
+  Validates each node's config by calling `module.validate/1` via the registry.
+
+  Returns `:ok` or `{:error, [String.t()]}` with config validation errors.
+  Nodes with unknown types are skipped (use `validate_node_types/2` first).
+  """
+  def analyze_config_completeness(graph, registry) when is_map(graph) do
+    errors =
+      nodes(graph)
+      |> Enum.flat_map(fn node ->
+        with {:ok, module} <- registry.lookup(node["type"]),
+             {:error, reasons} <- module.validate(node["config"] || %{}) do
+          Enum.map(reasons, fn reason ->
+            "node #{node["id"]} (#{node["type"]}): #{reason}"
+          end)
+        else
+          _ -> []
+        end
+      end)
+
+    case errors do
+      [] -> :ok
+      _ -> {:error, errors}
+    end
+  end
+
+  @doc """
+  Extracts context field names referenced by condition nodes in the graph.
+
+  Returns a list of field name strings that condition nodes read from context.
+  """
+  def analyze_context_deps(graph) when is_map(graph) do
+    nodes(graph)
+    |> Enum.flat_map(fn node ->
+      case node["type"] do
+        "condition" ->
+          config = node["config"] || %{}
+          field = config["field"]
+          if is_binary(field) and field != "", do: [field], else: []
+
+        "check_segment" ->
+          config = node["config"] || %{}
+          field = config["segment_field"]
+          if is_binary(field) and field != "", do: [field], else: []
+
+        _ ->
+          []
+      end
+    end)
+    |> Enum.uniq()
+  end
+
+  @doc """
+  Runs full pre-flight analysis on a graph: structural validation, node type
+  validation, config completeness, and context dependency extraction.
+
+  Returns `{:ok, %{warnings: [String.t()], context_deps: [String.t()]}}` or
+  `{:error, [String.t()]}` for critical failures.
+  """
+  def preflight(graph, registry) when is_map(graph) do
+    with :ok <- validate(graph),
+         :ok <- validate_node_types(graph, registry) do
+      config_warnings =
+        case analyze_config_completeness(graph, registry) do
+          :ok -> []
+          {:error, errors} -> errors
+        end
+
+      context_deps = analyze_context_deps(graph)
+
+      {:ok, %{warnings: config_warnings, context_deps: context_deps}}
+    end
+  end
+
   defp nodes(graph), do: Map.get(graph, "nodes", [])
   defp edges(graph), do: Map.get(graph, "edges", [])
 

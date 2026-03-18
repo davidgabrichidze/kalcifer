@@ -31,6 +31,7 @@ defmodule KalciferWeb.Router do
     post "/flows/:id/activate", FlowController, :activate
     post "/flows/:id/pause", FlowController, :pause
     post "/flows/:id/archive", FlowController, :archive
+    post "/flows/:id/preflight", FlowController, :preflight
 
     post "/flows/:flow_id/versions/:version_number/migrate", MigrationController, :migrate
     post "/flows/:flow_id/versions/:version_number/rollback", MigrationController, :rollback

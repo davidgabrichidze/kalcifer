@@ -3,7 +3,9 @@ defmodule Kalcifer.Flows do
 
   import Ecto.Query
 
+  alias Kalcifer.Engine.NodeRegistry
   alias Kalcifer.Flows.Flow
+  alias Kalcifer.Flows.FlowGraph
   alias Kalcifer.Flows.FlowInstance
   alias Kalcifer.Flows.FlowVersion
   alias Kalcifer.Repo
@@ -55,28 +57,46 @@ defmodule Kalcifer.Flows do
 
   # --- Lifecycle ---
 
-  def activate_flow(%Flow{} = flow) do
+  def activate_flow(%Flow{} = flow, opts \\ []) do
+    registry = Keyword.get(opts, :registry, NodeRegistry)
+
     Repo.transaction(fn ->
       flow.id
       |> get_latest_draft_version()
-      |> do_activate(flow)
+      |> do_activate(flow, registry)
     end)
   end
 
-  defp do_activate(nil, _flow), do: Repo.rollback(:no_draft_version)
+  defp do_activate(nil, _flow, _registry), do: Repo.rollback(:no_draft_version)
 
-  defp do_activate(version, flow) do
-    case publish_version(version) do
-      {:ok, published_version} ->
-        flow
-        |> Flow.status_changeset("active")
-        |> Repo.update!()
-        |> Flow.active_version_changeset(published_version.id)
-        |> Repo.update!()
+  defp do_activate(version, flow, registry) do
+    case run_preflight(version.graph, registry) do
+      {:error, errors} ->
+        Repo.rollback({:preflight_failed, errors})
 
-      {:error, changeset} ->
-        Repo.rollback(changeset)
+      {:ok, preflight_result} ->
+        case publish_version(version) do
+          {:ok, published_version} ->
+            activated =
+              flow
+              |> Flow.status_changeset("active")
+              |> Repo.update!()
+              |> Flow.active_version_changeset(published_version.id)
+              |> Repo.update!()
+
+            case preflight_result do
+              %{warnings: []} -> activated
+              %{warnings: _} -> {activated, preflight_result}
+            end
+
+          {:error, changeset} ->
+            Repo.rollback(changeset)
+        end
     end
+  end
+
+  defp run_preflight(graph, registry) do
+    FlowGraph.preflight(graph, registry)
   end
 
   def pause_flow(%Flow{} = flow) do
