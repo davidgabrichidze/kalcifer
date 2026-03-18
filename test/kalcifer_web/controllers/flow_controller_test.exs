@@ -90,12 +90,12 @@ defmodule KalciferWeb.FlowControllerTest do
       flow = insert(:flow, tenant: other_tenant)
 
       conn = get(conn, "/api/v1/flows/#{flow.id}")
-      assert json_response(conn, 404) == %{"error" => "not_found"}
+      assert %{"code" => "not_found"} = json_response(conn, 404)
     end
 
     test "returns 404 for non-existent flow", %{conn: conn} do
       conn = get(conn, "/api/v1/flows/#{Ecto.UUID.generate()}")
-      assert json_response(conn, 404) == %{"error" => "not_found"}
+      assert %{"code" => "not_found"} = json_response(conn, 404)
     end
   end
 
@@ -113,7 +113,7 @@ defmodule KalciferWeb.FlowControllerTest do
       flow = insert(:flow, tenant: tenant, status: "active")
 
       conn = put(conn, "/api/v1/flows/#{flow.id}", %{"name" => "Updated"})
-      assert json_response(conn, 422) == %{"error" => "flow_not_draft"}
+      assert %{"code" => "flow_not_draft"} = json_response(conn, 422)
     end
 
     test "returns 404 for other tenant's flow", %{conn: conn} do
@@ -121,7 +121,7 @@ defmodule KalciferWeb.FlowControllerTest do
       flow = insert(:flow, tenant: other_tenant)
 
       conn = put(conn, "/api/v1/flows/#{flow.id}", %{"name" => "Hacked"})
-      assert json_response(conn, 404) == %{"error" => "not_found"}
+      assert %{"code" => "not_found"} = json_response(conn, 404)
     end
   end
 
@@ -137,7 +137,7 @@ defmodule KalciferWeb.FlowControllerTest do
       flow = insert(:flow, tenant: tenant, status: "active")
 
       conn = delete(conn, "/api/v1/flows/#{flow.id}")
-      assert json_response(conn, 422) == %{"error" => "flow_not_draft"}
+      assert %{"code" => "flow_not_draft"} = json_response(conn, 422)
     end
   end
 
@@ -157,7 +157,7 @@ defmodule KalciferWeb.FlowControllerTest do
       flow = insert(:flow, tenant: tenant)
 
       conn = post(conn, "/api/v1/flows/#{flow.id}/activate")
-      assert json_response(conn, 422) == %{"error" => "no_draft_version"}
+      assert %{"code" => "no_draft_version"} = json_response(conn, 422)
     end
   end
 
@@ -193,7 +193,7 @@ defmodule KalciferWeb.FlowControllerTest do
       {:ok, _} = Kalcifer.Flows.activate_flow(flow)
 
       conn = post(conn, "/api/v1/flows/#{flow.id}/activate")
-      assert json_response(conn, 422) == %{"error" => "no_draft_version"}
+      assert %{"code" => "no_draft_version"} = json_response(conn, 422)
     end
 
     test "pause rejects draft flow", %{conn: conn, tenant: tenant} do

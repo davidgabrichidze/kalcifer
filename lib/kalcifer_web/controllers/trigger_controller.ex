@@ -10,9 +10,11 @@ defmodule KalciferWeb.TriggerController do
       when is_binary(cid) and cid != "" do
     tenant = conn.assigns.current_tenant
 
+    dry_run = params["dry_run"] == true
+
     with {:ok, _flow} <- fetch_tenant_flow(tenant, flow_id),
          {:ok, instance_id} <-
-           FlowTrigger.trigger(flow_id, cid, params["context"] || %{}) do
+           FlowTrigger.trigger(flow_id, cid, params["context"] || %{}, dry_run: dry_run) do
       conn
       |> put_status(:created)
       |> json(%{instance_id: instance_id})

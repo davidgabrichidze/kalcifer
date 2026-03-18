@@ -7,7 +7,19 @@ defmodule Kalcifer.Engine.Nodes.Action.Channel.SendWhatsapp do
 
   @impl true
   def execute(config, context) do
-    ChannelSender.send(:whatsapp, config, context)
+    if context["_dry_run"] do
+      {:completed,
+       %{
+         dry_run: true,
+         would_send: %{
+           channel: "whatsapp",
+           template_id: config["template_id"],
+           recipient: context["_phone"] || context["_customer_id"]
+         }
+       }}
+    else
+      ChannelSender.send(:whatsapp, config, context)
+    end
   end
 
   @impl true

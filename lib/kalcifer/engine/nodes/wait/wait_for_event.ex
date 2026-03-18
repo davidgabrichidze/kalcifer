@@ -4,8 +4,13 @@ defmodule Kalcifer.Engine.Nodes.Wait.WaitForEvent do
   use Kalcifer.Engine.NodeBehaviour
 
   @impl true
-  def execute(config, _context) do
-    {:waiting, %{event_type: config["event_type"]}}
+  def execute(config, context) do
+    if context["_dry_run"] do
+      {:branched, "event_received",
+       %{dry_run: true, skipped_wait_for: config["event_type"], trigger: %{}}}
+    else
+      {:waiting, %{event_type: config["event_type"]}}
+    end
   end
 
   @impl true

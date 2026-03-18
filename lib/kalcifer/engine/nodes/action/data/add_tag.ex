@@ -9,18 +9,22 @@ defmodule Kalcifer.Engine.Nodes.Action.Data.AddTag do
   def execute(config, context) do
     tag = config["tag"]
 
-    case get_customer(context) do
-      nil ->
-        {:completed, %{tagged: false, tag: tag, reason: "no_customer"}}
+    if context["_dry_run"] do
+      {:completed, %{dry_run: true, would_tag: tag, customer_id: context["_customer_id"]}}
+    else
+      case get_customer(context) do
+        nil ->
+          {:completed, %{tagged: false, tag: tag, reason: "no_customer"}}
 
-      customer ->
-        case Customers.add_tag(customer, tag) do
-          {:ok, _updated} ->
-            {:completed, %{tagged: true, tag: tag}}
+        customer ->
+          case Customers.add_tag(customer, tag) do
+            {:ok, _updated} ->
+              {:completed, %{tagged: true, tag: tag}}
 
-          {:error, _changeset} ->
-            {:failed, :tag_failed}
-        end
+            {:error, _changeset} ->
+              {:failed, :tag_failed}
+          end
+      end
     end
   end
 

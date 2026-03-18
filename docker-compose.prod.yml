@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kalcifer
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: kalcifer_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kalcifer -d kalcifer_prod"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "4000:4500"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ecto://kalcifer:${POSTGRES_PASSWORD}@postgres/kalcifer_prod
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      PHX_HOST: kalcifer.3line.ge
+      PHX_SERVER: "true"
+      PORT: "4500"
+
+volumes:
+  postgres_data:

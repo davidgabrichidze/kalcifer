@@ -7,7 +7,19 @@ defmodule Kalcifer.Engine.Nodes.Action.Channel.SendEmail do
 
   @impl true
   def execute(config, context) do
-    ChannelSender.send(:email, config, context)
+    if context["_dry_run"] do
+      {:completed,
+       %{
+         dry_run: true,
+         would_send: %{
+           channel: "email",
+           template_id: config["template_id"],
+           recipient: context["_email"] || context["_customer_id"]
+         }
+       }}
+    else
+      ChannelSender.send(:email, config, context)
+    end
   end
 
   @impl true

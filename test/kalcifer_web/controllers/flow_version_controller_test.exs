@@ -36,7 +36,7 @@ defmodule KalciferWeb.FlowVersionControllerTest do
       other_flow = insert(:flow, tenant: other_tenant)
 
       conn = get(conn, "/api/v1/flows/#{other_flow.id}/versions")
-      assert json_response(conn, 404) == %{"error" => "not_found"}
+      assert %{"code" => "not_found"} = json_response(conn, 404)
     end
   end
 
@@ -70,7 +70,7 @@ defmodule KalciferWeb.FlowVersionControllerTest do
 
     test "returns 404 for non-existent version", %{conn: conn, flow: flow} do
       conn = get(conn, "/api/v1/flows/#{flow.id}/versions/999")
-      assert json_response(conn, 404) == %{"error" => "not_found"}
+      assert %{"code" => "not_found"} = json_response(conn, 404)
     end
   end
 end

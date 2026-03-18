@@ -324,10 +324,11 @@ defmodule Kalcifer.Flows.FlowGraphTest do
         "edges" => []
       }
 
-      registry = stub_registry(%{
-        "event_entry" => StubValidNode,
-        "exit" => StubValidNode
-      })
+      registry =
+        stub_registry(%{
+          "event_entry" => StubValidNode,
+          "exit" => StubValidNode
+        })
 
       assert :ok = FlowGraph.analyze_config_completeness(graph, registry)
     end
@@ -341,10 +342,11 @@ defmodule Kalcifer.Flows.FlowGraphTest do
         "edges" => []
       }
 
-      registry = stub_registry(%{
-        "event_entry" => StubValidNode,
-        "bad_config_node" => StubInvalidNode
-      })
+      registry =
+        stub_registry(%{
+          "event_entry" => StubValidNode,
+          "bad_config_node" => StubInvalidNode
+        })
 
       assert {:error, errors} = FlowGraph.analyze_config_completeness(graph, registry)
       assert Enum.any?(errors, &String.contains?(&1, "n1"))
@@ -369,8 +371,16 @@ defmodule Kalcifer.Flows.FlowGraphTest do
       graph = %{
         "nodes" => [
           %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
-          %{"id" => "c1", "type" => "condition", "config" => %{"field" => "plan_type", "value" => "pro"}},
-          %{"id" => "c2", "type" => "condition", "config" => %{"field" => "country", "value" => "US"}},
+          %{
+            "id" => "c1",
+            "type" => "condition",
+            "config" => %{"field" => "plan_type", "value" => "pro"}
+          },
+          %{
+            "id" => "c2",
+            "type" => "condition",
+            "config" => %{"field" => "country", "value" => "US"}
+          },
           %{"id" => "exit_1", "type" => "exit", "config" => %{}}
         ],
         "edges" => []
@@ -384,8 +394,16 @@ defmodule Kalcifer.Flows.FlowGraphTest do
     test "deduplicates field names" do
       graph = %{
         "nodes" => [
-          %{"id" => "c1", "type" => "condition", "config" => %{"field" => "status", "value" => "a"}},
-          %{"id" => "c2", "type" => "condition", "config" => %{"field" => "status", "value" => "b"}}
+          %{
+            "id" => "c1",
+            "type" => "condition",
+            "config" => %{"field" => "status", "value" => "a"}
+          },
+          %{
+            "id" => "c2",
+            "type" => "condition",
+            "config" => %{"field" => "status", "value" => "b"}
+          }
         ],
         "edges" => []
       }
@@ -476,11 +494,12 @@ defmodule Kalcifer.Flows.FlowGraphTest do
         ]
       }
 
-      registry = stub_registry(%{
-        "event_entry" => StubValidNode,
-        "exit" => StubValidNode,
-        "bad_node" => StubInvalidNode
-      })
+      registry =
+        stub_registry(%{
+          "event_entry" => StubValidNode,
+          "exit" => StubValidNode,
+          "bad_node" => StubInvalidNode
+        })
 
       assert {:ok, %{warnings: warnings}} = FlowGraph.preflight(graph, registry)
       assert length(warnings) > 0
@@ -491,7 +510,11 @@ defmodule Kalcifer.Flows.FlowGraphTest do
       graph = %{
         "nodes" => [
           %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
-          %{"id" => "c1", "type" => "condition", "config" => %{"field" => "age", "value" => "25"}},
+          %{
+            "id" => "c1",
+            "type" => "condition",
+            "config" => %{"field" => "age", "value" => "25"}
+          },
           %{"id" => "exit_t", "type" => "exit", "config" => %{}},
           %{"id" => "exit_f", "type" => "exit", "config" => %{}}
         ],
@@ -502,11 +525,12 @@ defmodule Kalcifer.Flows.FlowGraphTest do
         ]
       }
 
-      registry = stub_registry(%{
-        "event_entry" => StubValidNode,
-        "exit" => StubValidNode,
-        "condition" => StubValidNode
-      })
+      registry =
+        stub_registry(%{
+          "event_entry" => StubValidNode,
+          "exit" => StubValidNode,
+          "condition" => StubValidNode
+        })
 
       assert {:ok, %{context_deps: ["age"]}} = FlowGraph.preflight(graph, registry)
     end

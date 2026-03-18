@@ -155,7 +155,7 @@ defmodule KalciferWeb.MigrationControllerTest do
         "strategy" => "migrate_all"
       })
 
-    assert json_response(conn_migrate, 404) == %{"error" => "not_found"}
+    assert %{"code" => "not_found"} = json_response(conn_migrate, 404)
   end
 
   test "migrate returns 404 for non-existent version", %{conn: conn, tenant: tenant} do
@@ -168,7 +168,7 @@ defmodule KalciferWeb.MigrationControllerTest do
         "strategy" => "migrate_all"
       })
 
-    assert json_response(conn_migrate, 404) == %{"error" => "version_not_found"}
+    assert %{"code" => "version_not_found"} = json_response(conn_migrate, 404)
   end
 
   test "rollback returns 404 for other tenant's flow", %{conn: conn} do
@@ -176,7 +176,7 @@ defmodule KalciferWeb.MigrationControllerTest do
     flow = insert(:flow, tenant: other_tenant)
 
     conn_rollback = post(conn, "/api/v1/flows/#{flow.id}/versions/1/rollback")
-    assert json_response(conn_rollback, 404) == %{"error" => "not_found"}
+    assert %{"code" => "not_found"} = json_response(conn_rollback, 404)
   end
 
   # --- Edge cases ---
@@ -187,14 +187,14 @@ defmodule KalciferWeb.MigrationControllerTest do
     conn_resp =
       post(conn, "/api/v1/flows/#{flow.id}/versions/abc/migrate", %{"strategy" => "migrate_all"})
 
-    assert json_response(conn_resp, 422) == %{"error" => "invalid_version_number"}
+    assert %{"code" => "invalid_version"} = json_response(conn_resp, 422)
   end
 
   test "rollback with invalid version number string returns 422", %{conn: conn, tenant: tenant} do
     flow = insert(:flow, tenant: tenant)
 
     conn_resp = post(conn, "/api/v1/flows/#{flow.id}/versions/xyz/rollback")
-    assert json_response(conn_resp, 422) == %{"error" => "invalid_version_number"}
+    assert %{"code" => "invalid_version"} = json_response(conn_resp, 422)
   end
 
   test "migrate defaults to new_entries_only strategy", %{conn: conn, tenant: tenant} do
@@ -216,7 +216,7 @@ defmodule KalciferWeb.MigrationControllerTest do
     flow = insert(:flow, tenant: tenant, status: "draft")
 
     conn_resp = post(conn, "/api/v1/flows/#{flow.id}/versions/1/rollback")
-    assert json_response(conn_resp, 422) == %{"error" => "no_active_version"}
+    assert %{"code" => "no_active_version"} = json_response(conn_resp, 422)
   end
 
   test "migrate returns 422 when flow has no active version", %{conn: conn, tenant: tenant} do
@@ -226,7 +226,7 @@ defmodule KalciferWeb.MigrationControllerTest do
     conn_resp =
       post(conn, "/api/v1/flows/#{flow.id}/versions/1/migrate", %{"strategy" => "migrate_all"})
 
-    assert json_response(conn_resp, 422) == %{"error" => "no_active_version"}
+    assert %{"code" => "no_active_version"} = json_response(conn_resp, 422)
   end
 
   test "migration_status returns empty map for flow with no instances", %{
@@ -245,6 +245,6 @@ defmodule KalciferWeb.MigrationControllerTest do
     flow = insert(:flow, tenant: other_tenant)
 
     conn_resp = get(conn, "/api/v1/flows/#{flow.id}/migration_status")
-    assert json_response(conn_resp, 404) == %{"error" => "not_found"}
+    assert %{"code" => "not_found"} = json_response(conn_resp, 404)
   end
 end

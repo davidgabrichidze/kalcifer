@@ -4,8 +4,12 @@ defmodule Kalcifer.Engine.Nodes.Wait.Wait do
   use Kalcifer.Engine.NodeBehaviour
 
   @impl true
-  def execute(config, _context) do
-    {:waiting, %{duration: config["duration"]}}
+  def execute(config, context) do
+    if context["_dry_run"] do
+      {:completed, %{dry_run: true, skipped_wait: config["duration"], waited: true}}
+    else
+      {:waiting, %{duration: config["duration"]}}
+    end
   end
 
   @impl true

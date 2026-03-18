@@ -53,7 +53,7 @@ defmodule KalciferWeb.TriggerControllerTest do
         "customer_id" => "cust_123"
       })
 
-    assert json_response(conn, 404) == %{"error" => "not_found"}
+    assert %{"code" => "not_found"} = json_response(conn, 404)
   end
 
   test "rejects trigger for non-active flow", %{conn: conn, tenant: tenant} do
@@ -64,7 +64,7 @@ defmodule KalciferWeb.TriggerControllerTest do
         "customer_id" => "cust_123"
       })
 
-    assert json_response(conn, 422) == %{"error" => "flow_not_active"}
+    assert %{"code" => "flow_not_active"} = json_response(conn, 422)
   end
 
   test "rejects trigger for paused flow", %{conn: conn, tenant: tenant} do
@@ -75,7 +75,7 @@ defmodule KalciferWeb.TriggerControllerTest do
         "customer_id" => "cust_123"
       })
 
-    assert json_response(conn, 422) == %{"error" => "flow_not_active"}
+    assert %{"code" => "flow_not_active"} = json_response(conn, 422)
   end
 
   test "returns 409 when customer already in flow", %{conn: conn, tenant: tenant} do
@@ -95,7 +95,7 @@ defmodule KalciferWeb.TriggerControllerTest do
         "customer_id" => "cust_dedup"
       })
 
-    assert json_response(conn, 409) == %{"error" => "already_in_flow"}
+    assert %{"code" => "already_in_flow"} = json_response(conn, 409)
   end
 
   test "returns 429 when customer exceeds frequency cap", %{conn: conn, tenant: tenant} do
@@ -130,7 +130,7 @@ defmodule KalciferWeb.TriggerControllerTest do
         "customer_id" => "cust_capped"
       })
 
-    assert json_response(conn, 429) == %{"error" => "frequency_cap_exceeded"}
+    assert %{"code" => "frequency_cap_exceeded"} = json_response(conn, 429)
   end
 
   test "trigger passes initial context to instance", %{conn: conn, tenant: tenant} do

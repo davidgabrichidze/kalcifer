@@ -75,7 +75,8 @@ defmodule Kalcifer.Engine.FlowServer do
           version_number: args.version_number,
           customer_id: args.customer_id,
           tenant_id: args.tenant_id,
-          current_nodes: entry_node_ids
+          current_nodes: entry_node_ids,
+          dry_run: Map.get(args, :dry_run, false)
         },
         id: args.instance_id
       )
@@ -86,6 +87,7 @@ defmodule Kalcifer.Engine.FlowServer do
       |> Map.put("_flow_id", args.flow_id)
       |> Map.put("_tenant_id", args.tenant_id)
       |> Map.put("_instance_id", instance.id)
+      |> maybe_put_dry_run(args)
 
     state = %__MODULE__{
       instance_id: instance.id,
@@ -403,6 +405,9 @@ defmodule Kalcifer.Engine.FlowServer do
 
   defp normalize_error(%{} = error), do: error
   defp normalize_error(reason), do: %{reason: inspect(reason)}
+
+  defp maybe_put_dry_run(context, %{dry_run: true}), do: Map.put(context, "_dry_run", true)
+  defp maybe_put_dry_run(context, _args), do: context
 
   # --- Telemetry ---
 

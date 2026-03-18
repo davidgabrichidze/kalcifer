@@ -3,6 +3,7 @@ defmodule KalciferWeb.InstanceController do
 
   import Ecto.Query
 
+  alias Kalcifer.Engine.ErrorCatalog
   alias Kalcifer.Flows.ExecutionStep
   alias Kalcifer.Flows.FlowInstance
   alias Kalcifer.Repo
@@ -128,6 +129,7 @@ defmodule KalciferWeb.InstanceController do
       status: instance.status,
       version_number: instance.version_number,
       current_nodes: instance.current_nodes,
+      dry_run: instance.dry_run,
       entered_at: instance.entered_at,
       completed_at: instance.completed_at,
       exited_at: instance.exited_at,
@@ -136,7 +138,7 @@ defmodule KalciferWeb.InstanceController do
   end
 
   defp serialize_step(step) do
-    %{
+    base = %{
       id: step.id,
       node_id: step.node_id,
       node_type: step.node_type,
@@ -145,5 +147,11 @@ defmodule KalciferWeb.InstanceController do
       completed_at: step.completed_at,
       output: step.output
     }
+
+    if step.error do
+      Map.merge(base, %{error: step.error, human_error: ErrorCatalog.humanize(step.error)})
+    else
+      base
+    end
   end
 end

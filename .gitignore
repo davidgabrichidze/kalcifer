@@ -47,3 +47,4 @@ kalcifer-*.tar
 # OS
 .DS_Store
 Thumbs.db
+.env.prod

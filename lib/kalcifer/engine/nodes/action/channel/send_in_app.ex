@@ -7,7 +7,20 @@ defmodule Kalcifer.Engine.Nodes.Action.Channel.SendInApp do
 
   @impl true
   def execute(config, context) do
-    ChannelSender.send(:in_app, config, context)
+    if context["_dry_run"] do
+      {:completed,
+       %{
+         dry_run: true,
+         would_send: %{
+           channel: "in_app",
+           template_id: config["template_id"],
+           placement: config["placement"],
+           recipient: context["_customer_id"]
+         }
+       }}
+    else
+      ChannelSender.send(:in_app, config, context)
+    end
   end
 
   @impl true

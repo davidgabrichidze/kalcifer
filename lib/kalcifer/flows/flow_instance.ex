@@ -38,6 +38,7 @@ defmodule Kalcifer.Flows.FlowInstance do
     field :completed_at, :utc_datetime
     field :exited_at, :utc_datetime
     field :exit_reason, :string
+    field :dry_run, :boolean, default: false
     field :migrated_from_version, :integer
     field :migrated_at, :utc_datetime
 
@@ -51,7 +52,7 @@ defmodule Kalcifer.Flows.FlowInstance do
     now = DateTime.utc_now() |> DateTime.truncate(:second)
 
     instance
-    |> cast(attrs, [:flow_id, :version_number, :customer_id, :tenant_id, :current_nodes])
+    |> cast(attrs, [:flow_id, :version_number, :customer_id, :tenant_id, :current_nodes, :dry_run])
     |> validate_required([:flow_id, :version_number, :customer_id, :tenant_id])
     |> put_change(:status, "running")
     |> put_change(:entered_at, now)

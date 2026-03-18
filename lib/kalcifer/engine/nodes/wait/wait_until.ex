@@ -4,8 +4,12 @@ defmodule Kalcifer.Engine.Nodes.Wait.WaitUntil do
   use Kalcifer.Engine.NodeBehaviour
 
   @impl true
-  def execute(config, _context) do
-    {:waiting, %{until: config["datetime"]}}
+  def execute(config, context) do
+    if context["_dry_run"] do
+      {:completed, %{dry_run: true, skipped_wait_until: config["datetime"], waited: true}}
+    else
+      {:waiting, %{until: config["datetime"]}}
+    end
   end
 
   @impl true

@@ -9,18 +9,26 @@ defmodule Kalcifer.Engine.Nodes.Action.Data.UpdateProfile do
   def execute(config, context) do
     fields = config["fields"] || %{}
 
-    case get_customer(context) do
-      nil ->
-        {:completed, %{updated: false, reason: "no_customer"}}
+    if context["_dry_run"] do
+      {:completed,
+       %{
+         dry_run: true,
+         would_update: %{fields: Map.keys(fields), customer_id: context["_customer_id"]}
+       }}
+    else
+      case get_customer(context) do
+        nil ->
+          {:completed, %{updated: false, reason: "no_customer"}}
 
-      customer ->
-        case Customers.update_customer(customer, fields) do
-          {:ok, _updated} ->
-            {:completed, %{updated: true, fields: Map.keys(fields)}}
+        customer ->
+          case Customers.update_customer(customer, fields) do
+            {:ok, _updated} ->
+              {:completed, %{updated: true, fields: Map.keys(fields)}}
 
-          {:error, _changeset} ->
-            {:failed, :update_failed}
-        end
+            {:error, _changeset} ->
+              {:failed, :update_failed}
+          end
+      end
     end
   end
 

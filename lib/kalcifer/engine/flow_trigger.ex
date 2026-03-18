@@ -9,7 +9,9 @@ defmodule Kalcifer.Engine.FlowTrigger do
   alias Kalcifer.Flows.FlowVersion
   alias Kalcifer.Repo
 
-  def trigger(flow_id, customer_id, initial_context \\ %{}) do
+  def trigger(flow_id, customer_id, initial_context \\ %{}, opts \\ []) do
+    dry_run = Keyword.get(opts, :dry_run, false)
+
     with {:ok, flow} <- fetch_active_flow(flow_id),
          {:ok, version} <- fetch_active_version(flow),
          :ok <- check_not_in_flow(flow_id, customer_id),
@@ -24,7 +26,8 @@ defmodule Kalcifer.Engine.FlowTrigger do
         tenant_id: flow.tenant_id,
         version_number: version.version_number,
         graph: version.graph,
-        initial_context: initial_context
+        initial_context: initial_context,
+        dry_run: dry_run
       }
 
       case DynamicSupervisor.start_child(

@@ -114,12 +114,12 @@ defmodule KalciferWeb.JourneyControllerTest do
       journey = insert(:journey, tenant: other_tenant, flow: other_flow)
 
       conn = get(conn, "/api/v1/journeys/#{journey.id}")
-      assert json_response(conn, 404) == %{"error" => "not_found"}
+      assert %{"code" => "not_found"} = json_response(conn, 404)
     end
 
     test "returns 404 for non-existent journey", %{conn: conn} do
       conn = get(conn, "/api/v1/journeys/#{Ecto.UUID.generate()}")
-      assert json_response(conn, 404) == %{"error" => "not_found"}
+      assert %{"code" => "not_found"} = json_response(conn, 404)
     end
   end
 
@@ -152,7 +152,7 @@ defmodule KalciferWeb.JourneyControllerTest do
       journey = insert(:journey, tenant: tenant, flow: flow, status: "active")
 
       conn = put(conn, "/api/v1/journeys/#{journey.id}", %{"name" => "Updated"})
-      assert json_response(conn, 422) == %{"error" => "journey_not_draft"}
+      assert %{"code" => "journey_not_draft"} = json_response(conn, 422)
     end
 
     test "returns 404 for other tenant's journey", %{conn: conn} do
@@ -161,7 +161,7 @@ defmodule KalciferWeb.JourneyControllerTest do
       journey = insert(:journey, tenant: other_tenant, flow: other_flow)
 
       conn = put(conn, "/api/v1/journeys/#{journey.id}", %{"name" => "Hacked"})
-      assert json_response(conn, 404) == %{"error" => "not_found"}
+      assert %{"code" => "not_found"} = json_response(conn, 404)
     end
   end
 
@@ -177,7 +177,7 @@ defmodule KalciferWeb.JourneyControllerTest do
       journey = insert(:journey, tenant: tenant, flow: flow, status: "active")
 
       conn = delete(conn, "/api/v1/journeys/#{journey.id}")
-      assert json_response(conn, 422) == %{"error" => "journey_not_draft"}
+      assert %{"code" => "journey_not_draft"} = json_response(conn, 422)
     end
   end
 
@@ -196,7 +196,7 @@ defmodule KalciferWeb.JourneyControllerTest do
       journey = insert(:journey, tenant: tenant, flow: flow)
 
       conn = post(conn, "/api/v1/journeys/#{journey.id}/launch")
-      assert json_response(conn, 422) == %{"error" => "no_draft_version"}
+      assert %{"code" => "no_draft_version"} = json_response(conn, 422)
     end
 
     test "returns 404 for other tenant's journey", %{conn: conn} do
@@ -205,7 +205,7 @@ defmodule KalciferWeb.JourneyControllerTest do
       journey = insert(:journey, tenant: other_tenant, flow: other_flow)
 
       conn = post(conn, "/api/v1/journeys/#{journey.id}/launch")
-      assert json_response(conn, 404) == %{"error" => "not_found"}
+      assert %{"code" => "not_found"} = json_response(conn, 404)
     end
   end
 
@@ -243,7 +243,7 @@ defmodule KalciferWeb.JourneyControllerTest do
       {:ok, _journey} = Kalcifer.Marketing.launch_journey(journey)
 
       conn = post(conn, "/api/v1/journeys/#{journey.id}/launch")
-      assert json_response(conn, 422) == %{"error" => "no_draft_version"}
+      assert %{"code" => "no_draft_version"} = json_response(conn, 422)
     end
 
     test "pause rejects draft journey", %{conn: conn, tenant: tenant, flow: flow} do
@@ -266,7 +266,7 @@ defmodule KalciferWeb.JourneyControllerTest do
       journey = insert(:journey, tenant: other_tenant, flow: other_flow)
 
       conn = delete(conn, "/api/v1/journeys/#{journey.id}")
-      assert json_response(conn, 404) == %{"error" => "not_found"}
+      assert %{"code" => "not_found"} = json_response(conn, 404)
     end
   end
 end

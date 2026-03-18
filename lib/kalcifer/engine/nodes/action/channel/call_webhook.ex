@@ -7,7 +7,18 @@ defmodule Kalcifer.Engine.Nodes.Action.Channel.CallWebhook do
 
   @impl true
   def execute(config, context) do
-    ChannelSender.send(:webhook, config, context)
+    if context["_dry_run"] do
+      {:completed,
+       %{
+         dry_run: true,
+         would_call: %{
+           channel: "webhook",
+           url: config["url"]
+         }
+       }}
+    else
+      ChannelSender.send(:webhook, config, context)
+    end
   end
 
   @impl true

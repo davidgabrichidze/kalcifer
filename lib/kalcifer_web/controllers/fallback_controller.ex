@@ -1,82 +1,31 @@
 defmodule KalciferWeb.FallbackController do
   use KalciferWeb, :controller
 
-  def call(conn, {:error, :not_found}) do
-    conn
-    |> put_status(:not_found)
-    |> json(%{error: "not_found"})
-  end
+  alias Kalcifer.Engine.ErrorCatalog
 
-  def call(conn, {:error, :not_draft}) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{error: "flow_not_draft"})
-  end
+  @status_map %{
+    not_found: :not_found,
+    version_not_found: :not_found,
+    not_draft: :unprocessable_entity,
+    journey_not_draft: :unprocessable_entity,
+    no_draft_version: :unprocessable_entity,
+    flow_not_active: :unprocessable_entity,
+    no_active_version: :unprocessable_entity,
+    version_not_publishable: :unprocessable_entity,
+    invalid_strategy: :unprocessable_entity,
+    invalid_version: :unprocessable_entity,
+    same_version: :unprocessable_entity,
+    already_in_flow: :conflict,
+    frequency_cap_exceeded: :too_many_requests
+  }
 
-  def call(conn, {:error, :journey_not_draft}) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{error: "journey_not_draft"})
-  end
+  def call(conn, {:error, code}) when is_atom(code) and is_map_key(@status_map, code) do
+    status = Map.fetch!(@status_map, code)
+    info = ErrorCatalog.humanize_code(code)
 
-  def call(conn, {:error, :no_draft_version}) do
     conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{error: "no_draft_version"})
-  end
-
-  def call(conn, {:error, :flow_not_active}) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{error: "flow_not_active"})
-  end
-
-  def call(conn, {:error, :no_active_version}) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{error: "no_active_version"})
-  end
-
-  def call(conn, {:error, :already_in_flow}) do
-    conn
-    |> put_status(:conflict)
-    |> json(%{error: "already_in_flow"})
-  end
-
-  def call(conn, {:error, :frequency_cap_exceeded}) do
-    conn
-    |> put_status(:too_many_requests)
-    |> json(%{error: "frequency_cap_exceeded"})
-  end
-
-  def call(conn, {:error, :version_not_found}) do
-    conn
-    |> put_status(:not_found)
-    |> json(%{error: "version_not_found"})
-  end
-
-  def call(conn, {:error, :version_not_publishable}) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{error: "version_not_publishable"})
-  end
-
-  def call(conn, {:error, :invalid_strategy}) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{error: "invalid_strategy"})
-  end
-
-  def call(conn, {:error, :invalid_version}) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{error: "invalid_version_number"})
-  end
-
-  def call(conn, {:error, :same_version}) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{error: "cannot_migrate_to_same_version"})
+    |> put_status(status)
+    |> json(info)
   end
 
   def call(conn, {:error, {:invalid_changeset, %Ecto.Changeset{} = changeset}}) do
@@ -103,9 +52,11 @@ defmodule KalciferWeb.FallbackController do
 
   # Catch-all for unhandled error atoms
   def call(conn, {:error, reason}) when is_atom(reason) do
+    info = ErrorCatalog.humanize_code(reason)
+
     conn
     |> put_status(:internal_server_error)
-    |> json(%{error: to_string(reason)})
+    |> json(info)
   end
 
   defp format_errors(changeset) do

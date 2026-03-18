@@ -36,7 +36,8 @@ if config_env() == :prod do
   config :kalcifer, KalciferWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     http: [
-      ip: {0, 0, 0, 0, 0, 0, 0, 0}
+      ip: {0, 0, 0, 0, 0, 0, 0, 0},
+      port: String.to_integer(System.get_env("PORT", "4500"))
     ],
     secret_key_base: secret_key_base
 
@@ -44,7 +45,7 @@ if config_env() == :prod do
   config :kalcifer, Oban,
     repo: Kalcifer.Repo,
     queues: [
-      journey_triggers: 10,
+      flow_triggers: 10,
       delayed_resume: 20,
       maintenance: 5
     ],
