@@ -74,4 +74,50 @@ defmodule Kalcifer.Customers do
     |> Ecto.Changeset.change(preferences: merged)
     |> Repo.update()
   end
+
+  @doc """
+  Returns coverage percentages for a list of field names across a tenant's customers.
+
+  For each field name, computes what percentage of customers have a non-nil value.
+  Fields are checked against both top-level schema fields (email, phone, name)
+  and the `properties` JSONB column.
+
+  Returns `%{field_name => float()}` where float is 0.0–100.0.
+  """
+  def field_coverage(tenant_id, field_names) when is_list(field_names) do
+    total =
+      Customer
+      |> where(tenant_id: ^tenant_id)
+      |> select([c], count(c.id))
+      |> Repo.one()
+
+    if total == 0 do
+      Map.new(field_names, fn f -> {f, 0.0} end)
+    else
+      Map.new(field_names, fn field ->
+        non_null_count = count_non_null(tenant_id, field, total)
+        {field, Float.round(non_null_count / total * 100, 1)}
+      end)
+    end
+  end
+
+  @top_level_fields ~w(email phone name external_id)
+
+  defp count_non_null(tenant_id, field, _total) when field in @top_level_fields do
+    field_atom = String.to_existing_atom(field)
+
+    Customer
+    |> where(tenant_id: ^tenant_id)
+    |> where([c], not is_nil(field(c, ^field_atom)))
+    |> select([c], count(c.id))
+    |> Repo.one()
+  end
+
+  defp count_non_null(tenant_id, field, _total) do
+    Customer
+    |> where(tenant_id: ^tenant_id)
+    |> where([c], fragment("? -> ? IS NOT NULL", c.properties, ^field))
+    |> select([c], count(c.id))
+    |> Repo.one()
+  end
 end
