@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalcifer — Automation Partner</title>
+<title>Kalcifer — Flow Partner</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -28,10 +28,10 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;transition:background 0.4s,color 0.3s}
 
-/* ═══ LAYOUT ═══ */
+/* LAYOUT */
 .app{display:grid;grid-template-columns:240px 1fr;grid-template-rows:48px 1fr;height:100vh}
 
-/* ═══ TOPBAR ═══ */
+/* TOPBAR */
 .topbar{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;transition:all 0.3s}
 .top-left{display:flex;align-items:center;gap:14px}
 .logo{font-size:17px;font-weight:700;color:var(--primary);letter-spacing:-0.5px}
@@ -51,7 +51,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .th-sw{display:flex;gap:2px}
 .th-sw i{width:10px;height:10px;border-radius:2px;display:block}
 
-/* ═══ SIDEBAR ═══ */
+/* SIDEBAR */
 .sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:all 0.3s}
 .sb-section{padding:10px 10px 4px}
 .sb-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);padding:0 6px;margin-bottom:4px}
@@ -61,27 +61,25 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .sb-scroll::-webkit-scrollbar{width:3px}
 .sb-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
-.camp-item{display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s;margin-bottom:2px;border:1px solid transparent}
-.camp-item:hover{background:var(--surface-dim)}
-.camp-item.active{background:var(--primary-soft);border-color:var(--primary)}
-.camp-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
-.dot-plan{background:var(--info)} .dot-live{background:var(--success);animation:pulse 2s infinite} .dot-done{background:var(--border)} .dot-draft{background:var(--text-muted)}
+.flow-item{display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s;margin-bottom:2px;border:1px solid transparent}
+.flow-item:hover{background:var(--surface-dim)}
+.flow-item.active{background:var(--primary-soft);border-color:var(--primary)}
+.flow-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.dot-draft{background:var(--text-muted)} .dot-active{background:var(--success);animation:pulse 2s infinite} .dot-paused{background:var(--warn)} .dot-archived{background:var(--border)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-.camp-info{flex:1;min-width:0}
-.camp-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.camp-meta{font-size:10px;color:var(--text-muted);margin-top:1px}
+.flow-info{flex:1;min-width:0}
+.flow-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flow-meta{font-size:10px;color:var(--text-muted);margin-top:1px}
 
 .sb-bottom{padding:8px 10px;border-top:1px solid var(--border)}
 .tenant-btn{display:flex;align-items:center;gap:6px;width:100%;padding:6px 8px;background:var(--surface-dim);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;color:var(--text-sec);cursor:pointer;font-family:inherit}
 .t-dot{width:6px;height:6px;border-radius:50%;background:var(--success)}
 
-/* ═══ MAIN CONTENT AREA ═══ */
+/* MAIN CONTENT AREA */
 .main-area{display:flex;overflow:hidden;min-height:0}
-
-/* Adaptive layout transitions */
 .main-area{transition:all 0.4s ease}
 
-/* ─── Chat Column ─── */
+/* Chat Column */
 .chat-col{display:flex;flex-direction:column;overflow:hidden;min-height:0;border-right:1px solid var(--border);background:var(--bg);transition:width 0.4s ease,flex 0.4s ease}
 
 .chat-head{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
@@ -114,17 +112,20 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .msg-btn-s{background:var(--surface-dim);color:var(--text-sec);border:1px solid var(--border)}
 .msg-btn-s:hover{border-color:var(--primary);color:var(--text)}
 
-/* Journey visual */
-.journey-v{margin:8px 0;padding:10px;background:var(--surface-dim);border-radius:var(--radius-sm);border:1px solid var(--border-light)}
-.j-step{display:flex;align-items:flex-start;gap:8px;padding:5px 0;position:relative}
-.j-step:not(:last-child)::after{content:'';position:absolute;left:10px;top:20px;bottom:-5px;width:1px;background:var(--border)}
-.j-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;background:var(--surface);border:2px solid var(--border);z-index:1}
-.j-dot.done{border-color:var(--success);color:var(--success);background:var(--success-soft)}
-.j-dot.active{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
-.j-dot.pending{border-color:var(--border);color:var(--text-muted)}
-.j-info{flex:1}
-.j-name{font-size:11px;font-weight:500}
-.j-desc{font-size:10px;color:var(--text-muted)}
+/* Flow graph inline preview */
+.flow-v{margin:8px 0;padding:10px;background:var(--surface-dim);border-radius:var(--radius-sm);border:1px solid var(--border-light)}
+.f-step{display:flex;align-items:flex-start;gap:8px;padding:5px 0;position:relative}
+.f-step:not(:last-child)::after{content:'';position:absolute;left:10px;top:20px;bottom:-5px;width:1px;background:var(--border)}
+.f-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;background:var(--surface);border:2px solid var(--border);z-index:1}
+.f-dot.trigger{border-color:var(--info);color:var(--info);background:var(--info-soft)}
+.f-dot.action{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
+.f-dot.condition{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.f-dot.wait{border-color:var(--text-muted);color:var(--text-muted);background:var(--accent-soft)}
+.f-dot.end{border-color:var(--success);color:var(--success);background:var(--success-soft)}
+.f-info{flex:1}
+.f-name{font-size:11px;font-weight:500}
+.f-desc{font-size:10px;color:var(--text-muted)}
+.f-branch{margin-left:28px;padding:4px 0 0;font-size:10px;color:var(--text-muted);font-style:italic}
 
 .suggestions{padding:6px 16px;display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0}
 .sug{background:var(--surface);border:1px solid var(--border);color:var(--text-sec);padding:4px 10px;border-radius:16px;font-size:10.5px;cursor:pointer;font-family:inherit;transition:all 0.2s}
@@ -144,7 +145,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .typing-ind span:nth-child(2){animation-delay:0.2s}.typing-ind span:nth-child(3){animation-delay:0.4s}
 @keyframes td{0%,60%,100%{opacity:0.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 
-/* ─── Dashboard Column ─── */
+/* Dashboard Column */
 .dash-col{flex:1;overflow-y:auto;padding:16px;background:var(--bg);transition:all 0.4s ease;min-height:0}
 .dash-col::-webkit-scrollbar{width:5px}
 .dash-col::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
@@ -153,7 +154,6 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .dash-title{font-size:15px;font-weight:600}
 .dash-subtitle{font-size:11px;color:var(--text-muted)}
 
-/* Dashboard grid */
 .dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px}
 
 .d-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;transition:all 0.2s}
@@ -218,8 +218,6 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .insight{padding:8px 10px;border-left:3px solid;border-radius:0 var(--radius-xs) var(--radius-xs) 0;margin-bottom:6px}
 .insight-type{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
 .insight-text{font-size:11px;margin-top:2px;color:var(--text-sec);line-height:1.4}
-
-/* Settings → separate page */
 </style>
 </head>
 <body data-theme="warm">
@@ -229,10 +227,10 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 <div class="topbar">
   <div class="top-left"><div class="logo">Kalcifer <span>Work</span></div></div>
   <div class="top-right">
-    <button class="top-btn" onclick="window.location.href='browse.html?theme='+(document.body.getAttribute('data-theme')||'warm')" title="დათვალიერება">👁 Browse</button>
-    <button class="top-btn" onclick="openSettings()">⚙</button>
+    <button class="top-btn" onclick="window.location.href='browse.html?theme='+(document.body.getAttribute('data-theme')||'warm')" title="დათვალიერება">Browse</button>
+    <button class="top-btn" onclick="openSettings()">Engine Room</button>
     <div class="theme-wrap">
-      <button class="top-btn" onclick="document.getElementById('thDD').classList.toggle('open')">◐</button>
+      <button class="top-btn" onclick="document.getElementById('thDD').classList.toggle('open')">&#9684;</button>
       <div class="theme-dd" id="thDD">
         <button class="th-opt active" onclick="setTh('warm',this)"><span class="th-sw"><i style="background:#f5f0eb"></i><i style="background:#c4956a"></i></span>Warm Paper</button>
         <button class="th-opt" onclick="setTh('lavender',this)"><span class="th-sw"><i style="background:#f7f5f0"></i><i style="background:#9b8ec4"></i></span>Lavender</button>
@@ -241,40 +239,40 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
         <button class="th-opt" onclick="setTh('dark',this)"><span class="th-sw"><i style="background:#0f0f14"></i><i style="background:#a89cf0"></i></span>Dark</button>
       </div>
     </div>
-    <div class="avatar">დგ</div>
+    <div class="avatar">DG</div>
   </div>
 </div>
 
 <!-- SIDEBAR -->
 <div class="sidebar">
   <div class="sb-section">
-    <button class="sb-new">+ ახალი კამპანია</button>
-    <div class="sb-label">მიმდინარე</div>
+    <button class="sb-new" onclick="ask('ახალი flow')">+ ახალი Flow</button>
+    <div class="sb-label">Active Flows</div>
   </div>
   <div class="sb-scroll">
-    <div class="camp-item active" id="camp-re" onclick="loadCampaign('planning')">
-      <div class="camp-dot dot-plan"></div>
-      <div class="camp-info"><div class="camp-name">Churn Re-engagement</div><div class="camp-meta">📝 Planning · 1,880 profiles</div></div>
+    <div class="flow-item active" id="flow-churn" onclick="loadFlow('planning')">
+      <div class="flow-dot dot-draft"></div>
+      <div class="flow-info"><div class="flow-name">Churn Re-engagement</div><div class="flow-meta">Draft v1 &middot; 4 nodes</div></div>
     </div>
-    <div class="camp-item" id="camp-spring" onclick="loadCampaign('live')">
-      <div class="camp-dot dot-live"></div>
-      <div class="camp-info"><div class="camp-name">Spring Sale Push</div><div class="camp-meta">🚀 Live · 67% sent</div></div>
+    <div class="flow-item" id="flow-spring" onclick="loadFlow('live')">
+      <div class="flow-dot dot-active"></div>
+      <div class="flow-info"><div class="flow-name">Spring Sale Push</div><div class="flow-meta">Active v2 &middot; 312 running</div></div>
     </div>
-    <div class="camp-item" id="camp-onb" onclick="loadCampaign('live-onb')">
-      <div class="camp-dot dot-live"></div>
-      <div class="camp-info"><div class="camp-name">Onboarding Flow v3</div><div class="camp-meta">🚀 Live · 2,100 in journey</div></div>
+    <div class="flow-item" id="flow-onb" onclick="loadFlow('live-onb')">
+      <div class="flow-dot dot-active"></div>
+      <div class="flow-info"><div class="flow-name">Onboarding Sequence</div><div class="flow-meta">Active v3 &middot; 2,100 running</div></div>
     </div>
-    <div style="padding:8px 6px 4px"><div class="sb-label">დასრულებული</div></div>
-    <div class="camp-item" id="camp-q4" onclick="loadCampaign('done')">
-      <div class="camp-dot dot-done"></div>
-      <div class="camp-info"><div class="camp-name">Q4 Upsell Campaign</div><div class="camp-meta">✅ 12.4% conversion</div></div>
+    <div style="padding:8px 6px 4px"><div class="sb-label">Archived</div></div>
+    <div class="flow-item" id="flow-q4" onclick="loadFlow('done')">
+      <div class="flow-dot dot-archived"></div>
+      <div class="flow-info"><div class="flow-name">Q4 Upsell Journey</div><div class="flow-meta">Archived &middot; 794 completed</div></div>
     </div>
-    <div class="camp-item" id="camp-holiday" onclick="loadCampaign('done-holiday')">
-      <div class="camp-dot dot-done"></div>
-      <div class="camp-info"><div class="camp-name">Holiday Promo 2025</div><div class="camp-meta">✅ 8.7% conversion</div></div>
+    <div class="flow-item" id="flow-holiday" onclick="loadFlow('done-holiday')">
+      <div class="flow-dot dot-archived"></div>
+      <div class="flow-info"><div class="flow-name">Holiday Promo 2025</div><div class="flow-meta">Archived &middot; 505 completed</div></div>
     </div>
   </div>
-  <div class="sb-bottom"><button class="tenant-btn"><span class="t-dot"></span>Acme SaaS <span style="margin-left:auto;font-size:10px;color:var(--text-muted)">▾</span></button></div>
+  <div class="sb-bottom"><button class="tenant-btn"><span class="t-dot"></span>Acme SaaS <span style="margin-left:auto;font-size:10px;color:var(--text-muted)">&blacktriangledown;</span></button></div>
 </div>
 
 <!-- MAIN AREA -->
@@ -285,15 +283,15 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
     <div class="chat-head">
       <div class="chat-head-left">
         <div class="ai-dot"></div>
-        <h2>Talk to Your Data</h2>
+        <h2>Flow Partner</h2>
       </div>
-      <span class="phase-tag" id="phaseTag" style="background:var(--info-soft);color:var(--info)">📝 Planning</span>
+      <span class="phase-tag" id="phaseTag" style="background:var(--info-soft);color:var(--info)">Draft</span>
     </div>
     <div class="chat-msgs" id="chatMsgs"></div>
     <div class="suggestions" id="sugs"></div>
     <div class="chat-input-area">
       <div class="chat-input-wrap">
-        <textarea class="chat-input" id="chatInput" placeholder="ესაუბრე კალციფერს..." rows="1"></textarea>
+        <textarea class="chat-input" id="chatInput" placeholder="მიამბე რა გინდა გააკეთო..." rows="1"></textarea>
         <button class="send-btn" onclick="sendMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
       </div>
     </div>
@@ -306,8 +304,6 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 
 </div>
 </div>
-
-<!-- Settings is now a separate page: engine-room.html -->
 
 <script>
 const chatMsgs=document.getElementById('chatMsgs');
@@ -325,21 +321,20 @@ function setTh(n,b){document.body.setAttribute('data-theme',n);document.querySel
 document.addEventListener('click',e=>{if(!e.target.closest('.theme-wrap'))document.getElementById('thDD').classList.remove('open')});
 
 function openSettings(){window.location.href='engine-room.html?theme='+(document.body.getAttribute('data-theme')||'warm')}
-function closeSettings(){}
 
 function pc(){return getComputedStyle(document.body).getPropertyValue('--primary').trim()}
 function bc(){return getComputedStyle(document.body).getPropertyValue('--border').trim()}
 function tc(){return getComputedStyle(document.body).getPropertyValue('--text-muted').trim()}
 
-// ═══ ADAPTIVE LAYOUT ═══
+// ADAPTIVE LAYOUT
 function setLayout(chatFlex, dashFlex){
   chatCol.style.flex=chatFlex;
   dashCol.style.flex=dashFlex;
 }
 
-// ═══ CAMPAIGNS ═══
-function loadCampaign(type){
-  document.querySelectorAll('.camp-item').forEach(c=>c.classList.remove('active'));
+// FLOWS
+function loadFlow(type){
+  document.querySelectorAll('.flow-item').forEach(c=>c.classList.remove('active'));
   if(liveInterval){clearInterval(liveInterval);liveInterval=null}
   Object.values(charts).forEach(c=>c.destroy());charts={};
 
@@ -350,171 +345,167 @@ function loadCampaign(type){
   else if(type==='done-holiday') loadDoneHoliday();
 }
 
-// ─── PLANNING: Chat-dominant ───
+// --- PLANNING: Chat-dominant ---
 function loadPlanning(){
-  document.getElementById('camp-re').classList.add('active');
-  setLayout(3,0); // Chat only at first
-  setPhaseTag('📝 Planning','var(--info-soft)','var(--info)');
+  document.getElementById('flow-churn').classList.add('active');
+  setLayout(3,0);
+  setPhaseTag('Draft','var(--info-soft)','var(--info)');
   dashContent.innerHTML='';
 
   chatMsgs.innerHTML='';
-  addAI(`<strong>Churn Re-engagement</strong> — დაგეგმვის ფაზა<br><br>გაქვს <strong>1,880 პროფილი</strong> "Churn Risk 90-day" სეგმენტში.<br><br>როგორ გინდა მივწვდეთ — რა არხით, რა მესიჯით?<br>წინა Q4 კამპანიაში personalized subject line-მა +34% open rate მოიტანა.`);
-  setSugs(['📧 Email + SMS re-activation','💡 წინა კამპანიიდან სწავლა','🔬 A/B ტესტი','👤 სეგმენტის ანალიზი']);
+  addAI(`<strong>Churn Re-engagement</strong> &mdash; draft flow<br><br><strong>1,880</strong> customer Churn Risk 90d segment-ში.<br><br>როგორი flow გინდა? მიამბე რა უნდა მოხდეს &mdash; trigger, რა არხით მივწვდეთ, რა პირობებით, და მე ავაწყობ.<br><br>წინა Q4 flow-ში personalized email-მა +34% open rate მოიტანა.`);
+  setSugs(['Email + SMS flow','A/B ტესტით','Dry run გავუშვა','რა nodes არსებობს?']);
 }
 
-// ─── LIVE: Split view with monitoring ───
+// --- LIVE: Split view with monitoring ---
 function loadLive(){
-  document.getElementById('camp-spring').classList.add('active');
-  setLayout(1,2); // Dashboard dominant
-  setPhaseTag('🚀 Live','var(--success-soft)','var(--success)');
+  document.getElementById('flow-spring').classList.add('active');
+  setLayout(1,2);
+  setPhaseTag('Active','var(--success-soft)','var(--success)');
 
   chatMsgs.innerHTML='';
-  addAI(`<strong>Spring Sale Push</strong> გაშვებულია 6 საათის წინ.<br><br>ყველაფერი კარგად მიდის — Variant A 41% open rate-ით ლიდერობს. SMS follow-up 2 საათში გაეშვება.<br><br>რაიმე ცვლილება გინდა?`);
-  setSugs(['⏸ დაპაუზება','📊 დეტალური მეტრიკები','✉️ SMS ტექსტის შეცვლა']);
+  addAI(`<strong>Spring Sale Push</strong> &mdash; v2 active, 6 საათის წინ გაეშვა.<br><br><strong>312 instance</strong> running, 2,502 completed. Variant A 41% open rate-ით ლიდერობს. Wait node-ზე 186 instance დგას &mdash; SMS follow-up 2 საათში.<br><br>რაიმე ცვლილება გინდა?`);
+  setSugs(['Instance-ები ვნახო','Flow დავპაუზო','Dry run ახალ version-ზე','Failed instances']);
 
   dashContent.innerHTML=`
-    <div class="dash-header"><div><div class="dash-title">Spring Sale Push</div><div class="dash-subtitle">🚀 Live · started 6h ago · 4,200 profiles</div></div></div>
+    <div class="dash-header"><div><div class="dash-title">Spring Sale Push</div><div class="dash-subtitle">Active v2 &middot; started 6h ago &middot; 4,200 triggered</div></div></div>
 
     <div class="dash-grid">
-      <div class="d-card"><div class="d-label">Sent</div><div class="d-value">2,814</div><div class="d-change change-up">67% of 4,200</div></div>
-      <div class="d-card"><div class="d-label">Delivered</div><div class="d-value">2,798</div><div class="d-change">99.4% rate</div></div>
-      <div class="d-card"><div class="d-label">Opened</div><div class="d-value" style="color:var(--success)">1,147</div><div class="d-change change-up">41.0% open rate</div></div>
-      <div class="d-card"><div class="d-label">Clicked</div><div class="d-value" style="color:var(--info)">386</div><div class="d-change change-up">13.8% CTR</div></div>
+      <div class="d-card"><div class="d-label">Running</div><div class="d-value" style="color:var(--info)">312</div><div class="d-change">in 6 different nodes</div></div>
+      <div class="d-card"><div class="d-label">Waiting</div><div class="d-value" style="color:var(--warn)">186</div><div class="d-change">at wait_for_event</div></div>
+      <div class="d-card"><div class="d-label">Completed</div><div class="d-value" style="color:var(--success)">2,502</div><div class="d-change">59.6% completion</div></div>
+      <div class="d-card"><div class="d-label">Failed</div><div class="d-value" style="color:var(--danger)">14</div><div class="d-change">0.3% error rate</div></div>
     </div>
 
-    <div class="d-section-title">📧 Email Delivery Progress</div>
-    <div class="d-card full">
-      <div class="prog-row"><div class="prog-label"><span>Variant A — "20% off spring collection"</span><span>72%</span></div><div class="prog-bar"><div class="prog-fill" style="width:72%;background:var(--primary)"></div></div></div>
-      <div class="prog-row"><div class="prog-label"><span>Variant B — "Spring refresh starts here"</span><span>62%</span></div><div class="prog-bar"><div class="prog-fill" style="width:62%;background:var(--info)"></div></div></div>
-      <div class="prog-row"><div class="prog-label"><span>📱 SMS follow-up (queued)</span><span>0%</span></div><div class="prog-bar"><div class="prog-fill" style="width:0%;background:var(--warn)"></div></div></div>
-    </div>
-
-    <div class="d-section-title">📡 Live Events</div>
-    <div class="d-card full"><div class="live-mini" id="liveStream"></div></div>
-
-    <div class="d-section-title">🔄 Journey Progress</div>
+    <div class="d-section-title">Flow Execution Path</div>
     <div class="d-card full">
       <div class="funnel">
-        <div class="funnel-step"><span class="funnel-label">Entered</span><div class="funnel-bar" style="width:100%;background:var(--primary)">4,200</div></div>
+        <div class="funnel-step"><span class="funnel-label">Triggered</span><div class="funnel-bar" style="width:100%;background:var(--info)">4,200</div></div>
         <div class="funnel-step"><span class="funnel-label">Email sent</span><div class="funnel-bar" style="width:67%;background:var(--primary)">2,814</div></div>
-        <div class="funnel-step"><span class="funnel-label">Opened</span><div class="funnel-bar" style="width:27%;background:var(--success)">1,147</div></div>
-        <div class="funnel-step"><span class="funnel-label">Clicked</span><div class="funnel-bar" style="width:9%;background:var(--info)">386</div></div>
-        <div class="funnel-step"><span class="funnel-label">Converted</span><div class="funnel-bar" style="width:3%;background:var(--warn)">142</div></div>
+        <div class="funnel-step"><span class="funnel-label">Condition: opened?</span><div class="funnel-bar" style="width:27%;background:var(--warn)">1,147</div></div>
+        <div class="funnel-step"><span class="funnel-label">SMS sent</span><div class="funnel-bar" style="width:15%;background:var(--primary)">630</div></div>
+        <div class="funnel-step"><span class="funnel-label">End node</span><div class="funnel-bar" style="width:60%;background:var(--success)">2,502</div></div>
       </div>
     </div>
 
-    <div class="d-section-title">⚡ A/B Test Status</div>
+    <div class="d-section-title">Node Execution Log</div>
+    <div class="d-card full"><div class="live-mini" id="liveStream"></div></div>
+
+    <div class="d-section-title">A/B Split Results</div>
     <div class="d-card full">
       <table class="d-table">
-        <thead><tr><th>Variant</th><th>Sent</th><th>Open %</th><th>CTR</th><th>Conv.</th><th>Status</th></tr></thead>
+        <thead><tr><th>Branch</th><th>Instances</th><th>Open %</th><th>CTR</th><th>Status</th></tr></thead>
         <tbody>
-          <tr><td><strong>A</strong> — "20% off spring"</td><td>1,407</td><td style="color:var(--success)"><strong>41.0%</strong></td><td>14.2%</td><td>5.8%</td><td><span class="badge b-green">Leading</span></td></tr>
-          <tr><td><strong>B</strong> — "Spring refresh"</td><td>1,407</td><td>33.6%</td><td>11.1%</td><td>3.9%</td><td><span class="badge b-orange">Behind</span></td></tr>
+          <tr><td><strong>A</strong> &mdash; "20% off spring"</td><td>1,407</td><td style="color:var(--success)"><strong>41.0%</strong></td><td>14.2%</td><td><span class="badge b-green">Leading</span></td></tr>
+          <tr><td><strong>B</strong> &mdash; "Spring refresh"</td><td>1,407</td><td>33.6%</td><td>11.1%</td><td><span class="badge b-orange">Behind</span></td></tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="d-section-title">Recent Errors</div>
+    <div class="d-card full">
+      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)">
+        <div class="insight-type" style="color:var(--danger)">send_email failed &times; 8</div>
+        <div class="insight-text">No message provider configured for this channel. Set up a provider (e.g., SendGrid) in Engine Room.</div>
+      </div>
+      <div class="insight" style="border-color:var(--warn);background:var(--warn-soft)">
+        <div class="insight-type" style="color:var(--warn)">frequency_cap &times; 6</div>
+        <div class="insight-text">Message limit reached for these customers. They received the maximum messages in the configured time window.</div>
+      </div>
     </div>
   `;
 
   startLiveStream();
 }
 
-// ─── LIVE ONBOARDING: Different monitoring ───
+// --- LIVE ONBOARDING ---
 function loadLiveOnboarding(){
-  document.getElementById('camp-onb').classList.add('active');
+  document.getElementById('flow-onb').classList.add('active');
   setLayout(1,2);
-  setPhaseTag('🚀 Live','var(--success-soft)','var(--success)');
+  setPhaseTag('Active','var(--success-soft)','var(--success)');
 
   chatMsgs.innerHTML='';
-  addAI(`<strong>Onboarding Flow v3</strong> მიმდინარეობს.<br><br><strong>2,100</strong> ახალი მომხმარებელი ამ journey-შია. Step 3 ("first value moment") არის ყველაზე კრიტიკული — drop-off 22%-ია.<br><br>გინდა Step 3-ის ტექსტის A/B ტესტი?`);
-  setSugs(['📊 step-by-step drop-off','✏️ Step 3 ტექსტის შეცვლა','⏸ დაპაუზება']);
+  addAI(`<strong>Onboarding Sequence</strong> v3 active.<br><br><strong>2,100</strong> instance running. Step 3 ("first value moment") &mdash; wait node-ზე 22% იკარგება. Condition node-ის config შეიძლება საჭიროებს შეცვლას.<br><br>Dry run გავუშვა ახალ config-ით?`);
+  setSugs(['Step-by-step breakdown','Dry run v4-ით','Wait node-ის config','Failed instances']);
 
   dashContent.innerHTML=`
-    <div class="dash-header"><div><div class="dash-title">Onboarding Flow v3</div><div class="dash-subtitle">🚀 Live · 2,100 users in journey · running 12 days</div></div></div>
+    <div class="dash-header"><div><div class="dash-title">Onboarding Sequence</div><div class="dash-subtitle">Active v3 &middot; 2,100 instances &middot; running 12 days</div></div></div>
 
     <div class="dash-grid">
-      <div class="d-card"><div class="d-label">In Journey</div><div class="d-value">2,100</div><div class="d-change change-up">+180 this week</div></div>
+      <div class="d-card"><div class="d-label">Running</div><div class="d-value">398</div><div class="d-change change-up">+180 this week</div></div>
       <div class="d-card"><div class="d-label">Completed</div><div class="d-value" style="color:var(--success)">1,240</div><div class="d-change">59% completion</div></div>
-      <div class="d-card"><div class="d-label">Dropped Off</div><div class="d-value" style="color:var(--danger)">462</div><div class="d-change change-down">22% drop-off</div></div>
-      <div class="d-card"><div class="d-label">Active Now</div><div class="d-value" style="color:var(--info)">398</div><div class="d-change">in various steps</div></div>
+      <div class="d-card"><div class="d-label">Failed / Exited</div><div class="d-value" style="color:var(--danger)">462</div><div class="d-change change-down">22% drop-off</div></div>
+      <div class="d-card"><div class="d-label">Waiting</div><div class="d-value" style="color:var(--warn)">210</div><div class="d-change">at wait nodes</div></div>
     </div>
 
-    <div class="d-section-title">🔄 Step-by-Step Progress</div>
+    <div class="d-section-title">Node-by-Node Funnel</div>
     <div class="d-card full">
       <div class="funnel">
-        <div class="funnel-step"><span class="funnel-label">Welcome email</span><div class="funnel-bar" style="width:100%;background:var(--primary)">2,100</div><span class="funnel-val">100%</span></div>
-        <div class="funnel-step"><span class="funnel-label">SDK installed</span><div class="funnel-bar" style="width:82%;background:var(--primary)">1,722</div><span class="funnel-val">82%</span></div>
-        <div class="funnel-step"><span class="funnel-label">First event</span><div class="funnel-bar" style="width:68%;background:var(--success)">1,428</div><span class="funnel-val">68%</span></div>
-        <div class="funnel-step"><span class="funnel-label">First value ⚠️</span><div class="funnel-bar" style="width:46%;background:var(--warn)">966</div><span class="funnel-val">46%</span></div>
-        <div class="funnel-step"><span class="funnel-label">Completed</span><div class="funnel-bar" style="width:35%;background:var(--success)">735</div><span class="funnel-val">35%</span></div>
+        <div class="funnel-step"><span class="funnel-label">segment_entry</span><div class="funnel-bar" style="width:100%;background:var(--info)">2,100</div><span class="funnel-val">100%</span></div>
+        <div class="funnel-step"><span class="funnel-label">send_email</span><div class="funnel-bar" style="width:82%;background:var(--primary)">1,722</div><span class="funnel-val">82%</span></div>
+        <div class="funnel-step"><span class="funnel-label">wait 2d</span><div class="funnel-bar" style="width:68%;background:var(--warn)">1,428</div><span class="funnel-val">68%</span></div>
+        <div class="funnel-step"><span class="funnel-label">condition: activated?</span><div class="funnel-bar" style="width:46%;background:var(--warn)">966</div><span class="funnel-val">46%</span></div>
+        <div class="funnel-step"><span class="funnel-label">end</span><div class="funnel-bar" style="width:35%;background:var(--success)">735</div><span class="funnel-val">35%</span></div>
       </div>
     </div>
 
-    <div class="d-section-title">⚠️ Drop-off Analysis</div>
+    <div class="d-section-title">Bottleneck Analysis</div>
     <div class="d-card full">
       <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)">
         <div class="insight-type" style="color:var(--danger)">Bottleneck</div>
-        <div class="insight-text">Step 3 "First Value Moment" → 22% drop-off. Users see the dashboard but don't take action.</div>
+        <div class="insight-text">condition node "activated?" &mdash; 22% false branch leads to exit. Customers see the dashboard but don't take action.</div>
       </div>
       <div class="insight" style="border-color:var(--info);background:var(--info-soft)">
-        <div class="insight-type" style="color:var(--info)">Recommendation</div>
-        <div class="insight-text">Add interactive walkthrough or pre-populated demo data. Similar change in v2 improved conversion +15%.</div>
+        <div class="insight-type" style="color:var(--info)">Suggestion</div>
+        <div class="insight-text">Add a send_push node before the condition with a "Try the dashboard" CTA. Similar change in v2 improved conversion +15%.</div>
       </div>
     </div>
   `;
 }
 
-// ─── DONE: Dashboard dominant ───
+// --- DONE: Dashboard dominant ---
 function loadDone(){
-  document.getElementById('camp-q4').classList.add('active');
-  setLayout(1,3); // Dashboard very dominant
-  setPhaseTag('✅ Complete','var(--accent-soft)','var(--text-muted)');
+  document.getElementById('flow-q4').classList.add('active');
+  setLayout(1,3);
+  setPhaseTag('Archived','var(--accent-soft)','var(--text-muted)');
 
   chatMsgs.innerHTML='';
-  addAI(`<strong>Q4 Upsell Campaign</strong> — დასრულდა 2 კვირის წინ.<br><br>მთავარი შედეგი: <strong>12.4% conversion, $48,200 revenue</strong>.<br><br>რა გაინტერესებს — დეტალური breakdown, learnings, თუ მსგავსი კამპანიის გამეორება?`);
-  setSugs(['💡 key learnings','🔁 მსგავსი კამპანიის გამეორება','📊 channel comparison']);
+  addAI(`<strong>Q4 Upsell Journey</strong> &mdash; archived.<br><br><strong>794 instances completed</strong>, 12.4% conversion, $48,200 revenue.<br><br>რა გაინტერესებს &mdash; execution timeline, node performance, ან ახალი flow ამის ბაზაზე?`);
+  setSugs(['Node performance','Execution timeline','Clone as new flow','Failed instances']);
 
   dashContent.innerHTML=`
-    <div class="dash-header"><div><div class="dash-title">Q4 Upsell Campaign — Results</div><div class="dash-subtitle">✅ Completed · Oct 15 – Nov 12, 2025 · 6,400 profiles</div></div></div>
+    <div class="dash-header"><div><div class="dash-title">Q4 Upsell Journey &mdash; Results</div><div class="dash-subtitle">Archived &middot; Oct 15 &ndash; Nov 12, 2025 &middot; 6,400 triggered</div></div></div>
 
     <div class="dash-grid">
-      <div class="d-card"><div class="d-label">Reached</div><div class="d-value">6,400</div></div>
-      <div class="d-card"><div class="d-label">Engaged</div><div class="d-value" style="color:var(--success)">2,816</div><div class="d-change">44% engagement</div></div>
+      <div class="d-card"><div class="d-label">Triggered</div><div class="d-value">6,400</div></div>
+      <div class="d-card"><div class="d-label">Completed</div><div class="d-value" style="color:var(--success)">5,312</div><div class="d-change">83% completion</div></div>
       <div class="d-card"><div class="d-label">Converted</div><div class="d-value" style="color:var(--primary)">794</div><div class="d-change change-up">12.4% conversion</div></div>
-      <div class="d-card"><div class="d-label">Revenue</div><div class="d-value" style="color:var(--success)">$48,200</div><div class="d-change change-up">ROI 8.2x</div></div>
+      <div class="d-card"><div class="d-label">Failed</div><div class="d-value" style="color:var(--danger)">88</div><div class="d-change">1.4% error rate</div></div>
     </div>
 
-    <div class="d-section-title">📈 Performance Over Time</div>
+    <div class="d-section-title">Execution Over Time</div>
     <div class="d-card full"><div class="chart-box"><canvas id="perfChart"></canvas></div></div>
 
-    <div class="d-section-title">📊 Channel Performance</div>
+    <div class="d-section-title">Node Performance</div>
     <div class="d-card full">
       <table class="d-table">
-        <thead><tr><th>Channel</th><th>Sent</th><th>Engaged</th><th>Converted</th><th>Revenue</th><th>CPA</th></tr></thead>
+        <thead><tr><th>Node</th><th>Type</th><th>Executed</th><th>Avg Duration</th><th>Failed</th></tr></thead>
         <tbody>
-          <tr><td>📧 Email</td><td>6,400</td><td>2,432 (38%)</td><td>512 (8%)</td><td>$31,200</td><td>$0.48</td></tr>
-          <tr><td>📱 SMS</td><td>3,200</td><td>896 (28%)</td><td>194 (6.1%)</td><td>$11,800</td><td>$1.20</td></tr>
-          <tr><td>💬 In-App</td><td>4,100</td><td>1,640 (40%)</td><td>88 (2.1%)</td><td>$5,200</td><td>$0.82</td></tr>
+          <tr><td>Entry trigger</td><td><code>segment_entry</code></td><td>6,400</td><td>12ms</td><td>0</td></tr>
+          <tr><td>Send offer email</td><td><code>send_email</code></td><td>6,400</td><td>340ms</td><td>32</td></tr>
+          <tr><td>Wait 2 days</td><td><code>wait</code></td><td>6,368</td><td>2d</td><td>0</td></tr>
+          <tr><td>Opened email?</td><td><code>condition</code></td><td>6,368</td><td>8ms</td><td>0</td></tr>
+          <tr><td>Send SMS</td><td><code>send_sms</code></td><td>3,820</td><td>280ms</td><td>44</td></tr>
+          <tr><td>Track conversion</td><td><code>track_conversion</code></td><td>794</td><td>15ms</td><td>12</td></tr>
         </tbody>
       </table>
     </div>
 
-    <div class="d-section-title">🔄 Conversion Funnel</div>
+    <div class="d-section-title">Learnings</div>
     <div class="d-card full">
-      <div class="funnel">
-        <div class="funnel-step"><span class="funnel-label">Targeted</span><div class="funnel-bar" style="width:100%;background:var(--primary)">6,400</div></div>
-        <div class="funnel-step"><span class="funnel-label">Delivered</span><div class="funnel-bar" style="width:98%;background:var(--primary)">6,272</div></div>
-        <div class="funnel-step"><span class="funnel-label">Opened</span><div class="funnel-bar" style="width:44%;background:var(--success)">2,816</div></div>
-        <div class="funnel-step"><span class="funnel-label">Clicked</span><div class="funnel-bar" style="width:22%;background:var(--info)">1,408</div></div>
-        <div class="funnel-step"><span class="funnel-label">Converted</span><div class="funnel-bar" style="width:12%;background:var(--warn)">794</div></div>
-      </div>
-    </div>
-
-    <div class="d-section-title">💡 AI Learnings</div>
-    <div class="d-card full">
-      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">What Worked</div><div class="insight-text">Personalized subject lines → +34% open rate vs generic. "Your plan upgrade" outperformed "Special offer".</div></div>
-      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">What Worked</div><div class="insight-text">SMS day-3 follow-up → +18% CTR. Timing matters: 10am–12pm sends performed 25% better.</div></div>
-      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)"><div class="insight-type" style="color:var(--danger)">What Didn't</div><div class="insight-text">In-app only → 2.1% conversion. Without email/SMS priming, in-app messages get ignored.</div></div>
-      <div class="insight" style="border-color:var(--info);background:var(--info-soft)"><div class="insight-type" style="color:var(--info)">Recommendation</div><div class="insight-text">Next campaign: Email first → SMS day 2 → In-App day 4. Allocate 60% budget to email channel.</div></div>
+      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Effective</div><div class="insight-text">Personalized subject line &rarr; +34% open rate. The condition node branched 41% to "opened" vs 33% for generic.</div></div>
+      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Effective</div><div class="insight-text">SMS follow-up on day 3 via wait node &rarr; +18% CTR. send_sms after wait(2d) is an effective pattern.</div></div>
+      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)"><div class="insight-type" style="color:var(--danger)">Issue</div><div class="insight-text">send_email node had 32 failures &mdash; all "no_provider" errors. Provider was misconfigured for 2 hours after launch.</div></div>
     </div>
   `;
 
@@ -522,37 +513,36 @@ function loadDone(){
     const ctx=document.getElementById('perfChart');if(!ctx)return;
     const days=['Oct 15','Oct 18','Oct 21','Oct 24','Oct 27','Oct 30','Nov 2','Nov 5','Nov 8','Nov 12'];
     charts.perf=new Chart(ctx,{type:'line',data:{labels:days,datasets:[
-      {label:'Conversions',data:[12,34,68,98,142,210,320,480,620,794],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,pointBackgroundColor:pc()},
-      {label:'Revenue ($)',data:[720,2040,4080,5880,8520,12600,19200,28800,37200,48200],borderColor:getComputedStyle(document.body).getPropertyValue('--success').trim(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,yAxisID:'y1'}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y1:{position:'right',grid:{display:false},ticks:{color:tc(),font:{size:9},callback:v=>'$'+(v/1000)+'K'}}}}});
+      {label:'Completed',data:[120,340,680,1200,1800,2600,3400,4200,4800,5312],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,pointBackgroundColor:pc()},
+      {label:'Failed',data:[18,24,32,40,48,55,62,70,78,88],borderColor:getComputedStyle(document.body).getPropertyValue('--danger').trim(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,yAxisID:'y1'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y1:{position:'right',grid:{display:false},ticks:{color:tc(),font:{size:9}}}}}});
   },50);
 }
 
 function loadDoneHoliday(){
-  document.getElementById('camp-holiday').classList.add('active');
+  document.getElementById('flow-holiday').classList.add('active');
   setLayout(1,3);
-  setPhaseTag('✅ Complete','var(--accent-soft)','var(--text-muted)');
+  setPhaseTag('Archived','var(--accent-soft)','var(--text-muted)');
   chatMsgs.innerHTML='';
-  addAI(`<strong>Holiday Promo 2025</strong> — 8.7% conversion, $32,400 revenue.<br><br>Multi-channel approach იმუშავა, მაგრამ push notification-ებმა 2% opt-out გამოიწვია. შემდეგისთვის push-ს ავიცილებთ churn-risk სეგმენტზე.`);
-  setSugs(['📊 channel comparison','💡 learnings','🔁 repeat']);
+  addAI(`<strong>Holiday Promo 2025</strong> &mdash; 505 instances completed, 8.7% conversion.<br><br>Multi-channel flow (email &rarr; wait &rarr; condition &rarr; SMS/push). send_push node-მა 2% opt-out გამოიწვია churn-risk segment-ზე. შემდეგ flow-ში push-ს ავიცილებთ იმ segment-ისთვის.`);
+  setSugs(['Node performance','Clone flow','Execution errors']);
   dashContent.innerHTML=`
-    <div class="dash-header"><div><div class="dash-title">Holiday Promo 2025 — Results</div><div class="dash-subtitle">✅ Completed · Dec 1–24, 2025 · 5,800 profiles</div></div></div>
+    <div class="dash-header"><div><div class="dash-title">Holiday Promo 2025 &mdash; Results</div><div class="dash-subtitle">Archived &middot; Dec 1&ndash;24, 2025 &middot; 5,800 triggered</div></div></div>
     <div class="dash-grid">
-      <div class="d-card"><div class="d-label">Reached</div><div class="d-value">5,800</div></div>
+      <div class="d-card"><div class="d-label">Triggered</div><div class="d-value">5,800</div></div>
+      <div class="d-card"><div class="d-label">Completed</div><div class="d-value" style="color:var(--success)">4,640</div><div class="d-change">80%</div></div>
       <div class="d-card"><div class="d-label">Converted</div><div class="d-value" style="color:var(--primary)">505</div><div class="d-change">8.7%</div></div>
-      <div class="d-card"><div class="d-label">Revenue</div><div class="d-value" style="color:var(--success)">$32,400</div></div>
-      <div class="d-card"><div class="d-label">ROI</div><div class="d-value">5.4x</div></div>
+      <div class="d-card"><div class="d-label">Failed</div><div class="d-value" style="color:var(--danger)">160</div><div class="d-change">2.8%</div></div>
     </div>
-    <div class="d-section-title">💡 Key Learnings</div>
+    <div class="d-section-title">Learnings</div>
     <div class="d-card full">
-      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Worked</div><div class="insight-text">Discount > free trial for re-engagement. 10% off outperformed 14-day trial by 2.3x.</div></div>
-      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Worked</div><div class="insight-text">Urgency messaging "expires in 48h" → +22% final-day conversions.</div></div>
-      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)"><div class="insight-type" style="color:var(--danger)">Avoid</div><div class="insight-text">Push notifications → 2% opt-out rate on churn-risk segment. Don't push to already disengaged users.</div></div>
+      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Effective</div><div class="insight-text">wait(2d) &rarr; condition(opened?) &rarr; send_sms pattern works. 10% discount outperformed free trial by 2.3x.</div></div>
+      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)"><div class="insight-type" style="color:var(--danger)">Avoid</div><div class="insight-text">send_push on churn-risk segment &rarr; 2% opt-out. Add frequency_cap condition before push nodes for at-risk customers.</div></div>
     </div>
   `;
 }
 
-// ═══ HELPERS ═══
+// HELPERS
 function setPhaseTag(text,bg,color){
   const tag=document.getElementById('phaseTag');
   tag.innerHTML=text;tag.style.background=bg;tag.style.color=color;
@@ -560,17 +550,17 @@ function setPhaseTag(text,bg,color){
 
 function addAI(html){
   const d=document.createElement('div');d.className='msg msg-ai';
-  d.innerHTML=`<div class="msg-av">O</div><div class="msg-body">${html}</div>`;
+  d.innerHTML=`<div class="msg-av">K</div><div class="msg-body">${html}</div>`;
   chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
 }
 function addUser(text){
   const d=document.createElement('div');d.className='msg msg-user';
-  d.innerHTML=`<div class="msg-av">დგ</div><div class="msg-body">${text}</div>`;
+  d.innerHTML=`<div class="msg-av">DG</div><div class="msg-body">${text}</div>`;
   chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
 }
 function addTyping(){
   const d=document.createElement('div');d.className='msg msg-ai';d.id='typing';
-  d.innerHTML='<div class="msg-av">O</div><div class="msg-body"><div class="typing-ind"><span></span><span></span><span></span></div></div>';
+  d.innerHTML='<div class="msg-av">K</div><div class="msg-body"><div class="typing-ind"><span></span><span></span><span></span></div></div>';
   chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
 }
 
@@ -591,76 +581,150 @@ function sendMsg(){
 
 function respond(text){
   const t=text.toLowerCase();
-  if(t.includes('email')&&t.includes('sms')||t.includes('re-activation')){
-    addAI(`კარგი! Email + SMS, re-activation მიზნით:<br>
-    <div class="journey-v">
-      <div class="j-step"><div class="j-dot active">1</div><div class="j-info"><div class="j-name">Trigger: enters "Churn Risk 90d"</div><div class="j-desc">ავტომატური</div></div></div>
-      <div class="j-step"><div class="j-dot pending">2</div><div class="j-info"><div class="j-name">Email: personal offer + 10% discount</div><div class="j-desc">SendGrid · personalized subject</div></div></div>
-      <div class="j-step"><div class="j-dot pending">3</div><div class="j-info"><div class="j-name">Wait 2d → opened?</div><div class="j-desc">Yes → in-app · No → SMS</div></div></div>
-      <div class="j-step"><div class="j-dot pending">4</div><div class="j-info"><div class="j-name">Wait 5d → returned?</div><div class="j-desc">Yes → exit ✅ · No → notify manager</div></div></div>
+
+  if(t.includes('email')&&t.includes('sms')||t.includes('re-activation')||t.includes('email + sms')){
+    addAI(`კარგი! აი ასეთი flow გამოვა:<br>
+    <div class="flow-v">
+      <div class="f-step"><div class="f-dot trigger">T</div><div class="f-info"><div class="f-name">segment_entry</div><div class="f-desc">Trigger: enters "Churn Risk 90d"</div></div></div>
+      <div class="f-step"><div class="f-dot action">A</div><div class="f-info"><div class="f-name">send_email</div><div class="f-desc">Personal offer + 10% discount &middot; SendGrid</div></div></div>
+      <div class="f-step"><div class="f-dot wait">W</div><div class="f-info"><div class="f-name">wait "2d"</div><div class="f-desc">2 days delay</div></div></div>
+      <div class="f-step"><div class="f-dot condition">?</div><div class="f-info"><div class="f-name">condition: email_opened?</div><div class="f-desc">true &rarr; end &middot; false &rarr; SMS</div></div></div>
+      <div class="f-branch">false &darr;</div>
+      <div class="f-step"><div class="f-dot action">A</div><div class="f-info"><div class="f-name">send_sms</div><div class="f-desc">Reminder + discount code &middot; Twilio</div></div></div>
+      <div class="f-step"><div class="f-dot wait">W</div><div class="f-info"><div class="f-name">wait "5d"</div><div class="f-desc">5 days delay</div></div></div>
+      <div class="f-step"><div class="f-dot end">E</div><div class="f-info"><div class="f-name">end</div><div class="f-desc">Track conversion &amp; exit</div></div></div>
     </div>
-    Q4 კამპანიიდან: personalized subject +34%, urgency +22%.<br><br>
-    <button class="msg-btn msg-btn-p" onclick="expandToBuild()">🔧 ავაწყოთ</button>
-    <button class="msg-btn msg-btn-s" onclick="ask('A/B ტესტი')">🔬 A/B ტესტი</button>`);
+    6 nodes, 2 channels. Q4-დან: personalized subject +34%, wait+SMS +18% CTR.<br><br>
+    <button class="msg-btn msg-btn-p" onclick="expandToBuild()">Publish draft</button>
+    <button class="msg-btn msg-btn-s" onclick="ask('Dry run გავუშვა')">Dry run</button>
+    <button class="msg-btn msg-btn-s" onclick="ask('A/B ტესტით')">+ A/B split</button>`);
+
   } else if(t.includes('a/b')||t.includes('ტესტ')){
-    addAI(`A/B ტესტი subject line-ზე:<br><br><strong>A:</strong> "[Name], 10% discount is waiting"<br><strong>B:</strong> "[Name], we built something new"<br><br>50/50 split (940/940). Winner auto-promoted 24h-ში.<br><br><button class="msg-btn msg-btn-p" onclick="expandToLaunch()">🚀 გავუშვათ</button><button class="msg-btn msg-btn-s" onclick="ask('preview')">👁 Preview</button>`);
-  } else if(t.includes('learning')||t.includes('სწავლ')||t.includes('წინა კამპანი')){
-    addAI(`წინა კამპანიებიდან:<br><br>✅ Personalized subject → +34% open<br>✅ SMS follow-up day 3 → +18% CTR<br>✅ 10% discount > free trial<br>✅ Urgency "48h" → +22% conversion<br>❌ Push → 2% opt-out (avoid for churn)<br>❌ Generic "we miss you" → low engagement<br><br>რეკომენდაცია: <strong>Email+SMS, personalized, discount, urgency</strong>.`);
-  } else if(t.includes('სეგმენტ')){
-    addAI(`<strong>Churn Risk 90d</strong>:<br><table><tr><th>Attr</th><th>Value</th></tr><tr><td>Count</td><td>1,880</td></tr><tr><td>Avg last active</td><td>42d ago</td></tr><tr><td>Avg LTV</td><td>$284</td></tr><tr><td>Top plan</td><td>Growth (62%)</td></tr></table><br>62% Growth plan = high LTV. Re-engagement-ს ნამდვილად აქვს აზრი.`);
-  } else if(t.includes('key learning')||t.includes('დასკვნ')){
-    addAI(`💡 <strong>Q4 Upsell Key Learnings:</strong><br><br>1. Personalized > generic (always)<br>2. Email → SMS → In-App sequence works best<br>3. 10am–12pm sends +25% better<br>4. In-app alone doesn't convert<br>5. SMS ROI justified for high-LTV segments<br><br>ეს learnings ავტომატურად გამოიყენება შემდეგ კამპანიაში.`);
+    addAI(`A/B split node-ს ვამატებ send_email-ის წინ:<br><br>
+    <div class="flow-v">
+      <div class="f-step"><div class="f-dot trigger">T</div><div class="f-info"><div class="f-name">segment_entry</div></div></div>
+      <div class="f-step"><div class="f-dot condition">AB</div><div class="f-info"><div class="f-name">ab_split</div><div class="f-desc">50/50 &mdash; A: "10% discount" / B: "something new"</div></div></div>
+      <div class="f-step"><div class="f-dot action">A</div><div class="f-info"><div class="f-name">send_email</div><div class="f-desc">variant-based subject line</div></div></div>
+      <div class="f-step"><div class="f-dot wait">W</div><div class="f-info"><div class="f-name">wait "2d"</div></div></div>
+      <div class="f-step"><div class="f-dot end">E</div><div class="f-info"><div class="f-name">end</div></div></div>
+    </div>
+    940/940 split. Winner auto-promoted 24h-ში.<br><br>
+    <button class="msg-btn msg-btn-p" onclick="expandToBuild()">Publish</button>
+    <button class="msg-btn msg-btn-s" onclick="ask('Dry run გავუშვა')">Dry run first</button>`);
+
+  } else if(t.includes('dry run')){
+    setLayout(2,1);
+    setPhaseTag('Dry Run','var(--warn-soft)','var(--warn)');
+    dashContent.innerHTML=`
+      <div class="dash-header"><div><div class="dash-title">Dry Run Results</div><div class="dash-subtitle">Churn Re-engagement &middot; simulated execution</div></div></div>
+      <div class="dash-grid">
+        <div class="d-card"><div class="d-label">Nodes traversed</div><div class="d-value" style="color:var(--success)">6</div></div>
+        <div class="d-card"><div class="d-label">Side effects</div><div class="d-value" style="color:var(--info)">0</div><div class="d-change">all skipped (dry run)</div></div>
+        <div class="d-card"><div class="d-label">Branching</div><div class="d-value">2</div><div class="d-change">condition + end</div></div>
+        <div class="d-card"><div class="d-label">Duration</div><div class="d-value">45ms</div><div class="d-change">simulated</div></div>
+      </div>
+      <div class="d-section-title">Execution Path</div>
+      <div class="d-card full">
+        <table class="d-table">
+          <thead><tr><th>Step</th><th>Node</th><th>Type</th><th>Result</th><th>Side Effects</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>entry</td><td><code>segment_entry</code></td><td><span class="badge b-green">completed</span></td><td>none</td></tr>
+            <tr><td>2</td><td>send offer</td><td><code>send_email</code></td><td><span class="badge b-blue">skipped (dry)</span></td><td>email NOT sent</td></tr>
+            <tr><td>3</td><td>wait 2d</td><td><code>wait</code></td><td><span class="badge b-blue">skipped (dry)</span></td><td>no delay</td></tr>
+            <tr><td>4</td><td>opened?</td><td><code>condition</code></td><td><span class="badge b-green">branched: false</span></td><td>none</td></tr>
+            <tr><td>5</td><td>send SMS</td><td><code>send_sms</code></td><td><span class="badge b-blue">skipped (dry)</span></td><td>SMS NOT sent</td></tr>
+            <tr><td>6</td><td>end</td><td><code>end</code></td><td><span class="badge b-green">completed</span></td><td>none</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="d-section-title">Preflight Checks</div>
+      <div class="d-card full">
+        <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Pass</div><div class="insight-text">Graph structure valid &mdash; no cycles, no orphan nodes, all edges connected.</div></div>
+        <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Pass</div><div class="insight-text">All node types registered in NodeRegistry.</div></div>
+        <div class="insight" style="border-color:var(--warn);background:var(--warn-soft)"><div class="insight-type" style="color:var(--warn)">Warning</div><div class="insight-text">send_email config: subject line uses <code>{{name}}</code> &mdash; ensure context has "name" field.</div></div>
+      </div>
+    `;
+    addAI(`Dry run &mdash; ყველაფერი გაიარა! 6 node traversed, side effects 0.<br><br>1 warning: email template <code>{{name}}</code>-ს იყენებს &mdash; trigger-ის context-ში "name" ფილდი უნდა იყოს.<br><br>
+    <button class="msg-btn msg-btn-p" onclick="expandToBuild()">Publish flow</button>
+    <button class="msg-btn msg-btn-s" onclick="ask('სხვა context-ით dry run')">სხვა context-ით</button>`);
+
+  } else if(t.includes('nodes')||t.includes('რა node')){
+    addAI(`კალციფერში <strong>23 built-in node</strong> არის 5 კატეგორიაში:<br><br>
+    <table>
+    <tr><th>Category</th><th>Nodes</th></tr>
+    <tr><td style="color:var(--info)">Trigger</td><td><code>segment_entry</code>, <code>event_entry</code>, <code>webhook_entry</code></td></tr>
+    <tr><td style="color:var(--warn)">Condition</td><td><code>condition</code>, <code>ab_split</code>, <code>check_segment</code>, <code>frequency_cap</code>, <code>preference_gate</code></td></tr>
+    <tr><td>Wait</td><td><code>wait</code>, <code>wait_until</code>, <code>wait_for_event</code></td></tr>
+    <tr><td style="color:var(--primary)">Action</td><td><code>send_email</code>, <code>send_sms</code>, <code>send_push</code>, <code>send_whatsapp</code>, <code>send_in_app</code>, <code>call_webhook</code>, <code>add_tag</code>, <code>update_profile</code>, <code>track_conversion</code></td></tr>
+    <tr><td style="color:var(--success)">End</td><td><code>end</code></td></tr>
+    </table><br>
+    უბრალოდ მითხარი რა გინდა მოხდეს და მე შესაბამის node-ებს შევარჩევ.`);
+    setSugs(['Email + SMS flow','Webhook-based flow','Wait for event']);
+
+  } else if(t.includes('instance')||t.includes('ინსტანს')){
+    addAI(`<strong>Spring Sale Push</strong> &mdash; instance breakdown:<br><br>
+    <table>
+    <tr><th>Status</th><th>Count</th><th>%</th></tr>
+    <tr><td style="color:var(--success)">completed</td><td>2,502</td><td>59.6%</td></tr>
+    <tr><td style="color:var(--info)">running</td><td>312</td><td>7.4%</td></tr>
+    <tr><td style="color:var(--warn)">waiting</td><td>186</td><td>4.4%</td></tr>
+    <tr><td style="color:var(--danger)">failed</td><td>14</td><td>0.3%</td></tr>
+    <tr><td>exited</td><td>1,186</td><td>28.2%</td></tr>
+    </table>`);
+    setSugs(['Failed instances ვნახო','Waiting instances','Instance timeline']);
+
+  } else if(t.includes('failed')||t.includes('error')){
+    addAI(`<strong>14 failed instance:</strong><br><br>8 &times; <code>send_email</code> &mdash; "No message provider configured for this channel"<br>6 &times; <code>frequency_cap</code> &mdash; "Message limit reached"<br><br>Email failures provider-ის misconfiguration-ით იყო &mdash; უკვე გასწორებულია. Frequency cap &mdash; ეს expected behavior-ია, ის customers უკვე მიიღეს max messages.<br><br>
+    <button class="msg-btn msg-btn-s" onclick="ask('retry failed instances')">Retry failed</button>`);
+
+  } else if(t.includes('ახალი flow')||t.includes('new flow')){
+    chatMsgs.innerHTML='';
+    setLayout(3,0);
+    setPhaseTag('New Flow','var(--info-soft)','var(--info)');
+    dashContent.innerHTML='';
+    addAI(`ახალი flow! მიამბე:<br><br>1. <strong>რა უნდა მოხდეს?</strong> (მაგ. "როცა customer-ი 30 დღე არაქტიურია, email გავუგზავნო")<br>2. <strong>რა არხით?</strong> (email, SMS, push, webhook...)<br>3. <strong>რამე პირობა?</strong> (A/B test, frequency cap, segment check...)<br><br>ან უბრალოდ თავისუფლად მიამბე რა გინდა და მე flow-ს ავაწყობ.`);
+    setSugs(['Re-engagement flow','Onboarding sequence','Event-based webhook','Upsell journey']);
+
+  } else if(t.includes('პაუზ')||t.includes('pause')){
+    addAI(`Flow დაპაუზდა. ყველა running instance "paused" სტატუსში გადადის &mdash; wait node-ები და scheduled jobs შეჩერდება.<br><br>
+    <button class="msg-btn msg-btn-p" onclick="ask('resume flow')">Resume</button>
+    <button class="msg-btn msg-btn-s" onclick="ask('instance-ები ვნახო')">Instance status</button>`);
+    setPhaseTag('Paused','var(--warn-soft)','var(--warn)');
+
   } else {
-    addAI(`კარგი, მოდი ვიმუშაოთ ამაზე. რა გაინტერესებს კონკრეტულად?`);
+    addAI(`კარგი. რა გინდა გავაკეთო ამ flow-ში? შემიძლია:<br>&bull; Flow graph-ის აწყობა/შეცვლა<br>&bull; Dry run (ტესტირება)<br>&bull; Instance-ების მონიტორინგი<br>&bull; Error-ების ანალიზი<br>&bull; ახალი version-ის publish`);
   }
 }
 
 function expandToBuild(){
   setLayout(2,1);
-  setPhaseTag('🔧 Building','var(--warn-soft)','var(--warn)');
+  setPhaseTag('Publishing','var(--warn-soft)','var(--warn)');
   dashContent.innerHTML=`
-    <div class="dash-header"><div><div class="dash-title">Journey Builder</div><div class="dash-subtitle">Churn Re-engagement</div></div></div>
+    <div class="dash-header"><div><div class="dash-title">Publishing Flow</div><div class="dash-subtitle">Churn Re-engagement v1</div></div></div>
     <div class="d-card full">
-      <div class="prog-row"><div class="prog-label"><span>✅ Trigger configured</span><span>Done</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
-      <div class="prog-row"><div class="prog-label"><span>✅ Email template</span><span>Done</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
-      <div class="prog-row"><div class="prog-label"><span>✅ Branch logic</span><span>Done</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
-      <div class="prog-row"><div class="prog-label"><span>⏳ SMS template</span><span>In progress</span></div><div class="prog-bar"><div class="prog-fill" style="width:60%;background:var(--warn)"></div></div></div>
-      <div class="prog-row"><div class="prog-label"><span>⬜ Exit criteria</span><span>Pending</span></div><div class="prog-bar"><div class="prog-fill" style="width:0%;background:var(--border)"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>Preflight validation</span><span>Pass</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>Graph structure</span><span>Valid</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>Node configs</span><span>Complete</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>Provider check</span><span>Connected</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
     </div>
   `;
-  addAI(`Journey-ს ვაწყობ! Trigger და email მზადაა, SMS template-ზე ვმუშაობ.<br><br>გინდა A/B ტესტის დამატებაც?`);
-  setSugs(['🔬 A/B ტესტი','🚀 გაშვება A/B-ს გარეშე']);
-}
-
-function expandToLaunch(){
-  setLayout(1,2);
-  setPhaseTag('🚀 Launching','var(--success-soft)','var(--success)');
-  addAI(`🚀 <strong>Launched!</strong> Journey გაეშვა 1,880 პროფილზე.<br><br>📧 940 → Variant A<br>📧 940 → Variant B<br>📱 SMS queued day 2<br><br>პირველი შედეგები 1-2 საათში.`);
-  dashContent.innerHTML=`
-    <div class="dash-header"><div><div class="dash-title">Churn Re-engagement</div><div class="dash-subtitle">🚀 Just launched · 1,880 profiles</div></div></div>
-    <div class="dash-grid">
-      <div class="d-card"><div class="d-label">Sending</div><div class="d-value" style="color:var(--success)">1,880</div></div>
-      <div class="d-card"><div class="d-label">Delivered</div><div class="d-value">0</div><div class="d-change">sending...</div></div>
-      <div class="d-card"><div class="d-label">Opened</div><div class="d-value">—</div><div class="d-change">waiting</div></div>
-      <div class="d-card"><div class="d-label">Converted</div><div class="d-value">—</div><div class="d-change">waiting</div></div>
-    </div>
-    <div class="d-section-title">📧 Delivery Progress</div>
-    <div class="d-card full">
-      <div class="prog-row"><div class="prog-label"><span>Variant A — "your 10% discount"</span><span>sending...</span></div><div class="prog-bar"><div class="prog-fill" style="width:5%;background:var(--primary);animation:sending 2s infinite"></div></div></div>
-      <div class="prog-row"><div class="prog-label"><span>Variant B — "we built something new"</span><span>sending...</span></div><div class="prog-bar"><div class="prog-fill" style="width:3%;background:var(--info);animation:sending 2s infinite 0.5s"></div></div></div>
-    </div>
-    <style>@keyframes sending{0%{width:5%}50%{width:35%}100%{width:5%}}</style>
-  `;
+  addAI(`Flow published! <strong>Churn Re-engagement v1</strong> active-ია.<br><br>1,880 customers segment-ში &mdash; trigger-ი ავტომატურად ამუშავდება segment_entry-ით.<br><br>
+  <button class="msg-btn msg-btn-s" onclick="loadFlow('live')">Monitor instances</button>`);
+  setTimeout(()=>{setPhaseTag('Active','var(--success-soft)','var(--success)')},1500);
 }
 
 function startLiveStream(){
-  const evts=['email_sent','email_opened','email_clicked','sms_queued','page_view','purchase','button_click'];
-  const users=['ana@acme.io','luka@nova.shop','nino@spark.tv','giorgi@acme.io','mariam@nova.shop','dato@spark.tv'];
+  const nodes=['segment_entry','send_email','wait','condition','send_sms','ab_split','end','track_conversion'];
+  const statuses=['completed','completed','completed','branched:true','branched:false','waiting','completed','failed'];
+  const ids=['inst-a3f2','inst-b7c1','inst-d4e8','inst-f1a9','inst-c2b5','inst-e6d3'];
   function addEv(){
     const s=document.getElementById('liveStream');if(!s){clearInterval(liveInterval);return}
     const n=new Date(),tm=`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}:${n.getSeconds().toString().padStart(2,'0')}`;
     const d=document.createElement('div');d.className='lm-ev';
-    d.innerHTML=`<span class="lm-time">${tm}</span><span class="lm-name">${evts[Math.floor(Math.random()*evts.length)]}</span><span class="lm-detail">${users[Math.floor(Math.random()*users.length)]}</span>`;
+    const node=nodes[Math.floor(Math.random()*nodes.length)];
+    const status=statuses[Math.floor(Math.random()*statuses.length)];
+    const id=ids[Math.floor(Math.random()*ids.length)];
+    d.innerHTML=`<span class="lm-time">${tm}</span><span class="lm-name">${node}</span><span class="lm-detail">${id} &rarr; ${status}</span>`;
     s.insertBefore(d,s.firstChild);
     if(s.children.length>30)s.removeChild(s.lastChild);
   }
@@ -670,10 +734,9 @@ function startLiveStream(){
 
 function rebuildCharts(){
   Object.values(charts).forEach(c=>c.destroy());charts={};
-  // Re-render current view's chart if needed
 }
 
-// ═══ INIT ═══
+// INIT
 (function(){const p=new URLSearchParams(window.location.search).get('theme');if(p&&['warm','lavender','sage','teal','dark'].includes(p)){document.body.setAttribute('data-theme',p);document.querySelectorAll('.th-opt').forEach(b=>{b.classList.remove('active');if(b.textContent.toLowerCase().includes(p==='warm'?'warm':p))b.classList.add('active')})}})();
 loadPlanning();
 </script>

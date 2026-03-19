@@ -307,66 +307,61 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="top-left">
-    <button class="back-btn" onclick="window.location.href='main.html?theme='+(document.body.getAttribute('data-theme')||'warm')">← კამპანიებზე დაბრუნება</button>
+    <button class="back-btn" onclick="window.location.href='main.html?theme='+(document.body.getAttribute('data-theme')||'warm')">← Flow Builder</button>
     <div class="top-title">
-      <h1>⚙ Engine Room</h1>
-      <span>Behind the Scenes</span>
+      <h1>Engine Room</h1>
+      <span>System Configuration</span>
     </div>
   </div>
   <div class="top-right">
     <div class="theme-wrap">
-      <button class="top-btn" onclick="document.getElementById('thDD').classList.toggle('open')">◐</button>
+      <button class="top-btn" onclick="document.getElementById('thDD').classList.toggle('open')">&#9684;</button>
       <div class="theme-dd" id="thDD">
         <button class="th-opt active" onclick="setTh('warm',this)"><span class="th-sw"><i style="background:#f5f0eb"></i><i style="background:#c4956a"></i></span>Warm Paper</button>
         <button class="th-opt" onclick="setTh('lavender',this)"><span class="th-sw"><i style="background:#f7f5f0"></i><i style="background:#9b8ec4"></i></span>Lavender</button>
-        <button class="th-opt" onclick="setTh('sage',this)"><span class="th-sw"><i style="background:#f4f1ec"></i><i style="background:#6b8f6e"></i></span>Sand & Sage</button>
-        <button class="th-opt" onclick="setTh('teal',this)"><span class="th-sw"><i style="background:#f5f2ed"></i><i style="background:#3d8b80"></i></span>Paper & Teal</button>
+        <button class="th-opt" onclick="setTh('sage',this)"><span class="th-sw"><i style="background:#f4f1ec"></i><i style="background:#6b8f6e"></i></span>Sand &amp; Sage</button>
+        <button class="th-opt" onclick="setTh('teal',this)"><span class="th-sw"><i style="background:#f5f2ed"></i><i style="background:#3d8b80"></i></span>Paper &amp; Teal</button>
         <button class="th-opt" onclick="setTh('dark',this)"><span class="th-sw"><i style="background:#0f0f14"></i><i style="background:#a89cf0"></i></span>Dark</button>
       </div>
     </div>
-    <div class="avatar">დგ</div>
+    <div class="avatar">DG</div>
   </div>
 </div>
 
 <!-- LEFT NAV -->
 <div class="left-nav">
   <div class="nav-section">
-    <div class="nav-label">Data Supply Chain</div>
+    <div class="nav-label">Channels &amp; Nodes</div>
   </div>
   <div class="nav-scroll">
-    <button class="nav-item active" onclick="showPanel('connectors',this)">
-      <span class="nav-icon">🔗</span><span class="nav-text">კონექტორები</span><span class="nav-badge">5</span>
+    <button class="nav-item active" onclick="showPanel('channels',this)">
+      <span class="nav-icon">&#128233;</span><span class="nav-text">Channels &amp; Providers</span><span class="nav-badge">5</span>
     </button>
-    <button class="nav-item" onclick="showPanel('infra',this)">
-      <span class="nav-icon">🏗</span><span class="nav-text">ინფრასტრუქტურა</span>
-    </button>
-    <button class="nav-item" onclick="showPanel('pipeline',this)">
-      <span class="nav-icon">📡</span><span class="nav-text">Events Pipeline</span><span class="nav-badge warn">31</span>
+    <button class="nav-item" onclick="showPanel('registry',this)">
+      <span class="nav-icon">&#9881;</span><span class="nav-text">Node Registry</span><span class="nav-badge">23</span>
     </button>
 
-    <div style="padding:12px 0 4px"><div class="nav-label">AI & Automation</div></div>
-    <button class="nav-item" onclick="showPanel('ai',this)">
-      <span class="nav-icon">🧠</span><span class="nav-text">AI Engine</span><span class="nav-badge">26</span>
+    <div style="padding:12px 0 4px"><div class="nav-label">Infrastructure</div></div>
+    <button class="nav-item" onclick="showPanel('oban',this)">
+      <span class="nav-icon">&#128203;</span><span class="nav-text">Oban Queues</span><span class="nav-badge">3</span>
+    </button>
+    <button class="nav-item" onclick="showPanel('recovery',this)">
+      <span class="nav-icon">&#128260;</span><span class="nav-text">Recovery</span><span class="nav-badge">0</span>
+    </button>
+    <button class="nav-item" onclick="showPanel('health',this)">
+      <span class="nav-icon">&#128154;</span><span class="nav-text">System Health</span>
     </button>
 
-    <div style="padding:12px 0 4px"><div class="nav-label">Team & Access</div></div>
-    <button class="nav-item" onclick="showPanel('users',this)">
-      <span class="nav-icon">👥</span><span class="nav-text">მომხმარებლები</span>
+    <div style="padding:12px 0 4px"><div class="nav-label">Access &amp; Tenancy</div></div>
+    <button class="nav-item" onclick="showPanel('apikeys',this)">
+      <span class="nav-icon">&#128273;</span><span class="nav-text">API Keys</span><span class="nav-badge warn">2</span>
     </button>
-    <button class="nav-item" onclick="showPanel('security',this)">
-      <span class="nav-icon">🔒</span><span class="nav-text">Security & GDPR</span>
-    </button>
-
-    <div style="padding:12px 0 4px"><div class="nav-label">Operations</div></div>
-    <button class="nav-item" onclick="showPanel('monitoring',this)">
-      <span class="nav-icon">📋</span><span class="nav-text">მონიტორინგი</span>
-    </button>
-    <button class="nav-item" onclick="showPanel('billing',this)">
-      <span class="nav-icon">💳</span><span class="nav-text">Usage & Billing</span>
+    <button class="nav-item" onclick="showPanel('tenants',this)">
+      <span class="nav-icon">&#127970;</span><span class="nav-text">Tenants</span><span class="nav-badge">3</span>
     </button>
   </div>
   <div class="nav-bottom">
-    <div class="health-bar"><div class="health-dot"></div>All Systems Operational</div>
+    <div class="health-bar"><div class="health-dot"></div>Engine Healthy &middot; OTP 28</div>
   </div>
 </div>
 
@@ -376,688 +371,627 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
   <!-- CONTENT AREA -->
   <div class="content-area" id="contentArea">
 
-    <!-- ═══ CONNECTORS ═══ -->
-    <div class="panel active" id="p-connectors">
+    <!-- ═══ CHANNELS & PROVIDERS ═══ -->
+    <div class="panel active" id="p-channels">
       <div class="page-head">
-        <h2>🔗 კონექტორები</h2>
-        <p>მონაცემთა წყაროები და არხები — ყველაფერი რაც Kalcifer-ს აკავშირებს გარე სამყაროსთან</p>
+        <h2>Channels &amp; Providers</h2>
+        <p>Channel-to-provider mapping for action nodes &mdash; SendGrid, Twilio, Firebase, and webhooks</p>
       </div>
 
       <div class="grid-4" style="margin-bottom:18px">
-        <div class="card stat"><div class="stat-icon">🟢</div><div class="stat-value">5</div><div class="stat-label">Active</div></div>
-        <div class="card stat"><div class="stat-icon">📥</div><div class="stat-value">160K</div><div class="stat-label">Events/day</div></div>
-        <div class="card stat"><div class="stat-icon">⏱</div><div class="stat-value">2m</div><div class="stat-label">Avg Sync</div></div>
-        <div class="card stat"><div class="stat-icon">⚡</div><div class="stat-value">99.8%</div><div class="stat-label">Uptime</div></div>
+        <div class="card stat"><div class="stat-icon">&#128233;</div><div class="stat-value">5</div><div class="stat-label">Channels</div></div>
+        <div class="card stat"><div class="stat-icon">&#128279;</div><div class="stat-value">4</div><div class="stat-label">Providers</div></div>
+        <div class="card stat"><div class="stat-icon">&#9889;</div><div class="stat-value">99.6%</div><div class="stat-label">Delivery Rate</div></div>
+        <div class="card stat"><div class="stat-icon">&#128200;</div><div class="stat-value">48.5K</div><div class="stat-label">Sent Today</div></div>
       </div>
 
       <div class="section">
-        <div class="section-head"><div class="section-title">Active Connectors</div></div>
+        <div class="section-head"><div class="section-title">Active Channel Providers</div><button class="section-action">+ Add Provider</button></div>
 
         <div class="conn-row">
-          <div class="conn-icon">📘</div>
+          <div class="conn-icon">&#128231;</div>
           <div class="conn-info">
-            <div class="conn-name">Facebook Ads</div>
-            <div class="conn-desc">Ad accounts: Acme Main, Acme Retarget</div>
-            <div class="conn-stats"><span>📥 12.4K/day</span><span>🔄 synced 2m ago</span><span>📊 42 campaigns tracked</span></div>
+            <div class="conn-name">Email &rarr; SendGrid</div>
+            <div class="conn-desc">Domain: mail.acme.io &middot; Dedicated IP &middot; Node: <code>send_email</code></div>
+            <div class="conn-stats"><span>&#128228; 45.2K/day</span><span>&#9989; 98.2% delivery</span><span>&#128337; last sync 1m ago</span></div>
           </div>
           <div class="conn-right">
-            <span class="tag tag-green">● Active</span>
-            <button class="conn-action" title="Configure">⚙</button>
-            <button class="conn-action" title="Logs">📋</button>
+            <span class="tag tag-green">&#9679; Connected</span>
+            <button class="conn-action" title="Configure">&#9881;</button>
+            <button class="conn-action" title="Logs">&#128203;</button>
           </div>
         </div>
 
         <div class="conn-row">
-          <div class="conn-icon">🔍</div>
+          <div class="conn-icon">&#128241;</div>
           <div class="conn-info">
-            <div class="conn-name">Google Ads</div>
-            <div class="conn-desc">Account: acme-saas-main</div>
-            <div class="conn-stats"><span>📥 8.7K/day</span><span>🔄 synced 5m ago</span><span>📊 28 campaigns tracked</span></div>
+            <div class="conn-name">SMS &rarr; Twilio</div>
+            <div class="conn-desc">Numbers: +1-555-0100, +1-555-0101 &middot; Node: <code>send_sms</code></div>
+            <div class="conn-stats"><span>&#128228; 2.1K/day</span><span>&#9989; 96.4% delivery</span><span>&#128337; last sync 8m ago</span></div>
           </div>
           <div class="conn-right">
-            <span class="tag tag-green">● Active</span>
-            <button class="conn-action">⚙</button>
-            <button class="conn-action">📋</button>
+            <span class="tag tag-green">&#9679; Connected</span>
+            <button class="conn-action">&#9881;</button>
+            <button class="conn-action">&#128203;</button>
           </div>
         </div>
 
         <div class="conn-row">
-          <div class="conn-icon">📧</div>
+          <div class="conn-icon">&#128244;</div>
           <div class="conn-info">
-            <div class="conn-name">SendGrid</div>
-            <div class="conn-desc">Domain: mail.acme.io · Dedicated IP</div>
-            <div class="conn-stats"><span>📤 45.2K/day</span><span>🔄 synced 1m ago</span><span>📊 98.2% delivery rate</span></div>
+            <div class="conn-name">Push &rarr; Firebase FCM</div>
+            <div class="conn-desc">Project: acme-prod &middot; Node: <code>send_push</code></div>
+            <div class="conn-stats"><span>&#128228; 820/day</span><span>&#9989; 94.1% delivery</span><span>&#128337; last sync 3m ago</span></div>
           </div>
           <div class="conn-right">
-            <span class="tag tag-green">● Active</span>
-            <button class="conn-action">⚙</button>
-            <button class="conn-action">📋</button>
+            <span class="tag tag-green">&#9679; Connected</span>
+            <button class="conn-action">&#9881;</button>
+            <button class="conn-action">&#128203;</button>
           </div>
         </div>
 
         <div class="conn-row">
-          <div class="conn-icon">📱</div>
+          <div class="conn-icon">&#128172;</div>
           <div class="conn-info">
-            <div class="conn-name">Twilio SMS</div>
-            <div class="conn-desc">Numbers: +1-555-0100, +1-555-0101</div>
-            <div class="conn-stats"><span>📤 2.1K/day</span><span>🔄 synced 8m ago</span><span>📊 96.4% delivery rate</span></div>
+            <div class="conn-name">WhatsApp &rarr; Twilio</div>
+            <div class="conn-desc">Business Account: Acme SaaS &middot; Node: <code>send_whatsapp</code></div>
+            <div class="conn-stats"><span>&#128228; 340/day</span><span>&#9989; 97.8% delivery</span><span>&#128337; last sync 12m ago</span></div>
           </div>
           <div class="conn-right">
-            <span class="tag tag-green">● Active</span>
-            <button class="conn-action">⚙</button>
-            <button class="conn-action">📋</button>
+            <span class="tag tag-green">&#9679; Connected</span>
+            <button class="conn-action">&#9881;</button>
+            <button class="conn-action">&#128203;</button>
           </div>
         </div>
 
         <div class="conn-row">
-          <div class="conn-icon">🐘</div>
+          <div class="conn-icon">&#128193;</div>
           <div class="conn-info">
-            <div class="conn-name">PostgreSQL CDC</div>
-            <div class="conn-desc">Source: app-db-primary · via Debezium</div>
-            <div class="conn-stats"><span>📥 92K/day</span><span>🔄 streaming</span><span>📊 WAL lag: 12ms</span></div>
+            <div class="conn-name">In-App &rarr; Internal</div>
+            <div class="conn-desc">WebSocket delivery via Phoenix Channels &middot; Node: <code>send_in_app</code></div>
+            <div class="conn-stats"><span>&#128228; 1.2K/day</span><span>&#9989; 99.9% delivery</span><span>&#128337; realtime</span></div>
           </div>
           <div class="conn-right">
-            <span class="tag tag-orange">● Syncing</span>
-            <button class="conn-action">⚙</button>
-            <button class="conn-action">📋</button>
+            <span class="tag tag-green">&#9679; Active</span>
+            <button class="conn-action">&#9881;</button>
+            <button class="conn-action">&#128203;</button>
           </div>
         </div>
       </div>
 
       <div class="section">
-        <div class="section-head"><div class="section-title">📦 Connector Catalog</div><button class="section-action">+ კონექტორის დამატება</button></div>
+        <div class="section-head"><div class="section-title">Available Providers</div></div>
         <div class="catalog">
-          <div class="cat-item"><div class="cat-icon">📊</div><div class="cat-name">Google Analytics</div><div class="cat-desc">Web analytics</div></div>
-          <div class="cat-item"><div class="cat-icon">🛒</div><div class="cat-name">Shopify</div><div class="cat-desc">E-commerce</div></div>
-          <div class="cat-item"><div class="cat-icon">💬</div><div class="cat-name">Intercom</div><div class="cat-desc">Customer comms</div></div>
-          <div class="cat-item"><div class="cat-icon">📮</div><div class="cat-name">Mailchimp</div><div class="cat-desc">Email (migrate)</div></div>
-          <div class="cat-item"><div class="cat-icon">🔔</div><div class="cat-name">Firebase FCM</div><div class="cat-desc">Push notifications</div></div>
-          <div class="cat-item"><div class="cat-icon">📋</div><div class="cat-name">Webhook</div><div class="cat-desc">Custom HTTP</div></div>
-          <div class="cat-item"><div class="cat-icon">🗄</div><div class="cat-name">Snowflake</div><div class="cat-desc">Data warehouse</div></div>
-          <div class="cat-item"><div class="cat-icon">📈</div><div class="cat-name">Mixpanel</div><div class="cat-desc">Product analytics</div></div>
+          <div class="cat-item"><div class="cat-icon">&#128231;</div><div class="cat-name">Mailgun</div><div class="cat-desc">Email provider</div></div>
+          <div class="cat-item"><div class="cat-icon">&#128231;</div><div class="cat-name">Postmark</div><div class="cat-desc">Transactional email</div></div>
+          <div class="cat-item"><div class="cat-icon">&#128241;</div><div class="cat-name">Vonage</div><div class="cat-desc">SMS provider</div></div>
+          <div class="cat-item"><div class="cat-icon">&#128244;</div><div class="cat-name">OneSignal</div><div class="cat-desc">Push notifications</div></div>
+          <div class="cat-item"><div class="cat-icon">&#128279;</div><div class="cat-name">Custom Webhook</div><div class="cat-desc">HTTP callback</div></div>
+          <div class="cat-item"><div class="cat-icon">&#128172;</div><div class="cat-name">Slack</div><div class="cat-desc">Team notifications</div></div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ INFRASTRUCTURE ═══ -->
-    <div class="panel" id="p-infra">
+    <!-- ═══ NODE REGISTRY ═══ -->
+    <div class="panel" id="p-registry">
       <div class="page-head">
-        <h2>🏗 ინფრასტრუქტურა</h2>
-        <p>Kalcifer-ის ქარხანა — ბაზები, სერვისები, კლასტერები</p>
+        <h2>Node Registry</h2>
+        <p>23 built-in nodes across 5 categories &mdash; ETS-backed registry mapping string type to module</p>
       </div>
 
       <div class="grid-4" style="margin-bottom:18px">
-        <div class="card stat"><div class="stat-icon">🟢</div><div class="stat-value">5/5</div><div class="stat-label">Services Up</div></div>
-        <div class="card stat"><div class="stat-icon">📊</div><div class="stat-value">247K</div><div class="stat-label">Events Today</div></div>
-        <div class="card stat"><div class="stat-icon">⚡</div><div class="stat-value">42ms</div><div class="stat-label">Avg Query</div></div>
-        <div class="card stat"><div class="stat-icon">💾</div><div class="stat-value">26GB</div><div class="stat-label">Total Storage</div></div>
+        <div class="card stat"><div class="stat-icon">&#9881;</div><div class="stat-value">23</div><div class="stat-label">Registered</div></div>
+        <div class="card stat"><div class="stat-icon">&#127919;</div><div class="stat-value">5</div><div class="stat-label">Categories</div></div>
+        <div class="card stat"><div class="stat-icon">&#9989;</div><div class="stat-value">23</div><div class="stat-label">Healthy</div></div>
+        <div class="card stat"><div class="stat-icon">&#128204;</div><div class="stat-value">0</div><div class="stat-label">Errors</div></div>
       </div>
 
-      <div class="grid-2">
-        <!-- PostgreSQL -->
-        <div class="card infra-card pg">
-          <div class="infra-head">
-            <div class="infra-title"><span>🐘</span> PostgreSQL 16</div>
-            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Healthy</span></div>
-          </div>
-          <div class="infra-metrics">
-            <div class="infra-metric"><div class="im-label">Profiles</div><div class="im-value">15,200</div></div>
-            <div class="infra-metric"><div class="im-label">Connections</div><div class="im-value">12/50</div><div class="im-bar"><div class="im-fill" style="width:24%;background:var(--success)"></div></div></div>
-            <div class="infra-metric"><div class="im-label">RLS</div><div class="im-value" style="color:var(--success)">Active</div></div>
-            <div class="infra-metric"><div class="im-label">DB Size</div><div class="im-value">4.2GB</div></div>
-            <div class="infra-metric"><div class="im-label">Queries/sec</div><div class="im-value">340</div></div>
-            <div class="infra-metric"><div class="im-label">p99 Latency</div><div class="im-value">12ms</div></div>
-          </div>
-        </div>
-
-        <!-- ClickHouse -->
-        <div class="card infra-card ch">
-          <div class="infra-head">
-            <div class="infra-title"><span>📊</span> ClickHouse</div>
-            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Healthy</span></div>
-          </div>
-          <div class="infra-metrics">
-            <div class="infra-metric"><div class="im-label">Events Today</div><div class="im-value">247.8K</div></div>
-            <div class="infra-metric"><div class="im-label">Avg Query</div><div class="im-value">42ms</div></div>
-            <div class="infra-metric"><div class="im-label">Storage</div><div class="im-value">18.4GB</div><div class="im-bar"><div class="im-fill" style="width:36%;background:var(--success)"></div></div></div>
-            <div class="infra-metric"><div class="im-label">Compression</div><div class="im-value">8.2x</div></div>
-            <div class="infra-metric"><div class="im-label">Partitions</div><div class="im-value">4 tenants</div></div>
-            <div class="infra-metric"><div class="im-label">Inserts/sec</div><div class="im-value">1,240</div></div>
-          </div>
-        </div>
-
-        <!-- Redpanda -->
-        <div class="card infra-card rp">
-          <div class="infra-head">
-            <div class="infra-title"><span>📨</span> Redpanda</div>
-            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Healthy</span></div>
-          </div>
-          <div class="infra-metrics">
-            <div class="infra-metric"><div class="im-label">Throughput</div><div class="im-value">1.2K/s</div></div>
-            <div class="infra-metric"><div class="im-label">Consumer Lag</div><div class="im-value">12 msgs</div></div>
-            <div class="infra-metric"><div class="im-label">Topics</div><div class="im-value">8</div></div>
-            <div class="infra-metric"><div class="im-label">Retention</div><div class="im-value">7 days</div></div>
-            <div class="infra-metric"><div class="im-label">Partitions</div><div class="im-value">24</div></div>
-            <div class="infra-metric"><div class="im-label">Brokers</div><div class="im-value">3</div></div>
-          </div>
-        </div>
-
-        <!-- Elixir/OTP -->
-        <div class="card infra-card ex">
-          <div class="infra-head">
-            <div class="infra-title"><span>⚡</span> Elixir/OTP</div>
-            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Healthy</span></div>
-          </div>
-          <div class="infra-metrics">
-            <div class="infra-metric"><div class="im-label">Nodes</div><div class="im-value">3</div></div>
-            <div class="infra-metric"><div class="im-label">Processes</div><div class="im-value">24,180</div></div>
-            <div class="infra-metric"><div class="im-label">Memory</div><div class="im-value">2.1/8GB</div><div class="im-bar"><div class="im-fill" style="width:26%;background:var(--success)"></div></div></div>
-            <div class="infra-metric"><div class="im-label">Msg Queue</div><div class="im-value">0</div></div>
-            <div class="infra-metric"><div class="im-label">Schedulers</div><div class="im-value">16</div></div>
-            <div class="infra-metric"><div class="im-label">Uptime</div><div class="im-value">14d 6h</div></div>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-top:10px">
-        <div class="card infra-card go" style="max-width:calc(50% - 5px)">
-          <div class="infra-head">
-            <div class="infra-title"><span>🚀</span> Go Ingest Service</div>
-            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Healthy</span></div>
-          </div>
-          <div class="infra-metrics">
-            <div class="infra-metric"><div class="im-label">Ingest Rate</div><div class="im-value">4.2K/s</div></div>
-            <div class="infra-metric"><div class="im-label">p99 Latency</div><div class="im-value">8ms</div></div>
-            <div class="infra-metric"><div class="im-label">Goroutines</div><div class="im-value">142</div></div>
-            <div class="infra-metric"><div class="im-label">Memory</div><div class="im-value">180MB</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ EVENTS PIPELINE ═══ -->
-    <div class="panel" id="p-pipeline">
-      <div class="page-head">
-        <h2>📡 Events Pipeline</h2>
-        <p>SDK → Ingest → Validate → Redpanda → ClickHouse — მონაცემთა მოძრაობის სრული ჯაჭვი</p>
-      </div>
-
+      <!-- Trigger nodes -->
       <div class="section">
-        <div class="section-title" style="margin-bottom:8px">Pipeline Flow</div>
-        <div class="pipeline">
-          <div class="pipe-node"><div class="pipe-icon">📲</div><div class="pipe-name">SDK</div><div class="pipe-stat">JS / iOS / Android</div></div>
-          <div class="pipe-arrow">→</div>
-          <div class="pipe-node"><div class="pipe-icon">🚀</div><div class="pipe-name">Go Ingest</div><div class="pipe-stat">4.2K/s · 8ms p99</div></div>
-          <div class="pipe-arrow">→</div>
-          <div class="pipe-node"><div class="pipe-icon">✅</div><div class="pipe-name">Validate</div><div class="pipe-stat">Schema strict</div></div>
-          <div class="pipe-arrow">→</div>
-          <div class="pipe-node"><div class="pipe-icon">📨</div><div class="pipe-name">Redpanda</div><div class="pipe-stat">1.2K/s · lag 12</div></div>
-          <div class="pipe-arrow">→</div>
-          <div class="pipe-node"><div class="pipe-icon">📊</div><div class="pipe-name">ClickHouse</div><div class="pipe-stat">247.8K today</div></div>
-          <div class="pipe-arrow">→</div>
-          <div class="pipe-node"><div class="pipe-icon">🐘</div><div class="pipe-name">Identity</div><div class="pipe-stat">PostgreSQL CDC</div></div>
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div>
-          <div class="section">
-            <div class="section-head"><div class="section-title">📋 Track Plan v2.1</div><button class="section-action">Edit Plan</button></div>
-            <div class="card">
-              <table class="user-table">
-                <thead><tr><th>Event</th><th>Category</th><th>Status</th><th>Last 24h</th></tr></thead>
-                <tbody>
-                  <tr><td style="font-weight:500">page_viewed</td><td>Core</td><td><span class="tag tag-green">✓</span></td><td>42.1K</td></tr>
-                  <tr><td style="font-weight:500">button_clicked</td><td>Core</td><td><span class="tag tag-green">✓</span></td><td>18.4K</td></tr>
-                  <tr><td style="font-weight:500">purchase_completed</td><td>Revenue</td><td><span class="tag tag-green">✓</span></td><td>1,240</td></tr>
-                  <tr><td style="font-weight:500">email_opened</td><td>Campaign</td><td><span class="tag tag-green">✓</span></td><td>8,920</td></tr>
-                  <tr><td style="font-weight:500">signup_started</td><td>Funnel</td><td><span class="tag tag-green">✓</span></td><td>680</td></tr>
-                  <tr><td style="font-weight:500">feature_activated</td><td>Product</td><td><span class="tag tag-green">✓</span></td><td>3,200</td></tr>
-                </tbody>
-              </table>
-              <div style="padding:6px 10px;font-size:10px;color:var(--text-muted)">24 events in track plan · 6 shown</div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div class="section">
-            <div class="section-head"><div class="section-title">⚠️ Schema Violations (24h)</div></div>
-            <div class="alert-row alert-warn">
-              <div class="alert-icon">⚠️</div>
-              <div class="alert-content">
-                <div class="alert-title">Unknown event: custom_banner_click</div>
-                <div class="alert-desc">Not in track plan. Seen 18 times. Source: web SDK v3.2</div>
-                <div class="alert-time">Last seen 12 min ago</div>
-              </div>
-            </div>
-            <div class="alert-row alert-warn">
-              <div class="alert-icon">⚠️</div>
-              <div class="alert-content">
-                <div class="alert-title">Missing property: purchase_completed.currency</div>
-                <div class="alert-desc">Required field missing in 8 events. Source: iOS SDK v2.1</div>
-                <div class="alert-time">Last seen 45 min ago</div>
-              </div>
-            </div>
-            <div class="alert-row alert-warn">
-              <div class="alert-icon">⚠️</div>
-              <div class="alert-content">
-                <div class="alert-title">Type mismatch: button_clicked.value (string→number)</div>
-                <div class="alert-desc">Expected number, got string. 5 events affected.</div>
-                <div class="alert-time">Last seen 2h ago</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <div class="section-title" style="margin-bottom:8px">📊 Ingest Volume (24h)</div>
-            <div class="card"><div class="chart-box"><canvas id="ingestChart"></canvas></div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ AI ENGINE ═══ -->
-    <div class="panel" id="p-ai">
-      <div class="page-head">
-        <h2>🧠 AI Engine</h2>
-        <p>26 ინსტრუმენტი, გარანტიები, მოდელები — Kalcifer-ის ტვინი</p>
-      </div>
-
-      <div class="grid-4" style="margin-bottom:18px">
-        <div class="card stat"><div class="stat-icon">🔧</div><div class="stat-value">26</div><div class="stat-label">Tools Active</div></div>
-        <div class="card stat"><div class="stat-icon">💬</div><div class="stat-value">3.4K</div><div class="stat-label">Queries Today</div></div>
-        <div class="card stat"><div class="stat-icon">🛡</div><div class="stat-value">4</div><div class="stat-label">Guardrails</div></div>
-        <div class="card stat"><div class="stat-icon">💰</div><div class="stat-value">$28.54</div><div class="stat-label">AI Cost (MTD)</div></div>
-      </div>
-
-      <div class="section">
-        <div class="section-head"><div class="section-title">🔧 Tool Registry — Phase 1</div></div>
-
-        <div class="tool-group">
-          <div class="tool-group-head"><div class="tool-group-name">👤 Identity <span class="tool-group-count">6 tools</span></div></div>
-          <div class="tool-list">
-            <button class="tool-chip enabled"><div class="tool-dot"></div>identity.find</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>identity.search</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>identity.merge</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>identity.candidates</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>identity.delete</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>identity.stats</button>
-          </div>
-        </div>
-
-        <div class="tool-group">
-          <div class="tool-group-head"><div class="tool-group-name">📡 Events <span class="tool-group-count">6 tools</span></div></div>
-          <div class="tool-list">
-            <button class="tool-chip enabled"><div class="tool-dot"></div>events.query</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>events.stats</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>events.violations</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>events.track_plan</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>events.trace</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>events.import</button>
-          </div>
-        </div>
-
-        <div class="tool-group">
-          <div class="tool-group-head"><div class="tool-group-name">🎯 Segments <span class="tool-group-count">7 tools</span></div></div>
-          <div class="tool-list">
-            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.create</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.preview</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.explain</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.overlap</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.suggest</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.trends</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.sync</button>
-          </div>
-        </div>
-
-        <div class="tool-group">
-          <div class="tool-group-head"><div class="tool-group-name">🛤 Journeys <span class="tool-group-count">4 tools</span></div></div>
-          <div class="tool-list">
-            <button class="tool-chip enabled"><div class="tool-dot"></div>journey.create</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>journey.preview</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>journey.stats</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>journey.pause</button>
-          </div>
-        </div>
-
-        <div class="tool-group">
-          <div class="tool-group-head"><div class="tool-group-name">🔗 Connectors <span class="tool-group-count">3 tools</span></div></div>
-          <div class="tool-list">
-            <button class="tool-chip enabled"><div class="tool-dot"></div>connector.status</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>connector.sync</button>
-            <button class="tool-chip enabled"><div class="tool-dot"></div>connector.health</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-head"><div class="section-title">🛡 Guardrails & Gates</div></div>
-
-        <div class="guard-row">
-          <div style="font-size:16px">🚪</div>
-          <div class="guard-info">
-            <div class="guard-name">Confirmation Gates</div>
-            <div class="guard-desc">delete, merge, launch → ყოველთვის ითხოვს დადასტურებას</div>
-          </div>
-          <button class="toggle on"></button>
-        </div>
-        <div class="guard-row">
-          <div style="font-size:16px">🔑</div>
-          <div class="guard-info">
-            <div class="guard-name">RBAC Enforcement</div>
-            <div class="guard-desc">AI მხოლოდ იმას აკეთებს, რისი უფლებაც მომხმარებელს აქვს</div>
-          </div>
-          <button class="toggle on"></button>
-        </div>
-        <div class="guard-row">
-          <div style="font-size:16px">📏</div>
-          <div class="guard-info">
-            <div class="guard-name">Rate Limiting</div>
-            <div class="guard-desc">Max 100 queries/min per user · burst: 20</div>
-          </div>
-          <button class="toggle on"></button>
-        </div>
-        <div class="guard-row">
-          <div style="font-size:16px">📝</div>
-          <div class="guard-info">
-            <div class="guard-name">Audit Logging</div>
-            <div class="guard-desc">ყველა AI action იწერება audit log-ში tenant_id + user_id + timestamp</div>
-          </div>
-          <button class="toggle on"></button>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title" style="margin-bottom:8px">📊 AI Usage (7 days)</div>
-        <div class="card"><div class="chart-box"><canvas id="aiChart"></canvas></div></div>
-      </div>
-    </div>
-
-    <!-- ═══ USERS ═══ -->
-    <div class="panel" id="p-users">
-      <div class="page-head">
-        <h2>👥 მომხმარებლები & უფლებები</h2>
-        <p>გუნდის წევრები, როლები, წვდომის კონტროლი</p>
-      </div>
-
-      <div class="grid-4" style="margin-bottom:18px">
-        <div class="card stat"><div class="stat-icon">👤</div><div class="stat-value">8</div><div class="stat-label">Team Members</div></div>
-        <div class="card stat"><div class="stat-icon">🟢</div><div class="stat-value">5</div><div class="stat-label">Online Now</div></div>
-        <div class="card stat"><div class="stat-icon">🔑</div><div class="stat-value">4</div><div class="stat-label">Roles</div></div>
-        <div class="card stat"><div class="stat-icon">📋</div><div class="stat-value">142</div><div class="stat-label">Actions Today</div></div>
-      </div>
-
-      <div class="section">
-        <div class="section-head"><div class="section-title">Team Members</div><button class="section-action">+ მოწვევა</button></div>
+        <div class="section-head"><div class="section-title">Trigger Nodes (3)</div></div>
         <div class="card" style="padding:0;overflow:hidden">
           <table class="user-table">
-            <thead><tr><th>User</th><th>Role</th><th>Last Active</th><th>Campaigns</th><th>Status</th></tr></thead>
+            <thead><tr><th>Type Key</th><th>Module</th><th>Category</th><th>Status</th></tr></thead>
             <tbody>
-              <tr>
-                <td><div class="user-row-name"><div class="user-av" style="background:var(--primary);color:var(--text-on-primary)">დგ</div><div class="user-details"><div class="user-name">დავით გაბრიჩიძე</div><div class="user-email">david@kalcifer.dev</div></div></div></td>
-                <td><span class="tag tag-blue">Admin</span></td>
-                <td>Now</td>
-                <td>12</td>
-                <td><span class="tag tag-green">● Online</span></td>
-              </tr>
-              <tr>
-                <td><div class="user-row-name"><div class="user-av" style="background:var(--success);color:white">ან</div><div class="user-details"><div class="user-name">ანა კვარაცხელია</div><div class="user-email">ana@kalcifer.dev</div></div></div></td>
-                <td><span class="tag tag-green">Marketer</span></td>
-                <td>2m ago</td>
-                <td>8</td>
-                <td><span class="tag tag-green">● Online</span></td>
-              </tr>
-              <tr>
-                <td><div class="user-row-name"><div class="user-av" style="background:var(--info);color:white">ლუ</div><div class="user-details"><div class="user-name">ლუკა ბერიძე</div><div class="user-email">luka@kalcifer.dev</div></div></div></td>
-                <td><span class="tag tag-green">Marketer</span></td>
-                <td>15m ago</td>
-                <td>5</td>
-                <td><span class="tag tag-green">● Online</span></td>
-              </tr>
-              <tr>
-                <td><div class="user-row-name"><div class="user-av" style="background:var(--warn);color:white">ნი</div><div class="user-details"><div class="user-name">ნინო ჯაფარიძე</div><div class="user-email">nino@kalcifer.dev</div></div></div></td>
-                <td><span class="tag tag-orange">Analyst</span></td>
-                <td>1h ago</td>
-                <td>3</td>
-                <td><span class="tag tag-green">● Online</span></td>
-              </tr>
-              <tr>
-                <td><div class="user-row-name"><div class="user-av" style="background:var(--danger);color:white">გი</div><div class="user-details"><div class="user-name">გიორგი მაისურაძე</div><div class="user-email">giorgi@kalcifer.dev</div></div></div></td>
-                <td><span class="tag tag-green">Marketer</span></td>
-                <td>3h ago</td>
-                <td>6</td>
-                <td><span class="tag tag-green">● Online</span></td>
-              </tr>
-              <tr>
-                <td><div class="user-row-name"><div class="user-av" style="background:var(--accent);color:white">მა</div><div class="user-details"><div class="user-name">მარიამ ხუციშვილი</div><div class="user-email">mariam@kalcifer.dev</div></div></div></td>
-                <td><span class="tag tag-muted">Viewer</span></td>
-                <td>Yesterday</td>
-                <td>0</td>
-                <td><span class="tag tag-muted">● Offline</span></td>
-              </tr>
+              <tr><td style="font-weight:500"><code>segment_entry</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Trigger.SegmentEntry</td><td><span class="tag tag-blue">trigger</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>event_entry</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Trigger.EventEntry</td><td><span class="tag tag-blue">trigger</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>webhook_entry</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Trigger.WebhookEntry</td><td><span class="tag tag-blue">trigger</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Condition nodes -->
+      <div class="section">
+        <div class="section-head"><div class="section-title">Condition Nodes (4)</div></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="user-table">
+            <thead><tr><th>Type Key</th><th>Module</th><th>Category</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:500"><code>condition</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Condition.Condition</td><td><span class="tag tag-orange">condition</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>ab_split</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Condition.AbSplit</td><td><span class="tag tag-orange">condition</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>check_segment</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Condition.CheckSegment</td><td><span class="tag tag-orange">condition</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>frequency_cap</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Condition.FrequencyCap</td><td><span class="tag tag-orange">condition</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Wait nodes -->
+      <div class="section">
+        <div class="section-head"><div class="section-title">Wait Nodes (4)</div></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="user-table">
+            <thead><tr><th>Type Key</th><th>Module</th><th>Category</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:500"><code>preference_gate</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Wait.PreferenceGate</td><td><span class="tag tag-muted">wait</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>wait</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Wait.Wait</td><td><span class="tag tag-muted">wait</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>wait_until</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Wait.WaitUntil</td><td><span class="tag tag-muted">wait</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>wait_for_event</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Wait.WaitForEvent</td><td><span class="tag tag-muted">wait</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Action nodes -->
+      <div class="section">
+        <div class="section-head"><div class="section-title">Action Nodes (11)</div></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="user-table">
+            <thead><tr><th>Type Key</th><th>Module</th><th>Category</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:500"><code>send_email</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Action.Channel.SendEmail</td><td><span class="tag tag-blue">action</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>send_sms</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Action.Channel.SendSms</td><td><span class="tag tag-blue">action</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>send_push</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Action.Channel.SendPush</td><td><span class="tag tag-blue">action</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>send_whatsapp</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Action.Channel.SendWhatsapp</td><td><span class="tag tag-blue">action</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>send_in_app</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Action.Channel.SendInApp</td><td><span class="tag tag-blue">action</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>call_webhook</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Action.Data.CallWebhook</td><td><span class="tag tag-blue">action</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>add_tag</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Action.Data.AddTag</td><td><span class="tag tag-blue">action</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>update_profile</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Action.Data.UpdateProfile</td><td><span class="tag tag-blue">action</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+              <tr><td style="font-weight:500"><code>track_conversion</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.Action.Data.TrackConversion</td><td><span class="tag tag-blue">action</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
+            </tbody>
+          </table>
+          <div style="padding:6px 10px;font-size:10px;color:var(--text-muted)">Action nodes split: 5 channel, 4 data &middot; subcategories: <code>Action.Channel.*</code>, <code>Action.Data.*</code></div>
+        </div>
+      </div>
+
+      <!-- End nodes -->
+      <div class="section">
+        <div class="section-head"><div class="section-title">End Nodes (1)</div></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="user-table">
+            <thead><tr><th>Type Key</th><th>Module</th><th>Category</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:500"><code>end</code></td><td style="font-family:'JetBrains Mono',monospace;font-size:10px">Kalcifer.Engine.Nodes.End.End</td><td><span class="tag tag-red">end</span></td><td><span class="tag tag-green">&#9679; registered</span></td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
       <div class="section">
-        <div class="section-head"><div class="section-title">🔑 Roles & Permissions</div></div>
-        <div class="grid-2">
-          <div class="card">
-            <div style="font-size:12px;font-weight:600;margin-bottom:6px"><span class="tag tag-blue">Admin</span></div>
-            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">Full access: connectors, infrastructure, users, billing, AI config. Can delete profiles and manage tenants.</div>
-          </div>
-          <div class="card">
-            <div style="font-size:12px;font-weight:600;margin-bottom:6px"><span class="tag tag-green">Marketer</span></div>
-            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">Create/edit campaigns, segments, journeys. Launch with confirmation. No infra or user management.</div>
-          </div>
-          <div class="card">
-            <div style="font-size:12px;font-weight:600;margin-bottom:6px"><span class="tag tag-orange">Analyst</span></div>
-            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">Read-only on campaigns. Full analytics and reporting. Can create segments but not launch journeys.</div>
-          </div>
-          <div class="card">
-            <div style="font-size:12px;font-weight:600;margin-bottom:6px"><span class="tag tag-muted">Viewer</span></div>
-            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">Read-only dashboard access. Can view campaign results and reports. No creation or editing.</div>
+        <div class="section-head"><div class="section-title">NodeBehaviour Callbacks</div></div>
+        <div class="card">
+          <div style="font-size:11px;color:var(--text-sec);line-height:1.8;font-family:'JetBrains Mono',monospace">
+            <code>execute/2</code> &rarr; <code>{:completed, result}</code> | <code>{:branched, branch_key, result}</code> | <code>{:waiting, wait_config}</code> | <code>{:failed, reason}</code><br>
+            <code>resume/3</code> &mdash; optional, for wait nodes<br>
+            <code>validate/1</code> &mdash; optional, config validation<br>
+            <code>config_schema/0</code> &mdash; returns JSON schema for node config<br>
+            <code>category/0</code> &mdash; <code>:trigger | :condition | :wait | :action | :end</code>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ SECURITY ═══ -->
-    <div class="panel" id="p-security">
+    <!-- ═══ OBAN QUEUES ═══ -->
+    <div class="panel" id="p-oban">
       <div class="page-head">
-        <h2>🔒 Security & GDPR</h2>
-        <p>ავთენტიფიკაცია, იზოლაცია, მონაცემთა დაცვა, compliance</p>
-      </div>
-
-      <div class="section">
-        <div class="section-title" style="margin-bottom:10px">🔑 Authentication & Isolation</div>
-        <div class="grid-2">
-          <div class="card">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:18px">🔑</span><div style="font-size:13px;font-weight:600">Auth0 Integration</div></div>
-            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">JWT tokens with <code style="background:var(--accent-soft);padding:1px 4px;border-radius:3px;font-size:10px;font-family:'JetBrains Mono',monospace">tenant_id</code> + <code style="background:var(--accent-soft);padding:1px 4px;border-radius:3px;font-size:10px;font-family:'JetBrains Mono',monospace">user_id</code> + <code style="background:var(--accent-soft);padding:1px 4px;border-radius:3px;font-size:10px;font-family:'JetBrains Mono',monospace">roles[]</code><br>MFA enforced for Admin role. SSO available (Google, Okta).</div>
-            <div style="margin-top:8px"><span class="tag tag-green">Active</span></div>
-          </div>
-          <div class="card">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:18px">🏢</span><div style="font-size:13px;font-weight:600">Tenant Isolation</div></div>
-            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">PostgreSQL: Row-Level Security per tenant<br>ClickHouse: Partition by tenant_id<br>Redpanda: Topic-per-tenant isolation<br>AI: tenant-scoped tool execution</div>
-            <div style="margin-top:8px"><span class="tag tag-green">Active</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title" style="margin-bottom:10px">🇪🇺 GDPR Compliance</div>
-        <div class="gdpr-item">
-          <div class="gdpr-check gdpr-ok">✓</div>
-          <div class="gdpr-info">
-            <div class="gdpr-name">Right to Erasure (Art. 17)</div>
-            <div class="gdpr-desc">PostgreSQL: hard-delete · ClickHouse: soft-delete + TTL · Redpanda: retention-based expiry · Backup purge: 30-day window</div>
-          </div>
-        </div>
-        <div class="gdpr-item">
-          <div class="gdpr-check gdpr-ok">✓</div>
-          <div class="gdpr-info">
-            <div class="gdpr-name">Right to Portability (Art. 20)</div>
-            <div class="gdpr-desc">Full JSON export of all profile data, events, and campaign history. Available via API and UI.</div>
-          </div>
-        </div>
-        <div class="gdpr-item">
-          <div class="gdpr-check gdpr-ok">✓</div>
-          <div class="gdpr-info">
-            <div class="gdpr-name">Right to Access (Art. 15)</div>
-            <div class="gdpr-desc">Profile viewer with full data transparency. Data collected, processing purposes, and third-party sharing.</div>
-          </div>
-        </div>
-        <div class="gdpr-item">
-          <div class="gdpr-check gdpr-ok">✓</div>
-          <div class="gdpr-info">
-            <div class="gdpr-name">Consent Management</div>
-            <div class="gdpr-desc">Purpose-based consent tracking. Integration with CMP (OneTrust, Cookiebot). Consent-aware segmentation.</div>
-          </div>
-        </div>
-        <div class="gdpr-item">
-          <div class="gdpr-check gdpr-ok">✓</div>
-          <div class="gdpr-info">
-            <div class="gdpr-name">Data Encryption</div>
-            <div class="gdpr-desc">At rest: AES-256. In transit: TLS 1.3. PII fields: application-level encryption with key rotation.</div>
-          </div>
-        </div>
-        <div class="gdpr-item">
-          <div class="gdpr-check gdpr-warn">!</div>
-          <div class="gdpr-info">
-            <div class="gdpr-name">Data Processing Agreement</div>
-            <div class="gdpr-desc">DPA template available. 2 of 4 sub-processors have signed updated DPAs. Action needed for SendGrid and Twilio.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title" style="margin-bottom:10px">📋 Recent Security Audit Log</div>
-        <div class="card" style="padding:10px">
-          <div class="log-stream" id="secLog">
-            <div class="log-line"><span class="log-time">14:32:08</span><span class="log-level log-info">INFO</span><span class="log-msg">User ana@acme.io launched journey "Spring Sale Push"</span></div>
-            <div class="log-line"><span class="log-time">14:28:44</span><span class="log-level log-info">INFO</span><span class="log-msg">AI tool segment.create invoked by luka@acme.io — confirmation gate passed</span></div>
-            <div class="log-line"><span class="log-time">14:15:22</span><span class="log-level log-warn">WARN</span><span class="log-msg">Failed login attempt for unknown@external.com — rate limited</span></div>
-            <div class="log-line"><span class="log-time">13:58:10</span><span class="log-level log-info">INFO</span><span class="log-msg">GDPR erasure request processed for profile #8842 — all stores cleared</span></div>
-            <div class="log-line"><span class="log-time">13:42:33</span><span class="log-level log-info">INFO</span><span class="log-msg">Connector "Facebook Ads" re-authenticated by david@kalcifer.dev</span></div>
-            <div class="log-line"><span class="log-time">13:20:15</span><span class="log-level log-info">INFO</span><span class="log-msg">New API key generated for tenant "KalCifer SaaS" — scope: events.ingest</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ MONITORING ═══ -->
-    <div class="panel" id="p-monitoring">
-      <div class="page-head">
-        <h2>📋 მონიტორინგი</h2>
-        <p>სისტემის ჯანმრთელობა, ალერტები, ლოგები — ელფების არმიის მდგომარეობა</p>
+        <h2>Oban Queues</h2>
+        <p>Oban 2.18 job queue configuration &mdash; 3 queues with configurable concurrency</p>
       </div>
 
       <div class="grid-3" style="margin-bottom:18px">
-        <div class="card stat" style="border-left:3px solid var(--success)"><div class="stat-value" style="color:var(--success)">99.8%</div><div class="stat-label">Uptime (30d)</div></div>
-        <div class="card stat" style="border-left:3px solid var(--info)"><div class="stat-value" style="color:var(--info)">42ms</div><div class="stat-label">Avg Response</div></div>
-        <div class="card stat" style="border-left:3px solid var(--warn)"><div class="stat-value" style="color:var(--warn)">2</div><div class="stat-label">Active Alerts</div></div>
+        <div class="card stat" style="border-left:3px solid var(--success)"><div class="stat-value" style="color:var(--success)">35</div><div class="stat-label">Total Concurrency</div></div>
+        <div class="card stat" style="border-left:3px solid var(--info)"><div class="stat-value" style="color:var(--info)">1,842</div><div class="stat-label">Jobs Today</div></div>
+        <div class="card stat" style="border-left:3px solid var(--warn)"><div class="stat-value" style="color:var(--warn)">0</div><div class="stat-label">Failed (24h)</div></div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card infra-card pg">
+          <div class="infra-head">
+            <div class="infra-title"><span>&#128293;</span> flow_triggers</div>
+            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Running</span></div>
+          </div>
+          <div class="infra-metrics">
+            <div class="infra-metric"><div class="im-label">Concurrency</div><div class="im-value">10</div></div>
+            <div class="infra-metric"><div class="im-label">Active</div><div class="im-value">3</div><div class="im-bar"><div class="im-fill" style="width:30%;background:var(--success)"></div></div></div>
+            <div class="infra-metric"><div class="im-label">Completed</div><div class="im-value">642</div></div>
+            <div class="infra-metric"><div class="im-label">Avg Duration</div><div class="im-value">120ms</div></div>
+            <div class="infra-metric"><div class="im-label">Failed</div><div class="im-value" style="color:var(--success)">0</div></div>
+            <div class="infra-metric"><div class="im-label">Retrying</div><div class="im-value">0</div></div>
+          </div>
+        </div>
+
+        <div class="card infra-card ch">
+          <div class="infra-head">
+            <div class="infra-title"><span>&#9200;</span> delayed_resume</div>
+            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Running</span></div>
+          </div>
+          <div class="infra-metrics">
+            <div class="infra-metric"><div class="im-label">Concurrency</div><div class="im-value">20</div></div>
+            <div class="infra-metric"><div class="im-label">Active</div><div class="im-value">7</div><div class="im-bar"><div class="im-fill" style="width:35%;background:var(--success)"></div></div></div>
+            <div class="infra-metric"><div class="im-label">Completed</div><div class="im-value">1,048</div></div>
+            <div class="infra-metric"><div class="im-label">Avg Duration</div><div class="im-value">85ms</div></div>
+            <div class="infra-metric"><div class="im-label">Failed</div><div class="im-value" style="color:var(--success)">0</div></div>
+            <div class="infra-metric"><div class="im-label">Scheduled</div><div class="im-value">42</div></div>
+          </div>
+        </div>
+
+        <div class="card infra-card rp">
+          <div class="infra-head">
+            <div class="infra-title"><span>&#128295;</span> maintenance</div>
+            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Running</span></div>
+          </div>
+          <div class="infra-metrics">
+            <div class="infra-metric"><div class="im-label">Concurrency</div><div class="im-value">5</div></div>
+            <div class="infra-metric"><div class="im-label">Active</div><div class="im-value">1</div><div class="im-bar"><div class="im-fill" style="width:20%;background:var(--success)"></div></div></div>
+            <div class="infra-metric"><div class="im-label">Completed</div><div class="im-value">152</div></div>
+            <div class="infra-metric"><div class="im-label">Avg Duration</div><div class="im-value">340ms</div></div>
+            <div class="infra-metric"><div class="im-label">Failed</div><div class="im-value" style="color:var(--success)">0</div></div>
+            <div class="infra-metric"><div class="im-label">Retrying</div><div class="im-value">0</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" style="margin-top:18px">
+        <div class="section-head"><div class="section-title">Oban Workers</div></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="user-table">
+            <thead><tr><th>Worker</th><th>Queue</th><th>Last Run</th><th>Avg Duration</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:500"><code>Kalcifer.Engine.Jobs.ResumeFlowJob</code></td><td>delayed_resume</td><td>2m ago</td><td>85ms</td><td><span class="tag tag-green">&#9679; healthy</span></td></tr>
+              <tr><td style="font-weight:500"><code>Kalcifer.Engine.Jobs.FlowTriggerJob</code></td><td>flow_triggers</td><td>30s ago</td><td>120ms</td><td><span class="tag tag-green">&#9679; healthy</span></td></tr>
+              <tr><td style="font-weight:500"><code>Kalcifer.Engine.Jobs.CleanupJob</code></td><td>maintenance</td><td>15m ago</td><td>340ms</td><td><span class="tag tag-green">&#9679; healthy</span></td></tr>
+              <tr><td style="font-weight:500"><code>Kalcifer.Engine.Jobs.StaleInstancePruner</code></td><td>maintenance</td><td>1h ago</td><td>520ms</td><td><span class="tag tag-green">&#9679; healthy</span></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="section">
-        <div class="section-title" style="margin-bottom:10px">🔔 Active Alerts</div>
-        <div class="alert-row alert-warn">
-          <div class="alert-icon">⚠️</div>
-          <div class="alert-content">
-            <div class="alert-title">Schema violations elevated — 31 in last 24h</div>
-            <div class="alert-desc">Above threshold of 20. Primary source: web SDK v3.2 sending unplanned events.</div>
-            <div class="alert-time">Started 6h ago · Events Pipeline</div>
-          </div>
-        </div>
-        <div class="alert-row alert-warn">
-          <div class="alert-icon">⚠️</div>
-          <div class="alert-content">
-            <div class="alert-title">AI query usage at 68% of monthly limit</div>
-            <div class="alert-desc">3,400 of 5,000 queries used. At current rate, will hit limit in 9 days.</div>
-            <div class="alert-time">Triggered today · AI Engine</div>
-          </div>
+        <div class="section-title" style="margin-bottom:8px">Job Volume (24h)</div>
+        <div class="card"><div class="chart-box"><canvas id="obanChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ API KEYS ═══ -->
+    <div class="panel" id="p-apikeys">
+      <div class="page-head">
+        <h2>API Keys</h2>
+        <p>Bearer token authentication &mdash; SHA256 hashed, scoped per tenant. <code>Authorization: Bearer &lt;raw_key&gt;</code></p>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:18px">
+        <div class="card stat"><div class="stat-icon">&#128273;</div><div class="stat-value">4</div><div class="stat-label">Active Keys</div></div>
+        <div class="card stat"><div class="stat-icon">&#128203;</div><div class="stat-value">12.4K</div><div class="stat-label">API Calls Today</div></div>
+        <div class="card stat"><div class="stat-icon">&#128274;</div><div class="stat-value">1</div><div class="stat-label">Revoked</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div class="section-title">Active API Keys</div><button class="section-action">+ Generate Key</button></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="user-table">
+            <thead><tr><th>Name</th><th>Tenant</th><th>Key Hash (SHA256)</th><th>Created</th><th>Last Used</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:500">Production API</td>
+                <td>Acme SaaS</td>
+                <td style="font-family:'JetBrains Mono',monospace;font-size:10px">a1b2c3...f8e9</td>
+                <td>2026-01-15</td>
+                <td>2m ago</td>
+                <td><span class="tag tag-green">&#9679; active</span></td>
+              </tr>
+              <tr>
+                <td style="font-weight:500">Staging API</td>
+                <td>Acme SaaS</td>
+                <td style="font-family:'JetBrains Mono',monospace;font-size:10px">d4e5f6...b2c3</td>
+                <td>2026-02-01</td>
+                <td>1h ago</td>
+                <td><span class="tag tag-green">&#9679; active</span></td>
+              </tr>
+              <tr>
+                <td style="font-weight:500">Webhook Ingest</td>
+                <td>Beta Corp</td>
+                <td style="font-family:'JetBrains Mono',monospace;font-size:10px">g7h8i9...e4f5</td>
+                <td>2026-02-20</td>
+                <td>15m ago</td>
+                <td><span class="tag tag-green">&#9679; active</span></td>
+              </tr>
+              <tr>
+                <td style="font-weight:500">CI/CD Pipeline</td>
+                <td>Acme SaaS</td>
+                <td style="font-family:'JetBrains Mono',monospace;font-size:10px">j0k1l2...h8i9</td>
+                <td>2026-03-01</td>
+                <td>3h ago</td>
+                <td><span class="tag tag-green">&#9679; active</span></td>
+              </tr>
+              <tr style="opacity:0.5">
+                <td style="font-weight:500">Old Test Key</td>
+                <td>Acme SaaS</td>
+                <td style="font-family:'JetBrains Mono',monospace;font-size:10px">m3n4o5...k1l2</td>
+                <td>2025-11-10</td>
+                <td>2026-01-05</td>
+                <td><span class="tag tag-red">&#9679; revoked</span></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
       <div class="section">
-        <div class="section-title" style="margin-bottom:10px">✅ Service Health</div>
+        <div class="section-title" style="margin-bottom:10px">Auth Flow</div>
+        <div class="pipeline">
+          <div class="pipe-node"><div class="pipe-icon">&#128273;</div><div class="pipe-name">Bearer Token</div><div class="pipe-stat">Raw API key</div></div>
+          <div class="pipe-arrow">&rarr;</div>
+          <div class="pipe-node"><div class="pipe-icon">&#128274;</div><div class="pipe-name">SHA256 Hash</div><div class="pipe-stat">Key never stored raw</div></div>
+          <div class="pipe-arrow">&rarr;</div>
+          <div class="pipe-node"><div class="pipe-icon">&#128270;</div><div class="pipe-name">Lookup</div><div class="pipe-stat">api_key_hash match</div></div>
+          <div class="pipe-arrow">&rarr;</div>
+          <div class="pipe-node"><div class="pipe-icon">&#127970;</div><div class="pipe-name">Tenant</div><div class="pipe-stat">Scope all queries</div></div>
+          <div class="pipe-arrow">&rarr;</div>
+          <div class="pipe-node"><div class="pipe-icon">&#9989;</div><div class="pipe-name">Authorized</div><div class="pipe-stat">ApiKeyAuth plug</div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:8px">API Traffic (24h)</div>
+        <div class="card"><div class="chart-box"><canvas id="apiChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ RECOVERY ═══ -->
+    <div class="panel" id="p-recovery">
+      <div class="page-head">
+        <h2>Recovery Manager</h2>
+        <p>RecoveryManager handles crash recovery on boot &mdash; restarts orphaned FlowServer instances via DynamicSupervisor</p>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:18px">
+        <div class="card stat"><div class="stat-icon">&#128260;</div><div class="stat-value">0</div><div class="stat-label">Orphaned</div></div>
+        <div class="card stat"><div class="stat-icon">&#9989;</div><div class="stat-value">14</div><div class="stat-label">Recovered (Total)</div></div>
+        <div class="card stat"><div class="stat-icon">&#128337;</div><div class="stat-value">2.3s</div><div class="stat-label">Last Recovery</div></div>
+        <div class="card stat"><div class="stat-icon">&#128197;</div><div class="stat-value">6h ago</div><div class="stat-label">Last Boot</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">Recovery Configuration</div>
         <div class="grid-2">
-          <div class="alert-row alert-ok"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">PostgreSQL</div><div class="alert-desc">Connections: 12/50 · Latency: 12ms p99</div></div></div>
-          <div class="alert-row alert-ok"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">ClickHouse</div><div class="alert-desc">Query: 42ms avg · Storage: 18.4GB</div></div></div>
-          <div class="alert-row alert-ok"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">Redpanda</div><div class="alert-desc">Throughput: 1.2K/s · Lag: 12 msgs</div></div></div>
-          <div class="alert-row alert-ok"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">Elixir/OTP</div><div class="alert-desc">Nodes: 3/3 · Memory: 2.1/8GB</div></div></div>
-          <div class="alert-row alert-ok"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">Go Ingest</div><div class="alert-desc">Rate: 4.2K/s · p99: 8ms</div></div></div>
-          <div class="alert-row alert-ok"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">AI Engine</div><div class="alert-desc">Response: 1.2s avg · Cache hit: 34%</div></div></div>
+          <div class="card">
+            <div class="guard-row" style="border:none;padding:0;margin-bottom:8px">
+              <div style="font-size:16px">&#128260;</div>
+              <div class="guard-info">
+                <div class="guard-name">Auto-Recovery on Boot</div>
+                <div class="guard-desc">Automatically detect and restart orphaned FlowInstance processes</div>
+              </div>
+              <button class="toggle on"></button>
+            </div>
+            <div class="guard-row" style="border:none;padding:0;margin-bottom:8px">
+              <div style="font-size:16px">&#9200;</div>
+              <div class="guard-info">
+                <div class="guard-name">Recovery Timeout</div>
+                <div class="guard-desc">Max time for recovery scan: <code>30_000</code>ms (30 seconds)</div>
+              </div>
+              <button class="toggle on"></button>
+            </div>
+            <div class="guard-row" style="border:none;padding:0">
+              <div style="font-size:16px">&#128203;</div>
+              <div class="guard-info">
+                <div class="guard-name">Recovery Logging</div>
+                <div class="guard-desc">Structured logging for all recovery events via Logger</div>
+              </div>
+              <button class="toggle on"></button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:12px;font-weight:600;margin-bottom:10px">Supervision Tree</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-sec);line-height:2">
+              <code>Engine.Supervisor</code> (rest_for_one)<br>
+              &nbsp;&nbsp;&#9500; <code>NodeRegistry</code> (ETS)<br>
+              &nbsp;&nbsp;&#9500; <code>EventRouter</code> (GenServer)<br>
+              &nbsp;&nbsp;&#9500; <code>DynamicSupervisor</code> (FlowServers)<br>
+              &nbsp;&nbsp;&#9492; <code>RecoveryManager</code> (GenServer)
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="section">
-        <div class="section-title" style="margin-bottom:10px">📊 System Performance (24h)</div>
-        <div class="card"><div class="chart-box"><canvas id="sysChart"></canvas></div></div>
+        <div class="section-title" style="margin-bottom:10px">Recovery History</div>
+        <div class="card" style="padding:10px">
+          <div class="log-stream">
+            <div class="log-line"><span class="log-time">08:14:32</span><span class="log-level log-info">INFO</span><span class="log-msg">RecoveryManager.recover/0 completed: 0 orphaned instances found</span></div>
+            <div class="log-line"><span class="log-time">08:14:31</span><span class="log-level log-info">INFO</span><span class="log-msg">Recovery scan started &mdash; querying flow_instances with status=running</span></div>
+            <div class="log-line"><span class="log-time">08:14:30</span><span class="log-level log-info">INFO</span><span class="log-msg">Engine.Supervisor started (rest_for_one strategy)</span></div>
+            <div class="log-line"><span class="log-time">08:14:29</span><span class="log-level log-info">INFO</span><span class="log-msg">NodeRegistry initialized: 23 nodes registered in ETS</span></div>
+            <div class="log-line"><span class="log-time">02:30:15</span><span class="log-level log-warn">WARN</span><span class="log-msg">RecoveryManager: 2 orphaned instances found, restarting FlowServers</span></div>
+            <div class="log-line"><span class="log-time">02:30:16</span><span class="log-level log-info">INFO</span><span class="log-msg">FlowServer restarted for instance #a4f2 (flow: Spring Campaign, step: wait_for_event)</span></div>
+            <div class="log-line"><span class="log-time">02:30:16</span><span class="log-level log-info">INFO</span><span class="log-msg">FlowServer restarted for instance #c8b1 (flow: Onboarding, step: wait)</span></div>
+            <div class="log-line"><span class="log-time">02:30:17</span><span class="log-level log-info">INFO</span><span class="log-msg">Recovery complete: 2/2 instances restored in 2.3s</span></div>
+          </div>
+        </div>
       </div>
 
       <div class="section">
-        <div class="section-title" style="margin-bottom:10px">📜 Recent System Logs</div>
-        <div class="card" style="padding:10px">
-          <div class="log-stream" id="sysLog"></div>
+        <div class="section-title" style="margin-bottom:10px">Active FlowServer Instances</div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="user-table">
+            <thead><tr><th>Instance ID</th><th>Flow</th><th>Current Node</th><th>Status</th><th>Started</th></tr></thead>
+            <tbody>
+              <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">#a4f2e8b1</td><td>Spring Campaign</td><td><code>wait_for_event</code></td><td><span class="tag tag-orange">&#9679; waiting</span></td><td>6h ago</td></tr>
+              <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">#c8b1d3a7</td><td>Onboarding v2</td><td><code>send_email</code></td><td><span class="tag tag-green">&#9679; running</span></td><td>4h ago</td></tr>
+              <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">#f5e2a9c4</td><td>Re-engagement</td><td><code>condition</code></td><td><span class="tag tag-green">&#9679; running</span></td><td>2h ago</td></tr>
+              <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">#b7d4f1e8</td><td>Cart Abandon</td><td><code>wait</code></td><td><span class="tag tag-orange">&#9679; waiting</span></td><td>1h ago</td></tr>
+              <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">#e3a8c5b2</td><td>Welcome Series</td><td><code>ab_split</code></td><td><span class="tag tag-green">&#9679; running</span></td><td>30m ago</td></tr>
+            </tbody>
+          </table>
+          <div style="padding:6px 10px;font-size:10px;color:var(--text-muted)">5 active FlowServer processes via DynamicSupervisor &middot; Process-per-instance architecture</div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ BILLING ═══ -->
-    <div class="panel" id="p-billing">
+    <!-- ═══ SYSTEM HEALTH ═══ -->
+    <div class="panel" id="p-health">
       <div class="page-head">
-        <h2>💳 Usage & Billing</h2>
-        <p>გეგმა, ლიმიტები, ხარჯები</p>
+        <h2>System Health</h2>
+        <p>Overall engine health &mdash; Elixir/OTP, PostgreSQL, Oban, process counts, memory</p>
       </div>
 
-      <div class="plan-banner">
-        <div class="plan-info"><h3>Growth Plan</h3><p>10M events · 50K profiles · 5K AI queries · 5 connectors</p></div>
-        <div class="plan-price"><div class="plan-amount">$299</div><div class="plan-period">/month</div></div>
+      <div class="grid-4" style="margin-bottom:18px">
+        <div class="card stat"><div class="stat-icon">&#128154;</div><div class="stat-value">99.9%</div><div class="stat-label">Uptime (30d)</div></div>
+        <div class="card stat"><div class="stat-icon">&#9889;</div><div class="stat-value">8ms</div><div class="stat-label">Avg Response</div></div>
+        <div class="card stat"><div class="stat-icon">&#128202;</div><div class="stat-value">24.1K</div><div class="stat-label">BEAM Processes</div></div>
+        <div class="card stat"><div class="stat-icon">&#128338;</div><div class="stat-value">14d 6h</div><div class="stat-label">Uptime</div></div>
       </div>
 
       <div class="section">
-        <div class="section-title" style="margin-bottom:10px">📊 Current Period Usage</div>
+        <div class="section-title" style="margin-bottom:10px">Service Status</div>
+        <div class="grid-2">
+          <div class="alert-row alert-ok"><div class="alert-icon">&#9989;</div><div class="alert-content"><div class="alert-title">Elixir/OTP 28</div><div class="alert-desc">Schedulers: 16 &middot; Memory: 2.1/8GB &middot; Msg Queue: 0</div></div></div>
+          <div class="alert-row alert-ok"><div class="alert-icon">&#9989;</div><div class="alert-content"><div class="alert-title">PostgreSQL 16</div><div class="alert-desc">Connections: 12/50 &middot; p99 Latency: 12ms &middot; DB Size: 4.2GB</div></div></div>
+          <div class="alert-row alert-ok"><div class="alert-icon">&#9989;</div><div class="alert-content"><div class="alert-title">Oban 2.18</div><div class="alert-desc">3 queues &middot; 35 total concurrency &middot; 0 failed jobs</div></div></div>
+          <div class="alert-row alert-ok"><div class="alert-icon">&#9989;</div><div class="alert-content"><div class="alert-title">Bandit HTTP Server</div><div class="alert-desc">Port 4500 &middot; API-only (no HTML/LiveView) &middot; 8ms avg response</div></div></div>
+          <div class="alert-row alert-ok"><div class="alert-icon">&#9989;</div><div class="alert-content"><div class="alert-title">Engine Supervisor</div><div class="alert-desc">rest_for_one strategy &middot; 5 active FlowServers &middot; 0 crashes</div></div></div>
+          <div class="alert-row alert-ok"><div class="alert-icon">&#9989;</div><div class="alert-content"><div class="alert-title">Node Registry (ETS)</div><div class="alert-desc">23 nodes registered &middot; All callbacks validated</div></div></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card infra-card ex">
+          <div class="infra-head">
+            <div class="infra-title"><span>&#9889;</span> BEAM VM</div>
+            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Healthy</span></div>
+          </div>
+          <div class="infra-metrics">
+            <div class="infra-metric"><div class="im-label">Processes</div><div class="im-value">24,180</div></div>
+            <div class="infra-metric"><div class="im-label">Memory</div><div class="im-value">2.1/8GB</div><div class="im-bar"><div class="im-fill" style="width:26%;background:var(--success)"></div></div></div>
+            <div class="infra-metric"><div class="im-label">Schedulers</div><div class="im-value">16</div></div>
+            <div class="infra-metric"><div class="im-label">Msg Queue</div><div class="im-value">0</div></div>
+            <div class="infra-metric"><div class="im-label">Reductions/s</div><div class="im-value">842K</div></div>
+            <div class="infra-metric"><div class="im-label">Uptime</div><div class="im-value">14d 6h</div></div>
+          </div>
+        </div>
+
+        <div class="card infra-card pg">
+          <div class="infra-head">
+            <div class="infra-title"><span>&#128024;</span> PostgreSQL 16</div>
+            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Healthy</span></div>
+          </div>
+          <div class="infra-metrics">
+            <div class="infra-metric"><div class="im-label">Connections</div><div class="im-value">12/50</div><div class="im-bar"><div class="im-fill" style="width:24%;background:var(--success)"></div></div></div>
+            <div class="infra-metric"><div class="im-label">Queries/sec</div><div class="im-value">340</div></div>
+            <div class="infra-metric"><div class="im-label">p99 Latency</div><div class="im-value">12ms</div></div>
+            <div class="infra-metric"><div class="im-label">DB Size</div><div class="im-value">4.2GB</div></div>
+            <div class="infra-metric"><div class="im-label">Tables</div><div class="im-value">flows, flow_versions, flow_instances, execution_steps</div></div>
+            <div class="infra-metric"><div class="im-label">PK Type</div><div class="im-value">binary_id</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" style="margin-top:12px">
+        <div class="section-title" style="margin-bottom:8px">Performance (24h)</div>
+        <div class="card"><div class="chart-box"><canvas id="healthChart"></canvas></div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">Recent System Logs</div>
+        <div class="card" style="padding:10px">
+          <div class="log-stream" id="healthLog"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TENANTS ═══ -->
+    <div class="panel" id="p-tenants">
+      <div class="page-head">
+        <h2>Tenants</h2>
+        <p>Multi-tenancy management &mdash; each tenant isolated by <code>tenant_id</code>, API key scoped</p>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:18px">
+        <div class="card stat"><div class="stat-icon">&#127970;</div><div class="stat-value">3</div><div class="stat-label">Active Tenants</div></div>
+        <div class="card stat"><div class="stat-icon">&#128203;</div><div class="stat-value">18</div><div class="stat-label">Total Flows</div></div>
+        <div class="card stat"><div class="stat-icon">&#128100;</div><div class="stat-value">5</div><div class="stat-label">Active Instances</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div class="section-title">Tenant Directory</div><button class="section-action">+ Add Tenant</button></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="user-table">
+            <thead><tr><th>Tenant</th><th>ID</th><th>API Keys</th><th>Flows</th><th>Instances</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="user-row-name"><div class="user-av" style="background:var(--primary);color:var(--text-on-primary)">AS</div><div class="user-details"><div class="user-name">Acme SaaS</div><div class="user-email">acme-saas-prod</div></div></div></td>
+                <td style="font-family:'JetBrains Mono',monospace;font-size:10px">t_a1b2c3d4</td>
+                <td>3</td>
+                <td>12</td>
+                <td>3</td>
+                <td><span class="tag tag-green">&#9679; active</span></td>
+              </tr>
+              <tr>
+                <td><div class="user-row-name"><div class="user-av" style="background:var(--info);color:white">BC</div><div class="user-details"><div class="user-name">Beta Corp</div><div class="user-email">beta-corp-prod</div></div></div></td>
+                <td style="font-family:'JetBrains Mono',monospace;font-size:10px">t_e5f6g7h8</td>
+                <td>1</td>
+                <td>4</td>
+                <td>1</td>
+                <td><span class="tag tag-green">&#9679; active</span></td>
+              </tr>
+              <tr>
+                <td><div class="user-row-name"><div class="user-av" style="background:var(--success);color:white">DS</div><div class="user-details"><div class="user-name">Demo Sandbox</div><div class="user-email">demo-sandbox</div></div></div></td>
+                <td style="font-family:'JetBrains Mono',monospace;font-size:10px">t_i9j0k1l2</td>
+                <td>1</td>
+                <td>2</td>
+                <td>1</td>
+                <td><span class="tag tag-green">&#9679; active</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">Tenant Isolation Model</div>
         <div class="grid-2">
           <div class="card">
-            <div class="prog-row"><div class="prog-label"><span>📡 Events</span><span>7.4M / 10M</span></div><div class="prog-bar"><div class="prog-fill" style="width:74%;background:var(--primary)"></div></div></div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">~480K/day · Estimate: 9.2M by end of period</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:18px">&#128024;</span><div style="font-size:13px;font-weight:600">Database Isolation</div></div>
+            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">All tables filtered by <code>tenant_id</code> (binary_id FK). Ecto queries scoped via context functions in <code>Kalcifer.Tenants</code>. API key hash lookup resolves tenant on every request.</div>
+            <div style="margin-top:8px"><span class="tag tag-green">Active</span></div>
           </div>
           <div class="card">
-            <div class="prog-row"><div class="prog-label"><span>👤 Profiles</span><span>15.2K / 50K</span></div><div class="prog-bar"><div class="prog-fill" style="width:30%;background:var(--success)"></div></div></div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">+1.2K this month · Plenty of headroom</div>
-          </div>
-          <div class="card">
-            <div class="prog-row"><div class="prog-label"><span>🧠 AI Queries</span><span>3.4K / 5K</span></div><div class="prog-bar"><div class="prog-fill" style="width:68%;background:var(--warn)"></div></div></div>
-            <div style="font-size:10px;color:var(--warn);margin-top:4px">⚠️ On track to exceed — consider upgrading or optimizing</div>
-          </div>
-          <div class="card">
-            <div class="prog-row"><div class="prog-label"><span>💰 AI Cost</span><span>$28.54 / $100</span></div><div class="prog-bar"><div class="prog-fill" style="width:28%;background:var(--info)"></div></div></div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Avg $1.90/day · Well within budget</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:18px">&#128273;</span><div style="font-size:13px;font-weight:600">API Key Scoping</div></div>
+            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">Each API key belongs to exactly one tenant. <code>KalciferWeb.Plugs.ApiKeyAuth</code> extracts Bearer token, SHA256 hashes it, and looks up the tenant. All downstream queries are tenant-scoped.</div>
+            <div style="margin-top:8px"><span class="tag tag-green">Active</span></div>
           </div>
         </div>
       </div>
 
       <div class="section">
-        <div class="section-title" style="margin-bottom:10px">📈 Cost Trend (6 months)</div>
-        <div class="card"><div class="chart-box"><canvas id="costChart"></canvas></div></div>
-      </div>
-
-      <div class="section">
-        <div class="section-title" style="margin-bottom:10px">📋 Cost Breakdown (Current Month)</div>
-        <div class="card" style="padding:0;overflow:hidden">
-          <table class="user-table">
-            <thead><tr><th>Component</th><th>Usage</th><th>Unit Cost</th><th>Total</th><th>% of Bill</th></tr></thead>
-            <tbody>
-              <tr><td style="font-weight:500">Base Plan</td><td>—</td><td>—</td><td>$299.00</td><td>86%</td></tr>
-              <tr><td style="font-weight:500">AI (Claude)</td><td>3,400 queries</td><td>$0.0084</td><td>$28.54</td><td>8%</td></tr>
-              <tr><td style="font-weight:500">SendGrid</td><td>45.2K emails</td><td>$0.0004</td><td>$18.08</td><td>5%</td></tr>
-              <tr><td style="font-weight:500">Twilio SMS</td><td>2.1K messages</td><td>$0.0075</td><td>$15.75</td><td>4%</td></tr>
-              <tr style="font-weight:600"><td>Total (estimated)</td><td></td><td></td><td style="color:var(--primary)">$361.37</td><td>—</td></tr>
-            </tbody>
-          </table>
+        <div class="section-title" style="margin-bottom:10px">Flow Status by Tenant</div>
+        <div class="grid-3">
+          <div class="card">
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px">Acme SaaS</div>
+            <div class="prog-row"><div class="prog-label"><span>Active Flows</span><span>4 / 12</span></div><div class="prog-bar"><div class="prog-fill" style="width:33%;background:var(--success)"></div></div></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:6px">3 draft &middot; 4 active &middot; 2 paused &middot; 3 archived</div>
+          </div>
+          <div class="card">
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px">Beta Corp</div>
+            <div class="prog-row"><div class="prog-label"><span>Active Flows</span><span>2 / 4</span></div><div class="prog-bar"><div class="prog-fill" style="width:50%;background:var(--info)"></div></div></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:6px">1 draft &middot; 2 active &middot; 0 paused &middot; 1 archived</div>
+          </div>
+          <div class="card">
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px">Demo Sandbox</div>
+            <div class="prog-row"><div class="prog-label"><span>Active Flows</span><span>1 / 2</span></div><div class="prog-bar"><div class="prog-fill" style="width:50%;background:var(--primary)"></div></div></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:6px">1 draft &middot; 1 active &middot; 0 paused &middot; 0 archived</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1071,12 +1005,12 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
         <div class="ai-dot"></div>
         <h3>KalCifer</h3>
       </div>
-      <button class="chat-toggle" onclick="toggleChat()">→</button>
+      <button class="chat-toggle" onclick="toggleChat()">&rarr;</button>
     </div>
     <div class="chat-msgs" id="chatMsgs"></div>
     <div class="chat-input-area">
       <div class="chat-input-wrap">
-        <textarea class="chat-input" id="chatInput" placeholder="კონფიგურაციაში დახმარება..." rows="1"></textarea>
+        <textarea class="chat-input" id="chatInput" placeholder="Ask about engine configuration..." rows="1"></textarea>
         <button class="send-btn" onclick="sendMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
       </div>
     </div>
@@ -1092,11 +1026,7 @@ function showPanel(id, btn) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('p-'+id)?.classList.add('active');
   btn?.classList.add('active');
-
-  // Context-aware chat
   updateChatContext(id);
-
-  // Initialize charts for this panel
   setTimeout(() => initPanelCharts(id), 50);
 }
 
@@ -1106,7 +1036,6 @@ function setTh(n,b){
   document.querySelectorAll('.th-opt').forEach(x=>x.classList.remove('active'));
   b?.classList.add('active');
   document.getElementById('thDD').classList.remove('open');
-  // Rebuild charts with new colors
   Object.values(charts).forEach(c=>c.destroy());
   charts={};
   const activePanel = document.querySelector('.panel.active')?.id?.replace('p-','');
@@ -1126,17 +1055,17 @@ function toggleChat(){
 
 function addAI(html){
   const d=document.createElement('div');d.className='msg msg-ai';
-  d.innerHTML=`<div class="msg-av">O</div><div class="msg-body">${html}</div>`;
+  d.innerHTML='<div class="msg-av">K</div><div class="msg-body">'+html+'</div>';
   chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
 }
 function addUser(text){
   const d=document.createElement('div');d.className='msg msg-user';
-  d.innerHTML=`<div class="msg-av">დგ</div><div class="msg-body">${text}</div>`;
+  d.innerHTML='<div class="msg-av">DG</div><div class="msg-body">'+text+'</div>';
   chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
 }
 function addTyping(){
   const d=document.createElement('div');d.className='msg msg-ai';d.id='typing';
-  d.innerHTML='<div class="msg-av">O</div><div class="msg-body"><div class="typing-ind"><span></span><span></span><span></span></div></div>';
+  d.innerHTML='<div class="msg-av">K</div><div class="msg-body"><div class="typing-ind"><span></span><span></span><span></span></div></div>';
   chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
 }
 
@@ -1149,32 +1078,35 @@ function sendMsg(){
 
 function respondSettings(text){
   const t = text.toLowerCase();
-  if(t.includes('connector') || t.includes('კონექტორ')){
-    addAI(`კონექტორები კარგად მუშაობს. 5 აქტიურია, უახლოესი sync 2 წუთის წინ იყო. გინდა ახლის დამატება ან კონფიგურაციის შეცვლა?`);
-  } else if(t.includes('schema') || t.includes('violation')){
-    addAI(`24 საათში 31 violation-ია. 18 — <code>custom_banner_click</code> event, რომელიც track plan-ში არ არის. SDK v3.2 აგზავნის. ვარიანტები: 1) დაამატე track plan-ში, ან 2) გაფილტრე ingest-ზე.`);
-  } else if(t.includes('cost') || t.includes('ხარჯ') || t.includes('billing')){
-    addAI(`მიმდინარე ხარჯი $361-ია. AI queries ტემპით 68%-ზეა — 9 დღეში ლიმიტს მიადგება. რეკომენდაცია: cache-ის გაძლიერება ან plan upgrade ($499 → 15K queries).`);
-  } else if(t.includes('gdpr') || t.includes('erasure')){
-    addAI(`GDPR compliance 5/6 ✓. DPA-ები ჯერ კიდევ ხელმოსაწერია SendGrid-ისა და Twilio-სგან. გინდა DPA template-ის გენერაცია?`);
-  } else if(t.includes('user') || t.includes('role') || t.includes('მომხმარებ')){
-    addAI(`8 წევრი, 4 როლი. 5 online ახლა. ბოლო ცვლილება: ანა-მ Spring Sale გაუშვა 2 საათის წინ. გინდა როლის შეცვლა ან ახლის მოწვევა?`);
+  if(t.includes('node') || t.includes('registry') || t.includes('register')){
+    addAI('The Node Registry uses ETS to map string type keys to modules. 23 nodes are registered across 5 categories: trigger (3), condition (4), wait (4), action (9+2 subcategories), end (1). New nodes can be registered at runtime via <code>NodeRegistry.register/2</code>. Need help adding a custom node?');
+  } else if(t.includes('provider') || t.includes('sendgrid') || t.includes('twilio') || t.includes('channel')){
+    addAI('Currently 5 channels configured: Email (SendGrid), SMS (Twilio), Push (Firebase), WhatsApp (Twilio), In-App (internal). Each channel maps to an action node like <code>send_email</code> or <code>send_sms</code>. Want to add a new provider or reconfigure an existing one?');
+  } else if(t.includes('oban') || t.includes('queue') || t.includes('job')){
+    addAI('3 Oban queues running: <code>flow_triggers: 10</code>, <code>delayed_resume: 20</code>, <code>maintenance: 5</code>. Total concurrency is 35. All queues healthy with 0 failed jobs in the last 24h. The <code>ResumeFlowJob</code> worker handles delayed flow resumption for wait nodes.');
+  } else if(t.includes('recovery') || t.includes('orphan') || t.includes('crash')){
+    addAI('RecoveryManager runs on boot and scans for FlowInstances with status=running that have no active FlowServer process. Last boot recovered 2 instances in 2.3s. Currently 0 orphaned. The Engine.Supervisor uses <code>rest_for_one</code> strategy to ensure proper restart ordering.');
+  } else if(t.includes('api') || t.includes('key') || t.includes('auth') || t.includes('bearer')){
+    addAI('API auth flow: Bearer token from <code>Authorization</code> header is SHA256 hashed, then looked up in the tenants table by <code>api_key_hash</code>. Implemented in <code>KalciferWeb.Plugs.ApiKeyAuth</code>. Currently 4 active keys across 2 tenants. Raw keys are never stored.');
+  } else if(t.includes('tenant') || t.includes('multi')){
+    addAI('3 active tenants: Acme SaaS (12 flows), Beta Corp (4 flows), Demo Sandbox (2 flows). All queries are scoped by <code>tenant_id</code> via the <code>Kalcifer.Tenants</code> context module. Tenant is resolved from the API key on every request.');
+  } else if(t.includes('health') || t.includes('status')){
+    addAI('All systems operational. BEAM VM: 24K processes, 2.1/8GB memory. PostgreSQL 16: 12/50 connections, 12ms p99. Oban: 0 failed jobs. Bandit serving on port 4500. Engine Supervisor healthy with 5 active FlowServer instances.');
   } else {
-    addAI(`გაიგე. რა კონკრეტულად გაინტერესებს? კონექტორები, ინფრა, events, AI, users, security, ან billing?`);
+    addAI('I can help with engine configuration. Try asking about: node registry, channel providers, Oban queues, API keys, recovery manager, tenants, or system health.');
   }
 }
 
 function updateChatContext(section){
   chatMsgs.innerHTML = '';
   const greetings = {
-    connectors: `კონექტორების მართვაში ხარ. 5 აქტიური წყარო, ერთი syncing მდგომარეობაში. რაიმე ცვლილება გინდა?`,
-    infra: `ინფრასტრუქტურის მონიტორინგში ხარ. ყველა სერვისი healthy-ა. PostgreSQL 12/50 connection, ClickHouse 42ms avg query. რაიმე კითხვა?`,
-    pipeline: `Events Pipeline-ში ხარ. 4.2K events/sec შემოდის. 31 schema violation-ია ბოლო 24 საათში — ძირითადად SDK v3.2-დან. გინდა რომ ვნახოთ?`,
-    ai: `AI Engine-ის კონფიგურაციაში ხარ. 26 ინსტრუმენტი აქტიურია, 4 guardrail ჩართულია. 3.4K query გამოყენებულია (68%). რაღაცის შეცვლა გინდა?`,
-    users: `მომხმარებლების მართვაში ხარ. 8 წევრი, 5 online. ახლის მოწვევა, როლის შეცვლა, ან უფლებების კონფიგურაცია — რით დაგეხმარო?`,
-    security: `Security & GDPR სექციაში ხარ. Auth0 + RLS აქტიურია. GDPR 5/6 ✓ — DPA ხელმოწერა სჭირდება 2 sub-processor-ს. რაიმე კითხვა?`,
-    monitoring: `მონიტორინგში ხარ. 99.8% uptime, 2 active alert: schema violations და AI usage. გინდა რომ რომელიმე ალერტი უფრო დეტალურად ვნახოთ?`,
-    billing: `Usage & Billing-ში ხარ. Growth Plan $299/mo, estimated total $361 channel costs-ით. AI queries 68%-ზეა. გინდა ოპტიმიზაციის რეკომენდაციები?`
+    channels: 'Channel & Provider configuration. 5 channels active with 4 external providers. All delivery rates above 94%. Want to add a new provider or check delivery stats?',
+    registry: 'Node Registry panel. 23 nodes registered in ETS across 5 categories. All nodes healthy with validated callbacks (<code>execute/2</code>, <code>config_schema/0</code>, <code>category/0</code>). Need to register a custom node?',
+    oban: 'Oban Queues dashboard. 3 queues: <code>flow_triggers: 10</code>, <code>delayed_resume: 20</code>, <code>maintenance: 5</code>. 1,842 jobs processed today with 0 failures. Want to adjust concurrency or check a specific worker?',
+    apikeys: 'API Key management. 4 active keys, 1 revoked. Auth via <code>KalciferWeb.Plugs.ApiKeyAuth</code> &mdash; Bearer token &rarr; SHA256 &rarr; tenant lookup. Want to generate a new key or revoke an existing one?',
+    recovery: 'Recovery Manager. Last boot: 6h ago, 0 orphaned instances found. Auto-recovery is enabled with 30s timeout. The Engine.Supervisor uses <code>rest_for_one</code> strategy. 5 FlowServer processes currently active.',
+    health: 'System Health overview. 99.9% uptime, all 6 services healthy. BEAM: 24K processes, 2.1GB memory. PostgreSQL: 12/50 connections. Oban: 0 failures. Want to drill into any specific component?',
+    tenants: 'Tenant management. 3 active tenants with 18 total flows. All queries scoped by <code>tenant_id</code>. Isolation via API key hashing in <code>Kalcifer.Tenants</code>. Need to add a tenant or check usage?'
   };
   if(greetings[section]) addAI(greetings[section]);
 }
@@ -1189,64 +1121,58 @@ function bc(){return getComputedStyle(document.body).getPropertyValue('--border'
 function tc(){return getComputedStyle(document.body).getPropertyValue('--text-muted').trim()}
 
 function initPanelCharts(panel){
-  if(panel==='pipeline'){
-    const ctx=document.getElementById('ingestChart');
-    if(!ctx||charts.ingest) return;
+  if(panel==='oban'){
+    const ctx=document.getElementById('obanChart');
+    if(!ctx||charts.oban) return;
     const hours=['00','02','04','06','08','10','12','14','16','18','20','22'];
-    charts.ingest=new Chart(ctx,{type:'bar',data:{labels:hours,datasets:[{label:'Events/hour',data:[2100,1800,1400,1200,4800,12400,18200,22100,19800,16400,11200,8400],backgroundColor:pc()+'80',borderColor:pc(),borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9},callback:v=>(v/1000)+'K'}}}}});
+    charts.oban=new Chart(ctx,{type:'bar',data:{labels:hours,datasets:[
+      {label:'flow_triggers',data:[12,8,5,3,42,86,124,148,132,98,64,38],backgroundColor:ic()+'80',borderRadius:4},
+      {label:'delayed_resume',data:[18,14,8,6,52,108,164,192,178,142,88,52],backgroundColor:pc()+'80',borderRadius:4},
+      {label:'maintenance',data:[4,4,4,4,8,12,14,16,14,12,8,6],backgroundColor:sc()+'80',borderRadius:4}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{stacked:true,grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{stacked:true,grid:{color:bc()},ticks:{color:tc(),font:{size:9}}}}}});
   }
-  if(panel==='ai'){
-    const ctx=document.getElementById('aiChart');
-    if(!ctx||charts.ai) return;
-    const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    charts.ai=new Chart(ctx,{type:'line',data:{labels:days,datasets:[
-      {label:'Queries',data:[480,520,610,540,490,180,120],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,pointBackgroundColor:pc()},
-      {label:'Cache Hits',data:[160,180,210,190,170,60,40],borderColor:sc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,borderDash:[4,4]}
+  if(panel==='apikeys'){
+    const ctx=document.getElementById('apiChart');
+    if(!ctx||charts.api) return;
+    const hours=['00','03','06','09','12','15','18','21'];
+    charts.api=new Chart(ctx,{type:'line',data:{labels:hours,datasets:[
+      {label:'API Calls',data:[180,120,80,620,1840,2200,1680,980],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,pointBackgroundColor:pc()},
+      {label:'Auth Failures',data:[2,0,1,3,8,5,4,2],borderColor:wc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,borderDash:[4,4]}
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}}}}});
   }
-  if(panel==='monitoring'){
-    const ctx=document.getElementById('sysChart');
-    if(!ctx||charts.sys) return;
+  if(panel==='health'){
+    const ctx=document.getElementById('healthChart');
+    if(!ctx||charts.health) return;
     const hours=['00:00','03:00','06:00','09:00','12:00','15:00','18:00','21:00'];
-    charts.sys=new Chart(ctx,{type:'line',data:{labels:hours,datasets:[
-      {label:'Response (ms)',data:[38,35,32,45,52,48,42,40],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3},
-      {label:'Events/s',data:[800,600,400,1800,2400,2100,1600,1200],borderColor:ic(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,yAxisID:'y1'}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9},callback:v=>v+'ms'}},y1:{position:'right',grid:{display:false},ticks:{color:tc(),font:{size:9},callback:v=>(v/1000).toFixed(1)+'K/s'}}}}});
+    charts.health=new Chart(ctx,{type:'line',data:{labels:hours,datasets:[
+      {label:'Response (ms)',data:[6,5,4,8,12,10,9,7],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3},
+      {label:'BEAM Processes (K)',data:[23.8,23.6,23.4,24.0,24.4,24.2,24.1,24.0],borderColor:ic(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,yAxisID:'y1'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9},callback:v=>v+'ms'}},y1:{position:'right',grid:{display:false},ticks:{color:tc(),font:{size:9},callback:v=>v+'K'}}}}});
 
-    // Populate system log
-    const logEl = document.getElementById('sysLog');
+    // Populate health log
+    const logEl = document.getElementById('healthLog');
     if(logEl && !logEl.children.length){
       const logs = [
-        ['14:35:12','INFO','ClickHouse merge completed — 3 parts merged to 1'],
-        ['14:32:08','INFO','Journey "Spring Sale Push" step 3 executed — 420 emails queued'],
-        ['14:28:44','WARN','Schema violation: custom_banner_click not in track plan'],
-        ['14:22:10','INFO','Redpanda consumer group rebalanced — 3 consumers'],
-        ['14:15:33','INFO','Go Ingest: batch of 1,200 events flushed to Redpanda'],
-        ['14:10:18','WARN','AI query rate approaching limit: 3,380/5,000'],
-        ['14:02:45','INFO','PostgreSQL: auto-vacuum completed on profiles table'],
-        ['13:58:22','INFO','Elixir node kalcifer@node2 health check OK'],
-        ['13:50:11','INFO','Connector "SendGrid" webhook received: 840 delivery events'],
-        ['13:42:08','INFO','ClickHouse: partition pruning reduced scan from 2.4M to 180K rows'],
+        ['14:35:12','INFO','Oban: maintenance queue completed StaleInstancePruner in 520ms'],
+        ['14:32:08','INFO','FlowServer #e3a8: ab_split node executed, branch A selected (60/40 split)'],
+        ['14:28:44','INFO','EventRouter: routed purchase_completed to 2 waiting FlowServer instances'],
+        ['14:22:10','INFO','Oban: delayed_resume queue processed ResumeFlowJob for instance #b7d4'],
+        ['14:15:33','INFO','NodeRegistry: all 23 nodes validated, 0 errors'],
+        ['14:10:18','INFO','PostgreSQL: auto-vacuum completed on flow_instances table'],
+        ['14:02:45','INFO','Engine.Supervisor: health check OK, 5 FlowServers active'],
+        ['13:58:22','INFO','Bandit: 340 req/s on port 4500, avg response 8ms'],
+        ['13:50:11','INFO','RecoveryManager: periodic scan complete, 0 orphaned instances'],
+        ['13:42:08','WARN','Rate limiter: tenant t_a1b2c3d4 approaching 80% of API call limit'],
       ];
-      logEl.innerHTML = logs.map(([t,l,m])=>`<div class="log-line"><span class="log-time">${t}</span><span class="log-level log-${l.toLowerCase()}">${l}</span><span class="log-msg">${m}</span></div>`).join('');
+      logEl.innerHTML = logs.map(([t,l,m])=>'<div class="log-line"><span class="log-time">'+t+'</span><span class="log-level log-'+l.toLowerCase()+'">'+l+'</span><span class="log-msg">'+m+'</span></div>').join('');
     }
-  }
-  if(panel==='billing'){
-    const ctx=document.getElementById('costChart');
-    if(!ctx||charts.cost) return;
-    const months=['Oct','Nov','Dec','Jan','Feb','Mar'];
-    charts.cost=new Chart(ctx,{type:'bar',data:{labels:months,datasets:[
-      {label:'Base Plan',data:[299,299,299,299,299,299],backgroundColor:pc()+'60',borderRadius:4},
-      {label:'AI Cost',data:[18,22,24,26,25,28],backgroundColor:ic()+'60',borderRadius:4},
-      {label:'Channels',data:[28,32,38,30,34,34],backgroundColor:sc()+'60',borderRadius:4}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{stacked:true,grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{stacked:true,grid:{color:bc()},ticks:{color:tc(),font:{size:9},callback:v=>'$'+v}}}}});
   }
 }
 
 // ═══ INIT ═══
 (function(){const p=new URLSearchParams(window.location.search).get('theme');if(p&&['warm','lavender','sage','teal','dark'].includes(p)){document.body.setAttribute('data-theme',p);document.querySelectorAll('.th-opt').forEach(b=>{b.classList.remove('active');if(b.textContent.toLowerCase().includes(p==='warm'?'warm':p))b.classList.add('active')})}})();
-updateChatContext('connectors');
-initPanelCharts('connectors');
+updateChatContext('channels');
+initPanelCharts('channels');
 </script>
 </body>
 </html>

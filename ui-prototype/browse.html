@@ -28,10 +28,9 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;transition:background 0.4s,color 0.3s}
 
-/* ═══ LAYOUT ═══ */
 .app{display:grid;grid-template-columns:200px 1fr;grid-template-rows:48px 1fr;height:100vh}
 
-/* ═══ TOPBAR ═══ */
+/* TOPBAR */
 .topbar{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
 .top-left{display:flex;align-items:center;gap:14px}
 .logo{font-size:17px;font-weight:700;color:var(--primary);letter-spacing:-0.5px}
@@ -49,7 +48,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .th-opt:hover{background:var(--primary-soft)}.th-opt.active{color:var(--primary);font-weight:600}
 .th-sw{display:flex;gap:2px}.th-sw i{width:10px;height:10px;border-radius:2px;display:block}
 
-/* ═══ SIDEBAR ═══ */
+/* SIDEBAR */
 .sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .sb-section{padding:10px 8px 4px}
 .sb-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);padding:0 8px;margin-bottom:6px}
@@ -68,12 +67,12 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .tenant{display:flex;align-items:center;gap:6px;width:100%;padding:6px 8px;background:var(--surface-dim);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;color:var(--text-sec);margin-top:6px}
 .t-dot{width:6px;height:6px;border-radius:50%;background:var(--success)}
 
-/* ═══ MAIN ═══ */
+/* MAIN */
 .main{display:flex;overflow:hidden;min-height:0}
 .content{flex:1;overflow-y:auto;padding:20px 24px;min-height:0}
 .content::-webkit-scrollbar{width:5px}.content::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 
-/* ═══ AI HELPER (collapsible) ═══ */
+/* AI HELPER */
 .ai-panel{width:300px;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;min-height:0;background:var(--bg);transition:width 0.3s,opacity 0.3s}
 .ai-panel.hidden{width:0;border:none;overflow:hidden;opacity:0}
 .ai-head{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
@@ -95,6 +94,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .msg-body{padding:7px 10px;border-radius:var(--radius);font-size:11px;line-height:1.5;max-width:88%}
 .msg-ai .msg-body{background:var(--surface);border:1px solid var(--border)}
 .msg-user .msg-body{background:var(--primary);color:var(--text-on-primary)}
+.msg-body code{background:var(--accent-soft);padding:1px 4px;border-radius:3px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--accent)}
 .ai-input-area{padding:8px 12px 10px;flex-shrink:0;border-top:1px solid var(--border)}
 .ai-input-wrap{display:flex;gap:4px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:6px 10px;transition:all 0.2s}
 .ai-input-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
@@ -108,7 +108,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .typing-ind span:nth-child(2){animation-delay:0.2s}.typing-ind span:nth-child(3){animation-delay:0.4s}
 @keyframes td{0%,60%,100%{opacity:0.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 
-/* ═══ PAGE COMPONENTS ═══ */
+/* PAGE COMPONENTS */
 .page{display:none}.page.active{display:block}
 .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .page-head h2{font-size:18px;font-weight:700}
@@ -117,31 +117,26 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .btn-primary{background:var(--primary);color:var(--text-on-primary)}.btn-primary:hover{background:var(--primary-hover)}
 .btn-secondary{background:var(--surface);color:var(--text-sec);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
 
-/* Grid */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
 
-/* Cards */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;transition:all 0.2s}
 .card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.04)}
 .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .card-title{font-size:12px;font-weight:600}
 
-/* Stat */
 .stat{text-align:center;padding:14px 10px}
 .stat-value{font-size:24px;font-weight:700;color:var(--primary)}
 .stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
 .stat-sub{font-size:10px;margin-top:3px}
 
-/* Tables */
 .tbl{width:100%;border-collapse:collapse}
 .tbl th{text-align:left;padding:8px 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:2px solid var(--border);background:var(--surface-dim)}
 .tbl td{padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:12px;color:var(--text-sec)}
 .tbl tr:hover td{background:var(--primary-soft)}
 .tbl tr{cursor:pointer}
 
-/* Tags */
 .tag{font-size:9px;padding:3px 8px;border-radius:10px;font-weight:600;display:inline-block}
 .tag-green{background:var(--success-soft);color:var(--success)}
 .tag-orange{background:var(--warn-soft);color:var(--warn)}
@@ -149,58 +144,30 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .tag-blue{background:var(--info-soft);color:var(--info)}
 .tag-muted{background:var(--accent-soft);color:var(--text-muted)}
 
-/* Progress */
 .prog-row{margin-bottom:8px}
 .prog-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
 .prog-label span:first-child{color:var(--text-sec)}.prog-label span:last-child{font-weight:600}
 .prog-bar{height:6px;background:var(--surface-dim);border-radius:3px;overflow:hidden;border:1px solid var(--border-light)}
 .prog-fill{height:100%;border-radius:2px}
 
-/* Chart */
 .chart-box{position:relative;height:200px}
 
-/* Form */
-.form-section{margin-bottom:18px}
-.form-section h3{font-size:13px;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border-light)}
-.form-row{display:flex;gap:12px;margin-bottom:10px}
-.form-group{flex:1;display:flex;flex-direction:column;gap:4px}
-.form-label{font-size:11px;font-weight:500;color:var(--text-sec)}
-.form-input{height:34px;padding:0 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);transition:all 0.2s;outline:none}
-.form-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
-.form-select{height:34px;padding:0 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);cursor:pointer;outline:none}
-.form-select:focus{border-color:var(--primary)}
-.form-textarea{padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);resize:vertical;min-height:60px;outline:none;line-height:1.5}
-.form-textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
-.form-hint{font-size:10px;color:var(--text-muted)}
-.form-actions{display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
-
-/* Funnel */
-.funnel{display:flex;flex-direction:column;gap:3px}
-.funnel-step{display:flex;align-items:center;gap:8px}
-.funnel-bar{height:22px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;color:white}
-.funnel-label{font-size:10px;color:var(--text-muted);min-width:65px}
-.funnel-val{font-size:10px;color:var(--text-sec);min-width:50px;text-align:right}
-
-/* Section title */
 .sec-title{font-size:13px;font-weight:600;margin:16px 0 10px;display:flex;align-items:center;gap:6px}
 
-/* Empty state */
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;color:var(--text-muted)}
-.empty-icon{font-size:40px;margin-bottom:8px;opacity:0.3}
-.empty h3{font-size:14px;color:var(--text-sec);font-weight:500;margin-bottom:4px}
-.empty p{font-size:11px;max-width:260px;line-height:1.5}
-
-/* Tabs */
 .tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px}
 .tab{padding:8px 14px;font-size:12px;color:var(--text-muted);cursor:pointer;border:none;background:none;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;font-weight:500}
 .tab:hover{color:var(--text-sec)}
 .tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
 
-/* Insight */
 .insight{padding:8px 10px;border-left:3px solid;border-radius:0 var(--radius-xs) var(--radius-xs) 0;margin-bottom:6px}
 .insight-type{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
 .insight-text{font-size:11px;margin-top:2px;color:var(--text-sec);line-height:1.4}
 
+.funnel{display:flex;flex-direction:column;gap:3px}
+.funnel-step{display:flex;align-items:center;gap:8px}
+.funnel-bar{height:22px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;color:white}
+.funnel-label{font-size:10px;color:var(--text-muted);min-width:65px}
+.funnel-val{font-size:10px;color:var(--text-sec);min-width:50px;text-align:right}
 </style>
 </head>
 <body data-theme="warm">
@@ -212,10 +179,10 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
     <div class="logo">kalcifer<span>Browse</span></div>
   </div>
   <div class="top-right">
-    <button class="top-btn" onclick="switchToAI()" title="სამუშაო რეჟიმი">🛠 Work</button>
-    <button class="top-btn ai-toggle" id="aiToggle" onclick="toggleAI()">💬 Assistant</button>
+    <button class="top-btn" onclick="switchToAI()" title="Work mode">Work</button>
+    <button class="top-btn ai-toggle" id="aiToggle" onclick="toggleAI()">Assistant</button>
     <div class="theme-wrap">
-      <button class="top-btn" onclick="document.getElementById('thDD').classList.toggle('open')">◐</button>
+      <button class="top-btn" onclick="document.getElementById('thDD').classList.toggle('open')">&#9684;</button>
       <div class="theme-dd" id="thDD">
         <button class="th-opt active" onclick="setTh('warm',this)"><span class="th-sw"><i style="background:#f5f0eb"></i><i style="background:#c4956a"></i></span>Warm Paper</button>
         <button class="th-opt" onclick="setTh('lavender',this)"><span class="th-sw"><i style="background:#f7f5f0"></i><i style="background:#9b8ec4"></i></span>Lavender</button>
@@ -224,25 +191,24 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
         <button class="th-opt" onclick="setTh('dark',this)"><span class="th-sw"><i style="background:#0f0f14"></i><i style="background:#a89cf0"></i></span>Dark</button>
       </div>
     </div>
-    <div class="avatar">დგ</div>
+    <div class="avatar">DG</div>
   </div>
 </div>
 
 <!-- SIDEBAR -->
 <div class="sidebar">
-  <div class="sb-section"><div class="sb-label">ნავიგაცია</div></div>
+  <div class="sb-section"><div class="sb-label">Navigation</div></div>
   <div class="sb-scroll">
-    <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</button>
-    <button class="nav-item" onclick="showPage('segments',this)"><span class="nav-icon">🎯</span>სეგმენტები<span class="nav-badge">12</span></button>
-    <button class="nav-item" onclick="showPage('campaigns',this)"><span class="nav-icon">📧</span>კამპანიები<span class="nav-badge">5</span></button>
-    <button class="nav-item" onclick="showPage('journeys',this)"><span class="nav-icon">🛤</span>Journeys<span class="nav-badge">3</span></button>
-    <button class="nav-item" onclick="showPage('analytics',this)"><span class="nav-icon">📈</span>ანალიტიკა</button>
-    <button class="nav-item" onclick="showPage('profiles',this)"><span class="nav-icon">👤</span>პროფილები<span class="nav-badge">15.2K</span></button>
-    <button class="nav-item" onclick="showPage('create-campaign',this)"><span class="nav-icon">✏️</span>ახალი კამპანია</button>
+    <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">&#9635;</span>Dashboard</button>
+    <button class="nav-item" onclick="showPage('flows',this)"><span class="nav-icon">&#8644;</span>Flows<span class="nav-badge">8</span></button>
+    <button class="nav-item" onclick="showPage('journeys',this)"><span class="nav-icon">&#9776;</span>Journeys<span class="nav-badge">3</span></button>
+    <button class="nav-item" onclick="showPage('instances',this)"><span class="nav-icon">&#9654;</span>Instances<span class="nav-badge">812</span></button>
+    <button class="nav-item" onclick="showPage('events',this)"><span class="nav-icon">&#9889;</span>Events</button>
+    <button class="nav-item" onclick="showPage('analytics',this)"><span class="nav-icon">&#9652;</span>Analytics</button>
   </div>
   <div class="sb-bottom">
-    <button class="sb-settings" onclick="goSettings()">⚙ Engine Room</button>
-    <div class="tenant"><span class="t-dot"></span>Acme SaaS<span style="margin-left:auto;font-size:10px;color:var(--text-muted)">▾</span></div>
+    <button class="sb-settings" onclick="goSettings()">Engine Room</button>
+    <div class="tenant"><span class="t-dot"></span>Acme SaaS<span style="margin-left:auto;font-size:10px;color:var(--text-muted)">&blacktriangledown;</span></div>
   </div>
 </div>
 
@@ -250,386 +216,203 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 <div class="main">
   <div class="content" id="contentArea">
 
-    <!-- ═══ DASHBOARD ═══ -->
+    <!-- DASHBOARD -->
     <div class="page active" id="pg-dashboard">
-      <div class="page-head"><h2>📊 Dashboard</h2><div class="page-actions"><button class="btn btn-secondary">Export</button></div></div>
+      <div class="page-head"><h2>Dashboard</h2><div class="page-actions"><button class="btn btn-secondary">Export</button></div></div>
 
       <div class="grid-4" style="margin-bottom:16px">
-        <div class="card stat"><div class="stat-value">15,200</div><div class="stat-label">Profiles</div><div class="stat-sub" style="color:var(--success)">+1.2K this month</div></div>
-        <div class="card stat"><div class="stat-value">5</div><div class="stat-label">Active Campaigns</div><div class="stat-sub">2 live · 1 planning</div></div>
-        <div class="card stat"><div class="stat-value">12.4%</div><div class="stat-label">Avg Conversion</div><div class="stat-sub" style="color:var(--success)">↑ 2.1%</div></div>
-        <div class="card stat"><div class="stat-value">$80.6K</div><div class="stat-label">Revenue (Campaigns)</div><div class="stat-sub">last 30 days</div></div>
+        <div class="card stat"><div class="stat-value">8</div><div class="stat-label">Total Flows</div><div class="stat-sub">3 active &middot; 2 draft</div></div>
+        <div class="card stat"><div class="stat-value">812</div><div class="stat-label">Running Instances</div><div class="stat-sub" style="color:var(--success)">+180 today</div></div>
+        <div class="card stat"><div class="stat-value">14</div><div class="stat-label">Failed (24h)</div><div class="stat-sub" style="color:var(--danger)">0.3% error rate</div></div>
+        <div class="card stat"><div class="stat-value">23</div><div class="stat-label">Node Types</div><div class="stat-sub">5 categories</div></div>
       </div>
 
       <div class="grid-2">
         <div>
-          <div class="sec-title">📧 მიმდინარე კამპანიები</div>
+          <div class="sec-title">Active Flows</div>
           <div class="card" style="padding:0;overflow:hidden">
             <table class="tbl">
-              <thead><tr><th>კამპანია</th><th>სტატუსი</th><th>Progress</th><th>Conv.</th></tr></thead>
+              <thead><tr><th>Flow</th><th>Status</th><th>Version</th><th>Instances</th></tr></thead>
               <tbody>
-                <tr onclick="showPage('campaigns',document.querySelectorAll('.nav-item')[2])"><td style="font-weight:500">Spring Sale Push</td><td><span class="tag tag-green">🚀 Live</span></td><td>67%</td><td>5.8%</td></tr>
-                <tr onclick="showPage('campaigns',document.querySelectorAll('.nav-item')[2])"><td style="font-weight:500">Onboarding v3</td><td><span class="tag tag-green">🚀 Live</span></td><td>59%</td><td>35%</td></tr>
-                <tr onclick="showPage('campaigns',document.querySelectorAll('.nav-item')[2])"><td style="font-weight:500">Churn Re-engage</td><td><span class="tag tag-blue">📝 Planning</span></td><td>—</td><td>—</td></tr>
+                <tr onclick="showPage('flows',document.querySelectorAll('.nav-item')[1])"><td style="font-weight:500">Spring Sale Push</td><td><span class="tag tag-green">Active</span></td><td>v2</td><td>312 running</td></tr>
+                <tr onclick="showPage('flows',document.querySelectorAll('.nav-item')[1])"><td style="font-weight:500">Onboarding Sequence</td><td><span class="tag tag-green">Active</span></td><td>v3</td><td>2,100 running</td></tr>
+                <tr onclick="showPage('flows',document.querySelectorAll('.nav-item')[1])"><td style="font-weight:500">Churn Re-engagement</td><td><span class="tag tag-blue">Draft</span></td><td>v1</td><td>&mdash;</td></tr>
               </tbody>
             </table>
           </div>
 
-          <div class="sec-title">🎯 Top სეგმენტები</div>
-          <div class="card" style="padding:0;overflow:hidden">
-            <table class="tbl">
-              <thead><tr><th>სეგმენტი</th><th>Size</th><th>Trend</th></tr></thead>
-              <tbody>
-                <tr><td>Active Customers</td><td>8,420</td><td style="color:var(--success)">↑ 5%</td></tr>
-                <tr><td>Churn Risk 90d</td><td>1,880</td><td style="color:var(--danger)">↑ 12%</td></tr>
-                <tr><td>High-LTV Users</td><td>2,140</td><td style="color:var(--success)">↑ 3%</td></tr>
-                <tr><td>New Signups (7d)</td><td>340</td><td>→ stable</td></tr>
-              </tbody>
-            </table>
+          <div class="sec-title">Recent Errors</div>
+          <div class="card">
+            <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)"><div class="insight-type" style="color:var(--danger)">send_email &times; 8</div><div class="insight-text">No message provider configured. Check Engine Room &rarr; Channels.</div></div>
+            <div class="insight" style="border-color:var(--warn);background:var(--warn-soft)"><div class="insight-type" style="color:var(--warn)">frequency_cap &times; 6</div><div class="insight-text">Message limit reached. Expected behavior for high-frequency customers.</div></div>
           </div>
         </div>
 
         <div>
-          <div class="sec-title">📈 Events (7 days)</div>
-          <div class="card"><div class="chart-box"><canvas id="dashEventsChart"></canvas></div></div>
+          <div class="sec-title">Instance Throughput (7d)</div>
+          <div class="card"><div class="chart-box"><canvas id="dashChart"></canvas></div></div>
 
-          <div class="sec-title">💡 AI Insights</div>
+          <div class="sec-title">System Health</div>
           <div class="card">
-            <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Opportunity</div><div class="insight-text">Churn Risk segment grew 12% — time for re-engagement campaign.</div></div>
-            <div class="insight" style="border-color:var(--info);background:var(--info-soft)"><div class="insight-type" style="color:var(--info)">Trend</div><div class="insight-text">Email open rates improving: 38% → 41% this month. Personalization working.</div></div>
-            <div class="insight" style="border-color:var(--warn);background:var(--warn-soft)"><div class="insight-type" style="color:var(--warn)">Alert</div><div class="insight-text">AI query usage at 68%. Consider caching or plan upgrade.</div></div>
+            <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Engine</div><div class="insight-text">All Oban queues healthy. flow_triggers: 2/10, delayed_resume: 5/20, maintenance: 0/5.</div></div>
+            <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Recovery</div><div class="insight-text">Last recovery check: 0 orphaned instances. All FlowServers running.</div></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ SEGMENTS ═══ -->
-    <div class="page" id="pg-segments">
-      <div class="page-head"><h2>🎯 სეგმენტები</h2><div class="page-actions"><button class="btn btn-primary" onclick="showPage('create-segment')">+ ახალი სეგმენტი</button><button class="btn btn-secondary">Export</button></div></div>
-
-      <div class="card" style="padding:0;overflow:hidden">
-        <table class="tbl">
-          <thead><tr><th>სახელი</th><th>Size</th><th>Type</th><th>Created</th><th>Last Sync</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td style="font-weight:500">Active Customers</td><td>8,420</td><td>Dynamic</td><td>Jan 15</td><td>2m ago</td><td><span class="tag tag-green">● Synced</span></td></tr>
-            <tr><td style="font-weight:500">Churn Risk 90d</td><td>1,880</td><td>Dynamic</td><td>Feb 2</td><td>5m ago</td><td><span class="tag tag-green">● Synced</span></td></tr>
-            <tr><td style="font-weight:500">High-LTV Users</td><td>2,140</td><td>Dynamic</td><td>Dec 10</td><td>3m ago</td><td><span class="tag tag-green">● Synced</span></td></tr>
-            <tr><td style="font-weight:500">New Signups (7d)</td><td>340</td><td>Dynamic</td><td>Jan 5</td><td>1m ago</td><td><span class="tag tag-green">● Synced</span></td></tr>
-            <tr><td style="font-weight:500">Growth Plan Users</td><td>4,200</td><td>Dynamic</td><td>Nov 20</td><td>8m ago</td><td><span class="tag tag-green">● Synced</span></td></tr>
-            <tr><td style="font-weight:500">Email Engaged (30d)</td><td>5,680</td><td>Dynamic</td><td>Mar 1</td><td>4m ago</td><td><span class="tag tag-green">● Synced</span></td></tr>
-            <tr><td style="font-weight:500">Push Opt-out</td><td>420</td><td>Dynamic</td><td>Dec 28</td><td>10m ago</td><td><span class="tag tag-orange">● Stale</span></td></tr>
-            <tr><td style="font-weight:500">Q4 Upsell Audience</td><td>6,400</td><td>Static</td><td>Oct 10</td><td>—</td><td><span class="tag tag-muted">Archived</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ═══ CAMPAIGNS ═══ -->
-    <div class="page" id="pg-campaigns">
-      <div class="page-head"><h2>📧 კამპანიები</h2><div class="page-actions"><button class="btn btn-primary" onclick="showPage('create-campaign')">+ ახალი კამპანია</button></div></div>
+    <!-- FLOWS -->
+    <div class="page" id="pg-flows">
+      <div class="page-head"><h2>Flows</h2><div class="page-actions"><button class="btn btn-primary" onclick="switchToAI()">+ New Flow</button></div></div>
 
       <div class="tabs">
-        <button class="tab active">ყველა</button>
-        <button class="tab">🚀 Live (2)</button>
-        <button class="tab">📝 Planning (1)</button>
-        <button class="tab">✅ Completed (2)</button>
+        <button class="tab active">All (8)</button>
+        <button class="tab">Active (3)</button>
+        <button class="tab">Draft (2)</button>
+        <button class="tab">Paused (0)</button>
+        <button class="tab">Archived (3)</button>
       </div>
 
       <div class="card" style="padding:0;overflow:hidden">
         <table class="tbl">
-          <thead><tr><th>კამპანია</th><th>ტიპი</th><th>სტატუსი</th><th>Audience</th><th>Sent</th><th>Conv.</th><th>Revenue</th></tr></thead>
+          <thead><tr><th>Flow Name</th><th>Status</th><th>Version</th><th>Nodes</th><th>Running</th><th>Completed</th><th>Failed</th></tr></thead>
           <tbody>
-            <tr><td style="font-weight:500">Spring Sale Push</td><td>Promo</td><td><span class="tag tag-green">🚀 Live</span></td><td>4,200</td><td>2,814</td><td>5.8%</td><td>$12,400</td></tr>
-            <tr><td style="font-weight:500">Onboarding Flow v3</td><td>Journey</td><td><span class="tag tag-green">🚀 Live</span></td><td>2,100</td><td>—</td><td>35%</td><td>—</td></tr>
-            <tr><td style="font-weight:500">Churn Re-engagement</td><td>Re-engage</td><td><span class="tag tag-blue">📝 Planning</span></td><td>1,880</td><td>—</td><td>—</td><td>—</td></tr>
-            <tr><td style="font-weight:500">Q4 Upsell Campaign</td><td>Upsell</td><td><span class="tag tag-muted">✅ Done</span></td><td>6,400</td><td>6,400</td><td>12.4%</td><td>$48,200</td></tr>
-            <tr><td style="font-weight:500">Holiday Promo 2025</td><td>Promo</td><td><span class="tag tag-muted">✅ Done</span></td><td>5,800</td><td>5,800</td><td>8.7%</td><td>$32,400</td></tr>
+            <tr><td style="font-weight:500">Spring Sale Push</td><td><span class="tag tag-green">Active</span></td><td>v2</td><td>7</td><td>312</td><td>2,502</td><td>14</td></tr>
+            <tr><td style="font-weight:500">Onboarding Sequence</td><td><span class="tag tag-green">Active</span></td><td>v3</td><td>5</td><td>2,100</td><td>1,240</td><td>462</td></tr>
+            <tr><td style="font-weight:500">Weekly Digest</td><td><span class="tag tag-green">Active</span></td><td>v1</td><td>3</td><td>45</td><td>8,200</td><td>2</td></tr>
+            <tr><td style="font-weight:500">Churn Re-engagement</td><td><span class="tag tag-blue">Draft</span></td><td>v1</td><td>6</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
+            <tr><td style="font-weight:500">Upsell Sequence</td><td><span class="tag tag-blue">Draft</span></td><td>v1</td><td>4</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
+            <tr><td style="font-weight:500">Q4 Upsell Journey</td><td><span class="tag tag-muted">Archived</span></td><td>v2</td><td>6</td><td>0</td><td>5,312</td><td>88</td></tr>
+            <tr><td style="font-weight:500">Holiday Promo 2025</td><td><span class="tag tag-muted">Archived</span></td><td>v1</td><td>8</td><td>0</td><td>4,640</td><td>160</td></tr>
+            <tr><td style="font-weight:500">Win-back Sequence</td><td><span class="tag tag-muted">Archived</span></td><td>v1</td><td>3</td><td>0</td><td>1,800</td><td>24</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- ═══ JOURNEYS ═══ -->
+    <!-- JOURNEYS -->
     <div class="page" id="pg-journeys">
-      <div class="page-head"><h2>🛤 Journeys</h2><div class="page-actions"><button class="btn btn-primary">+ ახალი Journey</button></div></div>
+      <div class="page-head"><h2>Journeys</h2><div class="page-actions"><button class="btn btn-primary" onclick="switchToAI()">+ New Journey</button></div></div>
 
       <div class="grid-3">
         <div class="card">
-          <div class="card-head"><div class="card-title">Onboarding Flow v3</div><span class="tag tag-green">🚀 Live</span></div>
-          <div style="font-size:11px;color:var(--text-sec);margin-bottom:8px">5 steps · 2,100 active users · running 12 days</div>
+          <div class="card-head"><div class="card-title">Onboarding Sequence</div><span class="tag tag-green">Active</span></div>
+          <div style="font-size:11px;color:var(--text-sec);margin-bottom:8px">Flow v3 &middot; 5 nodes &middot; 2,100 running</div>
           <div class="prog-row"><div class="prog-label"><span>Completion</span><span>59%</span></div><div class="prog-bar"><div class="prog-fill" style="width:59%;background:var(--success)"></div></div></div>
-          <div class="prog-row"><div class="prog-label"><span>Drop-off</span><span style="color:var(--danger)">22%</span></div><div class="prog-bar"><div class="prog-fill" style="width:22%;background:var(--danger)"></div></div></div>
-          <div style="margin-top:8px;display:flex;gap:4px"><button class="btn btn-secondary" style="height:26px;font-size:10px">📊 Stats</button><button class="btn btn-secondary" style="height:26px;font-size:10px">⏸ Pause</button></div>
+          <div class="prog-row"><div class="prog-label"><span>Error rate</span><span style="color:var(--danger)">22%</span></div><div class="prog-bar"><div class="prog-fill" style="width:22%;background:var(--danger)"></div></div></div>
         </div>
 
         <div class="card">
-          <div class="card-head"><div class="card-title">Churn Re-engagement</div><span class="tag tag-blue">📝 Draft</span></div>
-          <div style="font-size:11px;color:var(--text-sec);margin-bottom:8px">4 steps · 1,880 target · Email + SMS</div>
-          <div class="prog-row"><div class="prog-label"><span>Build Progress</span><span>0%</span></div><div class="prog-bar"><div class="prog-fill" style="width:0%;background:var(--border)"></div></div></div>
-          <div style="margin-top:8px"><button class="btn btn-primary" style="height:26px;font-size:10px">✏️ Continue Building</button></div>
+          <div class="card-head"><div class="card-title">Churn Re-engagement</div><span class="tag tag-blue">Draft</span></div>
+          <div style="font-size:11px;color:var(--text-sec);margin-bottom:8px">Flow v1 &middot; 6 nodes &middot; Email + SMS</div>
+          <div class="prog-row"><div class="prog-label"><span>Build progress</span><span>0%</span></div><div class="prog-bar"><div class="prog-fill" style="width:0%;background:var(--border)"></div></div></div>
+          <div style="margin-top:8px"><button class="btn btn-primary" style="height:26px;font-size:10px" onclick="switchToAI()">Build in Work mode</button></div>
         </div>
 
         <div class="card">
-          <div class="card-head"><div class="card-title">Win-back Sequence</div><span class="tag tag-muted">Archived</span></div>
-          <div style="font-size:11px;color:var(--text-sec);margin-bottom:8px">3 steps · completed Dec 2025 · 4.2% conv.</div>
-          <div style="margin-top:8px;display:flex;gap:4px"><button class="btn btn-secondary" style="height:26px;font-size:10px">📊 Results</button><button class="btn btn-secondary" style="height:26px;font-size:10px">🔁 Clone</button></div>
+          <div class="card-head"><div class="card-title">Q4 Upsell Journey</div><span class="tag tag-muted">Archived</span></div>
+          <div style="font-size:11px;color:var(--text-sec);margin-bottom:8px">Flow v2 &middot; completed Nov 2025 &middot; 12.4% conv.</div>
+          <div style="margin-top:8px;display:flex;gap:4px"><button class="btn btn-secondary" style="height:26px;font-size:10px">Results</button><button class="btn btn-secondary" style="height:26px;font-size:10px">Clone</button></div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ ANALYTICS ═══ -->
+    <!-- INSTANCES -->
+    <div class="page" id="pg-instances">
+      <div class="page-head"><h2>Instances</h2><div class="page-actions"><button class="btn btn-secondary">Export</button></div></div>
+
+      <div class="tabs">
+        <button class="tab active">All</button>
+        <button class="tab">Running (312)</button>
+        <button class="tab">Waiting (186)</button>
+        <button class="tab">Completed (2,502)</button>
+        <button class="tab">Failed (14)</button>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>Instance ID</th><th>Flow</th><th>Customer</th><th>Status</th><th>Current Node</th><th>Entered</th><th>Duration</th></tr></thead>
+          <tbody>
+            <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">inst-a3f2</td><td>Spring Sale Push</td><td>ana@acme.io</td><td><span class="tag tag-green">running</span></td><td><code>send_email</code></td><td>2m ago</td><td>2m</td></tr>
+            <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">inst-b7c1</td><td>Spring Sale Push</td><td>luka@nova.shop</td><td><span class="tag tag-orange">waiting</span></td><td><code>wait "2d"</code></td><td>1d ago</td><td>1d</td></tr>
+            <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">inst-d4e8</td><td>Onboarding Seq.</td><td>nino@spark.tv</td><td><span class="tag tag-green">running</span></td><td><code>condition</code></td><td>3h ago</td><td>3h</td></tr>
+            <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">inst-f1a9</td><td>Spring Sale Push</td><td>giorgi@acme.io</td><td><span class="tag tag-green">completed</span></td><td><code>end</code></td><td>6h ago</td><td>4h 12m</td></tr>
+            <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">inst-c2b5</td><td>Spring Sale Push</td><td>mariam@nova.shop</td><td><span class="tag tag-red">failed</span></td><td><code>send_email</code></td><td>5h ago</td><td>12s</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">Showing 5 of 3,014 instances</div>
+    </div>
+
+    <!-- EVENTS -->
+    <div class="page" id="pg-events">
+      <div class="page-head"><h2>Events</h2><div class="page-actions"><button class="btn btn-secondary">Filter</button></div></div>
+
+      <div style="margin-bottom:14px"><input style="height:34px;padding:0 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);width:100%;max-width:400px;outline:none" placeholder="Search events by type, customer, or flow..." /></div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>Timestamp</th><th>Event Type</th><th>Flow</th><th>Instance</th><th>Node</th><th>Details</th></tr></thead>
+          <tbody>
+            <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">14:32:18</td><td><span class="tag tag-green">node_completed</span></td><td>Spring Sale</td><td>inst-a3f2</td><td><code>send_email</code></td><td>email delivered</td></tr>
+            <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">14:32:15</td><td><span class="tag tag-blue">instance_started</span></td><td>Spring Sale</td><td>inst-e6d3</td><td><code>segment_entry</code></td><td>customer: dato@spark.tv</td></tr>
+            <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">14:32:12</td><td><span class="tag tag-orange">node_waiting</span></td><td>Spring Sale</td><td>inst-b7c1</td><td><code>wait "2d"</code></td><td>resume at Mar 21</td></tr>
+            <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">14:32:08</td><td><span class="tag tag-green">branched</span></td><td>Onboarding</td><td>inst-d4e8</td><td><code>condition</code></td><td>branch: true</td></tr>
+            <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">14:31:55</td><td><span class="tag tag-red">node_failed</span></td><td>Spring Sale</td><td>inst-c2b5</td><td><code>send_email</code></td><td>no_provider</td></tr>
+            <tr><td style="font-family:'JetBrains Mono',monospace;font-size:10px">14:31:42</td><td><span class="tag tag-green">instance_completed</span></td><td>Spring Sale</td><td>inst-f1a9</td><td><code>end</code></td><td>6 steps, 4h 12m</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
     <div class="page" id="pg-analytics">
-      <div class="page-head"><h2>📈 ანალიტიკა</h2><div class="page-actions"><button class="btn btn-secondary">📥 Export Report</button></div></div>
+      <div class="page-head"><h2>Analytics</h2><div class="page-actions"><button class="btn btn-secondary">Export Report</button></div></div>
 
       <div class="tabs">
         <button class="tab active">Overview</button>
-        <button class="tab">Campaigns</button>
-        <button class="tab">Channels</button>
-        <button class="tab">Segments</button>
+        <button class="tab">By Flow</button>
+        <button class="tab">By Node Type</button>
+        <button class="tab">Errors</button>
       </div>
 
       <div class="grid-4" style="margin-bottom:16px">
-        <div class="card stat"><div class="stat-value">247K</div><div class="stat-label">Events Today</div></div>
-        <div class="card stat"><div class="stat-value">41%</div><div class="stat-label">Avg Open Rate</div></div>
-        <div class="card stat"><div class="stat-value">13.8%</div><div class="stat-label">Avg CTR</div></div>
-        <div class="card stat"><div class="stat-value">$80.6K</div><div class="stat-label">Revenue (30d)</div></div>
+        <div class="card stat"><div class="stat-value">24.8K</div><div class="stat-label">Instances (30d)</div></div>
+        <div class="card stat"><div class="stat-value">83%</div><div class="stat-label">Completion Rate</div></div>
+        <div class="card stat"><div class="stat-value">1.4%</div><div class="stat-label">Error Rate</div></div>
+        <div class="card stat"><div class="stat-value">340ms</div><div class="stat-label">Avg Node Duration</div></div>
       </div>
 
       <div class="grid-2">
         <div>
-          <div class="sec-title">📈 Campaign Performance (30d)</div>
+          <div class="sec-title">Instance Throughput (30d)</div>
           <div class="card"><div class="chart-box"><canvas id="analyticsChart"></canvas></div></div>
         </div>
         <div>
-          <div class="sec-title">📊 Channel Comparison</div>
+          <div class="sec-title">Node Type Performance</div>
           <div class="card" style="padding:0;overflow:hidden">
             <table class="tbl">
-              <thead><tr><th>Channel</th><th>Sent</th><th>Open %</th><th>CTR</th><th>Conv.</th></tr></thead>
+              <thead><tr><th>Node Type</th><th>Executions</th><th>Avg Duration</th><th>Error %</th></tr></thead>
               <tbody>
-                <tr><td>📧 Email</td><td>45.2K</td><td>41%</td><td>14.2%</td><td>8.0%</td></tr>
-                <tr><td>📱 SMS</td><td>5.3K</td><td>—</td><td>8.4%</td><td>6.1%</td></tr>
-                <tr><td>💬 In-App</td><td>9.8K</td><td>—</td><td>22%</td><td>2.1%</td></tr>
-                <tr><td>🔔 Push</td><td>3.1K</td><td>—</td><td>4.2%</td><td>1.8%</td></tr>
+                <tr><td><code>segment_entry</code></td><td>24.8K</td><td>12ms</td><td>0%</td></tr>
+                <tr><td><code>send_email</code></td><td>22.1K</td><td>340ms</td><td>0.4%</td></tr>
+                <tr><td><code>condition</code></td><td>18.4K</td><td>8ms</td><td>0%</td></tr>
+                <tr><td><code>wait</code></td><td>15.2K</td><td>&mdash;</td><td>0%</td></tr>
+                <tr><td><code>send_sms</code></td><td>8.6K</td><td>280ms</td><td>0.5%</td></tr>
+                <tr><td><code>ab_split</code></td><td>4.2K</td><td>5ms</td><td>0%</td></tr>
+                <tr><td><code>end</code></td><td>20.6K</td><td>2ms</td><td>0%</td></tr>
               </tbody>
             </table>
           </div>
 
-          <div class="sec-title">🔄 Conversion Funnel (All Campaigns)</div>
+          <div class="sec-title">Flow Execution Funnel (All Flows)</div>
           <div class="card">
             <div class="funnel">
-              <div class="funnel-step"><span class="funnel-label">Targeted</span><div class="funnel-bar" style="width:100%;background:var(--primary)">18,500</div></div>
-              <div class="funnel-step"><span class="funnel-label">Delivered</span><div class="funnel-bar" style="width:96%;background:var(--primary)">17,760</div></div>
-              <div class="funnel-step"><span class="funnel-label">Opened</span><div class="funnel-bar" style="width:41%;background:var(--success)">7,585</div></div>
-              <div class="funnel-step"><span class="funnel-label">Clicked</span><div class="funnel-bar" style="width:14%;background:var(--info)">2,590</div></div>
-              <div class="funnel-step"><span class="funnel-label">Converted</span><div class="funnel-bar" style="width:7%;background:var(--warn)">1,295</div></div>
+              <div class="funnel-step"><span class="funnel-label">Triggered</span><div class="funnel-bar" style="width:100%;background:var(--info)">24,800</div></div>
+              <div class="funnel-step"><span class="funnel-label">Running</span><div class="funnel-bar" style="width:85%;background:var(--primary)">21,080</div></div>
+              <div class="funnel-step"><span class="funnel-label">Completed</span><div class="funnel-bar" style="width:83%;background:var(--success)">20,584</div></div>
+              <div class="funnel-step"><span class="funnel-label">Failed</span><div class="funnel-bar" style="width:1.4%;background:var(--danger);min-width:50px">347</div></div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ PROFILES ═══ -->
-    <div class="page" id="pg-profiles">
-      <div class="page-head"><h2>👤 პროფილები</h2><div class="page-actions"><button class="btn btn-secondary">📥 Export</button><button class="btn btn-secondary">🔍 Advanced Search</button></div></div>
-
-      <div style="margin-bottom:14px"><input class="form-input" style="width:100%;max-width:400px" placeholder="🔍 Search by email, name, or ID..." /></div>
-
-      <div class="card" style="padding:0;overflow:hidden">
-        <table class="tbl">
-          <thead><tr><th>Email</th><th>Name</th><th>Segments</th><th>Events (30d)</th><th>Last Active</th><th>LTV</th></tr></thead>
-          <tbody>
-            <tr><td style="font-weight:500">ana@acme.io</td><td>Ana Kvaratskhelia</td><td><span class="tag tag-green">Active</span> <span class="tag tag-blue">High-LTV</span></td><td>142</td><td>2m ago</td><td>$840</td></tr>
-            <tr><td style="font-weight:500">luka@nova.shop</td><td>Luka Beridze</td><td><span class="tag tag-green">Active</span></td><td>89</td><td>15m ago</td><td>$420</td></tr>
-            <tr><td style="font-weight:500">nino@spark.tv</td><td>Nino Japaridze</td><td><span class="tag tag-orange">Churn Risk</span></td><td>12</td><td>42d ago</td><td>$284</td></tr>
-            <tr><td style="font-weight:500">giorgi@acme.io</td><td>Giorgi Maisuradze</td><td><span class="tag tag-green">Active</span> <span class="tag tag-blue">Growth</span></td><td>210</td><td>1h ago</td><td>$620</td></tr>
-            <tr><td style="font-weight:500">mariam@nova.shop</td><td>Mariam Khutsishvili</td><td><span class="tag tag-muted">New Signup</span></td><td>8</td><td>3h ago</td><td>$0</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">Showing 5 of 15,200 profiles</div>
-    </div>
-
-    <!-- ═══ CREATE CAMPAIGN ═══ -->
-    <div class="page" id="pg-create-campaign">
-      <div class="page-head"><h2>✏️ ახალი კამპანია</h2></div>
-
-      <div class="grid-2">
-        <div>
-          <div class="form-section">
-            <h3>ძირითადი ინფორმაცია</h3>
-            <div class="form-group" style="margin-bottom:10px">
-              <label class="form-label">კამპანიის სახელი</label>
-              <input class="form-input" placeholder="e.g. Summer Re-engagement" />
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">ტიპი</label>
-                <select class="form-select">
-                  <option>Promotional</option>
-                  <option>Re-engagement</option>
-                  <option>Upsell</option>
-                  <option>Onboarding</option>
-                  <option>Transactional</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">პრიორიტეტი</label>
-                <select class="form-select">
-                  <option>High</option>
-                  <option selected>Medium</option>
-                  <option>Low</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">აღწერა</label>
-              <textarea class="form-textarea" placeholder="კამპანიის მიზანი და სტრატეგია..."></textarea>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h3>Audience</h3>
-            <div class="form-group" style="margin-bottom:10px">
-              <label class="form-label">სეგმენტი</label>
-              <select class="form-select">
-                <option>— აირჩიეთ სეგმენტი —</option>
-                <option>Active Customers (8,420)</option>
-                <option>Churn Risk 90d (1,880)</option>
-                <option>High-LTV Users (2,140)</option>
-                <option>New Signups 7d (340)</option>
-                <option>Growth Plan Users (4,200)</option>
-                <option>Email Engaged 30d (5,680)</option>
-              </select>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Estimated Audience</label>
-                <input class="form-input" value="—" disabled />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Exclude Segment (optional)</label>
-                <select class="form-select"><option>None</option><option>Push Opt-out (420)</option></select>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h3>არხები & კონტენტი</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">არხი</label>
-                <select class="form-select">
-                  <option>📧 Email only</option>
-                  <option>📧 Email + 📱 SMS</option>
-                  <option>📧 Email + 📱 SMS + 💬 In-App</option>
-                  <option>📱 SMS only</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">A/B Testing</label>
-                <select class="form-select">
-                  <option>Off</option>
-                  <option>Subject Line A/B</option>
-                  <option>Content A/B</option>
-                  <option>Send Time A/B</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group" style="margin-bottom:10px">
-              <label class="form-label">Email Subject</label>
-              <input class="form-input" placeholder="e.g. [Name], something special for you" />
-              <span class="form-hint">Use [Name], [Company] for personalization</span>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Email Body</label>
-              <textarea class="form-textarea" style="min-height:80px" placeholder="Write your email content here..."></textarea>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h3>გაგზავნის პარამეტრები</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Schedule</label>
-                <select class="form-select">
-                  <option>Send immediately</option>
-                  <option>Schedule for later</option>
-                  <option>Optimal send time (AI)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Rate Limit</label>
-                <select class="form-select">
-                  <option>No limit</option>
-                  <option>500/hour</option>
-                  <option>1000/hour</option>
-                  <option>5000/hour</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button class="btn btn-primary">🚀 Launch Campaign</button>
-            <button class="btn btn-secondary">💾 Save as Draft</button>
-            <button class="btn btn-secondary" onclick="showPage('campaigns',document.querySelectorAll('.nav-item')[2])">Cancel</button>
-          </div>
-        </div>
-
-        <div>
-          <div class="card" style="position:sticky;top:0">
-            <div class="card-title" style="margin-bottom:10px">📋 Campaign Preview</div>
-            <div style="padding:16px;background:var(--surface-dim);border-radius:var(--radius-sm);border:1px solid var(--border-light);text-align:center;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center">
-              <div style="font-size:32px;opacity:0.2;margin-bottom:8px">📧</div>
-              <div style="font-size:12px;color:var(--text-muted)">შეავსეთ ფორმა და preview აქ გამოჩნდება</div>
-            </div>
-            <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border-light)">
-              <div style="font-size:11px;font-weight:600;margin-bottom:6px">💡 AI Suggestions</div>
-              <div class="insight" style="border-color:var(--info);background:var(--info-soft)"><div class="insight-text">წინა კამპანიებში personalized subject lines +34% open rate-ს იძლეოდა</div></div>
-              <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-text">10am–12pm sends 25%-ით უკეთესი შედეგია</div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ CREATE SEGMENT (bonus) ═══ -->
-    <div class="page" id="pg-create-segment">
-      <div class="page-head"><h2>🎯 ახალი სეგმენტი</h2></div>
-      <div class="grid-2">
-        <div>
-          <div class="form-section">
-            <h3>სეგმენტის განსაზღვრა</h3>
-            <div class="form-group" style="margin-bottom:10px">
-              <label class="form-label">სახელი</label>
-              <input class="form-input" placeholder="e.g. Power Users Last 30d" />
-            </div>
-            <div class="form-group" style="margin-bottom:10px">
-              <label class="form-label">ტიპი</label>
-              <select class="form-select"><option>Dynamic (auto-updates)</option><option>Static (one-time)</option></select>
-            </div>
-          </div>
-          <div class="form-section">
-            <h3>Conditions</h3>
-            <div class="card" style="background:var(--surface-dim);margin-bottom:8px">
-              <div class="form-row" style="margin-bottom:0">
-                <select class="form-select" style="flex:1"><option>last_active</option><option>plan</option><option>ltv</option><option>signup_date</option><option>event_count</option></select>
-                <select class="form-select" style="width:120px"><option>is less than</option><option>is greater than</option><option>equals</option><option>contains</option></select>
-                <input class="form-input" style="width:120px" placeholder="value" />
-              </div>
-            </div>
-            <button class="btn btn-secondary" style="height:28px;font-size:10px">+ Add Condition</button>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary">💾 Save Segment</button>
-            <button class="btn btn-secondary">👁 Preview</button>
-            <button class="btn btn-secondary" onclick="showPage('segments',document.querySelectorAll('.nav-item')[1])">Cancel</button>
-          </div>
-        </div>
-        <div>
-          <div class="card" style="position:sticky;top:0">
-            <div class="card-title" style="margin-bottom:8px">Segment Preview</div>
-            <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Define conditions to see estimated audience size</div>
           </div>
         </div>
       </div>
@@ -642,15 +425,15 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
     <div class="ai-head">
       <div class="ai-head-left">
         <div class="ai-dot"></div>
-        <h3>Optio AI</h3>
+        <h3>Kalcifer</h3>
         <span class="ai-head-tag">Helper</span>
       </div>
-      <button class="ai-close" onclick="toggleAI()">✕</button>
+      <button class="ai-close" onclick="toggleAI()">&times;</button>
     </div>
     <div class="ai-msgs" id="aiMsgs"></div>
     <div class="ai-input-area">
       <div class="ai-input-wrap">
-        <textarea class="ai-input" id="aiInput" placeholder="დახმარება სჭირდება?" rows="1"></textarea>
+        <textarea class="ai-input" id="aiInput" placeholder="Ask about flows, instances..." rows="1"></textarea>
         <button class="ai-send" onclick="sendAI()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
       </div>
     </div>
@@ -659,7 +442,6 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 </div>
 
 <script>
-// ═══ NAVIGATION ═══
 let currentPage = 'dashboard';
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -671,7 +453,6 @@ function showPage(id, btn) {
   setTimeout(()=>initCharts(id),50);
 }
 
-// ═══ THEME ═══
 function setTh(n,b){
   document.body.setAttribute('data-theme',n);
   document.querySelectorAll('.th-opt').forEach(x=>x.classList.remove('active'));
@@ -689,14 +470,14 @@ function goSettings(){
   window.location.href='engine-room.html?theme='+(document.body.getAttribute('data-theme')||'warm');
 }
 
-// ═══ AI PANEL ═══
+// AI PANEL
 function toggleAI(){
   const panel = document.getElementById('aiPanel');
   const btn = document.getElementById('aiToggle');
   panel.classList.toggle('hidden');
   btn.classList.toggle('active');
   if(!panel.classList.contains('hidden') && !document.getElementById('aiMsgs').children.length){
-    addAIMsg(`ვხედავ რომ ათვალიერებ. რამეში თუ დაგეხმარო — მკითხე. თუ მუშაობა გინდა დაიწყო, დააჭირე <strong>🛠 Work</strong>-ს და ერთად ვიმუშავებთ.`);
+    addAIMsg(`Browse mode-ში ხარ &mdash; აქ flows, instances და analytics-ს ათვალიერებ.<br><br>რამეში თუ დაგეხმარო &mdash; მკითხე. Flow-ზე მუშაობა რომ დაიწყო, გადადი <strong>Work</strong> mode-ში.`);
   }
 }
 
@@ -706,17 +487,17 @@ aiInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preven
 
 function addAIMsg(html){
   const d=document.createElement('div');d.className='msg msg-ai';
-  d.innerHTML=`<div class="msg-av">O</div><div class="msg-body">${html}</div>`;
+  d.innerHTML=`<div class="msg-av">K</div><div class="msg-body">${html}</div>`;
   aiMsgs.appendChild(d);aiMsgs.scrollTop=aiMsgs.scrollHeight;
 }
 function addUserMsg(text){
   const d=document.createElement('div');d.className='msg msg-user';
-  d.innerHTML=`<div class="msg-av">დგ</div><div class="msg-body">${text}</div>`;
+  d.innerHTML=`<div class="msg-av">DG</div><div class="msg-body">${text}</div>`;
   aiMsgs.appendChild(d);aiMsgs.scrollTop=aiMsgs.scrollHeight;
 }
 function addTyping(){
   const d=document.createElement('div');d.className='msg msg-ai';d.id='aiTyping';
-  d.innerHTML='<div class="msg-av">O</div><div class="msg-body"><div class="typing-ind"><span></span><span></span><span></span></div></div>';
+  d.innerHTML='<div class="msg-av">K</div><div class="msg-body"><div class="typing-ind"><span></span><span></span><span></span></div></div>';
   aiMsgs.appendChild(d);aiMsgs.scrollTop=aiMsgs.scrollHeight;
 }
 
@@ -729,49 +510,48 @@ function sendAI(){
 
 function respondAI(text){
   const t=text.toLowerCase();
-  if(t.includes('სეგმენტ')||t.includes('segment')){
-    addAIMsg(`სეგმენტის შესაქმნელად გადადი <strong>🎯 სეგმენტები → + ახალი სეგმენტი</strong>.<br><br>რეკომენდაცია: Dynamic ტიპი ჯობია — ავტომატურად განახლდება. Condition-ები შეგიძლია დააწყო, მაგალითად:<br>• <code>last_active &lt; 90 days</code><br>• <code>plan = Growth</code>`);
-  } else if(t.includes('კამპანი')||t.includes('campaign')){
-    addAIMsg(`ახალი კამპანიისთვის გადადი <strong>✏️ ახალი კამპანია</strong> გვერდზე.<br><br>Tips:<br>• Personalized subject lines +34% open rate<br>• Email+SMS combo ჯობს single channel-ს<br>• 10am-12pm optimal send time`);
-  } else if(t.includes('churn')||t.includes('risk')){
-    addAIMsg(`Churn Risk 90d სეგმენტი <strong>1,880</strong> პროფილია, 12%-ით გაიზარდა.<br><br>რეკომენდაცია: Re-engagement campaign Email+SMS-ით, personalized discount-ით. წინა Q4-ში ასეთმა მიდგომამ 12.4% conversion მოიტანა.`);
-  } else if(t.includes('work')||t.includes('რეჟიმ')||t.includes('მუშაობ')){
-    addAIMsg(`სამუშაო რეჟიმში გადასართველად დააჭირე topbar-ში <strong>🛠 Work</strong> ღილაკს. იქ კამპანიებზე მუშაობ ჩემთან ერთად — დაგეგმვა, აწყობა, გაშვება, ანალიზი.`);
+  if(t.includes('flow')||t.includes('ფლოუ')){
+    addAIMsg(`8 flow გაქვს &mdash; 3 active, 2 draft, 3 archived.<br><br>Active flow-ებში <strong>812 instance</strong> running-ია. Spring Sale Push-ის 14 failed instance-ი <code>send_email</code> provider-ის პრობლემით &mdash; უკვე გასწორდა.<br><br>Flow-ზე მუშაობა <strong>Work</strong> mode-ში ჯობია.`);
+  } else if(t.includes('instance')||t.includes('ინსტანს')){
+    addAIMsg(`3,014 total instance:<br>&bull; 312 running<br>&bull; 186 waiting (wait nodes)<br>&bull; 2,502 completed<br>&bull; 14 failed<br><br>Failed-ები ძირითადად <code>no_provider</code> error &mdash; Engine Room-ში provider settings შეამოწმე.`);
+  } else if(t.includes('error')||t.includes('fail')){
+    addAIMsg(`24 საათში 14 failure:<br>&bull; 8 &times; <code>send_email</code> &rarr; no_provider<br>&bull; 6 &times; <code>frequency_cap</code> &rarr; message limit<br><br>no_provider უკვე გასწორდა. frequency_cap expected behavior-ია.`);
   } else {
-    addAIMsg(`გაიგე! რა დახმარება გჭირდება? შემიძლია:<br>• სეგმენტების ანალიზი<br>• კამპანიის ოპტიმიზაცია<br>• მონაცემთა ახსნა<br>• საუკეთესო პრაქტიკები`);
+    addAIMsg(`შემიძლია დაგეხმარო:<br>&bull; Flow-ების status<br>&bull; Instance analytics<br>&bull; Error analysis<br>&bull; Node performance<br><br>რა გაინტერესებს?`);
   }
 }
 
-// ═══ CHARTS ═══
+// CHARTS
 let charts = {};
 function pc(){return getComputedStyle(document.body).getPropertyValue('--primary').trim()}
 function sc(){return getComputedStyle(document.body).getPropertyValue('--success').trim()}
 function ic(){return getComputedStyle(document.body).getPropertyValue('--info').trim()}
+function dc(){return getComputedStyle(document.body).getPropertyValue('--danger').trim()}
 function bc(){return getComputedStyle(document.body).getPropertyValue('--border').trim()}
 function tc(){return getComputedStyle(document.body).getPropertyValue('--text-muted').trim()}
 
 function initCharts(page){
   if(page==='dashboard'){
-    const ctx=document.getElementById('dashEventsChart');
-    if(!ctx||charts.dashEv)return;
-    charts.dashEv=new Chart(ctx,{type:'line',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[
-      {label:'Events',data:[180000,210000,248000,232000,195000,120000,98000],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,fill:false},
-      {label:'Profiles',data:[14800,14920,15000,15050,15100,15140,15200],borderColor:sc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,borderDash:[4,4],yAxisID:'y1'}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9},callback:v=>(v/1000)+'K'}},y1:{position:'right',grid:{display:false},ticks:{color:tc(),font:{size:9},callback:v=>(v/1000).toFixed(1)+'K'}}}}});
+    const ctx=document.getElementById('dashChart');
+    if(!ctx||charts.dash)return;
+    charts.dash=new Chart(ctx,{type:'line',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[
+      {label:'Completed',data:[320,410,480,520,380,280,240],borderColor:sc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3},
+      {label:'Started',data:[380,460,540,580,420,310,280],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3},
+      {label:'Failed',data:[2,4,3,1,2,1,1],borderColor:dc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,yAxisID:'y1'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y1:{position:'right',grid:{display:false},ticks:{color:tc(),font:{size:9}}}}}});
   }
   if(page==='analytics'){
     const ctx=document.getElementById('analyticsChart');
     if(!ctx||charts.analytics)return;
-    const days=['W1','W2','W3','W4'];
-    charts.analytics=new Chart(ctx,{type:'bar',data:{labels:days,datasets:[
-      {label:'Sent',data:[8200,12400,15800,9600],backgroundColor:pc()+'60',borderRadius:4},
-      {label:'Opened',data:[3200,5100,6500,3900],backgroundColor:sc()+'80',borderRadius:4},
-      {label:'Converted',data:[410,680,820,380],backgroundColor:ic()+'80',borderRadius:4}
+    charts.analytics=new Chart(ctx,{type:'bar',data:{labels:['W1','W2','W3','W4'],datasets:[
+      {label:'Completed',data:[4800,6200,5800,4400],backgroundColor:sc()+'80',borderRadius:4},
+      {label:'Running',data:[200,280,320,180],backgroundColor:ic()+'80',borderRadius:4},
+      {label:'Failed',data:[40,80,120,60],backgroundColor:dc()+'60',borderRadius:4}
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}}}}});
   }
 }
 
-// ═══ INIT ═══
+// INIT
 (function(){const p=new URLSearchParams(window.location.search).get('theme');if(p&&['warm','lavender','sage','teal','dark'].includes(p)){document.body.setAttribute('data-theme',p);document.querySelectorAll('.th-opt').forEach(b=>{b.classList.remove('active');if(b.textContent.toLowerCase().includes(p==='warm'?'warm':p))b.classList.add('active')})}})();
 initCharts('dashboard');
 </script>
