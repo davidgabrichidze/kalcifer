@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalcifer — Engine Room</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:#f5f0eb;--surface:#ffffff;--surface-dim:#faf7f4;
+  --primary:#c4956a;--primary-hover:#b5845c;--primary-soft:rgba(196,149,106,0.10);
+  --accent:#8b7355;--accent-soft:rgba(139,115,85,0.08);
+  --border:#e8ddd3;--border-light:#f0e8df;
+  --text:#2d2a26;--text-sec:#6b6560;--text-muted:#a09890;--text-on-primary:#fff;
+  --success:#5a9e6f;--success-soft:rgba(90,158,111,0.08);
+  --warn:#c49a5c;--warn-soft:rgba(196,154,92,0.08);
+  --danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);
+  --info:#6a8fa0;--info-soft:rgba(106,143,160,0.08);
+  --radius:14px;--radius-sm:10px;--radius-xs:6px;
+}
+[data-theme="lavender"]{--bg:#f7f5f0;--surface:#fff;--surface-dim:#f5f2f8;--primary:#9b8ec4;--primary-hover:#8a7db5;--primary-soft:rgba(155,142,196,0.10);--accent:#7c6fa0;--accent-soft:rgba(124,111,160,0.08);--border:#e6e1ec;--border-light:#eeebf3;--text:#2d2a33;--text-sec:#65606e;--text-muted:#9e96a8;--success:#6a9e7a;--success-soft:rgba(106,158,122,0.08);--warn:#c4a05c;--warn-soft:rgba(196,160,92,0.08);--danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);--info:#7a8ec4;--info-soft:rgba(122,142,196,0.08)}
+[data-theme="sage"]{--bg:#f4f1ec;--surface:#fefdfb;--surface-dim:#f6f4f0;--primary:#6b8f6e;--primary-hover:#5c7e60;--primary-soft:rgba(107,143,110,0.10);--accent:#4a6b4d;--accent-soft:rgba(74,107,77,0.08);--border:#e2ddd6;--border-light:#eae6e0;--text:#2a2d28;--text-sec:#5c5f58;--text-muted:#969990;--success:#6b8f6e;--success-soft:rgba(107,143,110,0.08);--warn:#c49a5c;--warn-soft:rgba(196,154,92,0.08);--danger:#b86e5a;--danger-soft:rgba(184,110,90,0.08);--info:#5a8b9e;--info-soft:rgba(90,139,158,0.08)}
+[data-theme="teal"]{--bg:#f5f2ed;--surface:#fff;--surface-dim:#f9f7f4;--primary:#3d8b80;--primary-hover:#2d7b70;--primary-soft:rgba(61,139,128,0.10);--accent:#2d6b62;--accent-soft:rgba(45,107,98,0.08);--border:#e5dfd8;--border-light:#ede8e2;--text:#2a2825;--text-sec:#5c5855;--text-muted:#9a9590;--success:#5a9e6f;--success-soft:rgba(90,158,111,0.08);--warn:#c4956a;--warn-soft:rgba(196,149,106,0.08);--danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);--info:#3d8b80;--info-soft:rgba(61,139,128,0.08)}
+[data-theme="dark"]{--bg:#0f0f14;--surface:#1a1a24;--surface-dim:#141420;--primary:#a89cf0;--primary-hover:#bdb3f5;--primary-soft:rgba(168,156,240,0.10);--accent:#c4b8f0;--accent-soft:rgba(196,184,240,0.06);--border:#2a2a3a;--border-light:#22222f;--text:#e4e2ec;--text-sec:#9896a8;--text-muted:#5c5a6e;--text-on-primary:#0f0f14;--success:#6ee0a0;--success-soft:rgba(110,224,160,0.08);--warn:#f0c060;--warn-soft:rgba(240,192,96,0.08);--danger:#f08070;--danger-soft:rgba(240,128,112,0.08);--info:#70b0f0;--info-soft:rgba(112,176,240,0.08)}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;transition:background 0.4s,color 0.3s}
+
+/* ═══ APP SHELL ═══ */
+.app{display:grid;grid-template-columns:220px 1fr;grid-template-rows:48px 1fr;height:100vh}
+
+/* ═══ TOPBAR ═══ */
+.topbar{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
+.top-left{display:flex;align-items:center;gap:10px}
+.back-btn{display:flex;align-items:center;gap:6px;background:var(--surface-dim);border:1px solid var(--border);color:var(--text-sec);height:30px;padding:0 12px;border-radius:var(--radius-xs);cursor:pointer;font-size:11px;font-family:inherit;transition:all 0.2s}
+.back-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
+.top-title{display:flex;align-items:center;gap:8px}
+.top-title h1{font-size:15px;font-weight:600}
+.top-title span{font-size:11px;color:var(--text-muted)}
+.top-right{display:flex;align-items:center;gap:6px}
+.top-btn{background:var(--surface-dim);border:1px solid var(--border);color:var(--text-sec);height:30px;padding:0 10px;border-radius:var(--radius-xs);cursor:pointer;font-size:11px;font-family:inherit;display:flex;align-items:center;gap:4px;transition:all 0.2s}
+.top-btn:hover{border-color:var(--primary);color:var(--text)}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--text-on-primary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+
+/* Theme */
+.theme-wrap{position:relative}
+.theme-dd{display:none;position:absolute;top:36px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:500;min-width:160px}
+.theme-dd.open{display:block}
+.th-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius-xs);cursor:pointer;font-size:11px;color:var(--text-sec);border:none;background:none;width:100%;font-family:inherit;transition:all 0.15s}
+.th-opt:hover{background:var(--primary-soft)}
+.th-opt.active{color:var(--primary);font-weight:600}
+.th-sw{display:flex;gap:2px}
+.th-sw i{width:10px;height:10px;border-radius:2px;display:block}
+
+/* ═══ LEFT NAV ═══ */
+.left-nav{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.nav-section{padding:12px 8px 4px}
+.nav-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);padding:0 8px;margin-bottom:6px}
+.nav-scroll{flex:1;overflow-y:auto;padding:0 8px}
+.nav-scroll::-webkit-scrollbar{width:3px}
+.nav-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s;margin-bottom:2px;border:1px solid transparent;background:none;width:100%;font-family:inherit;font-size:12px;color:var(--text-sec);text-align:left}
+.nav-item:hover{background:var(--surface-dim)}
+.nav-item.active{background:var(--primary-soft);border-color:var(--primary);color:var(--primary);font-weight:600}
+.nav-icon{font-size:15px;width:22px;text-align:center;flex-shrink:0}
+.nav-text{flex:1}
+.nav-badge{font-size:9px;padding:2px 6px;border-radius:8px;font-weight:600;background:var(--success-soft);color:var(--success)}
+.nav-badge.warn{background:var(--warn-soft);color:var(--warn)}
+.nav-badge.danger{background:var(--danger-soft);color:var(--danger)}
+
+.nav-bottom{padding:8px;border-top:1px solid var(--border)}
+.health-bar{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--success-soft);border:1px solid var(--success);font-size:11px;color:var(--success);font-weight:500}
+.health-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* ═══ MAIN CONTENT ═══ */
+.main-content{display:flex;overflow:hidden;min-height:0}
+
+/* Content area */
+.content-area{flex:1;overflow-y:auto;padding:20px 24px;min-height:0}
+.content-area::-webkit-scrollbar{width:5px}
+.content-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* Chat panel (right side) */
+.chat-panel{width:320px;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;min-height:0;background:var(--bg);transition:width 0.3s}
+.chat-panel.collapsed{width:0;border:none;overflow:hidden}
+.chat-head{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.chat-head-left{display:flex;align-items:center;gap:6px}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:pulse 2.5s infinite}
+.chat-head h3{font-size:12px;font-weight:600}
+.chat-toggle{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:var(--radius-xs);transition:all 0.15s}
+.chat-toggle:hover{color:var(--text);background:var(--surface-dim)}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;min-height:0}
+.chat-msgs::-webkit-scrollbar{width:3px}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.msg{display:flex;gap:6px;animation:msgIn 0.3s ease}
+.msg-user{flex-direction:row-reverse}
+@keyframes msgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.msg-av{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600}
+.msg-ai .msg-av{background:var(--primary-soft);color:var(--primary);border:1px solid var(--border)}
+.msg-user .msg-av{background:var(--surface-dim);color:var(--text-muted);border:1px solid var(--border)}
+.msg-body{padding:8px 12px;border-radius:var(--radius);font-size:11.5px;line-height:1.55;max-width:90%}
+.msg-ai .msg-body{background:var(--surface);border:1px solid var(--border)}
+.msg-user .msg-body{background:var(--primary);color:var(--text-on-primary)}
+.msg-body code{background:var(--accent-soft);padding:1px 4px;border-radius:3px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--accent)}
+
+.chat-input-area{padding:8px 12px 10px;flex-shrink:0;border-top:1px solid var(--border)}
+.chat-input-wrap{display:flex;align-items:flex-end;gap:4px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:6px 10px;transition:all 0.2s}
+.chat-input-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.chat-input{flex:1;background:none;border:none;color:var(--text);font-size:12px;font-family:inherit;resize:none;outline:none;max-height:60px;line-height:1.5}
+.chat-input::placeholder{color:var(--text-muted)}
+.send-btn{background:var(--primary);border:none;color:var(--text-on-primary);width:26px;height:26px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+.send-btn:hover{background:var(--primary-hover)}
+.send-btn svg{width:11px;height:11px}
+
+.typing-ind{display:flex;gap:3px;padding:2px 0}
+.typing-ind span{width:4px;height:4px;border-radius:50%;background:var(--primary);animation:td 1.2s infinite}
+.typing-ind span:nth-child(2){animation-delay:0.2s}.typing-ind span:nth-child(3){animation-delay:0.4s}
+@keyframes td{0%,60%,100%{opacity:0.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+
+/* ═══ CONTENT PANELS ═══ */
+.panel{display:none}
+.panel.active{display:block}
+
+/* Page header */
+.page-head{margin-bottom:20px}
+.page-head h2{font-size:18px;font-weight:700;margin-bottom:4px}
+.page-head p{font-size:12px;color:var(--text-muted);line-height:1.5}
+
+/* Section */
+.section{margin-bottom:20px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.section-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.section-action{background:var(--primary-soft);border:1px solid var(--primary);color:var(--primary);height:28px;padding:0 12px;border-radius:var(--radius-xs);cursor:pointer;font-size:11px;font-family:inherit;font-weight:500;transition:all 0.2s}
+.section-action:hover{background:var(--primary);color:var(--text-on-primary)}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;transition:all 0.2s}
+.card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.card.expandable{cursor:pointer}
+.card.expandable:hover{border-color:var(--primary)}
+
+/* Grid layouts */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+
+/* Stat cards */
+.stat{text-align:center;padding:16px 12px}
+.stat-icon{font-size:22px;margin-bottom:6px}
+.stat-value{font-size:22px;font-weight:700;color:var(--primary)}
+.stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
+.stat-sub{font-size:10px;color:var(--text-sec);margin-top:3px}
+
+/* Connector rows */
+.conn-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border-light);margin-bottom:6px;transition:all 0.15s}
+.conn-row:hover{border-color:var(--border);box-shadow:0 1px 4px rgba(0,0,0,0.03)}
+.conn-icon{font-size:20px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--surface-dim);border-radius:var(--radius-xs);flex-shrink:0}
+.conn-info{flex:1}
+.conn-name{font-size:12px;font-weight:600;color:var(--text)}
+.conn-desc{font-size:10px;color:var(--text-muted);margin-top:1px}
+.conn-stats{display:flex;gap:12px;font-size:10px;color:var(--text-sec);margin-top:3px}
+.conn-stats span{display:flex;align-items:center;gap:3px}
+.conn-right{display:flex;align-items:center;gap:6px}
+.tag{font-size:9px;padding:3px 8px;border-radius:10px;font-weight:600}
+.tag-green{background:var(--success-soft);color:var(--success)}
+.tag-orange{background:var(--warn-soft);color:var(--warn)}
+.tag-red{background:var(--danger-soft);color:var(--danger)}
+.tag-blue{background:var(--info-soft);color:var(--info)}
+.tag-muted{background:var(--accent-soft);color:var(--text-muted)}
+.conn-action{background:none;border:1px solid var(--border);color:var(--text-muted);width:26px;height:26px;border-radius:var(--radius-xs);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all 0.15s}
+.conn-action:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
+
+/* Infra boxes */
+.infra-card{padding:14px;position:relative;overflow:hidden}
+.infra-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:3px 0 0 3px}
+.infra-card.pg::before{background:var(--info)}
+.infra-card.ch::before{background:var(--success)}
+.infra-card.rp::before{background:var(--warn)}
+.infra-card.ex::before{background:var(--primary)}
+.infra-card.go::before{background:var(--danger)}
+
+.infra-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.infra-title{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.infra-title span{font-size:16px}
+.infra-status{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:500}
+.status-dot{width:7px;height:7px;border-radius:50%}
+.infra-metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.infra-metric{padding:6px 8px;background:var(--surface-dim);border-radius:var(--radius-xs);border:1px solid var(--border-light)}
+.im-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.4px}
+.im-value{font-size:14px;font-weight:700;color:var(--text);margin-top:1px;font-family:'JetBrains Mono',monospace}
+.im-bar{height:4px;background:var(--border-light);border-radius:2px;margin-top:4px;overflow:hidden}
+.im-fill{height:100%;border-radius:2px}
+
+/* Pipeline visual */
+.pipeline{display:flex;align-items:center;gap:0;margin:14px 0;overflow-x:auto;padding-bottom:6px}
+.pipe-node{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:100px;padding:10px 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);position:relative;transition:all 0.2s}
+.pipe-node:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.pipe-icon{font-size:20px}
+.pipe-name{font-size:10px;font-weight:600;color:var(--text)}
+.pipe-stat{font-size:9px;color:var(--text-muted)}
+.pipe-arrow{font-size:16px;color:var(--primary);padding:0 4px;flex-shrink:0}
+
+/* User table */
+.user-table{width:100%;border-collapse:collapse}
+.user-table th{text-align:left;padding:8px 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:2px solid var(--border);background:var(--surface-dim)}
+.user-table td{padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:12px;color:var(--text-sec)}
+.user-table tr:hover td{background:var(--primary-soft)}
+.user-row-name{display:flex;align-items:center;gap:8px}
+.user-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.user-details{display:flex;flex-direction:column}
+.user-name{font-weight:500;color:var(--text)}
+.user-email{font-size:10px;color:var(--text-muted)}
+
+/* Tool grid */
+.tool-group{margin-bottom:12px}
+.tool-group-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.tool-group-name{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.tool-group-count{font-size:10px;color:var(--text-muted)}
+.tool-list{display:flex;flex-wrap:wrap;gap:4px}
+.tool-chip{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:16px;font-size:10px;border:1px solid var(--border);background:var(--surface);color:var(--text-sec);cursor:pointer;transition:all 0.15s;font-family:inherit}
+.tool-chip:hover{border-color:var(--primary);color:var(--primary)}
+.tool-chip.enabled{background:var(--primary-soft);border-color:var(--primary);color:var(--primary);font-weight:500}
+.tool-dot{width:5px;height:5px;border-radius:50%;background:var(--success)}
+
+/* Progress bar */
+.prog-row{margin-bottom:8px}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.prog-label span:first-child{color:var(--text-sec)}
+.prog-label span:last-child{font-weight:600;color:var(--text)}
+.prog-bar{height:8px;background:var(--surface-dim);border-radius:4px;overflow:hidden;border:1px solid var(--border-light)}
+.prog-fill{height:100%;border-radius:3px;transition:width 1s ease}
+
+/* Chart container */
+.chart-box{position:relative;height:180px}
+
+/* Log stream */
+.log-stream{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--surface-dim);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:10px;max-height:240px;overflow-y:auto}
+.log-stream::-webkit-scrollbar{width:3px}
+.log-stream::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.log-line{padding:2px 0;border-bottom:1px solid var(--border-light);display:flex;gap:8px}
+.log-line:last-child{border:none}
+.log-time{color:var(--text-muted);min-width:60px}
+.log-level{min-width:40px;font-weight:600}
+.log-info{color:var(--info)}
+.log-warn{color:var(--warn)}
+.log-error{color:var(--danger)}
+.log-msg{color:var(--text-sec);flex:1}
+
+/* Alert rows */
+.alert-row{display:flex;align-items:flex-start;gap:8px;padding:10px;border-radius:var(--radius-sm);margin-bottom:6px;border:1px solid}
+.alert-ok{background:var(--success-soft);border-color:var(--success)}
+.alert-warn{background:var(--warn-soft);border-color:var(--warn)}
+.alert-danger{background:var(--danger-soft);border-color:var(--danger)}
+.alert-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.alert-content{flex:1}
+.alert-title{font-size:11px;font-weight:600}
+.alert-desc{font-size:10px;color:var(--text-sec);margin-top:1px}
+.alert-time{font-size:9px;color:var(--text-muted);margin-top:2px}
+
+/* Catalog grid */
+.catalog{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.cat-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s;text-align:center}
+.cat-item:hover{border-color:var(--primary);border-style:solid;background:var(--primary-soft)}
+.cat-icon{font-size:24px}
+.cat-name{font-size:11px;font-weight:500;color:var(--text)}
+.cat-desc{font-size:9px;color:var(--text-muted)}
+
+/* Toggle */
+.toggle{position:relative;width:34px;height:18px;background:var(--border);border-radius:9px;cursor:pointer;transition:all 0.2s;border:none;flex-shrink:0}
+.toggle.on{background:var(--success)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;background:white;border-radius:50%;transition:all 0.2s}
+.toggle.on::after{left:18px}
+
+/* Guardrail row */
+.guard-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius-sm);margin-bottom:6px}
+.guard-info{flex:1}
+.guard-name{font-size:12px;font-weight:500}
+.guard-desc{font-size:10px;color:var(--text-muted);margin-top:1px}
+
+/* Billing */
+.plan-banner{padding:16px;background:linear-gradient(135deg,var(--primary-soft),var(--info-soft));border:1px solid var(--primary);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.plan-info h3{font-size:16px;font-weight:700;color:var(--primary)}
+.plan-info p{font-size:11px;color:var(--text-sec);margin-top:2px}
+.plan-price{text-align:right}
+.plan-amount{font-size:24px;font-weight:700;color:var(--primary)}
+.plan-period{font-size:10px;color:var(--text-muted)}
+
+/* GDPR checklist */
+.gdpr-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border-light);margin-bottom:6px}
+.gdpr-check{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:1px}
+.gdpr-ok{background:var(--success-soft);color:var(--success);border:1px solid var(--success)}
+.gdpr-warn{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn)}
+.gdpr-info{flex:1}
+.gdpr-name{font-size:12px;font-weight:500}
+.gdpr-desc{font-size:10px;color:var(--text-muted);margin-top:1px}
+
+</style>
+</head>
+<body data-theme="warm">
+<div class="app">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="top-left">
+    <button class="back-btn" onclick="window.location.href='main.html?theme='+(document.body.getAttribute('data-theme')||'warm')">← კამპანიებზე დაბრუნება</button>
+    <div class="top-title">
+      <h1>⚙ Engine Room</h1>
+      <span>Behind the Scenes</span>
+    </div>
+  </div>
+  <div class="top-right">
+    <div class="theme-wrap">
+      <button class="top-btn" onclick="document.getElementById('thDD').classList.toggle('open')">◐</button>
+      <div class="theme-dd" id="thDD">
+        <button class="th-opt active" onclick="setTh('warm',this)"><span class="th-sw"><i style="background:#f5f0eb"></i><i style="background:#c4956a"></i></span>Warm Paper</button>
+        <button class="th-opt" onclick="setTh('lavender',this)"><span class="th-sw"><i style="background:#f7f5f0"></i><i style="background:#9b8ec4"></i></span>Lavender</button>
+        <button class="th-opt" onclick="setTh('sage',this)"><span class="th-sw"><i style="background:#f4f1ec"></i><i style="background:#6b8f6e"></i></span>Sand & Sage</button>
+        <button class="th-opt" onclick="setTh('teal',this)"><span class="th-sw"><i style="background:#f5f2ed"></i><i style="background:#3d8b80"></i></span>Paper & Teal</button>
+        <button class="th-opt" onclick="setTh('dark',this)"><span class="th-sw"><i style="background:#0f0f14"></i><i style="background:#a89cf0"></i></span>Dark</button>
+      </div>
+    </div>
+    <div class="avatar">დგ</div>
+  </div>
+</div>
+
+<!-- LEFT NAV -->
+<div class="left-nav">
+  <div class="nav-section">
+    <div class="nav-label">Data Supply Chain</div>
+  </div>
+  <div class="nav-scroll">
+    <button class="nav-item active" onclick="showPanel('connectors',this)">
+      <span class="nav-icon">🔗</span><span class="nav-text">კონექტორები</span><span class="nav-badge">5</span>
+    </button>
+    <button class="nav-item" onclick="showPanel('infra',this)">
+      <span class="nav-icon">🏗</span><span class="nav-text">ინფრასტრუქტურა</span>
+    </button>
+    <button class="nav-item" onclick="showPanel('pipeline',this)">
+      <span class="nav-icon">📡</span><span class="nav-text">Events Pipeline</span><span class="nav-badge warn">31</span>
+    </button>
+
+    <div style="padding:12px 0 4px"><div class="nav-label">AI & Automation</div></div>
+    <button class="nav-item" onclick="showPanel('ai',this)">
+      <span class="nav-icon">🧠</span><span class="nav-text">AI Engine</span><span class="nav-badge">26</span>
+    </button>
+
+    <div style="padding:12px 0 4px"><div class="nav-label">Team & Access</div></div>
+    <button class="nav-item" onclick="showPanel('users',this)">
+      <span class="nav-icon">👥</span><span class="nav-text">მომხმარებლები</span>
+    </button>
+    <button class="nav-item" onclick="showPanel('security',this)">
+      <span class="nav-icon">🔒</span><span class="nav-text">Security & GDPR</span>
+    </button>
+
+    <div style="padding:12px 0 4px"><div class="nav-label">Operations</div></div>
+    <button class="nav-item" onclick="showPanel('monitoring',this)">
+      <span class="nav-icon">📋</span><span class="nav-text">მონიტორინგი</span>
+    </button>
+    <button class="nav-item" onclick="showPanel('billing',this)">
+      <span class="nav-icon">💳</span><span class="nav-text">Usage & Billing</span>
+    </button>
+  </div>
+  <div class="nav-bottom">
+    <div class="health-bar"><div class="health-dot"></div>All Systems Operational</div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+  <!-- CONTENT AREA -->
+  <div class="content-area" id="contentArea">
+
+    <!-- ═══ CONNECTORS ═══ -->
+    <div class="panel active" id="p-connectors">
+      <div class="page-head">
+        <h2>🔗 კონექტორები</h2>
+        <p>მონაცემთა წყაროები და არხები — ყველაფერი რაც Kalcifer-ს აკავშირებს გარე სამყაროსთან</p>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:18px">
+        <div class="card stat"><div class="stat-icon">🟢</div><div class="stat-value">5</div><div class="stat-label">Active</div></div>
+        <div class="card stat"><div class="stat-icon">📥</div><div class="stat-value">160K</div><div class="stat-label">Events/day</div></div>
+        <div class="card stat"><div class="stat-icon">⏱</div><div class="stat-value">2m</div><div class="stat-label">Avg Sync</div></div>
+        <div class="card stat"><div class="stat-icon">⚡</div><div class="stat-value">99.8%</div><div class="stat-label">Uptime</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div class="section-title">Active Connectors</div></div>
+
+        <div class="conn-row">
+          <div class="conn-icon">📘</div>
+          <div class="conn-info">
+            <div class="conn-name">Facebook Ads</div>
+            <div class="conn-desc">Ad accounts: Acme Main, Acme Retarget</div>
+            <div class="conn-stats"><span>📥 12.4K/day</span><span>🔄 synced 2m ago</span><span>📊 42 campaigns tracked</span></div>
+          </div>
+          <div class="conn-right">
+            <span class="tag tag-green">● Active</span>
+            <button class="conn-action" title="Configure">⚙</button>
+            <button class="conn-action" title="Logs">📋</button>
+          </div>
+        </div>
+
+        <div class="conn-row">
+          <div class="conn-icon">🔍</div>
+          <div class="conn-info">
+            <div class="conn-name">Google Ads</div>
+            <div class="conn-desc">Account: acme-saas-main</div>
+            <div class="conn-stats"><span>📥 8.7K/day</span><span>🔄 synced 5m ago</span><span>📊 28 campaigns tracked</span></div>
+          </div>
+          <div class="conn-right">
+            <span class="tag tag-green">● Active</span>
+            <button class="conn-action">⚙</button>
+            <button class="conn-action">📋</button>
+          </div>
+        </div>
+
+        <div class="conn-row">
+          <div class="conn-icon">📧</div>
+          <div class="conn-info">
+            <div class="conn-name">SendGrid</div>
+            <div class="conn-desc">Domain: mail.acme.io · Dedicated IP</div>
+            <div class="conn-stats"><span>📤 45.2K/day</span><span>🔄 synced 1m ago</span><span>📊 98.2% delivery rate</span></div>
+          </div>
+          <div class="conn-right">
+            <span class="tag tag-green">● Active</span>
+            <button class="conn-action">⚙</button>
+            <button class="conn-action">📋</button>
+          </div>
+        </div>
+
+        <div class="conn-row">
+          <div class="conn-icon">📱</div>
+          <div class="conn-info">
+            <div class="conn-name">Twilio SMS</div>
+            <div class="conn-desc">Numbers: +1-555-0100, +1-555-0101</div>
+            <div class="conn-stats"><span>📤 2.1K/day</span><span>🔄 synced 8m ago</span><span>📊 96.4% delivery rate</span></div>
+          </div>
+          <div class="conn-right">
+            <span class="tag tag-green">● Active</span>
+            <button class="conn-action">⚙</button>
+            <button class="conn-action">📋</button>
+          </div>
+        </div>
+
+        <div class="conn-row">
+          <div class="conn-icon">🐘</div>
+          <div class="conn-info">
+            <div class="conn-name">PostgreSQL CDC</div>
+            <div class="conn-desc">Source: app-db-primary · via Debezium</div>
+            <div class="conn-stats"><span>📥 92K/day</span><span>🔄 streaming</span><span>📊 WAL lag: 12ms</span></div>
+          </div>
+          <div class="conn-right">
+            <span class="tag tag-orange">● Syncing</span>
+            <button class="conn-action">⚙</button>
+            <button class="conn-action">📋</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div class="section-title">📦 Connector Catalog</div><button class="section-action">+ კონექტორის დამატება</button></div>
+        <div class="catalog">
+          <div class="cat-item"><div class="cat-icon">📊</div><div class="cat-name">Google Analytics</div><div class="cat-desc">Web analytics</div></div>
+          <div class="cat-item"><div class="cat-icon">🛒</div><div class="cat-name">Shopify</div><div class="cat-desc">E-commerce</div></div>
+          <div class="cat-item"><div class="cat-icon">💬</div><div class="cat-name">Intercom</div><div class="cat-desc">Customer comms</div></div>
+          <div class="cat-item"><div class="cat-icon">📮</div><div class="cat-name">Mailchimp</div><div class="cat-desc">Email (migrate)</div></div>
+          <div class="cat-item"><div class="cat-icon">🔔</div><div class="cat-name">Firebase FCM</div><div class="cat-desc">Push notifications</div></div>
+          <div class="cat-item"><div class="cat-icon">📋</div><div class="cat-name">Webhook</div><div class="cat-desc">Custom HTTP</div></div>
+          <div class="cat-item"><div class="cat-icon">🗄</div><div class="cat-name">Snowflake</div><div class="cat-desc">Data warehouse</div></div>
+          <div class="cat-item"><div class="cat-icon">📈</div><div class="cat-name">Mixpanel</div><div class="cat-desc">Product analytics</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ INFRASTRUCTURE ═══ -->
+    <div class="panel" id="p-infra">
+      <div class="page-head">
+        <h2>🏗 ინფრასტრუქტურა</h2>
+        <p>Kalcifer-ის ქარხანა — ბაზები, სერვისები, კლასტერები</p>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:18px">
+        <div class="card stat"><div class="stat-icon">🟢</div><div class="stat-value">5/5</div><div class="stat-label">Services Up</div></div>
+        <div class="card stat"><div class="stat-icon">📊</div><div class="stat-value">247K</div><div class="stat-label">Events Today</div></div>
+        <div class="card stat"><div class="stat-icon">⚡</div><div class="stat-value">42ms</div><div class="stat-label">Avg Query</div></div>
+        <div class="card stat"><div class="stat-icon">💾</div><div class="stat-value">26GB</div><div class="stat-label">Total Storage</div></div>
+      </div>
+
+      <div class="grid-2">
+        <!-- PostgreSQL -->
+        <div class="card infra-card pg">
+          <div class="infra-head">
+            <div class="infra-title"><span>🐘</span> PostgreSQL 16</div>
+            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Healthy</span></div>
+          </div>
+          <div class="infra-metrics">
+            <div class="infra-metric"><div class="im-label">Profiles</div><div class="im-value">15,200</div></div>
+            <div class="infra-metric"><div class="im-label">Connections</div><div class="im-value">12/50</div><div class="im-bar"><div class="im-fill" style="width:24%;background:var(--success)"></div></div></div>
+            <div class="infra-metric"><div class="im-label">RLS</div><div class="im-value" style="color:var(--success)">Active</div></div>
+            <div class="infra-metric"><div class="im-label">DB Size</div><div class="im-value">4.2GB</div></div>
+            <div class="infra-metric"><div class="im-label">Queries/sec</div><div class="im-value">340</div></div>
+            <div class="infra-metric"><div class="im-label">p99 Latency</div><div class="im-value">12ms</div></div>
+          </div>
+        </div>
+
+        <!-- ClickHouse -->
+        <div class="card infra-card ch">
+          <div class="infra-head">
+            <div class="infra-title"><span>📊</span> ClickHouse</div>
+            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Healthy</span></div>
+          </div>
+          <div class="infra-metrics">
+            <div class="infra-metric"><div class="im-label">Events Today</div><div class="im-value">247.8K</div></div>
+            <div class="infra-metric"><div class="im-label">Avg Query</div><div class="im-value">42ms</div></div>
+            <div class="infra-metric"><div class="im-label">Storage</div><div class="im-value">18.4GB</div><div class="im-bar"><div class="im-fill" style="width:36%;background:var(--success)"></div></div></div>
+            <div class="infra-metric"><div class="im-label">Compression</div><div class="im-value">8.2x</div></div>
+            <div class="infra-metric"><div class="im-label">Partitions</div><div class="im-value">4 tenants</div></div>
+            <div class="infra-metric"><div class="im-label">Inserts/sec</div><div class="im-value">1,240</div></div>
+          </div>
+        </div>
+
+        <!-- Redpanda -->
+        <div class="card infra-card rp">
+          <div class="infra-head">
+            <div class="infra-title"><span>📨</span> Redpanda</div>
+            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Healthy</span></div>
+          </div>
+          <div class="infra-metrics">
+            <div class="infra-metric"><div class="im-label">Throughput</div><div class="im-value">1.2K/s</div></div>
+            <div class="infra-metric"><div class="im-label">Consumer Lag</div><div class="im-value">12 msgs</div></div>
+            <div class="infra-metric"><div class="im-label">Topics</div><div class="im-value">8</div></div>
+            <div class="infra-metric"><div class="im-label">Retention</div><div class="im-value">7 days</div></div>
+            <div class="infra-metric"><div class="im-label">Partitions</div><div class="im-value">24</div></div>
+            <div class="infra-metric"><div class="im-label">Brokers</div><div class="im-value">3</div></div>
+          </div>
+        </div>
+
+        <!-- Elixir/OTP -->
+        <div class="card infra-card ex">
+          <div class="infra-head">
+            <div class="infra-title"><span>⚡</span> Elixir/OTP</div>
+            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Healthy</span></div>
+          </div>
+          <div class="infra-metrics">
+            <div class="infra-metric"><div class="im-label">Nodes</div><div class="im-value">3</div></div>
+            <div class="infra-metric"><div class="im-label">Processes</div><div class="im-value">24,180</div></div>
+            <div class="infra-metric"><div class="im-label">Memory</div><div class="im-value">2.1/8GB</div><div class="im-bar"><div class="im-fill" style="width:26%;background:var(--success)"></div></div></div>
+            <div class="infra-metric"><div class="im-label">Msg Queue</div><div class="im-value">0</div></div>
+            <div class="infra-metric"><div class="im-label">Schedulers</div><div class="im-value">16</div></div>
+            <div class="infra-metric"><div class="im-label">Uptime</div><div class="im-value">14d 6h</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <div class="card infra-card go" style="max-width:calc(50% - 5px)">
+          <div class="infra-head">
+            <div class="infra-title"><span>🚀</span> Go Ingest Service</div>
+            <div class="infra-status"><div class="status-dot" style="background:var(--success)"></div><span style="color:var(--success)">Healthy</span></div>
+          </div>
+          <div class="infra-metrics">
+            <div class="infra-metric"><div class="im-label">Ingest Rate</div><div class="im-value">4.2K/s</div></div>
+            <div class="infra-metric"><div class="im-label">p99 Latency</div><div class="im-value">8ms</div></div>
+            <div class="infra-metric"><div class="im-label">Goroutines</div><div class="im-value">142</div></div>
+            <div class="infra-metric"><div class="im-label">Memory</div><div class="im-value">180MB</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ EVENTS PIPELINE ═══ -->
+    <div class="panel" id="p-pipeline">
+      <div class="page-head">
+        <h2>📡 Events Pipeline</h2>
+        <p>SDK → Ingest → Validate → Redpanda → ClickHouse — მონაცემთა მოძრაობის სრული ჯაჭვი</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:8px">Pipeline Flow</div>
+        <div class="pipeline">
+          <div class="pipe-node"><div class="pipe-icon">📲</div><div class="pipe-name">SDK</div><div class="pipe-stat">JS / iOS / Android</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-node"><div class="pipe-icon">🚀</div><div class="pipe-name">Go Ingest</div><div class="pipe-stat">4.2K/s · 8ms p99</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-node"><div class="pipe-icon">✅</div><div class="pipe-name">Validate</div><div class="pipe-stat">Schema strict</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-node"><div class="pipe-icon">📨</div><div class="pipe-name">Redpanda</div><div class="pipe-stat">1.2K/s · lag 12</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-node"><div class="pipe-icon">📊</div><div class="pipe-name">ClickHouse</div><div class="pipe-stat">247.8K today</div></div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-node"><div class="pipe-icon">🐘</div><div class="pipe-name">Identity</div><div class="pipe-stat">PostgreSQL CDC</div></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="section">
+            <div class="section-head"><div class="section-title">📋 Track Plan v2.1</div><button class="section-action">Edit Plan</button></div>
+            <div class="card">
+              <table class="user-table">
+                <thead><tr><th>Event</th><th>Category</th><th>Status</th><th>Last 24h</th></tr></thead>
+                <tbody>
+                  <tr><td style="font-weight:500">page_viewed</td><td>Core</td><td><span class="tag tag-green">✓</span></td><td>42.1K</td></tr>
+                  <tr><td style="font-weight:500">button_clicked</td><td>Core</td><td><span class="tag tag-green">✓</span></td><td>18.4K</td></tr>
+                  <tr><td style="font-weight:500">purchase_completed</td><td>Revenue</td><td><span class="tag tag-green">✓</span></td><td>1,240</td></tr>
+                  <tr><td style="font-weight:500">email_opened</td><td>Campaign</td><td><span class="tag tag-green">✓</span></td><td>8,920</td></tr>
+                  <tr><td style="font-weight:500">signup_started</td><td>Funnel</td><td><span class="tag tag-green">✓</span></td><td>680</td></tr>
+                  <tr><td style="font-weight:500">feature_activated</td><td>Product</td><td><span class="tag tag-green">✓</span></td><td>3,200</td></tr>
+                </tbody>
+              </table>
+              <div style="padding:6px 10px;font-size:10px;color:var(--text-muted)">24 events in track plan · 6 shown</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section">
+            <div class="section-head"><div class="section-title">⚠️ Schema Violations (24h)</div></div>
+            <div class="alert-row alert-warn">
+              <div class="alert-icon">⚠️</div>
+              <div class="alert-content">
+                <div class="alert-title">Unknown event: custom_banner_click</div>
+                <div class="alert-desc">Not in track plan. Seen 18 times. Source: web SDK v3.2</div>
+                <div class="alert-time">Last seen 12 min ago</div>
+              </div>
+            </div>
+            <div class="alert-row alert-warn">
+              <div class="alert-icon">⚠️</div>
+              <div class="alert-content">
+                <div class="alert-title">Missing property: purchase_completed.currency</div>
+                <div class="alert-desc">Required field missing in 8 events. Source: iOS SDK v2.1</div>
+                <div class="alert-time">Last seen 45 min ago</div>
+              </div>
+            </div>
+            <div class="alert-row alert-warn">
+              <div class="alert-icon">⚠️</div>
+              <div class="alert-content">
+                <div class="alert-title">Type mismatch: button_clicked.value (string→number)</div>
+                <div class="alert-desc">Expected number, got string. 5 events affected.</div>
+                <div class="alert-time">Last seen 2h ago</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title" style="margin-bottom:8px">📊 Ingest Volume (24h)</div>
+            <div class="card"><div class="chart-box"><canvas id="ingestChart"></canvas></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ AI ENGINE ═══ -->
+    <div class="panel" id="p-ai">
+      <div class="page-head">
+        <h2>🧠 AI Engine</h2>
+        <p>26 ინსტრუმენტი, გარანტიები, მოდელები — Kalcifer-ის ტვინი</p>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:18px">
+        <div class="card stat"><div class="stat-icon">🔧</div><div class="stat-value">26</div><div class="stat-label">Tools Active</div></div>
+        <div class="card stat"><div class="stat-icon">💬</div><div class="stat-value">3.4K</div><div class="stat-label">Queries Today</div></div>
+        <div class="card stat"><div class="stat-icon">🛡</div><div class="stat-value">4</div><div class="stat-label">Guardrails</div></div>
+        <div class="card stat"><div class="stat-icon">💰</div><div class="stat-value">$28.54</div><div class="stat-label">AI Cost (MTD)</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div class="section-title">🔧 Tool Registry — Phase 1</div></div>
+
+        <div class="tool-group">
+          <div class="tool-group-head"><div class="tool-group-name">👤 Identity <span class="tool-group-count">6 tools</span></div></div>
+          <div class="tool-list">
+            <button class="tool-chip enabled"><div class="tool-dot"></div>identity.find</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>identity.search</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>identity.merge</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>identity.candidates</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>identity.delete</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>identity.stats</button>
+          </div>
+        </div>
+
+        <div class="tool-group">
+          <div class="tool-group-head"><div class="tool-group-name">📡 Events <span class="tool-group-count">6 tools</span></div></div>
+          <div class="tool-list">
+            <button class="tool-chip enabled"><div class="tool-dot"></div>events.query</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>events.stats</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>events.violations</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>events.track_plan</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>events.trace</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>events.import</button>
+          </div>
+        </div>
+
+        <div class="tool-group">
+          <div class="tool-group-head"><div class="tool-group-name">🎯 Segments <span class="tool-group-count">7 tools</span></div></div>
+          <div class="tool-list">
+            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.create</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.preview</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.explain</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.overlap</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.suggest</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.trends</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>segment.sync</button>
+          </div>
+        </div>
+
+        <div class="tool-group">
+          <div class="tool-group-head"><div class="tool-group-name">🛤 Journeys <span class="tool-group-count">4 tools</span></div></div>
+          <div class="tool-list">
+            <button class="tool-chip enabled"><div class="tool-dot"></div>journey.create</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>journey.preview</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>journey.stats</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>journey.pause</button>
+          </div>
+        </div>
+
+        <div class="tool-group">
+          <div class="tool-group-head"><div class="tool-group-name">🔗 Connectors <span class="tool-group-count">3 tools</span></div></div>
+          <div class="tool-list">
+            <button class="tool-chip enabled"><div class="tool-dot"></div>connector.status</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>connector.sync</button>
+            <button class="tool-chip enabled"><div class="tool-dot"></div>connector.health</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div class="section-title">🛡 Guardrails & Gates</div></div>
+
+        <div class="guard-row">
+          <div style="font-size:16px">🚪</div>
+          <div class="guard-info">
+            <div class="guard-name">Confirmation Gates</div>
+            <div class="guard-desc">delete, merge, launch → ყოველთვის ითხოვს დადასტურებას</div>
+          </div>
+          <button class="toggle on"></button>
+        </div>
+        <div class="guard-row">
+          <div style="font-size:16px">🔑</div>
+          <div class="guard-info">
+            <div class="guard-name">RBAC Enforcement</div>
+            <div class="guard-desc">AI მხოლოდ იმას აკეთებს, რისი უფლებაც მომხმარებელს აქვს</div>
+          </div>
+          <button class="toggle on"></button>
+        </div>
+        <div class="guard-row">
+          <div style="font-size:16px">📏</div>
+          <div class="guard-info">
+            <div class="guard-name">Rate Limiting</div>
+            <div class="guard-desc">Max 100 queries/min per user · burst: 20</div>
+          </div>
+          <button class="toggle on"></button>
+        </div>
+        <div class="guard-row">
+          <div style="font-size:16px">📝</div>
+          <div class="guard-info">
+            <div class="guard-name">Audit Logging</div>
+            <div class="guard-desc">ყველა AI action იწერება audit log-ში tenant_id + user_id + timestamp</div>
+          </div>
+          <button class="toggle on"></button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:8px">📊 AI Usage (7 days)</div>
+        <div class="card"><div class="chart-box"><canvas id="aiChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ USERS ═══ -->
+    <div class="panel" id="p-users">
+      <div class="page-head">
+        <h2>👥 მომხმარებლები & უფლებები</h2>
+        <p>გუნდის წევრები, როლები, წვდომის კონტროლი</p>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:18px">
+        <div class="card stat"><div class="stat-icon">👤</div><div class="stat-value">8</div><div class="stat-label">Team Members</div></div>
+        <div class="card stat"><div class="stat-icon">🟢</div><div class="stat-value">5</div><div class="stat-label">Online Now</div></div>
+        <div class="card stat"><div class="stat-icon">🔑</div><div class="stat-value">4</div><div class="stat-label">Roles</div></div>
+        <div class="card stat"><div class="stat-icon">📋</div><div class="stat-value">142</div><div class="stat-label">Actions Today</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div class="section-title">Team Members</div><button class="section-action">+ მოწვევა</button></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="user-table">
+            <thead><tr><th>User</th><th>Role</th><th>Last Active</th><th>Campaigns</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="user-row-name"><div class="user-av" style="background:var(--primary);color:var(--text-on-primary)">დგ</div><div class="user-details"><div class="user-name">დავით გაბრიჩიძე</div><div class="user-email">david@kalcifer.dev</div></div></div></td>
+                <td><span class="tag tag-blue">Admin</span></td>
+                <td>Now</td>
+                <td>12</td>
+                <td><span class="tag tag-green">● Online</span></td>
+              </tr>
+              <tr>
+                <td><div class="user-row-name"><div class="user-av" style="background:var(--success);color:white">ან</div><div class="user-details"><div class="user-name">ანა კვარაცხელია</div><div class="user-email">ana@kalcifer.dev</div></div></div></td>
+                <td><span class="tag tag-green">Marketer</span></td>
+                <td>2m ago</td>
+                <td>8</td>
+                <td><span class="tag tag-green">● Online</span></td>
+              </tr>
+              <tr>
+                <td><div class="user-row-name"><div class="user-av" style="background:var(--info);color:white">ლუ</div><div class="user-details"><div class="user-name">ლუკა ბერიძე</div><div class="user-email">luka@kalcifer.dev</div></div></div></td>
+                <td><span class="tag tag-green">Marketer</span></td>
+                <td>15m ago</td>
+                <td>5</td>
+                <td><span class="tag tag-green">● Online</span></td>
+              </tr>
+              <tr>
+                <td><div class="user-row-name"><div class="user-av" style="background:var(--warn);color:white">ნი</div><div class="user-details"><div class="user-name">ნინო ჯაფარიძე</div><div class="user-email">nino@kalcifer.dev</div></div></div></td>
+                <td><span class="tag tag-orange">Analyst</span></td>
+                <td>1h ago</td>
+                <td>3</td>
+                <td><span class="tag tag-green">● Online</span></td>
+              </tr>
+              <tr>
+                <td><div class="user-row-name"><div class="user-av" style="background:var(--danger);color:white">გი</div><div class="user-details"><div class="user-name">გიორგი მაისურაძე</div><div class="user-email">giorgi@kalcifer.dev</div></div></div></td>
+                <td><span class="tag tag-green">Marketer</span></td>
+                <td>3h ago</td>
+                <td>6</td>
+                <td><span class="tag tag-green">● Online</span></td>
+              </tr>
+              <tr>
+                <td><div class="user-row-name"><div class="user-av" style="background:var(--accent);color:white">მა</div><div class="user-details"><div class="user-name">მარიამ ხუციშვილი</div><div class="user-email">mariam@kalcifer.dev</div></div></div></td>
+                <td><span class="tag tag-muted">Viewer</span></td>
+                <td>Yesterday</td>
+                <td>0</td>
+                <td><span class="tag tag-muted">● Offline</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div class="section-title">🔑 Roles & Permissions</div></div>
+        <div class="grid-2">
+          <div class="card">
+            <div style="font-size:12px;font-weight:600;margin-bottom:6px"><span class="tag tag-blue">Admin</span></div>
+            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">Full access: connectors, infrastructure, users, billing, AI config. Can delete profiles and manage tenants.</div>
+          </div>
+          <div class="card">
+            <div style="font-size:12px;font-weight:600;margin-bottom:6px"><span class="tag tag-green">Marketer</span></div>
+            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">Create/edit campaigns, segments, journeys. Launch with confirmation. No infra or user management.</div>
+          </div>
+          <div class="card">
+            <div style="font-size:12px;font-weight:600;margin-bottom:6px"><span class="tag tag-orange">Analyst</span></div>
+            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">Read-only on campaigns. Full analytics and reporting. Can create segments but not launch journeys.</div>
+          </div>
+          <div class="card">
+            <div style="font-size:12px;font-weight:600;margin-bottom:6px"><span class="tag tag-muted">Viewer</span></div>
+            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">Read-only dashboard access. Can view campaign results and reports. No creation or editing.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SECURITY ═══ -->
+    <div class="panel" id="p-security">
+      <div class="page-head">
+        <h2>🔒 Security & GDPR</h2>
+        <p>ავთენტიფიკაცია, იზოლაცია, მონაცემთა დაცვა, compliance</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">🔑 Authentication & Isolation</div>
+        <div class="grid-2">
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:18px">🔑</span><div style="font-size:13px;font-weight:600">Auth0 Integration</div></div>
+            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">JWT tokens with <code style="background:var(--accent-soft);padding:1px 4px;border-radius:3px;font-size:10px;font-family:'JetBrains Mono',monospace">tenant_id</code> + <code style="background:var(--accent-soft);padding:1px 4px;border-radius:3px;font-size:10px;font-family:'JetBrains Mono',monospace">user_id</code> + <code style="background:var(--accent-soft);padding:1px 4px;border-radius:3px;font-size:10px;font-family:'JetBrains Mono',monospace">roles[]</code><br>MFA enforced for Admin role. SSO available (Google, Okta).</div>
+            <div style="margin-top:8px"><span class="tag tag-green">Active</span></div>
+          </div>
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:18px">🏢</span><div style="font-size:13px;font-weight:600">Tenant Isolation</div></div>
+            <div style="font-size:11px;color:var(--text-sec);line-height:1.6">PostgreSQL: Row-Level Security per tenant<br>ClickHouse: Partition by tenant_id<br>Redpanda: Topic-per-tenant isolation<br>AI: tenant-scoped tool execution</div>
+            <div style="margin-top:8px"><span class="tag tag-green">Active</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">🇪🇺 GDPR Compliance</div>
+        <div class="gdpr-item">
+          <div class="gdpr-check gdpr-ok">✓</div>
+          <div class="gdpr-info">
+            <div class="gdpr-name">Right to Erasure (Art. 17)</div>
+            <div class="gdpr-desc">PostgreSQL: hard-delete · ClickHouse: soft-delete + TTL · Redpanda: retention-based expiry · Backup purge: 30-day window</div>
+          </div>
+        </div>
+        <div class="gdpr-item">
+          <div class="gdpr-check gdpr-ok">✓</div>
+          <div class="gdpr-info">
+            <div class="gdpr-name">Right to Portability (Art. 20)</div>
+            <div class="gdpr-desc">Full JSON export of all profile data, events, and campaign history. Available via API and UI.</div>
+          </div>
+        </div>
+        <div class="gdpr-item">
+          <div class="gdpr-check gdpr-ok">✓</div>
+          <div class="gdpr-info">
+            <div class="gdpr-name">Right to Access (Art. 15)</div>
+            <div class="gdpr-desc">Profile viewer with full data transparency. Data collected, processing purposes, and third-party sharing.</div>
+          </div>
+        </div>
+        <div class="gdpr-item">
+          <div class="gdpr-check gdpr-ok">✓</div>
+          <div class="gdpr-info">
+            <div class="gdpr-name">Consent Management</div>
+            <div class="gdpr-desc">Purpose-based consent tracking. Integration with CMP (OneTrust, Cookiebot). Consent-aware segmentation.</div>
+          </div>
+        </div>
+        <div class="gdpr-item">
+          <div class="gdpr-check gdpr-ok">✓</div>
+          <div class="gdpr-info">
+            <div class="gdpr-name">Data Encryption</div>
+            <div class="gdpr-desc">At rest: AES-256. In transit: TLS 1.3. PII fields: application-level encryption with key rotation.</div>
+          </div>
+        </div>
+        <div class="gdpr-item">
+          <div class="gdpr-check gdpr-warn">!</div>
+          <div class="gdpr-info">
+            <div class="gdpr-name">Data Processing Agreement</div>
+            <div class="gdpr-desc">DPA template available. 2 of 4 sub-processors have signed updated DPAs. Action needed for SendGrid and Twilio.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">📋 Recent Security Audit Log</div>
+        <div class="card" style="padding:10px">
+          <div class="log-stream" id="secLog">
+            <div class="log-line"><span class="log-time">14:32:08</span><span class="log-level log-info">INFO</span><span class="log-msg">User ana@acme.io launched journey "Spring Sale Push"</span></div>
+            <div class="log-line"><span class="log-time">14:28:44</span><span class="log-level log-info">INFO</span><span class="log-msg">AI tool segment.create invoked by luka@acme.io — confirmation gate passed</span></div>
+            <div class="log-line"><span class="log-time">14:15:22</span><span class="log-level log-warn">WARN</span><span class="log-msg">Failed login attempt for unknown@external.com — rate limited</span></div>
+            <div class="log-line"><span class="log-time">13:58:10</span><span class="log-level log-info">INFO</span><span class="log-msg">GDPR erasure request processed for profile #8842 — all stores cleared</span></div>
+            <div class="log-line"><span class="log-time">13:42:33</span><span class="log-level log-info">INFO</span><span class="log-msg">Connector "Facebook Ads" re-authenticated by david@kalcifer.dev</span></div>
+            <div class="log-line"><span class="log-time">13:20:15</span><span class="log-level log-info">INFO</span><span class="log-msg">New API key generated for tenant "KalCifer SaaS" — scope: events.ingest</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MONITORING ═══ -->
+    <div class="panel" id="p-monitoring">
+      <div class="page-head">
+        <h2>📋 მონიტორინგი</h2>
+        <p>სისტემის ჯანმრთელობა, ალერტები, ლოგები — ელფების არმიის მდგომარეობა</p>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:18px">
+        <div class="card stat" style="border-left:3px solid var(--success)"><div class="stat-value" style="color:var(--success)">99.8%</div><div class="stat-label">Uptime (30d)</div></div>
+        <div class="card stat" style="border-left:3px solid var(--info)"><div class="stat-value" style="color:var(--info)">42ms</div><div class="stat-label">Avg Response</div></div>
+        <div class="card stat" style="border-left:3px solid var(--warn)"><div class="stat-value" style="color:var(--warn)">2</div><div class="stat-label">Active Alerts</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">🔔 Active Alerts</div>
+        <div class="alert-row alert-warn">
+          <div class="alert-icon">⚠️</div>
+          <div class="alert-content">
+            <div class="alert-title">Schema violations elevated — 31 in last 24h</div>
+            <div class="alert-desc">Above threshold of 20. Primary source: web SDK v3.2 sending unplanned events.</div>
+            <div class="alert-time">Started 6h ago · Events Pipeline</div>
+          </div>
+        </div>
+        <div class="alert-row alert-warn">
+          <div class="alert-icon">⚠️</div>
+          <div class="alert-content">
+            <div class="alert-title">AI query usage at 68% of monthly limit</div>
+            <div class="alert-desc">3,400 of 5,000 queries used. At current rate, will hit limit in 9 days.</div>
+            <div class="alert-time">Triggered today · AI Engine</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">✅ Service Health</div>
+        <div class="grid-2">
+          <div class="alert-row alert-ok"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">PostgreSQL</div><div class="alert-desc">Connections: 12/50 · Latency: 12ms p99</div></div></div>
+          <div class="alert-row alert-ok"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">ClickHouse</div><div class="alert-desc">Query: 42ms avg · Storage: 18.4GB</div></div></div>
+          <div class="alert-row alert-ok"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">Redpanda</div><div class="alert-desc">Throughput: 1.2K/s · Lag: 12 msgs</div></div></div>
+          <div class="alert-row alert-ok"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">Elixir/OTP</div><div class="alert-desc">Nodes: 3/3 · Memory: 2.1/8GB</div></div></div>
+          <div class="alert-row alert-ok"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">Go Ingest</div><div class="alert-desc">Rate: 4.2K/s · p99: 8ms</div></div></div>
+          <div class="alert-row alert-ok"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">AI Engine</div><div class="alert-desc">Response: 1.2s avg · Cache hit: 34%</div></div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">📊 System Performance (24h)</div>
+        <div class="card"><div class="chart-box"><canvas id="sysChart"></canvas></div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">📜 Recent System Logs</div>
+        <div class="card" style="padding:10px">
+          <div class="log-stream" id="sysLog"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ BILLING ═══ -->
+    <div class="panel" id="p-billing">
+      <div class="page-head">
+        <h2>💳 Usage & Billing</h2>
+        <p>გეგმა, ლიმიტები, ხარჯები</p>
+      </div>
+
+      <div class="plan-banner">
+        <div class="plan-info"><h3>Growth Plan</h3><p>10M events · 50K profiles · 5K AI queries · 5 connectors</p></div>
+        <div class="plan-price"><div class="plan-amount">$299</div><div class="plan-period">/month</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">📊 Current Period Usage</div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="prog-row"><div class="prog-label"><span>📡 Events</span><span>7.4M / 10M</span></div><div class="prog-bar"><div class="prog-fill" style="width:74%;background:var(--primary)"></div></div></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">~480K/day · Estimate: 9.2M by end of period</div>
+          </div>
+          <div class="card">
+            <div class="prog-row"><div class="prog-label"><span>👤 Profiles</span><span>15.2K / 50K</span></div><div class="prog-bar"><div class="prog-fill" style="width:30%;background:var(--success)"></div></div></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">+1.2K this month · Plenty of headroom</div>
+          </div>
+          <div class="card">
+            <div class="prog-row"><div class="prog-label"><span>🧠 AI Queries</span><span>3.4K / 5K</span></div><div class="prog-bar"><div class="prog-fill" style="width:68%;background:var(--warn)"></div></div></div>
+            <div style="font-size:10px;color:var(--warn);margin-top:4px">⚠️ On track to exceed — consider upgrading or optimizing</div>
+          </div>
+          <div class="card">
+            <div class="prog-row"><div class="prog-label"><span>💰 AI Cost</span><span>$28.54 / $100</span></div><div class="prog-bar"><div class="prog-fill" style="width:28%;background:var(--info)"></div></div></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Avg $1.90/day · Well within budget</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">📈 Cost Trend (6 months)</div>
+        <div class="card"><div class="chart-box"><canvas id="costChart"></canvas></div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">📋 Cost Breakdown (Current Month)</div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="user-table">
+            <thead><tr><th>Component</th><th>Usage</th><th>Unit Cost</th><th>Total</th><th>% of Bill</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:500">Base Plan</td><td>—</td><td>—</td><td>$299.00</td><td>86%</td></tr>
+              <tr><td style="font-weight:500">AI (Claude)</td><td>3,400 queries</td><td>$0.0084</td><td>$28.54</td><td>8%</td></tr>
+              <tr><td style="font-weight:500">SendGrid</td><td>45.2K emails</td><td>$0.0004</td><td>$18.08</td><td>5%</td></tr>
+              <tr><td style="font-weight:500">Twilio SMS</td><td>2.1K messages</td><td>$0.0075</td><td>$15.75</td><td>4%</td></tr>
+              <tr style="font-weight:600"><td>Total (estimated)</td><td></td><td></td><td style="color:var(--primary)">$361.37</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CHAT PANEL (RIGHT) -->
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-head">
+      <div class="chat-head-left">
+        <div class="ai-dot"></div>
+        <h3>KalCifer</h3>
+      </div>
+      <button class="chat-toggle" onclick="toggleChat()">→</button>
+    </div>
+    <div class="chat-msgs" id="chatMsgs"></div>
+    <div class="chat-input-area">
+      <div class="chat-input-wrap">
+        <textarea class="chat-input" id="chatInput" placeholder="კონფიგურაციაში დახმარება..." rows="1"></textarea>
+        <button class="send-btn" onclick="sendMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ═══ NAVIGATION ═══
+function showPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('p-'+id)?.classList.add('active');
+  btn?.classList.add('active');
+
+  // Context-aware chat
+  updateChatContext(id);
+
+  // Initialize charts for this panel
+  setTimeout(() => initPanelCharts(id), 50);
+}
+
+// ═══ THEME ═══
+function setTh(n,b){
+  document.body.setAttribute('data-theme',n);
+  document.querySelectorAll('.th-opt').forEach(x=>x.classList.remove('active'));
+  b?.classList.add('active');
+  document.getElementById('thDD').classList.remove('open');
+  // Rebuild charts with new colors
+  Object.values(charts).forEach(c=>c.destroy());
+  charts={};
+  const activePanel = document.querySelector('.panel.active')?.id?.replace('p-','');
+  if(activePanel) setTimeout(()=>initPanelCharts(activePanel),50);
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.theme-wrap'))document.getElementById('thDD').classList.remove('open')});
+
+// ═══ CHAT ═══
+const chatMsgs = document.getElementById('chatMsgs');
+const chatInput = document.getElementById('chatInput');
+chatInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
+chatInput.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,60)+'px'});
+
+function toggleChat(){
+  document.getElementById('chatPanel').classList.toggle('collapsed');
+}
+
+function addAI(html){
+  const d=document.createElement('div');d.className='msg msg-ai';
+  d.innerHTML=`<div class="msg-av">O</div><div class="msg-body">${html}</div>`;
+  chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
+}
+function addUser(text){
+  const d=document.createElement('div');d.className='msg msg-user';
+  d.innerHTML=`<div class="msg-av">დგ</div><div class="msg-body">${text}</div>`;
+  chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
+}
+function addTyping(){
+  const d=document.createElement('div');d.className='msg msg-ai';d.id='typing';
+  d.innerHTML='<div class="msg-av">O</div><div class="msg-body"><div class="typing-ind"><span></span><span></span><span></span></div></div>';
+  chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
+}
+
+function sendMsg(){
+  const text=chatInput.value.trim();if(!text)return;
+  addUser(text);chatInput.value='';chatInput.style.height='auto';
+  addTyping();
+  setTimeout(()=>{document.getElementById('typing')?.remove();respondSettings(text)},500+Math.random()*500);
+}
+
+function respondSettings(text){
+  const t = text.toLowerCase();
+  if(t.includes('connector') || t.includes('კონექტორ')){
+    addAI(`კონექტორები კარგად მუშაობს. 5 აქტიურია, უახლოესი sync 2 წუთის წინ იყო. გინდა ახლის დამატება ან კონფიგურაციის შეცვლა?`);
+  } else if(t.includes('schema') || t.includes('violation')){
+    addAI(`24 საათში 31 violation-ია. 18 — <code>custom_banner_click</code> event, რომელიც track plan-ში არ არის. SDK v3.2 აგზავნის. ვარიანტები: 1) დაამატე track plan-ში, ან 2) გაფილტრე ingest-ზე.`);
+  } else if(t.includes('cost') || t.includes('ხარჯ') || t.includes('billing')){
+    addAI(`მიმდინარე ხარჯი $361-ია. AI queries ტემპით 68%-ზეა — 9 დღეში ლიმიტს მიადგება. რეკომენდაცია: cache-ის გაძლიერება ან plan upgrade ($499 → 15K queries).`);
+  } else if(t.includes('gdpr') || t.includes('erasure')){
+    addAI(`GDPR compliance 5/6 ✓. DPA-ები ჯერ კიდევ ხელმოსაწერია SendGrid-ისა და Twilio-სგან. გინდა DPA template-ის გენერაცია?`);
+  } else if(t.includes('user') || t.includes('role') || t.includes('მომხმარებ')){
+    addAI(`8 წევრი, 4 როლი. 5 online ახლა. ბოლო ცვლილება: ანა-მ Spring Sale გაუშვა 2 საათის წინ. გინდა როლის შეცვლა ან ახლის მოწვევა?`);
+  } else {
+    addAI(`გაიგე. რა კონკრეტულად გაინტერესებს? კონექტორები, ინფრა, events, AI, users, security, ან billing?`);
+  }
+}
+
+function updateChatContext(section){
+  chatMsgs.innerHTML = '';
+  const greetings = {
+    connectors: `კონექტორების მართვაში ხარ. 5 აქტიური წყარო, ერთი syncing მდგომარეობაში. რაიმე ცვლილება გინდა?`,
+    infra: `ინფრასტრუქტურის მონიტორინგში ხარ. ყველა სერვისი healthy-ა. PostgreSQL 12/50 connection, ClickHouse 42ms avg query. რაიმე კითხვა?`,
+    pipeline: `Events Pipeline-ში ხარ. 4.2K events/sec შემოდის. 31 schema violation-ია ბოლო 24 საათში — ძირითადად SDK v3.2-დან. გინდა რომ ვნახოთ?`,
+    ai: `AI Engine-ის კონფიგურაციაში ხარ. 26 ინსტრუმენტი აქტიურია, 4 guardrail ჩართულია. 3.4K query გამოყენებულია (68%). რაღაცის შეცვლა გინდა?`,
+    users: `მომხმარებლების მართვაში ხარ. 8 წევრი, 5 online. ახლის მოწვევა, როლის შეცვლა, ან უფლებების კონფიგურაცია — რით დაგეხმარო?`,
+    security: `Security & GDPR სექციაში ხარ. Auth0 + RLS აქტიურია. GDPR 5/6 ✓ — DPA ხელმოწერა სჭირდება 2 sub-processor-ს. რაიმე კითხვა?`,
+    monitoring: `მონიტორინგში ხარ. 99.8% uptime, 2 active alert: schema violations და AI usage. გინდა რომ რომელიმე ალერტი უფრო დეტალურად ვნახოთ?`,
+    billing: `Usage & Billing-ში ხარ. Growth Plan $299/mo, estimated total $361 channel costs-ით. AI queries 68%-ზეა. გინდა ოპტიმიზაციის რეკომენდაციები?`
+  };
+  if(greetings[section]) addAI(greetings[section]);
+}
+
+// ═══ CHARTS ═══
+let charts = {};
+function pc(){return getComputedStyle(document.body).getPropertyValue('--primary').trim()}
+function sc(){return getComputedStyle(document.body).getPropertyValue('--success').trim()}
+function wc(){return getComputedStyle(document.body).getPropertyValue('--warn').trim()}
+function ic(){return getComputedStyle(document.body).getPropertyValue('--info').trim()}
+function bc(){return getComputedStyle(document.body).getPropertyValue('--border').trim()}
+function tc(){return getComputedStyle(document.body).getPropertyValue('--text-muted').trim()}
+
+function initPanelCharts(panel){
+  if(panel==='pipeline'){
+    const ctx=document.getElementById('ingestChart');
+    if(!ctx||charts.ingest) return;
+    const hours=['00','02','04','06','08','10','12','14','16','18','20','22'];
+    charts.ingest=new Chart(ctx,{type:'bar',data:{labels:hours,datasets:[{label:'Events/hour',data:[2100,1800,1400,1200,4800,12400,18200,22100,19800,16400,11200,8400],backgroundColor:pc()+'80',borderColor:pc(),borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9},callback:v=>(v/1000)+'K'}}}}});
+  }
+  if(panel==='ai'){
+    const ctx=document.getElementById('aiChart');
+    if(!ctx||charts.ai) return;
+    const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    charts.ai=new Chart(ctx,{type:'line',data:{labels:days,datasets:[
+      {label:'Queries',data:[480,520,610,540,490,180,120],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,pointBackgroundColor:pc()},
+      {label:'Cache Hits',data:[160,180,210,190,170,60,40],borderColor:sc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,borderDash:[4,4]}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}}}}});
+  }
+  if(panel==='monitoring'){
+    const ctx=document.getElementById('sysChart');
+    if(!ctx||charts.sys) return;
+    const hours=['00:00','03:00','06:00','09:00','12:00','15:00','18:00','21:00'];
+    charts.sys=new Chart(ctx,{type:'line',data:{labels:hours,datasets:[
+      {label:'Response (ms)',data:[38,35,32,45,52,48,42,40],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3},
+      {label:'Events/s',data:[800,600,400,1800,2400,2100,1600,1200],borderColor:ic(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,yAxisID:'y1'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9},callback:v=>v+'ms'}},y1:{position:'right',grid:{display:false},ticks:{color:tc(),font:{size:9},callback:v=>(v/1000).toFixed(1)+'K/s'}}}}});
+
+    // Populate system log
+    const logEl = document.getElementById('sysLog');
+    if(logEl && !logEl.children.length){
+      const logs = [
+        ['14:35:12','INFO','ClickHouse merge completed — 3 parts merged to 1'],
+        ['14:32:08','INFO','Journey "Spring Sale Push" step 3 executed — 420 emails queued'],
+        ['14:28:44','WARN','Schema violation: custom_banner_click not in track plan'],
+        ['14:22:10','INFO','Redpanda consumer group rebalanced — 3 consumers'],
+        ['14:15:33','INFO','Go Ingest: batch of 1,200 events flushed to Redpanda'],
+        ['14:10:18','WARN','AI query rate approaching limit: 3,380/5,000'],
+        ['14:02:45','INFO','PostgreSQL: auto-vacuum completed on profiles table'],
+        ['13:58:22','INFO','Elixir node kalcifer@node2 health check OK'],
+        ['13:50:11','INFO','Connector "SendGrid" webhook received: 840 delivery events'],
+        ['13:42:08','INFO','ClickHouse: partition pruning reduced scan from 2.4M to 180K rows'],
+      ];
+      logEl.innerHTML = logs.map(([t,l,m])=>`<div class="log-line"><span class="log-time">${t}</span><span class="log-level log-${l.toLowerCase()}">${l}</span><span class="log-msg">${m}</span></div>`).join('');
+    }
+  }
+  if(panel==='billing'){
+    const ctx=document.getElementById('costChart');
+    if(!ctx||charts.cost) return;
+    const months=['Oct','Nov','Dec','Jan','Feb','Mar'];
+    charts.cost=new Chart(ctx,{type:'bar',data:{labels:months,datasets:[
+      {label:'Base Plan',data:[299,299,299,299,299,299],backgroundColor:pc()+'60',borderRadius:4},
+      {label:'AI Cost',data:[18,22,24,26,25,28],backgroundColor:ic()+'60',borderRadius:4},
+      {label:'Channels',data:[28,32,38,30,34,34],backgroundColor:sc()+'60',borderRadius:4}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{stacked:true,grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{stacked:true,grid:{color:bc()},ticks:{color:tc(),font:{size:9},callback:v=>'$'+v}}}}});
+  }
+}
+
+// ═══ INIT ═══
+(function(){const p=new URLSearchParams(window.location.search).get('theme');if(p&&['warm','lavender','sage','teal','dark'].includes(p)){document.body.setAttribute('data-theme',p);document.querySelectorAll('.th-opt').forEach(b=>{b.classList.remove('active');if(b.textContent.toLowerCase().includes(p==='warm'?'warm':p))b.classList.add('active')})}})();
+updateChatContext('connectors');
+initPanelCharts('connectors');
+</script>
+</body>
+</html>

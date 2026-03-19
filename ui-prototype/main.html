@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalcifer — Automation Partner</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:#f5f0eb;--surface:#ffffff;--surface-dim:#faf7f4;
+  --primary:#c4956a;--primary-hover:#b5845c;--primary-soft:rgba(196,149,106,0.10);
+  --accent:#8b7355;--accent-soft:rgba(139,115,85,0.08);
+  --border:#e8ddd3;--border-light:#f0e8df;
+  --text:#2d2a26;--text-sec:#6b6560;--text-muted:#a09890;--text-on-primary:#fff;
+  --success:#5a9e6f;--success-soft:rgba(90,158,111,0.08);
+  --warn:#c49a5c;--warn-soft:rgba(196,154,92,0.08);
+  --danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);
+  --info:#6a8fa0;--info-soft:rgba(106,143,160,0.08);
+  --radius:14px;--radius-sm:10px;--radius-xs:6px;
+}
+[data-theme="lavender"]{--bg:#f7f5f0;--surface:#fff;--surface-dim:#f5f2f8;--primary:#9b8ec4;--primary-hover:#8a7db5;--primary-soft:rgba(155,142,196,0.10);--accent:#7c6fa0;--accent-soft:rgba(124,111,160,0.08);--border:#e6e1ec;--border-light:#eeebf3;--text:#2d2a33;--text-sec:#65606e;--text-muted:#9e96a8;--success:#6a9e7a;--success-soft:rgba(106,158,122,0.08);--warn:#c4a05c;--warn-soft:rgba(196,160,92,0.08);--danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);--info:#7a8ec4;--info-soft:rgba(122,142,196,0.08)}
+[data-theme="sage"]{--bg:#f4f1ec;--surface:#fefdfb;--surface-dim:#f6f4f0;--primary:#6b8f6e;--primary-hover:#5c7e60;--primary-soft:rgba(107,143,110,0.10);--accent:#4a6b4d;--accent-soft:rgba(74,107,77,0.08);--border:#e2ddd6;--border-light:#eae6e0;--text:#2a2d28;--text-sec:#5c5f58;--text-muted:#969990;--success:#6b8f6e;--success-soft:rgba(107,143,110,0.08);--warn:#c49a5c;--warn-soft:rgba(196,154,92,0.08);--danger:#b86e5a;--danger-soft:rgba(184,110,90,0.08);--info:#5a8b9e;--info-soft:rgba(90,139,158,0.08)}
+[data-theme="teal"]{--bg:#f5f2ed;--surface:#fff;--surface-dim:#f9f7f4;--primary:#3d8b80;--primary-hover:#2d7b70;--primary-soft:rgba(61,139,128,0.10);--accent:#2d6b62;--accent-soft:rgba(45,107,98,0.08);--border:#e5dfd8;--border-light:#ede8e2;--text:#2a2825;--text-sec:#5c5855;--text-muted:#9a9590;--success:#5a9e6f;--success-soft:rgba(90,158,111,0.08);--warn:#c4956a;--warn-soft:rgba(196,149,106,0.08);--danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);--info:#3d8b80;--info-soft:rgba(61,139,128,0.08)}
+[data-theme="dark"]{--bg:#0f0f14;--surface:#1a1a24;--surface-dim:#141420;--primary:#a89cf0;--primary-hover:#bdb3f5;--primary-soft:rgba(168,156,240,0.10);--accent:#c4b8f0;--accent-soft:rgba(196,184,240,0.06);--border:#2a2a3a;--border-light:#22222f;--text:#e4e2ec;--text-sec:#9896a8;--text-muted:#5c5a6e;--text-on-primary:#0f0f14;--success:#6ee0a0;--success-soft:rgba(110,224,160,0.08);--warn:#f0c060;--warn-soft:rgba(240,192,96,0.08);--danger:#f08070;--danger-soft:rgba(240,128,112,0.08);--info:#70b0f0;--info-soft:rgba(112,176,240,0.08)}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;transition:background 0.4s,color 0.3s}
+
+/* ═══ LAYOUT ═══ */
+.app{display:grid;grid-template-columns:240px 1fr;grid-template-rows:48px 1fr;height:100vh}
+
+/* ═══ TOPBAR ═══ */
+.topbar{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;transition:all 0.3s}
+.top-left{display:flex;align-items:center;gap:14px}
+.logo{font-size:17px;font-weight:700;color:var(--primary);letter-spacing:-0.5px}
+.logo span{font-weight:400;color:var(--text-muted);font-size:12px}
+.top-right{display:flex;align-items:center;gap:6px}
+.top-btn{background:var(--surface-dim);border:1px solid var(--border);color:var(--text-sec);height:30px;padding:0 10px;border-radius:var(--radius-xs);cursor:pointer;font-size:11px;font-family:inherit;display:flex;align-items:center;gap:4px;transition:all 0.2s}
+.top-btn:hover{border-color:var(--primary);color:var(--text)}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--text-on-primary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+
+/* Theme */
+.theme-wrap{position:relative}
+.theme-dd{display:none;position:absolute;top:36px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:500;min-width:160px}
+.theme-dd.open{display:block}
+.th-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius-xs);cursor:pointer;font-size:11px;color:var(--text-sec);border:none;background:none;width:100%;font-family:inherit;transition:all 0.15s}
+.th-opt:hover{background:var(--primary-soft)}
+.th-opt.active{color:var(--primary);font-weight:600}
+.th-sw{display:flex;gap:2px}
+.th-sw i{width:10px;height:10px;border-radius:2px;display:block}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:all 0.3s}
+.sb-section{padding:10px 10px 4px}
+.sb-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);padding:0 6px;margin-bottom:4px}
+.sb-new{display:flex;align-items:center;gap:6px;width:100%;padding:7px 10px;background:var(--primary-soft);border:1px dashed var(--primary);border-radius:var(--radius-sm);color:var(--primary);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all 0.2s;margin-bottom:6px}
+.sb-new:hover{background:var(--primary);color:var(--text-on-primary);border-style:solid}
+.sb-scroll{flex:1;overflow-y:auto;padding:0 10px}
+.sb-scroll::-webkit-scrollbar{width:3px}
+.sb-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.camp-item{display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s;margin-bottom:2px;border:1px solid transparent}
+.camp-item:hover{background:var(--surface-dim)}
+.camp-item.active{background:var(--primary-soft);border-color:var(--primary)}
+.camp-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.dot-plan{background:var(--info)} .dot-live{background:var(--success);animation:pulse 2s infinite} .dot-done{background:var(--border)} .dot-draft{background:var(--text-muted)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.camp-info{flex:1;min-width:0}
+.camp-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.camp-meta{font-size:10px;color:var(--text-muted);margin-top:1px}
+
+.sb-bottom{padding:8px 10px;border-top:1px solid var(--border)}
+.tenant-btn{display:flex;align-items:center;gap:6px;width:100%;padding:6px 8px;background:var(--surface-dim);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;color:var(--text-sec);cursor:pointer;font-family:inherit}
+.t-dot{width:6px;height:6px;border-radius:50%;background:var(--success)}
+
+/* ═══ MAIN CONTENT AREA ═══ */
+.main-area{display:flex;overflow:hidden;min-height:0}
+
+/* Adaptive layout transitions */
+.main-area{transition:all 0.4s ease}
+
+/* ─── Chat Column ─── */
+.chat-col{display:flex;flex-direction:column;overflow:hidden;min-height:0;border-right:1px solid var(--border);background:var(--bg);transition:width 0.4s ease,flex 0.4s ease}
+
+.chat-head{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.chat-head-left{display:flex;align-items:center;gap:8px}
+.ai-dot{width:7px;height:7px;border-radius:50%;background:var(--success);animation:pulse 2.5s infinite}
+.chat-head h2{font-size:13px;font-weight:600}
+.phase-tag{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:600}
+
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;min-height:0}
+.chat-msgs::-webkit-scrollbar{width:4px}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.msg{display:flex;gap:8px;animation:msgIn 0.3s ease}
+.msg-user{flex-direction:row-reverse}
+@keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.msg-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+.msg-ai .msg-av{background:var(--primary-soft);color:var(--primary);border:1px solid var(--border)}
+.msg-user .msg-av{background:var(--surface-dim);color:var(--text-muted);border:1px solid var(--border)}
+.msg-body{padding:10px 14px;border-radius:var(--radius);font-size:12.5px;line-height:1.6;max-width:90%}
+.msg-ai .msg-body{background:var(--surface);border:1px solid var(--border)}
+.msg-user .msg-body{background:var(--primary);color:var(--text-on-primary)}
+.msg-body code{background:var(--accent-soft);padding:1px 4px;border-radius:3px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent)}
+.msg-body table{width:100%;border-collapse:collapse;margin:6px 0;font-size:11px}
+.msg-body th,.msg-body td{padding:4px 6px;border:1px solid var(--border);text-align:left}
+.msg-body th{background:var(--surface-dim);color:var(--accent);font-size:10px;text-transform:uppercase;letter-spacing:0.3px;font-weight:600}
+
+.msg-btn{display:inline-flex;align-items:center;gap:4px;margin-top:6px;margin-right:4px;padding:5px 10px;border-radius:var(--radius-xs);font-size:11px;font-family:inherit;cursor:pointer;transition:all 0.2s;font-weight:500;border:none}
+.msg-btn-p{background:var(--primary);color:var(--text-on-primary)}
+.msg-btn-p:hover{background:var(--primary-hover)}
+.msg-btn-s{background:var(--surface-dim);color:var(--text-sec);border:1px solid var(--border)}
+.msg-btn-s:hover{border-color:var(--primary);color:var(--text)}
+
+/* Journey visual */
+.journey-v{margin:8px 0;padding:10px;background:var(--surface-dim);border-radius:var(--radius-sm);border:1px solid var(--border-light)}
+.j-step{display:flex;align-items:flex-start;gap:8px;padding:5px 0;position:relative}
+.j-step:not(:last-child)::after{content:'';position:absolute;left:10px;top:20px;bottom:-5px;width:1px;background:var(--border)}
+.j-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;background:var(--surface);border:2px solid var(--border);z-index:1}
+.j-dot.done{border-color:var(--success);color:var(--success);background:var(--success-soft)}
+.j-dot.active{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
+.j-dot.pending{border-color:var(--border);color:var(--text-muted)}
+.j-info{flex:1}
+.j-name{font-size:11px;font-weight:500}
+.j-desc{font-size:10px;color:var(--text-muted)}
+
+.suggestions{padding:6px 16px;display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0}
+.sug{background:var(--surface);border:1px solid var(--border);color:var(--text-sec);padding:4px 10px;border-radius:16px;font-size:10.5px;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.sug:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
+
+.chat-input-area{padding:10px 16px 12px;flex-shrink:0;border-top:1px solid var(--border)}
+.chat-input-wrap{display:flex;align-items:flex-end;gap:6px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:8px 12px;transition:all 0.2s}
+.chat-input-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.chat-input{flex:1;background:none;border:none;color:var(--text);font-size:13px;font-family:inherit;resize:none;outline:none;max-height:80px;line-height:1.5}
+.chat-input::placeholder{color:var(--text-muted)}
+.send-btn{background:var(--primary);border:none;color:var(--text-on-primary);width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+.send-btn:hover{background:var(--primary-hover)}
+.send-btn svg{width:13px;height:13px}
+
+.typing-ind{display:flex;gap:3px;padding:3px 0}
+.typing-ind span{width:5px;height:5px;border-radius:50%;background:var(--primary);animation:td 1.2s infinite}
+.typing-ind span:nth-child(2){animation-delay:0.2s}.typing-ind span:nth-child(3){animation-delay:0.4s}
+@keyframes td{0%,60%,100%{opacity:0.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+
+/* ─── Dashboard Column ─── */
+.dash-col{flex:1;overflow-y:auto;padding:16px;background:var(--bg);transition:all 0.4s ease;min-height:0}
+.dash-col::-webkit-scrollbar{width:5px}
+.dash-col::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.dash-title{font-size:15px;font-weight:600}
+.dash-subtitle{font-size:11px;color:var(--text-muted)}
+
+/* Dashboard grid */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px}
+
+.d-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;transition:all 0.2s}
+.d-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.d-card.wide{grid-column:span 2}
+.d-card.full{grid-column:1/-1}
+
+.d-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted)}
+.d-value{font-size:24px;font-weight:700;color:var(--primary);margin-top:3px}
+.d-change{font-size:10px;margin-top:2px}
+.change-up{color:var(--success)}.change-down{color:var(--danger)}
+
+.d-section-title{font-size:12px;font-weight:600;color:var(--text);margin:14px 0 8px;display:flex;align-items:center;gap:6px}
+
+/* Progress bars */
+.prog-row{margin-bottom:10px}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.prog-label span:first-child{color:var(--text-sec)}
+.prog-label span:last-child{font-weight:600;color:var(--text)}
+.prog-bar{height:8px;background:var(--surface-dim);border-radius:4px;overflow:hidden;border:1px solid var(--border-light)}
+.prog-fill{height:100%;border-radius:3px;transition:width 1s ease}
+
+/* Live stream mini */
+.live-mini{font-family:'JetBrains Mono',monospace;font-size:10px;max-height:160px;overflow-y:auto;background:var(--surface-dim);border-radius:var(--radius-sm);padding:8px;border:1px solid var(--border-light)}
+.live-mini::-webkit-scrollbar{width:3px}
+.live-mini::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.lm-ev{padding:2px 0;border-bottom:1px solid var(--border-light);display:flex;gap:6px}
+.lm-ev:last-child{border:none}
+.lm-time{color:var(--text-muted);min-width:55px}
+.lm-name{color:var(--primary)}
+.lm-detail{color:var(--text-sec)}
+
+/* Chart */
+.chart-box{position:relative;height:180px}
+
+/* Table mini */
+.d-table{width:100%;border-collapse:collapse;font-size:11px}
+.d-table th{text-align:left;padding:5px 6px;color:var(--text-muted);font-weight:500;text-transform:uppercase;font-size:9px;letter-spacing:0.5px;border-bottom:1px solid var(--border)}
+.d-table td{padding:5px 6px;border-bottom:1px solid var(--border-light);color:var(--text-sec)}
+.d-table tr:hover td{background:var(--primary-soft)}
+
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500}
+.b-green{background:var(--success-soft);color:var(--success)}
+.b-orange{background:var(--warn-soft);color:var(--warn)}
+.b-red{background:var(--danger-soft);color:var(--danger)}
+.b-blue{background:var(--info-soft);color:var(--info)}
+
+/* Funnel */
+.funnel{display:flex;flex-direction:column;gap:3px}
+.funnel-step{display:flex;align-items:center;gap:8px}
+.funnel-bar{height:24px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;color:white;transition:width 0.8s ease}
+.funnel-label{font-size:10px;color:var(--text-muted);min-width:70px}
+.funnel-val{font-size:10px;color:var(--text-sec);min-width:50px;text-align:right}
+
+/* Empty dash state */
+.dash-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:var(--text-muted)}
+.dash-empty-icon{font-size:48px;margin-bottom:10px;opacity:0.3}
+.dash-empty h3{font-size:15px;color:var(--text-sec);font-weight:500;margin-bottom:4px}
+.dash-empty p{font-size:12px;max-width:280px;line-height:1.5}
+
+/* Insight cards */
+.insight{padding:8px 10px;border-left:3px solid;border-radius:0 var(--radius-xs) var(--radius-xs) 0;margin-bottom:6px}
+.insight-type{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.insight-text{font-size:11px;margin-top:2px;color:var(--text-sec);line-height:1.4}
+
+/* Settings → separate page */
+</style>
+</head>
+<body data-theme="warm">
+<div class="app">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="top-left"><div class="logo">Kalcifer <span>Work</span></div></div>
+  <div class="top-right">
+    <button class="top-btn" onclick="window.location.href='browse.html?theme='+(document.body.getAttribute('data-theme')||'warm')" title="დათვალიერება">👁 Browse</button>
+    <button class="top-btn" onclick="openSettings()">⚙</button>
+    <div class="theme-wrap">
+      <button class="top-btn" onclick="document.getElementById('thDD').classList.toggle('open')">◐</button>
+      <div class="theme-dd" id="thDD">
+        <button class="th-opt active" onclick="setTh('warm',this)"><span class="th-sw"><i style="background:#f5f0eb"></i><i style="background:#c4956a"></i></span>Warm Paper</button>
+        <button class="th-opt" onclick="setTh('lavender',this)"><span class="th-sw"><i style="background:#f7f5f0"></i><i style="background:#9b8ec4"></i></span>Lavender</button>
+        <button class="th-opt" onclick="setTh('sage',this)"><span class="th-sw"><i style="background:#f4f1ec"></i><i style="background:#6b8f6e"></i></span>Sand & Sage</button>
+        <button class="th-opt" onclick="setTh('teal',this)"><span class="th-sw"><i style="background:#f5f2ed"></i><i style="background:#3d8b80"></i></span>Paper & Teal</button>
+        <button class="th-opt" onclick="setTh('dark',this)"><span class="th-sw"><i style="background:#0f0f14"></i><i style="background:#a89cf0"></i></span>Dark</button>
+      </div>
+    </div>
+    <div class="avatar">დგ</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sb-section">
+    <button class="sb-new">+ ახალი კამპანია</button>
+    <div class="sb-label">მიმდინარე</div>
+  </div>
+  <div class="sb-scroll">
+    <div class="camp-item active" id="camp-re" onclick="loadCampaign('planning')">
+      <div class="camp-dot dot-plan"></div>
+      <div class="camp-info"><div class="camp-name">Churn Re-engagement</div><div class="camp-meta">📝 Planning · 1,880 profiles</div></div>
+    </div>
+    <div class="camp-item" id="camp-spring" onclick="loadCampaign('live')">
+      <div class="camp-dot dot-live"></div>
+      <div class="camp-info"><div class="camp-name">Spring Sale Push</div><div class="camp-meta">🚀 Live · 67% sent</div></div>
+    </div>
+    <div class="camp-item" id="camp-onb" onclick="loadCampaign('live-onb')">
+      <div class="camp-dot dot-live"></div>
+      <div class="camp-info"><div class="camp-name">Onboarding Flow v3</div><div class="camp-meta">🚀 Live · 2,100 in journey</div></div>
+    </div>
+    <div style="padding:8px 6px 4px"><div class="sb-label">დასრულებული</div></div>
+    <div class="camp-item" id="camp-q4" onclick="loadCampaign('done')">
+      <div class="camp-dot dot-done"></div>
+      <div class="camp-info"><div class="camp-name">Q4 Upsell Campaign</div><div class="camp-meta">✅ 12.4% conversion</div></div>
+    </div>
+    <div class="camp-item" id="camp-holiday" onclick="loadCampaign('done-holiday')">
+      <div class="camp-dot dot-done"></div>
+      <div class="camp-info"><div class="camp-name">Holiday Promo 2025</div><div class="camp-meta">✅ 8.7% conversion</div></div>
+    </div>
+  </div>
+  <div class="sb-bottom"><button class="tenant-btn"><span class="t-dot"></span>Acme SaaS <span style="margin-left:auto;font-size:10px;color:var(--text-muted)">▾</span></button></div>
+</div>
+
+<!-- MAIN AREA -->
+<div class="main-area" id="mainArea">
+
+  <!-- CHAT COLUMN -->
+  <div class="chat-col" id="chatCol" style="flex:3">
+    <div class="chat-head">
+      <div class="chat-head-left">
+        <div class="ai-dot"></div>
+        <h2>Talk to Your Data</h2>
+      </div>
+      <span class="phase-tag" id="phaseTag" style="background:var(--info-soft);color:var(--info)">📝 Planning</span>
+    </div>
+    <div class="chat-msgs" id="chatMsgs"></div>
+    <div class="suggestions" id="sugs"></div>
+    <div class="chat-input-area">
+      <div class="chat-input-wrap">
+        <textarea class="chat-input" id="chatInput" placeholder="ესაუბრე კალციფერს..." rows="1"></textarea>
+        <button class="send-btn" onclick="sendMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD COLUMN -->
+  <div class="dash-col" id="dashCol" style="flex:0">
+    <div id="dashContent"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- Settings is now a separate page: engine-room.html -->
+
+<script>
+const chatMsgs=document.getElementById('chatMsgs');
+const chatInput=document.getElementById('chatInput');
+const chatCol=document.getElementById('chatCol');
+const dashCol=document.getElementById('dashCol');
+const dashContent=document.getElementById('dashContent');
+let charts={};
+let liveInterval=null;
+
+chatInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
+chatInput.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'});
+
+function setTh(n,b){document.body.setAttribute('data-theme',n);document.querySelectorAll('.th-opt').forEach(x=>x.classList.remove('active'));b?.classList.add('active');document.getElementById('thDD').classList.remove('open');rebuildCharts()}
+document.addEventListener('click',e=>{if(!e.target.closest('.theme-wrap'))document.getElementById('thDD').classList.remove('open')});
+
+function openSettings(){window.location.href='engine-room.html?theme='+(document.body.getAttribute('data-theme')||'warm')}
+function closeSettings(){}
+
+function pc(){return getComputedStyle(document.body).getPropertyValue('--primary').trim()}
+function bc(){return getComputedStyle(document.body).getPropertyValue('--border').trim()}
+function tc(){return getComputedStyle(document.body).getPropertyValue('--text-muted').trim()}
+
+// ═══ ADAPTIVE LAYOUT ═══
+function setLayout(chatFlex, dashFlex){
+  chatCol.style.flex=chatFlex;
+  dashCol.style.flex=dashFlex;
+}
+
+// ═══ CAMPAIGNS ═══
+function loadCampaign(type){
+  document.querySelectorAll('.camp-item').forEach(c=>c.classList.remove('active'));
+  if(liveInterval){clearInterval(liveInterval);liveInterval=null}
+  Object.values(charts).forEach(c=>c.destroy());charts={};
+
+  if(type==='planning') loadPlanning();
+  else if(type==='live') loadLive();
+  else if(type==='live-onb') loadLiveOnboarding();
+  else if(type==='done') loadDone();
+  else if(type==='done-holiday') loadDoneHoliday();
+}
+
+// ─── PLANNING: Chat-dominant ───
+function loadPlanning(){
+  document.getElementById('camp-re').classList.add('active');
+  setLayout(3,0); // Chat only at first
+  setPhaseTag('📝 Planning','var(--info-soft)','var(--info)');
+  dashContent.innerHTML='';
+
+  chatMsgs.innerHTML='';
+  addAI(`<strong>Churn Re-engagement</strong> — დაგეგმვის ფაზა<br><br>გაქვს <strong>1,880 პროფილი</strong> "Churn Risk 90-day" სეგმენტში.<br><br>როგორ გინდა მივწვდეთ — რა არხით, რა მესიჯით?<br>წინა Q4 კამპანიაში personalized subject line-მა +34% open rate მოიტანა.`);
+  setSugs(['📧 Email + SMS re-activation','💡 წინა კამპანიიდან სწავლა','🔬 A/B ტესტი','👤 სეგმენტის ანალიზი']);
+}
+
+// ─── LIVE: Split view with monitoring ───
+function loadLive(){
+  document.getElementById('camp-spring').classList.add('active');
+  setLayout(1,2); // Dashboard dominant
+  setPhaseTag('🚀 Live','var(--success-soft)','var(--success)');
+
+  chatMsgs.innerHTML='';
+  addAI(`<strong>Spring Sale Push</strong> გაშვებულია 6 საათის წინ.<br><br>ყველაფერი კარგად მიდის — Variant A 41% open rate-ით ლიდერობს. SMS follow-up 2 საათში გაეშვება.<br><br>რაიმე ცვლილება გინდა?`);
+  setSugs(['⏸ დაპაუზება','📊 დეტალური მეტრიკები','✉️ SMS ტექსტის შეცვლა']);
+
+  dashContent.innerHTML=`
+    <div class="dash-header"><div><div class="dash-title">Spring Sale Push</div><div class="dash-subtitle">🚀 Live · started 6h ago · 4,200 profiles</div></div></div>
+
+    <div class="dash-grid">
+      <div class="d-card"><div class="d-label">Sent</div><div class="d-value">2,814</div><div class="d-change change-up">67% of 4,200</div></div>
+      <div class="d-card"><div class="d-label">Delivered</div><div class="d-value">2,798</div><div class="d-change">99.4% rate</div></div>
+      <div class="d-card"><div class="d-label">Opened</div><div class="d-value" style="color:var(--success)">1,147</div><div class="d-change change-up">41.0% open rate</div></div>
+      <div class="d-card"><div class="d-label">Clicked</div><div class="d-value" style="color:var(--info)">386</div><div class="d-change change-up">13.8% CTR</div></div>
+    </div>
+
+    <div class="d-section-title">📧 Email Delivery Progress</div>
+    <div class="d-card full">
+      <div class="prog-row"><div class="prog-label"><span>Variant A — "20% off spring collection"</span><span>72%</span></div><div class="prog-bar"><div class="prog-fill" style="width:72%;background:var(--primary)"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>Variant B — "Spring refresh starts here"</span><span>62%</span></div><div class="prog-bar"><div class="prog-fill" style="width:62%;background:var(--info)"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>📱 SMS follow-up (queued)</span><span>0%</span></div><div class="prog-bar"><div class="prog-fill" style="width:0%;background:var(--warn)"></div></div></div>
+    </div>
+
+    <div class="d-section-title">📡 Live Events</div>
+    <div class="d-card full"><div class="live-mini" id="liveStream"></div></div>
+
+    <div class="d-section-title">🔄 Journey Progress</div>
+    <div class="d-card full">
+      <div class="funnel">
+        <div class="funnel-step"><span class="funnel-label">Entered</span><div class="funnel-bar" style="width:100%;background:var(--primary)">4,200</div></div>
+        <div class="funnel-step"><span class="funnel-label">Email sent</span><div class="funnel-bar" style="width:67%;background:var(--primary)">2,814</div></div>
+        <div class="funnel-step"><span class="funnel-label">Opened</span><div class="funnel-bar" style="width:27%;background:var(--success)">1,147</div></div>
+        <div class="funnel-step"><span class="funnel-label">Clicked</span><div class="funnel-bar" style="width:9%;background:var(--info)">386</div></div>
+        <div class="funnel-step"><span class="funnel-label">Converted</span><div class="funnel-bar" style="width:3%;background:var(--warn)">142</div></div>
+      </div>
+    </div>
+
+    <div class="d-section-title">⚡ A/B Test Status</div>
+    <div class="d-card full">
+      <table class="d-table">
+        <thead><tr><th>Variant</th><th>Sent</th><th>Open %</th><th>CTR</th><th>Conv.</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><strong>A</strong> — "20% off spring"</td><td>1,407</td><td style="color:var(--success)"><strong>41.0%</strong></td><td>14.2%</td><td>5.8%</td><td><span class="badge b-green">Leading</span></td></tr>
+          <tr><td><strong>B</strong> — "Spring refresh"</td><td>1,407</td><td>33.6%</td><td>11.1%</td><td>3.9%</td><td><span class="badge b-orange">Behind</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  startLiveStream();
+}
+
+// ─── LIVE ONBOARDING: Different monitoring ───
+function loadLiveOnboarding(){
+  document.getElementById('camp-onb').classList.add('active');
+  setLayout(1,2);
+  setPhaseTag('🚀 Live','var(--success-soft)','var(--success)');
+
+  chatMsgs.innerHTML='';
+  addAI(`<strong>Onboarding Flow v3</strong> მიმდინარეობს.<br><br><strong>2,100</strong> ახალი მომხმარებელი ამ journey-შია. Step 3 ("first value moment") არის ყველაზე კრიტიკული — drop-off 22%-ია.<br><br>გინდა Step 3-ის ტექსტის A/B ტესტი?`);
+  setSugs(['📊 step-by-step drop-off','✏️ Step 3 ტექსტის შეცვლა','⏸ დაპაუზება']);
+
+  dashContent.innerHTML=`
+    <div class="dash-header"><div><div class="dash-title">Onboarding Flow v3</div><div class="dash-subtitle">🚀 Live · 2,100 users in journey · running 12 days</div></div></div>
+
+    <div class="dash-grid">
+      <div class="d-card"><div class="d-label">In Journey</div><div class="d-value">2,100</div><div class="d-change change-up">+180 this week</div></div>
+      <div class="d-card"><div class="d-label">Completed</div><div class="d-value" style="color:var(--success)">1,240</div><div class="d-change">59% completion</div></div>
+      <div class="d-card"><div class="d-label">Dropped Off</div><div class="d-value" style="color:var(--danger)">462</div><div class="d-change change-down">22% drop-off</div></div>
+      <div class="d-card"><div class="d-label">Active Now</div><div class="d-value" style="color:var(--info)">398</div><div class="d-change">in various steps</div></div>
+    </div>
+
+    <div class="d-section-title">🔄 Step-by-Step Progress</div>
+    <div class="d-card full">
+      <div class="funnel">
+        <div class="funnel-step"><span class="funnel-label">Welcome email</span><div class="funnel-bar" style="width:100%;background:var(--primary)">2,100</div><span class="funnel-val">100%</span></div>
+        <div class="funnel-step"><span class="funnel-label">SDK installed</span><div class="funnel-bar" style="width:82%;background:var(--primary)">1,722</div><span class="funnel-val">82%</span></div>
+        <div class="funnel-step"><span class="funnel-label">First event</span><div class="funnel-bar" style="width:68%;background:var(--success)">1,428</div><span class="funnel-val">68%</span></div>
+        <div class="funnel-step"><span class="funnel-label">First value ⚠️</span><div class="funnel-bar" style="width:46%;background:var(--warn)">966</div><span class="funnel-val">46%</span></div>
+        <div class="funnel-step"><span class="funnel-label">Completed</span><div class="funnel-bar" style="width:35%;background:var(--success)">735</div><span class="funnel-val">35%</span></div>
+      </div>
+    </div>
+
+    <div class="d-section-title">⚠️ Drop-off Analysis</div>
+    <div class="d-card full">
+      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)">
+        <div class="insight-type" style="color:var(--danger)">Bottleneck</div>
+        <div class="insight-text">Step 3 "First Value Moment" → 22% drop-off. Users see the dashboard but don't take action.</div>
+      </div>
+      <div class="insight" style="border-color:var(--info);background:var(--info-soft)">
+        <div class="insight-type" style="color:var(--info)">Recommendation</div>
+        <div class="insight-text">Add interactive walkthrough or pre-populated demo data. Similar change in v2 improved conversion +15%.</div>
+      </div>
+    </div>
+  `;
+}
+
+// ─── DONE: Dashboard dominant ───
+function loadDone(){
+  document.getElementById('camp-q4').classList.add('active');
+  setLayout(1,3); // Dashboard very dominant
+  setPhaseTag('✅ Complete','var(--accent-soft)','var(--text-muted)');
+
+  chatMsgs.innerHTML='';
+  addAI(`<strong>Q4 Upsell Campaign</strong> — დასრულდა 2 კვირის წინ.<br><br>მთავარი შედეგი: <strong>12.4% conversion, $48,200 revenue</strong>.<br><br>რა გაინტერესებს — დეტალური breakdown, learnings, თუ მსგავსი კამპანიის გამეორება?`);
+  setSugs(['💡 key learnings','🔁 მსგავსი კამპანიის გამეორება','📊 channel comparison']);
+
+  dashContent.innerHTML=`
+    <div class="dash-header"><div><div class="dash-title">Q4 Upsell Campaign — Results</div><div class="dash-subtitle">✅ Completed · Oct 15 – Nov 12, 2025 · 6,400 profiles</div></div></div>
+
+    <div class="dash-grid">
+      <div class="d-card"><div class="d-label">Reached</div><div class="d-value">6,400</div></div>
+      <div class="d-card"><div class="d-label">Engaged</div><div class="d-value" style="color:var(--success)">2,816</div><div class="d-change">44% engagement</div></div>
+      <div class="d-card"><div class="d-label">Converted</div><div class="d-value" style="color:var(--primary)">794</div><div class="d-change change-up">12.4% conversion</div></div>
+      <div class="d-card"><div class="d-label">Revenue</div><div class="d-value" style="color:var(--success)">$48,200</div><div class="d-change change-up">ROI 8.2x</div></div>
+    </div>
+
+    <div class="d-section-title">📈 Performance Over Time</div>
+    <div class="d-card full"><div class="chart-box"><canvas id="perfChart"></canvas></div></div>
+
+    <div class="d-section-title">📊 Channel Performance</div>
+    <div class="d-card full">
+      <table class="d-table">
+        <thead><tr><th>Channel</th><th>Sent</th><th>Engaged</th><th>Converted</th><th>Revenue</th><th>CPA</th></tr></thead>
+        <tbody>
+          <tr><td>📧 Email</td><td>6,400</td><td>2,432 (38%)</td><td>512 (8%)</td><td>$31,200</td><td>$0.48</td></tr>
+          <tr><td>📱 SMS</td><td>3,200</td><td>896 (28%)</td><td>194 (6.1%)</td><td>$11,800</td><td>$1.20</td></tr>
+          <tr><td>💬 In-App</td><td>4,100</td><td>1,640 (40%)</td><td>88 (2.1%)</td><td>$5,200</td><td>$0.82</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-section-title">🔄 Conversion Funnel</div>
+    <div class="d-card full">
+      <div class="funnel">
+        <div class="funnel-step"><span class="funnel-label">Targeted</span><div class="funnel-bar" style="width:100%;background:var(--primary)">6,400</div></div>
+        <div class="funnel-step"><span class="funnel-label">Delivered</span><div class="funnel-bar" style="width:98%;background:var(--primary)">6,272</div></div>
+        <div class="funnel-step"><span class="funnel-label">Opened</span><div class="funnel-bar" style="width:44%;background:var(--success)">2,816</div></div>
+        <div class="funnel-step"><span class="funnel-label">Clicked</span><div class="funnel-bar" style="width:22%;background:var(--info)">1,408</div></div>
+        <div class="funnel-step"><span class="funnel-label">Converted</span><div class="funnel-bar" style="width:12%;background:var(--warn)">794</div></div>
+      </div>
+    </div>
+
+    <div class="d-section-title">💡 AI Learnings</div>
+    <div class="d-card full">
+      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">What Worked</div><div class="insight-text">Personalized subject lines → +34% open rate vs generic. "Your plan upgrade" outperformed "Special offer".</div></div>
+      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">What Worked</div><div class="insight-text">SMS day-3 follow-up → +18% CTR. Timing matters: 10am–12pm sends performed 25% better.</div></div>
+      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)"><div class="insight-type" style="color:var(--danger)">What Didn't</div><div class="insight-text">In-app only → 2.1% conversion. Without email/SMS priming, in-app messages get ignored.</div></div>
+      <div class="insight" style="border-color:var(--info);background:var(--info-soft)"><div class="insight-type" style="color:var(--info)">Recommendation</div><div class="insight-text">Next campaign: Email first → SMS day 2 → In-App day 4. Allocate 60% budget to email channel.</div></div>
+    </div>
+  `;
+
+  setTimeout(()=>{
+    const ctx=document.getElementById('perfChart');if(!ctx)return;
+    const days=['Oct 15','Oct 18','Oct 21','Oct 24','Oct 27','Oct 30','Nov 2','Nov 5','Nov 8','Nov 12'];
+    charts.perf=new Chart(ctx,{type:'line',data:{labels:days,datasets:[
+      {label:'Conversions',data:[12,34,68,98,142,210,320,480,620,794],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,pointBackgroundColor:pc()},
+      {label:'Revenue ($)',data:[720,2040,4080,5880,8520,12600,19200,28800,37200,48200],borderColor:getComputedStyle(document.body).getPropertyValue('--success').trim(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,yAxisID:'y1'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y1:{position:'right',grid:{display:false},ticks:{color:tc(),font:{size:9},callback:v=>'$'+(v/1000)+'K'}}}}});
+  },50);
+}
+
+function loadDoneHoliday(){
+  document.getElementById('camp-holiday').classList.add('active');
+  setLayout(1,3);
+  setPhaseTag('✅ Complete','var(--accent-soft)','var(--text-muted)');
+  chatMsgs.innerHTML='';
+  addAI(`<strong>Holiday Promo 2025</strong> — 8.7% conversion, $32,400 revenue.<br><br>Multi-channel approach იმუშავა, მაგრამ push notification-ებმა 2% opt-out გამოიწვია. შემდეგისთვის push-ს ავიცილებთ churn-risk სეგმენტზე.`);
+  setSugs(['📊 channel comparison','💡 learnings','🔁 repeat']);
+  dashContent.innerHTML=`
+    <div class="dash-header"><div><div class="dash-title">Holiday Promo 2025 — Results</div><div class="dash-subtitle">✅ Completed · Dec 1–24, 2025 · 5,800 profiles</div></div></div>
+    <div class="dash-grid">
+      <div class="d-card"><div class="d-label">Reached</div><div class="d-value">5,800</div></div>
+      <div class="d-card"><div class="d-label">Converted</div><div class="d-value" style="color:var(--primary)">505</div><div class="d-change">8.7%</div></div>
+      <div class="d-card"><div class="d-label">Revenue</div><div class="d-value" style="color:var(--success)">$32,400</div></div>
+      <div class="d-card"><div class="d-label">ROI</div><div class="d-value">5.4x</div></div>
+    </div>
+    <div class="d-section-title">💡 Key Learnings</div>
+    <div class="d-card full">
+      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Worked</div><div class="insight-text">Discount > free trial for re-engagement. 10% off outperformed 14-day trial by 2.3x.</div></div>
+      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Worked</div><div class="insight-text">Urgency messaging "expires in 48h" → +22% final-day conversions.</div></div>
+      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)"><div class="insight-type" style="color:var(--danger)">Avoid</div><div class="insight-text">Push notifications → 2% opt-out rate on churn-risk segment. Don't push to already disengaged users.</div></div>
+    </div>
+  `;
+}
+
+// ═══ HELPERS ═══
+function setPhaseTag(text,bg,color){
+  const tag=document.getElementById('phaseTag');
+  tag.innerHTML=text;tag.style.background=bg;tag.style.color=color;
+}
+
+function addAI(html){
+  const d=document.createElement('div');d.className='msg msg-ai';
+  d.innerHTML=`<div class="msg-av">O</div><div class="msg-body">${html}</div>`;
+  chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
+}
+function addUser(text){
+  const d=document.createElement('div');d.className='msg msg-user';
+  d.innerHTML=`<div class="msg-av">დგ</div><div class="msg-body">${text}</div>`;
+  chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
+}
+function addTyping(){
+  const d=document.createElement('div');d.className='msg msg-ai';d.id='typing';
+  d.innerHTML='<div class="msg-av">O</div><div class="msg-body"><div class="typing-ind"><span></span><span></span><span></span></div></div>';
+  chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
+}
+
+function setSugs(list){
+  const el=document.getElementById('sugs');
+  el.style.display='flex';
+  el.innerHTML=list.map(s=>`<button class="sug" onclick="ask('${s.replace(/'/g,"\\'")}')">${s}</button>`).join('');
+}
+
+function ask(text){chatInput.value=text;sendMsg()}
+function sendMsg(){
+  const text=chatInput.value.trim();if(!text)return;
+  addUser(text);chatInput.value='';chatInput.style.height='auto';
+  document.getElementById('sugs').style.display='none';
+  addTyping();
+  setTimeout(()=>{document.getElementById('typing')?.remove();respond(text)},600+Math.random()*400);
+}
+
+function respond(text){
+  const t=text.toLowerCase();
+  if(t.includes('email')&&t.includes('sms')||t.includes('re-activation')){
+    addAI(`კარგი! Email + SMS, re-activation მიზნით:<br>
+    <div class="journey-v">
+      <div class="j-step"><div class="j-dot active">1</div><div class="j-info"><div class="j-name">Trigger: enters "Churn Risk 90d"</div><div class="j-desc">ავტომატური</div></div></div>
+      <div class="j-step"><div class="j-dot pending">2</div><div class="j-info"><div class="j-name">Email: personal offer + 10% discount</div><div class="j-desc">SendGrid · personalized subject</div></div></div>
+      <div class="j-step"><div class="j-dot pending">3</div><div class="j-info"><div class="j-name">Wait 2d → opened?</div><div class="j-desc">Yes → in-app · No → SMS</div></div></div>
+      <div class="j-step"><div class="j-dot pending">4</div><div class="j-info"><div class="j-name">Wait 5d → returned?</div><div class="j-desc">Yes → exit ✅ · No → notify manager</div></div></div>
+    </div>
+    Q4 კამპანიიდან: personalized subject +34%, urgency +22%.<br><br>
+    <button class="msg-btn msg-btn-p" onclick="expandToBuild()">🔧 ავაწყოთ</button>
+    <button class="msg-btn msg-btn-s" onclick="ask('A/B ტესტი')">🔬 A/B ტესტი</button>`);
+  } else if(t.includes('a/b')||t.includes('ტესტ')){
+    addAI(`A/B ტესტი subject line-ზე:<br><br><strong>A:</strong> "[Name], 10% discount is waiting"<br><strong>B:</strong> "[Name], we built something new"<br><br>50/50 split (940/940). Winner auto-promoted 24h-ში.<br><br><button class="msg-btn msg-btn-p" onclick="expandToLaunch()">🚀 გავუშვათ</button><button class="msg-btn msg-btn-s" onclick="ask('preview')">👁 Preview</button>`);
+  } else if(t.includes('learning')||t.includes('სწავლ')||t.includes('წინა კამპანი')){
+    addAI(`წინა კამპანიებიდან:<br><br>✅ Personalized subject → +34% open<br>✅ SMS follow-up day 3 → +18% CTR<br>✅ 10% discount > free trial<br>✅ Urgency "48h" → +22% conversion<br>❌ Push → 2% opt-out (avoid for churn)<br>❌ Generic "we miss you" → low engagement<br><br>რეკომენდაცია: <strong>Email+SMS, personalized, discount, urgency</strong>.`);
+  } else if(t.includes('სეგმენტ')){
+    addAI(`<strong>Churn Risk 90d</strong>:<br><table><tr><th>Attr</th><th>Value</th></tr><tr><td>Count</td><td>1,880</td></tr><tr><td>Avg last active</td><td>42d ago</td></tr><tr><td>Avg LTV</td><td>$284</td></tr><tr><td>Top plan</td><td>Growth (62%)</td></tr></table><br>62% Growth plan = high LTV. Re-engagement-ს ნამდვილად აქვს აზრი.`);
+  } else if(t.includes('key learning')||t.includes('დასკვნ')){
+    addAI(`💡 <strong>Q4 Upsell Key Learnings:</strong><br><br>1. Personalized > generic (always)<br>2. Email → SMS → In-App sequence works best<br>3. 10am–12pm sends +25% better<br>4. In-app alone doesn't convert<br>5. SMS ROI justified for high-LTV segments<br><br>ეს learnings ავტომატურად გამოიყენება შემდეგ კამპანიაში.`);
+  } else {
+    addAI(`კარგი, მოდი ვიმუშაოთ ამაზე. რა გაინტერესებს კონკრეტულად?`);
+  }
+}
+
+function expandToBuild(){
+  setLayout(2,1);
+  setPhaseTag('🔧 Building','var(--warn-soft)','var(--warn)');
+  dashContent.innerHTML=`
+    <div class="dash-header"><div><div class="dash-title">Journey Builder</div><div class="dash-subtitle">Churn Re-engagement</div></div></div>
+    <div class="d-card full">
+      <div class="prog-row"><div class="prog-label"><span>✅ Trigger configured</span><span>Done</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>✅ Email template</span><span>Done</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>✅ Branch logic</span><span>Done</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>⏳ SMS template</span><span>In progress</span></div><div class="prog-bar"><div class="prog-fill" style="width:60%;background:var(--warn)"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>⬜ Exit criteria</span><span>Pending</span></div><div class="prog-bar"><div class="prog-fill" style="width:0%;background:var(--border)"></div></div></div>
+    </div>
+  `;
+  addAI(`Journey-ს ვაწყობ! Trigger და email მზადაა, SMS template-ზე ვმუშაობ.<br><br>გინდა A/B ტესტის დამატებაც?`);
+  setSugs(['🔬 A/B ტესტი','🚀 გაშვება A/B-ს გარეშე']);
+}
+
+function expandToLaunch(){
+  setLayout(1,2);
+  setPhaseTag('🚀 Launching','var(--success-soft)','var(--success)');
+  addAI(`🚀 <strong>Launched!</strong> Journey გაეშვა 1,880 პროფილზე.<br><br>📧 940 → Variant A<br>📧 940 → Variant B<br>📱 SMS queued day 2<br><br>პირველი შედეგები 1-2 საათში.`);
+  dashContent.innerHTML=`
+    <div class="dash-header"><div><div class="dash-title">Churn Re-engagement</div><div class="dash-subtitle">🚀 Just launched · 1,880 profiles</div></div></div>
+    <div class="dash-grid">
+      <div class="d-card"><div class="d-label">Sending</div><div class="d-value" style="color:var(--success)">1,880</div></div>
+      <div class="d-card"><div class="d-label">Delivered</div><div class="d-value">0</div><div class="d-change">sending...</div></div>
+      <div class="d-card"><div class="d-label">Opened</div><div class="d-value">—</div><div class="d-change">waiting</div></div>
+      <div class="d-card"><div class="d-label">Converted</div><div class="d-value">—</div><div class="d-change">waiting</div></div>
+    </div>
+    <div class="d-section-title">📧 Delivery Progress</div>
+    <div class="d-card full">
+      <div class="prog-row"><div class="prog-label"><span>Variant A — "your 10% discount"</span><span>sending...</span></div><div class="prog-bar"><div class="prog-fill" style="width:5%;background:var(--primary);animation:sending 2s infinite"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>Variant B — "we built something new"</span><span>sending...</span></div><div class="prog-bar"><div class="prog-fill" style="width:3%;background:var(--info);animation:sending 2s infinite 0.5s"></div></div></div>
+    </div>
+    <style>@keyframes sending{0%{width:5%}50%{width:35%}100%{width:5%}}</style>
+  `;
+}
+
+function startLiveStream(){
+  const evts=['email_sent','email_opened','email_clicked','sms_queued','page_view','purchase','button_click'];
+  const users=['ana@acme.io','luka@nova.shop','nino@spark.tv','giorgi@acme.io','mariam@nova.shop','dato@spark.tv'];
+  function addEv(){
+    const s=document.getElementById('liveStream');if(!s){clearInterval(liveInterval);return}
+    const n=new Date(),tm=`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}:${n.getSeconds().toString().padStart(2,'0')}`;
+    const d=document.createElement('div');d.className='lm-ev';
+    d.innerHTML=`<span class="lm-time">${tm}</span><span class="lm-name">${evts[Math.floor(Math.random()*evts.length)]}</span><span class="lm-detail">${users[Math.floor(Math.random()*users.length)]}</span>`;
+    s.insertBefore(d,s.firstChild);
+    if(s.children.length>30)s.removeChild(s.lastChild);
+  }
+  for(let i=0;i<5;i++)addEv();
+  liveInterval=setInterval(addEv,1200);
+}
+
+function rebuildCharts(){
+  Object.values(charts).forEach(c=>c.destroy());charts={};
+  // Re-render current view's chart if needed
+}
+
+// ═══ INIT ═══
+(function(){const p=new URLSearchParams(window.location.search).get('theme');if(p&&['warm','lavender','sage','teal','dark'].includes(p)){document.body.setAttribute('data-theme',p);document.querySelectorAll('.th-opt').forEach(b=>{b.classList.remove('active');if(b.textContent.toLowerCase().includes(p==='warm'?'warm':p))b.classList.add('active')})}})();
+loadPlanning();
+</script>
+</body>
+</html>

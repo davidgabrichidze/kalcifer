@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalcifer — Browse</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:#f5f0eb;--surface:#ffffff;--surface-dim:#faf7f4;
+  --primary:#c4956a;--primary-hover:#b5845c;--primary-soft:rgba(196,149,106,0.10);
+  --accent:#8b7355;--accent-soft:rgba(139,115,85,0.08);
+  --border:#e8ddd3;--border-light:#f0e8df;
+  --text:#2d2a26;--text-sec:#6b6560;--text-muted:#a09890;--text-on-primary:#fff;
+  --success:#5a9e6f;--success-soft:rgba(90,158,111,0.08);
+  --warn:#c49a5c;--warn-soft:rgba(196,154,92,0.08);
+  --danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);
+  --info:#6a8fa0;--info-soft:rgba(106,143,160,0.08);
+  --radius:14px;--radius-sm:10px;--radius-xs:6px;
+}
+[data-theme="lavender"]{--bg:#f7f5f0;--surface:#fff;--surface-dim:#f5f2f8;--primary:#9b8ec4;--primary-hover:#8a7db5;--primary-soft:rgba(155,142,196,0.10);--accent:#7c6fa0;--accent-soft:rgba(124,111,160,0.08);--border:#e6e1ec;--border-light:#eeebf3;--text:#2d2a33;--text-sec:#65606e;--text-muted:#9e96a8;--success:#6a9e7a;--success-soft:rgba(106,158,122,0.08);--warn:#c4a05c;--warn-soft:rgba(196,160,92,0.08);--danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);--info:#7a8ec4;--info-soft:rgba(122,142,196,0.08)}
+[data-theme="sage"]{--bg:#f4f1ec;--surface:#fefdfb;--surface-dim:#f6f4f0;--primary:#6b8f6e;--primary-hover:#5c7e60;--primary-soft:rgba(107,143,110,0.10);--accent:#4a6b4d;--accent-soft:rgba(74,107,77,0.08);--border:#e2ddd6;--border-light:#eae6e0;--text:#2a2d28;--text-sec:#5c5f58;--text-muted:#969990;--success:#6b8f6e;--success-soft:rgba(107,143,110,0.08);--warn:#c49a5c;--warn-soft:rgba(196,154,92,0.08);--danger:#b86e5a;--danger-soft:rgba(184,110,90,0.08);--info:#5a8b9e;--info-soft:rgba(90,139,158,0.08)}
+[data-theme="teal"]{--bg:#f5f2ed;--surface:#fff;--surface-dim:#f9f7f4;--primary:#3d8b80;--primary-hover:#2d7b70;--primary-soft:rgba(61,139,128,0.10);--accent:#2d6b62;--accent-soft:rgba(45,107,98,0.08);--border:#e5dfd8;--border-light:#ede8e2;--text:#2a2825;--text-sec:#5c5855;--text-muted:#9a9590;--success:#5a9e6f;--success-soft:rgba(90,158,111,0.08);--warn:#c4956a;--warn-soft:rgba(196,149,106,0.08);--danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);--info:#3d8b80;--info-soft:rgba(61,139,128,0.08)}
+[data-theme="dark"]{--bg:#0f0f14;--surface:#1a1a24;--surface-dim:#141420;--primary:#a89cf0;--primary-hover:#bdb3f5;--primary-soft:rgba(168,156,240,0.10);--accent:#c4b8f0;--accent-soft:rgba(196,184,240,0.06);--border:#2a2a3a;--border-light:#22222f;--text:#e4e2ec;--text-sec:#9896a8;--text-muted:#5c5a6e;--text-on-primary:#0f0f14;--success:#6ee0a0;--success-soft:rgba(110,224,160,0.08);--warn:#f0c060;--warn-soft:rgba(240,192,96,0.08);--danger:#f08070;--danger-soft:rgba(240,128,112,0.08);--info:#70b0f0;--info-soft:rgba(112,176,240,0.08)}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;transition:background 0.4s,color 0.3s}
+
+/* ═══ LAYOUT ═══ */
+.app{display:grid;grid-template-columns:200px 1fr;grid-template-rows:48px 1fr;height:100vh}
+
+/* ═══ TOPBAR ═══ */
+.topbar{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
+.top-left{display:flex;align-items:center;gap:14px}
+.logo{font-size:17px;font-weight:700;color:var(--primary);letter-spacing:-0.5px}
+.logo span{font-weight:400;color:var(--text-muted);font-size:11px;margin-left:4px;padding:2px 6px;background:var(--accent-soft);border-radius:4px}
+.top-right{display:flex;align-items:center;gap:6px}
+.top-btn{background:var(--surface-dim);border:1px solid var(--border);color:var(--text-sec);height:30px;padding:0 10px;border-radius:var(--radius-xs);cursor:pointer;font-size:11px;font-family:inherit;display:flex;align-items:center;gap:4px;transition:all 0.2s}
+.top-btn:hover{border-color:var(--primary);color:var(--text)}
+.top-btn.ai-toggle{background:var(--primary-soft);border-color:var(--primary);color:var(--primary)}
+.top-btn.ai-toggle.active{background:var(--primary);color:var(--text-on-primary)}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--text-on-primary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+.theme-wrap{position:relative}
+.theme-dd{display:none;position:absolute;top:36px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:500;min-width:160px}
+.theme-dd.open{display:block}
+.th-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius-xs);cursor:pointer;font-size:11px;color:var(--text-sec);border:none;background:none;width:100%;font-family:inherit;transition:all 0.15s}
+.th-opt:hover{background:var(--primary-soft)}.th-opt.active{color:var(--primary);font-weight:600}
+.th-sw{display:flex;gap:2px}.th-sw i{width:10px;height:10px;border-radius:2px;display:block}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sb-section{padding:10px 8px 4px}
+.sb-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);padding:0 8px;margin-bottom:6px}
+.sb-scroll{flex:1;overflow-y:auto;padding:0 8px}
+.sb-scroll::-webkit-scrollbar{width:3px}.sb-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s;margin-bottom:2px;border:none;background:none;width:100%;font-family:inherit;font-size:12px;color:var(--text-sec);text-align:left}
+.nav-item:hover{background:var(--surface-dim)}
+.nav-item.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+.nav-icon{font-size:15px;width:20px;text-align:center}
+.nav-badge{margin-left:auto;font-size:9px;padding:2px 6px;border-radius:8px;font-weight:600;background:var(--primary-soft);color:var(--primary)}
+
+.sb-bottom{padding:8px;border-top:1px solid var(--border)}
+.sb-settings{display:flex;align-items:center;gap:6px;width:100%;padding:7px 10px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-sec);font-size:11px;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.sb-settings:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
+.tenant{display:flex;align-items:center;gap:6px;width:100%;padding:6px 8px;background:var(--surface-dim);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;color:var(--text-sec);margin-top:6px}
+.t-dot{width:6px;height:6px;border-radius:50%;background:var(--success)}
+
+/* ═══ MAIN ═══ */
+.main{display:flex;overflow:hidden;min-height:0}
+.content{flex:1;overflow-y:auto;padding:20px 24px;min-height:0}
+.content::-webkit-scrollbar{width:5px}.content::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ═══ AI HELPER (collapsible) ═══ */
+.ai-panel{width:300px;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;min-height:0;background:var(--bg);transition:width 0.3s,opacity 0.3s}
+.ai-panel.hidden{width:0;border:none;overflow:hidden;opacity:0}
+.ai-head{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.ai-head-left{display:flex;align-items:center;gap:6px}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:pulse 2.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.ai-head h3{font-size:12px;font-weight:600}
+.ai-head-tag{font-size:9px;padding:2px 6px;border-radius:8px;background:var(--accent-soft);color:var(--text-muted);font-weight:500}
+.ai-close{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:var(--radius-xs);transition:all 0.15s}
+.ai-close:hover{color:var(--text);background:var(--surface-dim)}
+.ai-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;min-height:0}
+.ai-msgs::-webkit-scrollbar{width:3px}.ai-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.msg{display:flex;gap:6px;animation:msgIn 0.3s ease}
+.msg-user{flex-direction:row-reverse}
+@keyframes msgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.msg-av{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600}
+.msg-ai .msg-av{background:var(--primary-soft);color:var(--primary);border:1px solid var(--border)}
+.msg-user .msg-av{background:var(--surface-dim);color:var(--text-muted);border:1px solid var(--border)}
+.msg-body{padding:7px 10px;border-radius:var(--radius);font-size:11px;line-height:1.5;max-width:88%}
+.msg-ai .msg-body{background:var(--surface);border:1px solid var(--border)}
+.msg-user .msg-body{background:var(--primary);color:var(--text-on-primary)}
+.ai-input-area{padding:8px 12px 10px;flex-shrink:0;border-top:1px solid var(--border)}
+.ai-input-wrap{display:flex;gap:4px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:6px 10px;transition:all 0.2s}
+.ai-input-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.ai-input{flex:1;background:none;border:none;color:var(--text);font-size:11px;font-family:inherit;resize:none;outline:none;max-height:50px;line-height:1.4}
+.ai-input::placeholder{color:var(--text-muted)}
+.ai-send{background:var(--primary);border:none;color:var(--text-on-primary);width:24px;height:24px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+.ai-send:hover{background:var(--primary-hover)}
+.ai-send svg{width:10px;height:10px}
+.typing-ind{display:flex;gap:3px;padding:2px 0}
+.typing-ind span{width:4px;height:4px;border-radius:50%;background:var(--primary);animation:td 1.2s infinite}
+.typing-ind span:nth-child(2){animation-delay:0.2s}.typing-ind span:nth-child(3){animation-delay:0.4s}
+@keyframes td{0%,60%,100%{opacity:0.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+
+/* ═══ PAGE COMPONENTS ═══ */
+.page{display:none}.page.active{display:block}
+.page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.page-head h2{font-size:18px;font-weight:700}
+.page-actions{display:flex;gap:6px}
+.btn{height:32px;padding:0 14px;border-radius:var(--radius-xs);font-size:12px;font-family:inherit;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:5px;font-weight:500;border:none}
+.btn-primary{background:var(--primary);color:var(--text-on-primary)}.btn-primary:hover{background:var(--primary-hover)}
+.btn-secondary{background:var(--surface);color:var(--text-sec);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
+
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;transition:all 0.2s}
+.card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.card-title{font-size:12px;font-weight:600}
+
+/* Stat */
+.stat{text-align:center;padding:14px 10px}
+.stat-value{font-size:24px;font-weight:700;color:var(--primary)}
+.stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
+.stat-sub{font-size:10px;margin-top:3px}
+
+/* Tables */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;padding:8px 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:2px solid var(--border);background:var(--surface-dim)}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:12px;color:var(--text-sec)}
+.tbl tr:hover td{background:var(--primary-soft)}
+.tbl tr{cursor:pointer}
+
+/* Tags */
+.tag{font-size:9px;padding:3px 8px;border-radius:10px;font-weight:600;display:inline-block}
+.tag-green{background:var(--success-soft);color:var(--success)}
+.tag-orange{background:var(--warn-soft);color:var(--warn)}
+.tag-red{background:var(--danger-soft);color:var(--danger)}
+.tag-blue{background:var(--info-soft);color:var(--info)}
+.tag-muted{background:var(--accent-soft);color:var(--text-muted)}
+
+/* Progress */
+.prog-row{margin-bottom:8px}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.prog-label span:first-child{color:var(--text-sec)}.prog-label span:last-child{font-weight:600}
+.prog-bar{height:6px;background:var(--surface-dim);border-radius:3px;overflow:hidden;border:1px solid var(--border-light)}
+.prog-fill{height:100%;border-radius:2px}
+
+/* Chart */
+.chart-box{position:relative;height:200px}
+
+/* Form */
+.form-section{margin-bottom:18px}
+.form-section h3{font-size:13px;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border-light)}
+.form-row{display:flex;gap:12px;margin-bottom:10px}
+.form-group{flex:1;display:flex;flex-direction:column;gap:4px}
+.form-label{font-size:11px;font-weight:500;color:var(--text-sec)}
+.form-input{height:34px;padding:0 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);transition:all 0.2s;outline:none}
+.form-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.form-select{height:34px;padding:0 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);cursor:pointer;outline:none}
+.form-select:focus{border-color:var(--primary)}
+.form-textarea{padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);resize:vertical;min-height:60px;outline:none;line-height:1.5}
+.form-textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.form-hint{font-size:10px;color:var(--text-muted)}
+.form-actions{display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+
+/* Funnel */
+.funnel{display:flex;flex-direction:column;gap:3px}
+.funnel-step{display:flex;align-items:center;gap:8px}
+.funnel-bar{height:22px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;color:white}
+.funnel-label{font-size:10px;color:var(--text-muted);min-width:65px}
+.funnel-val{font-size:10px;color:var(--text-sec);min-width:50px;text-align:right}
+
+/* Section title */
+.sec-title{font-size:13px;font-weight:600;margin:16px 0 10px;display:flex;align-items:center;gap:6px}
+
+/* Empty state */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;color:var(--text-muted)}
+.empty-icon{font-size:40px;margin-bottom:8px;opacity:0.3}
+.empty h3{font-size:14px;color:var(--text-sec);font-weight:500;margin-bottom:4px}
+.empty p{font-size:11px;max-width:260px;line-height:1.5}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px}
+.tab{padding:8px 14px;font-size:12px;color:var(--text-muted);cursor:pointer;border:none;background:none;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;font-weight:500}
+.tab:hover{color:var(--text-sec)}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+
+/* Insight */
+.insight{padding:8px 10px;border-left:3px solid;border-radius:0 var(--radius-xs) var(--radius-xs) 0;margin-bottom:6px}
+.insight-type{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.insight-text{font-size:11px;margin-top:2px;color:var(--text-sec);line-height:1.4}
+
+</style>
+</head>
+<body data-theme="warm">
+<div class="app">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="top-left">
+    <div class="logo">kalcifer<span>Browse</span></div>
+  </div>
+  <div class="top-right">
+    <button class="top-btn" onclick="switchToAI()" title="სამუშაო რეჟიმი">🛠 Work</button>
+    <button class="top-btn ai-toggle" id="aiToggle" onclick="toggleAI()">💬 Assistant</button>
+    <div class="theme-wrap">
+      <button class="top-btn" onclick="document.getElementById('thDD').classList.toggle('open')">◐</button>
+      <div class="theme-dd" id="thDD">
+        <button class="th-opt active" onclick="setTh('warm',this)"><span class="th-sw"><i style="background:#f5f0eb"></i><i style="background:#c4956a"></i></span>Warm Paper</button>
+        <button class="th-opt" onclick="setTh('lavender',this)"><span class="th-sw"><i style="background:#f7f5f0"></i><i style="background:#9b8ec4"></i></span>Lavender</button>
+        <button class="th-opt" onclick="setTh('sage',this)"><span class="th-sw"><i style="background:#f4f1ec"></i><i style="background:#6b8f6e"></i></span>Sand & Sage</button>
+        <button class="th-opt" onclick="setTh('teal',this)"><span class="th-sw"><i style="background:#f5f2ed"></i><i style="background:#3d8b80"></i></span>Paper & Teal</button>
+        <button class="th-opt" onclick="setTh('dark',this)"><span class="th-sw"><i style="background:#0f0f14"></i><i style="background:#a89cf0"></i></span>Dark</button>
+      </div>
+    </div>
+    <div class="avatar">დგ</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sb-section"><div class="sb-label">ნავიგაცია</div></div>
+  <div class="sb-scroll">
+    <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</button>
+    <button class="nav-item" onclick="showPage('segments',this)"><span class="nav-icon">🎯</span>სეგმენტები<span class="nav-badge">12</span></button>
+    <button class="nav-item" onclick="showPage('campaigns',this)"><span class="nav-icon">📧</span>კამპანიები<span class="nav-badge">5</span></button>
+    <button class="nav-item" onclick="showPage('journeys',this)"><span class="nav-icon">🛤</span>Journeys<span class="nav-badge">3</span></button>
+    <button class="nav-item" onclick="showPage('analytics',this)"><span class="nav-icon">📈</span>ანალიტიკა</button>
+    <button class="nav-item" onclick="showPage('profiles',this)"><span class="nav-icon">👤</span>პროფილები<span class="nav-badge">15.2K</span></button>
+    <button class="nav-item" onclick="showPage('create-campaign',this)"><span class="nav-icon">✏️</span>ახალი კამპანია</button>
+  </div>
+  <div class="sb-bottom">
+    <button class="sb-settings" onclick="goSettings()">⚙ Engine Room</button>
+    <div class="tenant"><span class="t-dot"></span>Acme SaaS<span style="margin-left:auto;font-size:10px;color:var(--text-muted)">▾</span></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="content" id="contentArea">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="page active" id="pg-dashboard">
+      <div class="page-head"><h2>📊 Dashboard</h2><div class="page-actions"><button class="btn btn-secondary">Export</button></div></div>
+
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="card stat"><div class="stat-value">15,200</div><div class="stat-label">Profiles</div><div class="stat-sub" style="color:var(--success)">+1.2K this month</div></div>
+        <div class="card stat"><div class="stat-value">5</div><div class="stat-label">Active Campaigns</div><div class="stat-sub">2 live · 1 planning</div></div>
+        <div class="card stat"><div class="stat-value">12.4%</div><div class="stat-label">Avg Conversion</div><div class="stat-sub" style="color:var(--success)">↑ 2.1%</div></div>
+        <div class="card stat"><div class="stat-value">$80.6K</div><div class="stat-label">Revenue (Campaigns)</div><div class="stat-sub">last 30 days</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="sec-title">📧 მიმდინარე კამპანიები</div>
+          <div class="card" style="padding:0;overflow:hidden">
+            <table class="tbl">
+              <thead><tr><th>კამპანია</th><th>სტატუსი</th><th>Progress</th><th>Conv.</th></tr></thead>
+              <tbody>
+                <tr onclick="showPage('campaigns',document.querySelectorAll('.nav-item')[2])"><td style="font-weight:500">Spring Sale Push</td><td><span class="tag tag-green">🚀 Live</span></td><td>67%</td><td>5.8%</td></tr>
+                <tr onclick="showPage('campaigns',document.querySelectorAll('.nav-item')[2])"><td style="font-weight:500">Onboarding v3</td><td><span class="tag tag-green">🚀 Live</span></td><td>59%</td><td>35%</td></tr>
+                <tr onclick="showPage('campaigns',document.querySelectorAll('.nav-item')[2])"><td style="font-weight:500">Churn Re-engage</td><td><span class="tag tag-blue">📝 Planning</span></td><td>—</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sec-title">🎯 Top სეგმენტები</div>
+          <div class="card" style="padding:0;overflow:hidden">
+            <table class="tbl">
+              <thead><tr><th>სეგმენტი</th><th>Size</th><th>Trend</th></tr></thead>
+              <tbody>
+                <tr><td>Active Customers</td><td>8,420</td><td style="color:var(--success)">↑ 5%</td></tr>
+                <tr><td>Churn Risk 90d</td><td>1,880</td><td style="color:var(--danger)">↑ 12%</td></tr>
+                <tr><td>High-LTV Users</td><td>2,140</td><td style="color:var(--success)">↑ 3%</td></tr>
+                <tr><td>New Signups (7d)</td><td>340</td><td>→ stable</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="sec-title">📈 Events (7 days)</div>
+          <div class="card"><div class="chart-box"><canvas id="dashEventsChart"></canvas></div></div>
+
+          <div class="sec-title">💡 AI Insights</div>
+          <div class="card">
+            <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Opportunity</div><div class="insight-text">Churn Risk segment grew 12% — time for re-engagement campaign.</div></div>
+            <div class="insight" style="border-color:var(--info);background:var(--info-soft)"><div class="insight-type" style="color:var(--info)">Trend</div><div class="insight-text">Email open rates improving: 38% → 41% this month. Personalization working.</div></div>
+            <div class="insight" style="border-color:var(--warn);background:var(--warn-soft)"><div class="insight-type" style="color:var(--warn)">Alert</div><div class="insight-text">AI query usage at 68%. Consider caching or plan upgrade.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SEGMENTS ═══ -->
+    <div class="page" id="pg-segments">
+      <div class="page-head"><h2>🎯 სეგმენტები</h2><div class="page-actions"><button class="btn btn-primary" onclick="showPage('create-segment')">+ ახალი სეგმენტი</button><button class="btn btn-secondary">Export</button></div></div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>სახელი</th><th>Size</th><th>Type</th><th>Created</th><th>Last Sync</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td style="font-weight:500">Active Customers</td><td>8,420</td><td>Dynamic</td><td>Jan 15</td><td>2m ago</td><td><span class="tag tag-green">● Synced</span></td></tr>
+            <tr><td style="font-weight:500">Churn Risk 90d</td><td>1,880</td><td>Dynamic</td><td>Feb 2</td><td>5m ago</td><td><span class="tag tag-green">● Synced</span></td></tr>
+            <tr><td style="font-weight:500">High-LTV Users</td><td>2,140</td><td>Dynamic</td><td>Dec 10</td><td>3m ago</td><td><span class="tag tag-green">● Synced</span></td></tr>
+            <tr><td style="font-weight:500">New Signups (7d)</td><td>340</td><td>Dynamic</td><td>Jan 5</td><td>1m ago</td><td><span class="tag tag-green">● Synced</span></td></tr>
+            <tr><td style="font-weight:500">Growth Plan Users</td><td>4,200</td><td>Dynamic</td><td>Nov 20</td><td>8m ago</td><td><span class="tag tag-green">● Synced</span></td></tr>
+            <tr><td style="font-weight:500">Email Engaged (30d)</td><td>5,680</td><td>Dynamic</td><td>Mar 1</td><td>4m ago</td><td><span class="tag tag-green">● Synced</span></td></tr>
+            <tr><td style="font-weight:500">Push Opt-out</td><td>420</td><td>Dynamic</td><td>Dec 28</td><td>10m ago</td><td><span class="tag tag-orange">● Stale</span></td></tr>
+            <tr><td style="font-weight:500">Q4 Upsell Audience</td><td>6,400</td><td>Static</td><td>Oct 10</td><td>—</td><td><span class="tag tag-muted">Archived</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ CAMPAIGNS ═══ -->
+    <div class="page" id="pg-campaigns">
+      <div class="page-head"><h2>📧 კამპანიები</h2><div class="page-actions"><button class="btn btn-primary" onclick="showPage('create-campaign')">+ ახალი კამპანია</button></div></div>
+
+      <div class="tabs">
+        <button class="tab active">ყველა</button>
+        <button class="tab">🚀 Live (2)</button>
+        <button class="tab">📝 Planning (1)</button>
+        <button class="tab">✅ Completed (2)</button>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>კამპანია</th><th>ტიპი</th><th>სტატუსი</th><th>Audience</th><th>Sent</th><th>Conv.</th><th>Revenue</th></tr></thead>
+          <tbody>
+            <tr><td style="font-weight:500">Spring Sale Push</td><td>Promo</td><td><span class="tag tag-green">🚀 Live</span></td><td>4,200</td><td>2,814</td><td>5.8%</td><td>$12,400</td></tr>
+            <tr><td style="font-weight:500">Onboarding Flow v3</td><td>Journey</td><td><span class="tag tag-green">🚀 Live</span></td><td>2,100</td><td>—</td><td>35%</td><td>—</td></tr>
+            <tr><td style="font-weight:500">Churn Re-engagement</td><td>Re-engage</td><td><span class="tag tag-blue">📝 Planning</span></td><td>1,880</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td style="font-weight:500">Q4 Upsell Campaign</td><td>Upsell</td><td><span class="tag tag-muted">✅ Done</span></td><td>6,400</td><td>6,400</td><td>12.4%</td><td>$48,200</td></tr>
+            <tr><td style="font-weight:500">Holiday Promo 2025</td><td>Promo</td><td><span class="tag tag-muted">✅ Done</span></td><td>5,800</td><td>5,800</td><td>8.7%</td><td>$32,400</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ JOURNEYS ═══ -->
+    <div class="page" id="pg-journeys">
+      <div class="page-head"><h2>🛤 Journeys</h2><div class="page-actions"><button class="btn btn-primary">+ ახალი Journey</button></div></div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Onboarding Flow v3</div><span class="tag tag-green">🚀 Live</span></div>
+          <div style="font-size:11px;color:var(--text-sec);margin-bottom:8px">5 steps · 2,100 active users · running 12 days</div>
+          <div class="prog-row"><div class="prog-label"><span>Completion</span><span>59%</span></div><div class="prog-bar"><div class="prog-fill" style="width:59%;background:var(--success)"></div></div></div>
+          <div class="prog-row"><div class="prog-label"><span>Drop-off</span><span style="color:var(--danger)">22%</span></div><div class="prog-bar"><div class="prog-fill" style="width:22%;background:var(--danger)"></div></div></div>
+          <div style="margin-top:8px;display:flex;gap:4px"><button class="btn btn-secondary" style="height:26px;font-size:10px">📊 Stats</button><button class="btn btn-secondary" style="height:26px;font-size:10px">⏸ Pause</button></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div class="card-title">Churn Re-engagement</div><span class="tag tag-blue">📝 Draft</span></div>
+          <div style="font-size:11px;color:var(--text-sec);margin-bottom:8px">4 steps · 1,880 target · Email + SMS</div>
+          <div class="prog-row"><div class="prog-label"><span>Build Progress</span><span>0%</span></div><div class="prog-bar"><div class="prog-fill" style="width:0%;background:var(--border)"></div></div></div>
+          <div style="margin-top:8px"><button class="btn btn-primary" style="height:26px;font-size:10px">✏️ Continue Building</button></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div class="card-title">Win-back Sequence</div><span class="tag tag-muted">Archived</span></div>
+          <div style="font-size:11px;color:var(--text-sec);margin-bottom:8px">3 steps · completed Dec 2025 · 4.2% conv.</div>
+          <div style="margin-top:8px;display:flex;gap:4px"><button class="btn btn-secondary" style="height:26px;font-size:10px">📊 Results</button><button class="btn btn-secondary" style="height:26px;font-size:10px">🔁 Clone</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ANALYTICS ═══ -->
+    <div class="page" id="pg-analytics">
+      <div class="page-head"><h2>📈 ანალიტიკა</h2><div class="page-actions"><button class="btn btn-secondary">📥 Export Report</button></div></div>
+
+      <div class="tabs">
+        <button class="tab active">Overview</button>
+        <button class="tab">Campaigns</button>
+        <button class="tab">Channels</button>
+        <button class="tab">Segments</button>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="card stat"><div class="stat-value">247K</div><div class="stat-label">Events Today</div></div>
+        <div class="card stat"><div class="stat-value">41%</div><div class="stat-label">Avg Open Rate</div></div>
+        <div class="card stat"><div class="stat-value">13.8%</div><div class="stat-label">Avg CTR</div></div>
+        <div class="card stat"><div class="stat-value">$80.6K</div><div class="stat-label">Revenue (30d)</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="sec-title">📈 Campaign Performance (30d)</div>
+          <div class="card"><div class="chart-box"><canvas id="analyticsChart"></canvas></div></div>
+        </div>
+        <div>
+          <div class="sec-title">📊 Channel Comparison</div>
+          <div class="card" style="padding:0;overflow:hidden">
+            <table class="tbl">
+              <thead><tr><th>Channel</th><th>Sent</th><th>Open %</th><th>CTR</th><th>Conv.</th></tr></thead>
+              <tbody>
+                <tr><td>📧 Email</td><td>45.2K</td><td>41%</td><td>14.2%</td><td>8.0%</td></tr>
+                <tr><td>📱 SMS</td><td>5.3K</td><td>—</td><td>8.4%</td><td>6.1%</td></tr>
+                <tr><td>💬 In-App</td><td>9.8K</td><td>—</td><td>22%</td><td>2.1%</td></tr>
+                <tr><td>🔔 Push</td><td>3.1K</td><td>—</td><td>4.2%</td><td>1.8%</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sec-title">🔄 Conversion Funnel (All Campaigns)</div>
+          <div class="card">
+            <div class="funnel">
+              <div class="funnel-step"><span class="funnel-label">Targeted</span><div class="funnel-bar" style="width:100%;background:var(--primary)">18,500</div></div>
+              <div class="funnel-step"><span class="funnel-label">Delivered</span><div class="funnel-bar" style="width:96%;background:var(--primary)">17,760</div></div>
+              <div class="funnel-step"><span class="funnel-label">Opened</span><div class="funnel-bar" style="width:41%;background:var(--success)">7,585</div></div>
+              <div class="funnel-step"><span class="funnel-label">Clicked</span><div class="funnel-bar" style="width:14%;background:var(--info)">2,590</div></div>
+              <div class="funnel-step"><span class="funnel-label">Converted</span><div class="funnel-bar" style="width:7%;background:var(--warn)">1,295</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PROFILES ═══ -->
+    <div class="page" id="pg-profiles">
+      <div class="page-head"><h2>👤 პროფილები</h2><div class="page-actions"><button class="btn btn-secondary">📥 Export</button><button class="btn btn-secondary">🔍 Advanced Search</button></div></div>
+
+      <div style="margin-bottom:14px"><input class="form-input" style="width:100%;max-width:400px" placeholder="🔍 Search by email, name, or ID..." /></div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>Email</th><th>Name</th><th>Segments</th><th>Events (30d)</th><th>Last Active</th><th>LTV</th></tr></thead>
+          <tbody>
+            <tr><td style="font-weight:500">ana@acme.io</td><td>Ana Kvaratskhelia</td><td><span class="tag tag-green">Active</span> <span class="tag tag-blue">High-LTV</span></td><td>142</td><td>2m ago</td><td>$840</td></tr>
+            <tr><td style="font-weight:500">luka@nova.shop</td><td>Luka Beridze</td><td><span class="tag tag-green">Active</span></td><td>89</td><td>15m ago</td><td>$420</td></tr>
+            <tr><td style="font-weight:500">nino@spark.tv</td><td>Nino Japaridze</td><td><span class="tag tag-orange">Churn Risk</span></td><td>12</td><td>42d ago</td><td>$284</td></tr>
+            <tr><td style="font-weight:500">giorgi@acme.io</td><td>Giorgi Maisuradze</td><td><span class="tag tag-green">Active</span> <span class="tag tag-blue">Growth</span></td><td>210</td><td>1h ago</td><td>$620</td></tr>
+            <tr><td style="font-weight:500">mariam@nova.shop</td><td>Mariam Khutsishvili</td><td><span class="tag tag-muted">New Signup</span></td><td>8</td><td>3h ago</td><td>$0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">Showing 5 of 15,200 profiles</div>
+    </div>
+
+    <!-- ═══ CREATE CAMPAIGN ═══ -->
+    <div class="page" id="pg-create-campaign">
+      <div class="page-head"><h2>✏️ ახალი კამპანია</h2></div>
+
+      <div class="grid-2">
+        <div>
+          <div class="form-section">
+            <h3>ძირითადი ინფორმაცია</h3>
+            <div class="form-group" style="margin-bottom:10px">
+              <label class="form-label">კამპანიის სახელი</label>
+              <input class="form-input" placeholder="e.g. Summer Re-engagement" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">ტიპი</label>
+                <select class="form-select">
+                  <option>Promotional</option>
+                  <option>Re-engagement</option>
+                  <option>Upsell</option>
+                  <option>Onboarding</option>
+                  <option>Transactional</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">პრიორიტეტი</label>
+                <select class="form-select">
+                  <option>High</option>
+                  <option selected>Medium</option>
+                  <option>Low</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">აღწერა</label>
+              <textarea class="form-textarea" placeholder="კამპანიის მიზანი და სტრატეგია..."></textarea>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Audience</h3>
+            <div class="form-group" style="margin-bottom:10px">
+              <label class="form-label">სეგმენტი</label>
+              <select class="form-select">
+                <option>— აირჩიეთ სეგმენტი —</option>
+                <option>Active Customers (8,420)</option>
+                <option>Churn Risk 90d (1,880)</option>
+                <option>High-LTV Users (2,140)</option>
+                <option>New Signups 7d (340)</option>
+                <option>Growth Plan Users (4,200)</option>
+                <option>Email Engaged 30d (5,680)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Estimated Audience</label>
+                <input class="form-input" value="—" disabled />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Exclude Segment (optional)</label>
+                <select class="form-select"><option>None</option><option>Push Opt-out (420)</option></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>არხები & კონტენტი</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">არხი</label>
+                <select class="form-select">
+                  <option>📧 Email only</option>
+                  <option>📧 Email + 📱 SMS</option>
+                  <option>📧 Email + 📱 SMS + 💬 In-App</option>
+                  <option>📱 SMS only</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">A/B Testing</label>
+                <select class="form-select">
+                  <option>Off</option>
+                  <option>Subject Line A/B</option>
+                  <option>Content A/B</option>
+                  <option>Send Time A/B</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label class="form-label">Email Subject</label>
+              <input class="form-input" placeholder="e.g. [Name], something special for you" />
+              <span class="form-hint">Use [Name], [Company] for personalization</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Body</label>
+              <textarea class="form-textarea" style="min-height:80px" placeholder="Write your email content here..."></textarea>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>გაგზავნის პარამეტრები</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Schedule</label>
+                <select class="form-select">
+                  <option>Send immediately</option>
+                  <option>Schedule for later</option>
+                  <option>Optimal send time (AI)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Rate Limit</label>
+                <select class="form-select">
+                  <option>No limit</option>
+                  <option>500/hour</option>
+                  <option>1000/hour</option>
+                  <option>5000/hour</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary">🚀 Launch Campaign</button>
+            <button class="btn btn-secondary">💾 Save as Draft</button>
+            <button class="btn btn-secondary" onclick="showPage('campaigns',document.querySelectorAll('.nav-item')[2])">Cancel</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="position:sticky;top:0">
+            <div class="card-title" style="margin-bottom:10px">📋 Campaign Preview</div>
+            <div style="padding:16px;background:var(--surface-dim);border-radius:var(--radius-sm);border:1px solid var(--border-light);text-align:center;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <div style="font-size:32px;opacity:0.2;margin-bottom:8px">📧</div>
+              <div style="font-size:12px;color:var(--text-muted)">შეავსეთ ფორმა და preview აქ გამოჩნდება</div>
+            </div>
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border-light)">
+              <div style="font-size:11px;font-weight:600;margin-bottom:6px">💡 AI Suggestions</div>
+              <div class="insight" style="border-color:var(--info);background:var(--info-soft)"><div class="insight-text">წინა კამპანიებში personalized subject lines +34% open rate-ს იძლეოდა</div></div>
+              <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-text">10am–12pm sends 25%-ით უკეთესი შედეგია</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CREATE SEGMENT (bonus) ═══ -->
+    <div class="page" id="pg-create-segment">
+      <div class="page-head"><h2>🎯 ახალი სეგმენტი</h2></div>
+      <div class="grid-2">
+        <div>
+          <div class="form-section">
+            <h3>სეგმენტის განსაზღვრა</h3>
+            <div class="form-group" style="margin-bottom:10px">
+              <label class="form-label">სახელი</label>
+              <input class="form-input" placeholder="e.g. Power Users Last 30d" />
+            </div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label class="form-label">ტიპი</label>
+              <select class="form-select"><option>Dynamic (auto-updates)</option><option>Static (one-time)</option></select>
+            </div>
+          </div>
+          <div class="form-section">
+            <h3>Conditions</h3>
+            <div class="card" style="background:var(--surface-dim);margin-bottom:8px">
+              <div class="form-row" style="margin-bottom:0">
+                <select class="form-select" style="flex:1"><option>last_active</option><option>plan</option><option>ltv</option><option>signup_date</option><option>event_count</option></select>
+                <select class="form-select" style="width:120px"><option>is less than</option><option>is greater than</option><option>equals</option><option>contains</option></select>
+                <input class="form-input" style="width:120px" placeholder="value" />
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="height:28px;font-size:10px">+ Add Condition</button>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary">💾 Save Segment</button>
+            <button class="btn btn-secondary">👁 Preview</button>
+            <button class="btn btn-secondary" onclick="showPage('segments',document.querySelectorAll('.nav-item')[1])">Cancel</button>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="position:sticky;top:0">
+            <div class="card-title" style="margin-bottom:8px">Segment Preview</div>
+            <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Define conditions to see estimated audience size</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- AI HELPER PANEL -->
+  <div class="ai-panel hidden" id="aiPanel">
+    <div class="ai-head">
+      <div class="ai-head-left">
+        <div class="ai-dot"></div>
+        <h3>Optio AI</h3>
+        <span class="ai-head-tag">Helper</span>
+      </div>
+      <button class="ai-close" onclick="toggleAI()">✕</button>
+    </div>
+    <div class="ai-msgs" id="aiMsgs"></div>
+    <div class="ai-input-area">
+      <div class="ai-input-wrap">
+        <textarea class="ai-input" id="aiInput" placeholder="დახმარება სჭირდება?" rows="1"></textarea>
+        <button class="ai-send" onclick="sendAI()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ═══ NAVIGATION ═══
+let currentPage = 'dashboard';
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('pg-'+id);
+  if(pg) pg.classList.add('active');
+  if(btn) btn.classList.add('active');
+  currentPage = id;
+  setTimeout(()=>initCharts(id),50);
+}
+
+// ═══ THEME ═══
+function setTh(n,b){
+  document.body.setAttribute('data-theme',n);
+  document.querySelectorAll('.th-opt').forEach(x=>x.classList.remove('active'));
+  b?.classList.add('active');
+  document.getElementById('thDD').classList.remove('open');
+  Object.values(charts).forEach(c=>c.destroy());charts={};
+  setTimeout(()=>initCharts(currentPage),50);
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.theme-wrap'))document.getElementById('thDD').classList.remove('open')});
+
+function switchToAI(){
+  window.location.href='main.html?theme='+(document.body.getAttribute('data-theme')||'warm');
+}
+function goSettings(){
+  window.location.href='engine-room.html?theme='+(document.body.getAttribute('data-theme')||'warm');
+}
+
+// ═══ AI PANEL ═══
+function toggleAI(){
+  const panel = document.getElementById('aiPanel');
+  const btn = document.getElementById('aiToggle');
+  panel.classList.toggle('hidden');
+  btn.classList.toggle('active');
+  if(!panel.classList.contains('hidden') && !document.getElementById('aiMsgs').children.length){
+    addAIMsg(`ვხედავ რომ ათვალიერებ. რამეში თუ დაგეხმარო — მკითხე. თუ მუშაობა გინდა დაიწყო, დააჭირე <strong>🛠 Work</strong>-ს და ერთად ვიმუშავებთ.`);
+  }
+}
+
+const aiMsgs = document.getElementById('aiMsgs');
+const aiInput = document.getElementById('aiInput');
+aiInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAI()}});
+
+function addAIMsg(html){
+  const d=document.createElement('div');d.className='msg msg-ai';
+  d.innerHTML=`<div class="msg-av">O</div><div class="msg-body">${html}</div>`;
+  aiMsgs.appendChild(d);aiMsgs.scrollTop=aiMsgs.scrollHeight;
+}
+function addUserMsg(text){
+  const d=document.createElement('div');d.className='msg msg-user';
+  d.innerHTML=`<div class="msg-av">დგ</div><div class="msg-body">${text}</div>`;
+  aiMsgs.appendChild(d);aiMsgs.scrollTop=aiMsgs.scrollHeight;
+}
+function addTyping(){
+  const d=document.createElement('div');d.className='msg msg-ai';d.id='aiTyping';
+  d.innerHTML='<div class="msg-av">O</div><div class="msg-body"><div class="typing-ind"><span></span><span></span><span></span></div></div>';
+  aiMsgs.appendChild(d);aiMsgs.scrollTop=aiMsgs.scrollHeight;
+}
+
+function sendAI(){
+  const text=aiInput.value.trim();if(!text)return;
+  addUserMsg(text);aiInput.value='';
+  addTyping();
+  setTimeout(()=>{document.getElementById('aiTyping')?.remove();respondAI(text)},500+Math.random()*500);
+}
+
+function respondAI(text){
+  const t=text.toLowerCase();
+  if(t.includes('სეგმენტ')||t.includes('segment')){
+    addAIMsg(`სეგმენტის შესაქმნელად გადადი <strong>🎯 სეგმენტები → + ახალი სეგმენტი</strong>.<br><br>რეკომენდაცია: Dynamic ტიპი ჯობია — ავტომატურად განახლდება. Condition-ები შეგიძლია დააწყო, მაგალითად:<br>• <code>last_active &lt; 90 days</code><br>• <code>plan = Growth</code>`);
+  } else if(t.includes('კამპანი')||t.includes('campaign')){
+    addAIMsg(`ახალი კამპანიისთვის გადადი <strong>✏️ ახალი კამპანია</strong> გვერდზე.<br><br>Tips:<br>• Personalized subject lines +34% open rate<br>• Email+SMS combo ჯობს single channel-ს<br>• 10am-12pm optimal send time`);
+  } else if(t.includes('churn')||t.includes('risk')){
+    addAIMsg(`Churn Risk 90d სეგმენტი <strong>1,880</strong> პროფილია, 12%-ით გაიზარდა.<br><br>რეკომენდაცია: Re-engagement campaign Email+SMS-ით, personalized discount-ით. წინა Q4-ში ასეთმა მიდგომამ 12.4% conversion მოიტანა.`);
+  } else if(t.includes('work')||t.includes('რეჟიმ')||t.includes('მუშაობ')){
+    addAIMsg(`სამუშაო რეჟიმში გადასართველად დააჭირე topbar-ში <strong>🛠 Work</strong> ღილაკს. იქ კამპანიებზე მუშაობ ჩემთან ერთად — დაგეგმვა, აწყობა, გაშვება, ანალიზი.`);
+  } else {
+    addAIMsg(`გაიგე! რა დახმარება გჭირდება? შემიძლია:<br>• სეგმენტების ანალიზი<br>• კამპანიის ოპტიმიზაცია<br>• მონაცემთა ახსნა<br>• საუკეთესო პრაქტიკები`);
+  }
+}
+
+// ═══ CHARTS ═══
+let charts = {};
+function pc(){return getComputedStyle(document.body).getPropertyValue('--primary').trim()}
+function sc(){return getComputedStyle(document.body).getPropertyValue('--success').trim()}
+function ic(){return getComputedStyle(document.body).getPropertyValue('--info').trim()}
+function bc(){return getComputedStyle(document.body).getPropertyValue('--border').trim()}
+function tc(){return getComputedStyle(document.body).getPropertyValue('--text-muted').trim()}
+
+function initCharts(page){
+  if(page==='dashboard'){
+    const ctx=document.getElementById('dashEventsChart');
+    if(!ctx||charts.dashEv)return;
+    charts.dashEv=new Chart(ctx,{type:'line',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[
+      {label:'Events',data:[180000,210000,248000,232000,195000,120000,98000],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,fill:false},
+      {label:'Profiles',data:[14800,14920,15000,15050,15100,15140,15200],borderColor:sc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,borderDash:[4,4],yAxisID:'y1'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9},callback:v=>(v/1000)+'K'}},y1:{position:'right',grid:{display:false},ticks:{color:tc(),font:{size:9},callback:v=>(v/1000).toFixed(1)+'K'}}}}});
+  }
+  if(page==='analytics'){
+    const ctx=document.getElementById('analyticsChart');
+    if(!ctx||charts.analytics)return;
+    const days=['W1','W2','W3','W4'];
+    charts.analytics=new Chart(ctx,{type:'bar',data:{labels:days,datasets:[
+      {label:'Sent',data:[8200,12400,15800,9600],backgroundColor:pc()+'60',borderRadius:4},
+      {label:'Opened',data:[3200,5100,6500,3900],backgroundColor:sc()+'80',borderRadius:4},
+      {label:'Converted',data:[410,680,820,380],backgroundColor:ic()+'80',borderRadius:4}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}}}}});
+  }
+}
+
+// ═══ INIT ═══
+(function(){const p=new URLSearchParams(window.location.search).get('theme');if(p&&['warm','lavender','sage','teal','dark'].includes(p)){document.body.setAttribute('data-theme',p);document.querySelectorAll('.th-opt').forEach(b=>{b.classList.remove('active');if(b.textContent.toLowerCase().includes(p==='warm'?'warm':p))b.classList.add('active')})}})();
+initCharts('dashboard');
+</script>
+</body>
+</html>
