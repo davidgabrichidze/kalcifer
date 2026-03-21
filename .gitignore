@@ -48,3 +48,4 @@ kalcifer-*.tar
 .DS_Store
 Thumbs.db
 .env.prod
+package-lock.json
