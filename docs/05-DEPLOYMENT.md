@@ -1,8 +1,14 @@
 # Kalcifer — Deployment Strategy
 
-**Version**: 1.0
-**Date**: 2026-02-22
-**Status**: Draft
+**Version**: 1.1
+**Date**: 2026-02-22 (updated 2026-03-21)
+**Status**: Reference — see `00-MASTER-PLAN.md` for deployment plan
+
+> **⚠ Note**:
+> - SQLite Tier 1 **არ არის implemented** და არ არის გეგმაში
+> - Kubernetes manifests არის aspirational (Phase 4)
+> - Fly.io deployment config უკვე შექმნილია (`fly.toml`)
+> - ფაქტობრივი deployment plan იხ. **`00-MASTER-PLAN.md`** §4 (Phase 3)
 
 ---
 

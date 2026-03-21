@@ -1,5 +1,8 @@
 # Phase 1: Production Readiness
 
+> **Status**: ✅ Active — ეს არის მიმდინარე სამუშაო გეგმა (Increments 12-17).
+> ამ დოკუმენტის ადგილი Master Plan-ში: **`00-MASTER-PLAN.md`** §4, Phase 1, Sprints 1-4.
+
 ## Phase 0 Recap
 
 Phase 0-ში აიგო Kalcifer-ის core engine:

@@ -1,8 +1,11 @@
 # Kalcifer — Monetisation Strategy
 
-**Version**: 1.0
-**Date**: 2026-02-22
-**Status**: Draft
+**Version**: 1.1
+**Date**: 2026-02-22 (updated 2026-03-21)
+**Status**: Reference — pricing and model accurate, revenue projections updated in Master Plan
+
+> **⚠ Note**: Pricing tiers და business model accurate. განახლებული revenue projections
+> (AI revenue ცალკე გამოყოფილი) იხ. **`00-MASTER-PLAN.md`** §7
 
 ---
 

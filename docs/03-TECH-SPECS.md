@@ -1,8 +1,15 @@
 # Kalcifer — Technical Specifications
 
-**Version**: 1.0
-**Date**: 2026-02-22
-**Status**: Draft
+**Version**: 1.1
+**Date**: 2026-02-22 (updated 2026-03-21)
+**Status**: Reference — see `00-MASTER-PLAN.md` for current source of truth
+
+> **⚠ Note**: ტექნიკური ვერსიები მოძველებულია:
+> - Elixir ~> 1.17 → **~> 1.18**, OTP 27 → **28**
+> - Frontend spec (§1.3) არის aspirational — React app **ჯერ არ არსებობს** (Phase 2)
+> - API spec ზოგან განსხვავდება ფაქტობრივი router.ex-ისგან
+>
+> აქტუალური tech stack-ისთვის იხ. **`00-MASTER-PLAN.md`** §5
 
 ---
 

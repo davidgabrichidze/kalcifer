@@ -1,0 +1,41 @@
+app = "kalcifer"
+primary_region = "fra"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  dockerfile = "docker/Dockerfile"
+
+[env]
+  PHX_HOST = "app.kalcifer.dev"
+  PORT = "4500"
+  ECTO_IPV6 = "true"
+  ERL_AFLAGS = "-proto_dist inet6_tcp"
+  POOL_SIZE = "20"
+
+[http_service]
+  internal_port = 4500
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 800
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "1gb"
+  processes = ["app"]
+
+[checks]
+  [checks.health]
+    port = 4500
+    type = "http"
+    interval = "10s"
+    timeout = "5s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/api/v1/health"

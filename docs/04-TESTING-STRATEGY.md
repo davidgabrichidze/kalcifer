@@ -1,8 +1,12 @@
 # Kalcifer — Testing & Reliability Strategy
 
-**Version**: 1.0
-**Date**: 2026-02-22
-**Status**: Draft
+**Version**: 1.1
+**Date**: 2026-02-22 (updated 2026-03-21)
+**Status**: Reference — aspirational testing standards
+
+> **⚠ Note**: Unit და integration tests implemented. Property tests — 7 properties (target: 500+).
+> Chaos tests და Load tests ჯერ **არ არის implemented**.
+> ფაქტობრივი სტატუსისთვის იხ. **`00-MASTER-PLAN.md`** §2
 
 ---
 

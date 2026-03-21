@@ -1,8 +1,16 @@
 # Kalcifer — Architecture Document
 
-**Version**: 1.0
-**Date**: 2026-02-22
-**Status**: Draft
+**Version**: 1.1
+**Date**: 2026-02-22 (updated 2026-03-21)
+**Status**: Reference — see `00-MASTER-PLAN.md` for current source of truth
+
+> **⚠ Note**: ეს დოკუმენტი Phase 0-ის პერიოდში დაიწერა. ცნობილი განსხვავებები:
+> - Elixir 1.17/OTP 27 → **1.18/OTP 28**
+> - AI Designer section (2.3) არის aspirational — **ჯერ არ არის implemented**
+> - ES/ClickHouse integration — docker-compose-შია, კოდში **stub**
+> - File paths ზოგან განსხვავდება ფაქტობრივი სტრუქტურისგან
+>
+> ტექნიკური არქიტექტურის აქტუალური აღწერისთვის იხ. **`00-MASTER-PLAN.md`** §5
 
 ---
 
