@@ -9,8 +9,7 @@ interface TopBarProps {
 
 const NAV_ITEMS = [
   { to: '/', label: 'Work' },
-  { to: '/editor', label: 'Editor' },
-  { to: '/engine', label: 'Engine' },
+  { to: '/engine', label: 'Engine Room' },
   { to: '/browse', label: 'Browse' },
 ] as const
 

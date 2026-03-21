@@ -13,15 +13,9 @@ describe('App', () => {
     expect(screen.getByText(/AI chat/)).toBeInTheDocument()
   })
 
-  it('navigates to Editor page', () => {
+  it('navigates to Engine Room page', () => {
     render(<App />)
-    fireEvent.click(screen.getByText('Editor'))
-    expect(screen.getByText(/Flow editor/)).toBeInTheDocument()
-  })
-
-  it('navigates to Engine page', () => {
-    render(<App />)
-    fireEvent.click(screen.getByText('Engine'))
+    fireEvent.click(screen.getByText('Engine Room'))
     expect(screen.getByText(/Live monitoring/)).toBeInTheDocument()
   })
 

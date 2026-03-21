@@ -17,12 +17,16 @@ describe('TopBar', () => {
     expect(screen.getByText(/Kalcifer/)).toBeInTheDocument()
   })
 
-  it('renders all 4 nav links', () => {
+  it('renders all 3 nav links', () => {
     renderTopBar()
     expect(screen.getByText('Work')).toBeInTheDocument()
-    expect(screen.getByText('Editor')).toBeInTheDocument()
-    expect(screen.getByText('Engine')).toBeInTheDocument()
+    expect(screen.getByText('Engine Room')).toBeInTheDocument()
     expect(screen.getByText('Browse')).toBeInTheDocument()
+  })
+
+  it('does not render Editor nav link', () => {
+    renderTopBar()
+    expect(screen.queryByText('Editor')).not.toBeInTheDocument()
   })
 
   it('renders ThemeSwitcher buttons', () => {
