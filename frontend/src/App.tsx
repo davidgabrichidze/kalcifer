@@ -1,4 +1,9 @@
+import { useTheme } from './lib/useTheme'
+import ThemeSwitcher from './components/ThemeSwitcher'
+
 export default function App() {
+  const { theme, setTheme } = useTheme()
+
   return (
     <div
       className="flex h-screen flex-col items-center justify-center"
@@ -17,6 +22,8 @@ export default function App() {
       >
         სახლის გული ცოცხალია
       </p>
+
+      <ThemeSwitcher current={theme} onChange={setTheme} />
     </div>
   )
 }

@@ -12,4 +12,10 @@ describe('App', () => {
     render(<App />)
     expect(screen.getByText('სახლის გული ცოცხალია')).toBeInTheDocument()
   })
+
+  it('renders ThemeSwitcher', () => {
+    render(<App />)
+    const buttons = screen.getAllByRole('button')
+    expect(buttons.length).toBeGreaterThanOrEqual(8)
+  })
 })
