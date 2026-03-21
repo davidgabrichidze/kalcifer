@@ -15,15 +15,10 @@ const PALETTE_COLORS: Record<string, { light: string; dark: string }> = {
 export default function ThemeSwitcher({ current, onChange }: ThemeSwitcherProps) {
   return (
     <div
-      className="fixed bottom-6 right-6 flex gap-2 rounded-xl p-3"
-      style={{
-        background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
-        boxShadow: 'var(--shadow-md)',
-      }}
+      className="flex gap-1.5"
     >
       {THEMES.map(t => {
-        const color = PALETTE_COLORS[t.palette][t.mode]
+        const color = PALETTE_COLORS[t.palette]?.[t.mode] ?? '#888'
         const isActive = current === t.id
         const isDark = t.mode === 'dark'
 
@@ -32,7 +27,7 @@ export default function ThemeSwitcher({ current, onChange }: ThemeSwitcherProps)
             key={t.id}
             onClick={() => onChange(t.id)}
             title={`${t.label} ${t.mode}`}
-            className="relative flex h-8 w-8 items-center justify-center rounded-lg transition-transform hover:scale-110"
+            className="relative flex h-6 w-6 items-center justify-center rounded-md transition-transform hover:scale-110"
             style={{
               background: isDark ? '#1a1a1a' : '#f5f5f0',
               border: isActive
@@ -43,7 +38,7 @@ export default function ThemeSwitcher({ current, onChange }: ThemeSwitcherProps)
             }}
           >
             <div
-              className="h-3.5 w-3.5 rounded-full"
+              className="h-2.5 w-2.5 rounded-full"
               style={{ background: color }}
             />
           </button>

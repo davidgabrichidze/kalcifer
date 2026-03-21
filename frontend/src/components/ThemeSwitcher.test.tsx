@@ -15,8 +15,8 @@ describe('ThemeSwitcher', () => {
     render(<ThemeSwitcher current="hearth-light" onChange={onChange} />)
 
     const buttons = screen.getAllByRole('button')
-    fireEvent.click(buttons[3]) // command-dark (4th button)
-    expect(onChange).toHaveBeenCalledWith(THEMES[3].id)
+    fireEvent.click(buttons[3]!) // command-dark (4th button)
+    expect(onChange).toHaveBeenCalledWith(THEMES[3]!.id)
   })
 
   it('shows title with palette name and mode', () => {

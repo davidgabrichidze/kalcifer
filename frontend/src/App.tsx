@@ -1,29 +1,29 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useTheme } from './lib/useTheme'
-import ThemeSwitcher from './components/ThemeSwitcher'
+import TopBar from './components/TopBar'
+import WorkPage from './pages/WorkPage'
+import EditorPage from './pages/EditorPage'
+import EnginePage from './pages/EnginePage'
+import BrowsePage from './pages/BrowsePage'
 
 export default function App() {
   const { theme, setTheme } = useTheme()
 
   return (
-    <div
-      className="flex h-screen flex-col items-center justify-center"
-      style={{ background: 'var(--color-bg)' }}
-    >
-      <div className="mb-2 text-5xl">🔥</div>
-      <h1
-        className="mb-2 text-3xl font-bold tracking-tight"
-        style={{ color: 'var(--color-primary)', letterSpacing: '-0.5px' }}
+    <BrowserRouter>
+      <div
+        className="flex h-screen flex-col"
+        style={{ background: 'var(--color-bg)' }}
       >
-        Kalcifer
-      </h1>
-      <p
-        className="text-sm"
-        style={{ color: 'var(--color-text-sec)' }}
-      >
-        სახლის გული ცოცხალია
-      </p>
+        <TopBar theme={theme} onThemeChange={setTheme} />
 
-      <ThemeSwitcher current={theme} onChange={setTheme} />
-    </div>
+        <Routes>
+          <Route path="/" element={<WorkPage />} />
+          <Route path="/editor" element={<EditorPage />} />
+          <Route path="/engine" element={<EnginePage />} />
+          <Route path="/browse" element={<BrowsePage />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   )
 }

@@ -1,21 +1,33 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import App from './App'
 
 describe('App', () => {
-  it('renders Kalcifer heading', () => {
+  it('renders TopBar with brand', () => {
     render(<App />)
-    expect(screen.getByText('Kalcifer')).toBeInTheDocument()
+    expect(screen.getByText(/Kalcifer/)).toBeInTheDocument()
   })
 
-  it('renders Georgian subtitle', () => {
+  it('shows Work page by default', () => {
     render(<App />)
-    expect(screen.getByText('სახლის გული ცოცხალია')).toBeInTheDocument()
+    expect(screen.getByText(/AI chat/)).toBeInTheDocument()
   })
 
-  it('renders ThemeSwitcher', () => {
+  it('navigates to Editor page', () => {
     render(<App />)
-    const buttons = screen.getAllByRole('button')
-    expect(buttons.length).toBeGreaterThanOrEqual(8)
+    fireEvent.click(screen.getByText('Editor'))
+    expect(screen.getByText(/Flow editor/)).toBeInTheDocument()
+  })
+
+  it('navigates to Engine page', () => {
+    render(<App />)
+    fireEvent.click(screen.getByText('Engine'))
+    expect(screen.getByText(/Live monitoring/)).toBeInTheDocument()
+  })
+
+  it('navigates to Browse page', () => {
+    render(<App />)
+    fireEvent.click(screen.getByText('Browse'))
+    expect(screen.getByText(/Flow library/)).toBeInTheDocument()
   })
 })
