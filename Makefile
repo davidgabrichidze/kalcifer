@@ -79,6 +79,27 @@ docker-ci:
 	docker compose -f docker-compose.dev.yml exec -e MIX_ENV=test app sh -c "mix compile --warnings-as-errors && mix format --check-formatted && mix credo --strict && mix ecto.create --quiet && mix ecto.migrate --quiet && mix test --trace"
 
 # =====================================================
+# Frontend (React)
+# =====================================================
+
+# Start frontend dev server
+fe:
+	docker compose -f docker-compose.dev.yml up -d frontend
+	@echo "\n✓ Frontend running: http://localhost:5173"
+
+# Install frontend deps
+fe-install:
+	docker compose -f docker-compose.dev.yml exec frontend npm install
+
+# Run frontend tests
+fe-test:
+	docker compose -f docker-compose.dev.yml exec frontend npm test
+
+# Frontend shell
+fe-shell:
+	docker compose -f docker-compose.dev.yml exec frontend sh
+
+# =====================================================
 # Docker Production
 # =====================================================
 
