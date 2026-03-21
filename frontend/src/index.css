@@ -349,3 +349,9 @@ body {
   line-height: 1.5;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+/* ─── Animations ─── */
+@keyframes typingDot {
+  0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+  30% { opacity: 1; transform: scale(1); }
+}
