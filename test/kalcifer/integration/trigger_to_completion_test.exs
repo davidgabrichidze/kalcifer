@@ -191,7 +191,7 @@ defmodule Kalcifer.Integration.TriggerToCompletionTest do
 
     # Second trigger blocked
     conn_t2 = post(conn, "/api/v1/flows/#{flow_id}/trigger", %{"customer_id" => customer_id})
-    assert json_response(conn_t2, 409) == %{"error" => "already_in_flow"}
+    assert %{"code" => "already_in_flow"} = json_response(conn_t2, 409)
 
     # Complete the flow via event
     via = {:via, Registry, {Kalcifer.Engine.ProcessRegistry, instance_id}}

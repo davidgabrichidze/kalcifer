@@ -44,17 +44,46 @@ ci: lint test dialyzer
 precommit: ci
 
 # =====================================================
-# Docker
+# Docker Development (all-in-one)
+# =====================================================
+
+# Start dev environment (PG + App)
+up:
+	docker compose -f docker-compose.dev.yml up -d
+	@echo "\n✓ Dev environment running. API: http://localhost:4500"
+
+down:
+	docker compose -f docker-compose.dev.yml down
+
+# Run mix commands inside container
+run:
+	docker compose -f docker-compose.dev.yml exec app $(CMD)
+
+# Interactive shell in container
+shell:
+	docker compose -f docker-compose.dev.yml exec app sh
+
+# Setup DB inside container
+docker-setup:
+	docker compose -f docker-compose.dev.yml exec app mix deps.get
+	docker compose -f docker-compose.dev.yml exec app mix ecto.create
+	docker compose -f docker-compose.dev.yml exec app mix ecto.migrate
+	@echo "\n✓ Setup complete."
+
+# Run tests inside container
+docker-test:
+	docker compose -f docker-compose.dev.yml exec -e MIX_ENV=test app sh -c "mix ecto.create --quiet && mix ecto.migrate --quiet && mix test --trace"
+
+# Run full CI inside container
+docker-ci:
+	docker compose -f docker-compose.dev.yml exec -e MIX_ENV=test app sh -c "mix compile --warnings-as-errors && mix format --check-formatted && mix credo --strict && mix ecto.create --quiet && mix ecto.migrate --quiet && mix test --trace"
+
+# =====================================================
+# Docker Production
 # =====================================================
 
 docker-build:
 	docker build -t kalcifer:latest -f docker/Dockerfile .
-
-docker-up:
-	docker compose -f docker/docker-compose.yml up -d
-
-docker-down:
-	docker compose -f docker/docker-compose.yml down
 
 docker-prod:
 	docker compose -f docker-compose.prod.yml up -d

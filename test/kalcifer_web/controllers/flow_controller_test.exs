@@ -113,7 +113,7 @@ defmodule KalciferWeb.FlowControllerTest do
       flow = insert(:flow, tenant: tenant, status: "active")
 
       conn = put(conn, "/api/v1/flows/#{flow.id}", %{"name" => "Updated"})
-      assert %{"code" => "flow_not_draft"} = json_response(conn, 422)
+      assert %{"code" => "not_draft"} = json_response(conn, 422)
     end
 
     test "returns 404 for other tenant's flow", %{conn: conn} do
@@ -137,7 +137,7 @@ defmodule KalciferWeb.FlowControllerTest do
       flow = insert(:flow, tenant: tenant, status: "active")
 
       conn = delete(conn, "/api/v1/flows/#{flow.id}")
-      assert %{"code" => "flow_not_draft"} = json_response(conn, 422)
+      assert %{"code" => "not_draft"} = json_response(conn, 422)
     end
   end
 

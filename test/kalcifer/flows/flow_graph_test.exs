@@ -2,6 +2,8 @@ defmodule Kalcifer.Flows.FlowGraphTest do
   use ExUnit.Case, async: true
 
   alias Kalcifer.Flows.FlowGraph
+  alias __MODULE__.StubValidNode
+  alias __MODULE__.StubInvalidNode
 
   describe "validate/1" do
     test "accepts a valid minimal graph (entry → exit)" do
