@@ -80,16 +80,36 @@ test/support/factory.ex          # ExMachina factories
 
 ## Git conventions
 
-Conventional commits format: `<type>: <description>`
+Conventional commits format: `<type>(<scope>/<subscope>): <description>`
 
 Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`, `ci`
 
+Scopes (from `docs/PRODUCT-MAP.md`):
+
+| scope | subscopes |
+|-------|-----------|
+| `engine` | `executor`, `nodes`, `events`, `recovery`, `persistence`, `jobs`, `errors`, `circuit-breaker` |
+| `flows` | `lifecycle`, `versions`, `graph`, `instances` |
+| `channels` | `providers`, `delivery`, `webhooks` |
+| `customers` | `profiles`, `segments` |
+| `analytics` | `stats`, `funnel`, `conversions` |
+| `marketing` | `journeys` |
+| `tenants` | `auth` |
+| `api` | `flows`, `versions`, `instances`, `triggers`, `customers`, `analytics`, `journeys`, `health`, `middleware` |
+| `ws` | `monitoring`, `presence` |
+| `ai` | `chat`, `tools`, `context`, `prompts` |
+| `simulators` | `email`, `sms`, `push`, `whatsapp`, `in-app` |
+| `fe` | `shell`, `design`, `chat`, `work`, `editor`, `engine-room`, `browse` |
+| `infra` | `docker`, `ci`, `release` |
+
 Examples:
 ```
-feat: implement event routing for waiting flow instances
-fix: correct duration parsing for fractional hours
-test: add edge case tests for flow server resume
-refactor: extract frequency cap helpers into separate module
+feat(engine/nodes): add rate_limit node
+fix(api/instances): correct timeline ordering
+feat(ai/tools): implement create_flow tool
+feat(fe/design): add hearth theme tokens
+test(flows/graph): add property tests for cycle detection
+refactor(channels/providers): extract common provider interface
 docs: add CLAUDE.md with project conventions
 ```
 
