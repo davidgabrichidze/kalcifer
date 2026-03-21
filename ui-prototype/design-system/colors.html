@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalcifer Design System — Colors</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ============================================================
+   KALCIFER DESIGN SYSTEM — COLOR TOKENS
+   3 Palettes × 2 Modes = 6 Themes
+
+   Philosophy:
+   ● Hearth (ბუხარი) — Kalcifer's fire. Warm, amber, ember.
+   ● Command (მეთაური) — War room. Indigo, navy, precise.
+   ● Grove (კორომი) — Garden. Green, organic, growing.
+   ============================================================ */
+
+/* ---- HEARTH LIGHT (default) ---- */
+:root, [data-theme="hearth-light"] {
+  --bg: #f6f1ea;
+  --surface: #ffffff;
+  --surface-dim: #faf7f2;
+  --surface-raised: #fff;
+
+  --primary: #c07a3e;
+  --primary-hover: #a96830;
+  --primary-soft: rgba(192,122,62,0.10);
+  --primary-muted: rgba(192,122,62,0.40);
+
+  --accent: #8b6d4a;
+  --accent-soft: rgba(139,109,74,0.08);
+
+  --border: #e6ddd2;
+  --border-light: #f0e8de;
+  --border-focus: var(--primary);
+
+  --text: #2c2720;
+  --text-sec: #6b6358;
+  --text-muted: #a09686;
+  --text-on-primary: #ffffff;
+  --text-on-surface: var(--text);
+
+  --success: #5a9e6f;
+  --success-soft: rgba(90,158,111,0.10);
+  --warn: #c49a4a;
+  --warn-soft: rgba(196,154,74,0.10);
+  --danger: #c4655a;
+  --danger-soft: rgba(196,101,90,0.10);
+  --info: #6a8fa0;
+  --info-soft: rgba(106,143,160,0.10);
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+
+  --shadow-sm: 0 1px 3px rgba(44,39,32,0.06);
+  --shadow-md: 0 4px 12px rgba(44,39,32,0.08);
+  --shadow-lg: 0 8px 24px rgba(44,39,32,0.10);
+
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ---- HEARTH DARK ---- */
+[data-theme="hearth-dark"] {
+  --bg: #161210;
+  --surface: #211c18;
+  --surface-dim: #1a1614;
+  --surface-raised: #2a2420;
+
+  --primary: #e0a060;
+  --primary-hover: #eab070;
+  --primary-soft: rgba(224,160,96,0.12);
+  --primary-muted: rgba(224,160,96,0.35);
+
+  --accent: #d4b896;
+  --accent-soft: rgba(212,184,150,0.08);
+
+  --border: #332c26;
+  --border-light: #2a2420;
+  --border-focus: var(--primary);
+
+  --text: #ede6dc;
+  --text-sec: #a89a88;
+  --text-muted: #6b6054;
+  --text-on-primary: #161210;
+  --text-on-surface: var(--text);
+
+  --success: #70c490;
+  --success-soft: rgba(112,196,144,0.10);
+  --warn: #e0b860;
+  --warn-soft: rgba(224,184,96,0.10);
+  --danger: #e07060;
+  --danger-soft: rgba(224,112,96,0.10);
+  --info: #70a8c0;
+  --info-soft: rgba(112,168,192,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.25);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.30);
+}
+
+/* ---- COMMAND LIGHT ---- */
+[data-theme="command-light"] {
+  --bg: #f0f1f5;
+  --surface: #ffffff;
+  --surface-dim: #f6f7fa;
+  --surface-raised: #fff;
+
+  --primary: #4a5eb0;
+  --primary-hover: #3d4f9a;
+  --primary-soft: rgba(74,94,176,0.10);
+  --primary-muted: rgba(74,94,176,0.35);
+
+  --accent: #5c6a8a;
+  --accent-soft: rgba(92,106,138,0.08);
+
+  --border: #dde0e8;
+  --border-light: #e8eaf0;
+  --border-focus: var(--primary);
+
+  --text: #1a1e2c;
+  --text-sec: #5a6070;
+  --text-muted: #9298a8;
+  --text-on-primary: #ffffff;
+  --text-on-surface: var(--text);
+
+  --success: #3d9e6f;
+  --success-soft: rgba(61,158,111,0.10);
+  --warn: #c49a4a;
+  --warn-soft: rgba(196,154,74,0.10);
+  --danger: #c45050;
+  --danger-soft: rgba(196,80,80,0.10);
+  --info: #4a8ab0;
+  --info-soft: rgba(74,138,176,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(26,30,44,0.06);
+  --shadow-md: 0 4px 12px rgba(26,30,44,0.08);
+  --shadow-lg: 0 8px 24px rgba(26,30,44,0.10);
+}
+
+/* ---- COMMAND DARK ---- */
+[data-theme="command-dark"] {
+  --bg: #0e1018;
+  --surface: #181a24;
+  --surface-dim: #12141c;
+  --surface-raised: #222430;
+
+  --primary: #8090e0;
+  --primary-hover: #96a4ea;
+  --primary-soft: rgba(128,144,224,0.12);
+  --primary-muted: rgba(128,144,224,0.35);
+
+  --accent: #a0a8d0;
+  --accent-soft: rgba(160,168,208,0.08);
+
+  --border: #282a38;
+  --border-light: #20222e;
+  --border-focus: var(--primary);
+
+  --text: #e0e2f0;
+  --text-sec: #8a8ea0;
+  --text-muted: #505468;
+  --text-on-primary: #0e1018;
+  --text-on-surface: var(--text);
+
+  --success: #60d090;
+  --success-soft: rgba(96,208,144,0.10);
+  --warn: #e0c060;
+  --warn-soft: rgba(224,192,96,0.10);
+  --danger: #e06060;
+  --danger-soft: rgba(224,96,96,0.10);
+  --info: #60a0e0;
+  --info-soft: rgba(96,160,224,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.30);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+/* ---- GROVE LIGHT ---- */
+[data-theme="grove-light"] {
+  --bg: #f0f3ee;
+  --surface: #fefffe;
+  --surface-dim: #f5f7f3;
+  --surface-raised: #fff;
+
+  --primary: #4a8a5a;
+  --primary-hover: #3d7a4d;
+  --primary-soft: rgba(74,138,90,0.10);
+  --primary-muted: rgba(74,138,90,0.35);
+
+  --accent: #5a7a5e;
+  --accent-soft: rgba(90,122,94,0.08);
+
+  --border: #d8e0d6;
+  --border-light: #e4eae2;
+  --border-focus: var(--primary);
+
+  --text: #1e261e;
+  --text-sec: #586058;
+  --text-muted: #8a968a;
+  --text-on-primary: #ffffff;
+  --text-on-surface: var(--text);
+
+  --success: #4a9e60;
+  --success-soft: rgba(74,158,96,0.10);
+  --warn: #b89a40;
+  --warn-soft: rgba(184,154,64,0.10);
+  --danger: #b85a4a;
+  --danger-soft: rgba(184,90,74,0.10);
+  --info: #4a889e;
+  --info-soft: rgba(74,136,158,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(30,38,30,0.06);
+  --shadow-md: 0 4px 12px rgba(30,38,30,0.08);
+  --shadow-lg: 0 8px 24px rgba(30,38,30,0.10);
+}
+
+/* ---- GROVE DARK ---- */
+[data-theme="grove-dark"] {
+  --bg: #0e1410;
+  --surface: #161e18;
+  --surface-dim: #121a14;
+  --surface-raised: #1e2a20;
+
+  --primary: #6cc480;
+  --primary-hover: #80d494;
+  --primary-soft: rgba(108,196,128,0.12);
+  --primary-muted: rgba(108,196,128,0.35);
+
+  --accent: #90c4a0;
+  --accent-soft: rgba(144,196,160,0.08);
+
+  --border: #243028;
+  --border-light: #1e2820;
+  --border-focus: var(--primary);
+
+  --text: #dce8de;
+  --text-sec: #88a08a;
+  --text-muted: #4a6050;
+  --text-on-primary: #0e1410;
+  --text-on-surface: var(--text);
+
+  --success: #60d080;
+  --success-soft: rgba(96,208,128,0.10);
+  --warn: #d0b850;
+  --warn-soft: rgba(208,184,80,0.10);
+  --danger: #d06050;
+  --danger-soft: rgba(208,96,80,0.10);
+  --info: #50b0d0;
+  --info-soft: rgba(80,176,208,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.30);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+/* ---- CALCIFER FILM LIGHT ----
+   Blended from Howl's Moving Castle color palette:
+   Fire: amber/orange from Calcifer
+   Earth: parchment/brown from castle interior
+   Life: forest green from landscape
+   Sky: dusty blue from Sophie's dress
+   Shadow: mauve from twilight scenes */
+[data-theme="calcifer-light"] {
+  --bg: #f4efe5;
+  --surface: #fefcf7;
+  --surface-dim: #f8f3ea;
+  --surface-raised: #fff;
+
+  --primary: #c07838;
+  --primary-hover: #a86828;
+  --primary-soft: rgba(192,120,56,0.10);
+  --primary-muted: rgba(192,120,56,0.40);
+
+  --accent: #8a6878;
+  --accent-soft: rgba(138,104,120,0.08);
+
+  --border: #dfd4c4;
+  --border-light: #ebe4d8;
+  --border-focus: var(--primary);
+
+  --text: #2a1e14;
+  --text-sec: #6a5e4e;
+  --text-muted: #a09278;
+  --text-on-primary: #fefcf7;
+  --text-on-surface: var(--text);
+
+  --success: #5a7a42;
+  --success-soft: rgba(90,122,66,0.10);
+  --warn: #b89a40;
+  --warn-soft: rgba(184,154,64,0.10);
+  --danger: #a04040;
+  --danger-soft: rgba(160,64,64,0.10);
+  --info: #5a80a0;
+  --info-soft: rgba(90,128,160,0.10);
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+
+  --shadow-sm: 0 1px 3px rgba(42,30,20,0.06);
+  --shadow-md: 0 4px 12px rgba(42,30,20,0.08);
+  --shadow-lg: 0 8px 24px rgba(42,30,20,0.12);
+
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ---- CALCIFER FILM DARK ----
+   Castle interior at night. Ember glow,
+   deep wood, stone, moonlit blue hints */
+[data-theme="calcifer-dark"] {
+  --bg: #141010;
+  --surface: #1e1a14;
+  --surface-dim: #18140e;
+  --surface-raised: #282018;
+
+  --primary: #e09848;
+  --primary-hover: #eaaa58;
+  --primary-soft: rgba(224,152,72,0.12);
+  --primary-muted: rgba(224,152,72,0.35);
+
+  --accent: #c0a090;
+  --accent-soft: rgba(192,160,144,0.08);
+
+  --border: #342a20;
+  --border-light: #2a221a;
+  --border-focus: var(--primary);
+
+  --text: #e8e0d0;
+  --text-sec: #a8986a;
+  --text-muted: #685840;
+  --text-on-primary: #141010;
+  --text-on-surface: var(--text);
+
+  --success: #80b060;
+  --success-soft: rgba(128,176,96,0.10);
+  --warn: #d0b048;
+  --warn-soft: rgba(208,176,72,0.10);
+  --danger: #c85040;
+  --danger-soft: rgba(200,80,64,0.10);
+  --info: #6898b8;
+  --info-soft: rgba(104,152,184,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.30);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+/* ============================================================
+   PAGE STYLES
+   ============================================================ */
+* { margin:0; padding:0; box-sizing:border-box }
+body { font-family:var(--font-body); background:var(--bg); color:var(--text); line-height:1.6; transition:background 0.4s,color 0.3s }
+
+.page { max-width:1200px; margin:0 auto; padding:32px 24px }
+
+/* Header */
+.ds-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:40px; padding-bottom:20px; border-bottom:1px solid var(--border) }
+.ds-logo { font-size:20px; font-weight:700; color:var(--primary) }
+.ds-logo span { font-weight:400; color:var(--text-muted); font-size:13px; margin-left:6px }
+.ds-nav { display:flex; gap:4px }
+.ds-nav a { font-size:12px; padding:6px 14px; border-radius:var(--radius-xs); color:var(--text-sec); text-decoration:none; border:1px solid var(--border); transition:all 0.2s }
+.ds-nav a:hover { border-color:var(--primary); color:var(--primary) }
+.ds-nav a.active { background:var(--primary); color:var(--text-on-primary); border-color:var(--primary) }
+
+/* Theme switcher */
+.theme-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:40px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm) }
+.th-btn { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:var(--radius-xs); border:1.5px solid var(--border); background:var(--surface-dim); cursor:pointer; font-size:12px; font-family:inherit; color:var(--text-sec); transition:all 0.2s; font-weight:500 }
+.th-btn:hover { border-color:var(--primary); color:var(--text) }
+.th-btn.active { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); font-weight:600 }
+.th-swatch { display:flex; gap:2px; flex-shrink:0 }
+.th-swatch i { width:14px; height:14px; border-radius:3px; display:block; border:1px solid rgba(0,0,0,0.08) }
+.th-label { display:block; font-size:9px; color:var(--text-muted); margin-top:1px }
+
+/* Section */
+.section { margin-bottom:48px }
+.section-title { font-size:18px; font-weight:700; color:var(--text); margin-bottom:4px }
+.section-desc { font-size:13px; color:var(--text-sec); margin-bottom:20px; max-width:640px; line-height:1.6 }
+
+/* Color grid */
+.color-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px }
+.color-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; transition:box-shadow 0.2s }
+.color-card:hover { box-shadow:var(--shadow-md) }
+.color-swatch { height:80px; position:relative }
+.color-swatch .value { position:absolute; bottom:6px; right:8px; font-size:10px; font-family:var(--font-mono); color:white; background:rgba(0,0,0,0.35); padding:2px 6px; border-radius:3px }
+.color-meta { padding:10px 12px }
+.color-name { font-size:12px; font-weight:600; color:var(--text) }
+.color-var { font-size:10px; font-family:var(--font-mono); color:var(--text-muted); margin-top:2px }
+.color-use { font-size:10px; color:var(--text-sec); margin-top:4px; line-height:1.4 }
+
+/* Semantic group */
+.semantic-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px }
+.semantic-card { border-radius:var(--radius-sm); padding:14px; border:1px solid }
+.semantic-card h4 { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px }
+.semantic-card .pair { display:flex; gap:8px; margin-top:8px }
+.semantic-card .chip { padding:4px 10px; border-radius:var(--radius-xs); font-size:10px; font-weight:500 }
+
+/* Token table */
+.token-table { width:100%; border-collapse:collapse; font-size:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden }
+.token-table th { text-align:left; padding:8px 12px; background:var(--surface-dim); color:var(--text-muted); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid var(--border) }
+.token-table td { padding:8px 12px; border-bottom:1px solid var(--border-light); color:var(--text-sec); vertical-align:middle }
+.token-table tr:last-child td { border:none }
+.token-table tr:hover td { background:var(--primary-soft) }
+.token-table code { font-family:var(--font-mono); font-size:11px; color:var(--accent); background:var(--accent-soft); padding:1px 5px; border-radius:3px }
+.token-swatch { width:24px; height:24px; border-radius:4px; border:1px solid var(--border); display:inline-block; vertical-align:middle; margin-right:8px }
+
+/* Contrast check */
+.contrast-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px }
+.contrast-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px; text-align:center }
+.contrast-sample { padding:10px; border-radius:var(--radius-xs); font-size:14px; font-weight:600; margin-bottom:6px }
+.contrast-label { font-size:10px; color:var(--text-muted) }
+.contrast-ratio { font-size:11px; font-weight:600; font-family:var(--font-mono) }
+
+/* Philosophy cards */
+.phil-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:32px }
+.phil-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; transition:all 0.2s }
+.phil-card:hover { box-shadow:var(--shadow-md); border-color:var(--primary) }
+.phil-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:12px }
+.phil-card h3 { font-size:15px; font-weight:600; margin-bottom:4px }
+.phil-card p { font-size:12px; color:var(--text-sec); line-height:1.5 }
+.phil-card .phil-mood { font-size:10px; color:var(--text-muted); margin-top:8px; font-style:italic }
+
+/* Component preview */
+.preview-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px }
+.preview-btn { padding:7px 16px; border-radius:var(--radius-xs); font-size:12px; font-weight:500; font-family:inherit; cursor:pointer; transition:all 0.2s; border:none }
+.preview-btn-primary { background:var(--primary); color:var(--text-on-primary) }
+.preview-btn-primary:hover { background:var(--primary-hover) }
+.preview-btn-outline { background:transparent; color:var(--primary); border:1.5px solid var(--primary) }
+.preview-btn-outline:hover { background:var(--primary-soft) }
+.preview-badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:10px; font-weight:600 }
+.preview-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; max-width:260px }
+.preview-card h4 { font-size:13px; font-weight:600; margin-bottom:4px }
+.preview-card p { font-size:11px; color:var(--text-sec) }
+.preview-input { padding:7px 12px; border:1.5px solid var(--border); border-radius:var(--radius-xs); font-size:12px; font-family:inherit; color:var(--text); background:var(--surface-dim); outline:none; width:200px }
+.preview-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft) }
+
+/* Back link */
+.back-link { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text-muted); text-decoration:none; margin-bottom:16px; transition:color 0.2s }
+.back-link:hover { color:var(--primary) }
+</style>
+</head>
+<body data-theme="hearth-light">
+<div class="page">
+
+<!-- Header -->
+<a class="back-link" href="../main.html">&larr; Back to Kalcifer</a>
+<div class="ds-header">
+  <div class="ds-logo">Kalcifer <span>Design System</span></div>
+  <div class="ds-nav">
+    <a href="colors.html" class="active">Colors</a>
+    <a href="components.html">Components</a>
+    <a href="patterns.html">Patterns</a>
+  </div>
+</div>
+
+<!-- Theme Switcher -->
+<div class="theme-bar">
+  <button class="th-btn active" onclick="setTheme('hearth-light',this)">
+    <span class="th-swatch"><i style="background:#f6f1ea"></i><i style="background:#c07a3e"></i></span>
+    <span>Hearth Light<span class="th-label">ბუხარი</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('hearth-dark',this)">
+    <span class="th-swatch"><i style="background:#161210"></i><i style="background:#e0a060"></i></span>
+    <span>Hearth Dark<span class="th-label">ბუხარი</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('command-light',this)">
+    <span class="th-swatch"><i style="background:#f0f1f5"></i><i style="background:#4a5eb0"></i></span>
+    <span>Command Light<span class="th-label">მეთაური</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('command-dark',this)">
+    <span class="th-swatch"><i style="background:#0e1018"></i><i style="background:#8090e0"></i></span>
+    <span>Command Dark<span class="th-label">მეთაური</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('grove-light',this)">
+    <span class="th-swatch"><i style="background:#f0f3ee"></i><i style="background:#4a8a5a"></i></span>
+    <span>Grove Light<span class="th-label">კორომი</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('grove-dark',this)">
+    <span class="th-swatch"><i style="background:#0e1410"></i><i style="background:#6cc480"></i></span>
+    <span>Grove Dark<span class="th-label">კორომი</span></span>
+  </button>
+  <span style="width:1px;height:28px;background:var(--border);flex-shrink:0"></span>
+  <button class="th-btn" onclick="setTheme('calcifer-light',this)">
+    <span class="th-swatch"><i style="background:#f4efe5"></i><i style="background:#c07838"></i><i style="background:#5a7a42"></i><i style="background:#5a80a0"></i></span>
+    <span>Calcifer<span class="th-label">ფილმი</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('calcifer-dark',this)">
+    <span class="th-swatch"><i style="background:#141010"></i><i style="background:#e09848"></i><i style="background:#80b060"></i><i style="background:#6898b8"></i></span>
+    <span>Calcifer Dark<span class="th-label">ფილმი</span></span>
+  </button>
+</div>
+
+<!-- Philosophy -->
+<div class="section">
+  <div class="section-title">Color Philosophy</div>
+  <div class="section-desc">კალციფერი ჰაულის მოძრავი ციხესიმაგრის ცეცხლია. ერთი კარი სამ სხვადასხვა სამყაროში იხსნება. თითოეულ პალიტრას თავისი ხასიათი, ენერგია და დანიშნულება აქვს.</div>
+
+  <div class="phil-grid">
+    <div class="phil-card" style="border-left:3px solid #c07a3e">
+      <div class="phil-icon" style="background:rgba(192,122,62,0.10);color:#c07a3e">&#128293;</div>
+      <h3>Hearth / ბუხარი</h3>
+      <p>კალციფერის ცეცხლი. თბილი, ამბერის ტონები. შემოქმედებითი სახელოსნო, სადაც იდეები ფორმას იღებს. ეს არის სახლის გული.</p>
+      <div class="phil-mood">Mood: creative workshop, warm trust, handcrafted</div>
+    </div>
+    <div class="phil-card" style="border-left:3px solid #4a5eb0">
+      <div class="phil-icon" style="background:rgba(74,94,176,0.10);color:#4a5eb0">&#9876;</div>
+      <h3>Command / მეთაური</h3>
+      <p>საბრძოლო ოთახი. კამპანიები, სტრატეგია, მონიტორინგი. ზუსტი, მკაცრი, საქმიანი. "აწარმოეთ კამპანიები, არა ომები."</p>
+      <div class="phil-mood">Mood: strategic precision, control room, focused power</div>
+    </div>
+    <div class="phil-card" style="border-left:3px solid #4a8a5a">
+      <div class="phil-icon" style="background:rgba(74,138,90,0.10);color:#4a8a5a">&#127793;</div>
+      <h3>Grove / კორომი</h3>
+      <p>ბაღი. რაც შექმენი, ცოცხლდება და იზრდება. ნაყოფი გაზომვადია. ორგანული, მზარდი, მოვლის მოთხოვნილი.</p>
+      <div class="phil-mood">Mood: organic growth, patient nurturing, measurable harvest</div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;padding:20px;background:var(--surface);border:2px solid var(--primary);border-radius:var(--radius);display:flex;align-items:flex-start;gap:16px">
+    <div class="phil-icon" style="background:linear-gradient(135deg,rgba(192,120,56,0.15),rgba(90,128,160,0.15));color:#c07838;flex-shrink:0">&#10038;</div>
+    <div>
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:4px">Calcifer Film / ფილმის პალიტრა</h3>
+      <p style="font-size:12px;color:var(--text-sec);line-height:1.6">პირდაპირ მიაძაკის ფილმიდან ამოღებული ფერთა ნაზავი. კალციფერის ცეცხლის amber, სოფის კაბის dusty blue, ციხესიმაგრის ინტერიერის ღრმა ყავისფერი, ლანდშაფტის ტყის მწვანე, შებინდისას mauve. ფილმის ემოციური სპექტრი ერთ პალიტრაში.</p>
+      <div style="display:flex;gap:4px;margin-top:10px">
+        <span style="width:28px;height:28px;border-radius:6px;background:#c07838;display:block;border:1px solid rgba(0,0,0,0.1)" title="Calcifer's fire"></span>
+        <span style="width:28px;height:28px;border-radius:6px;background:#8a6878;display:block;border:1px solid rgba(0,0,0,0.1)" title="Sophie's mauve"></span>
+        <span style="width:28px;height:28px;border-radius:6px;background:#5a7a42;display:block;border:1px solid rgba(0,0,0,0.1)" title="Landscape green"></span>
+        <span style="width:28px;height:28px;border-radius:6px;background:#5a80a0;display:block;border:1px solid rgba(0,0,0,0.1)" title="Sophie's blue"></span>
+        <span style="width:28px;height:28px;border-radius:6px;background:#b89a40;display:block;border:1px solid rgba(0,0,0,0.1)" title="Golden khaki"></span>
+        <span style="width:28px;height:28px;border-radius:6px;background:#a04040;display:block;border:1px solid rgba(0,0,0,0.1)" title="Maroon shadow"></span>
+        <span style="width:28px;height:28px;border-radius:6px;background:#2a1e14;display:block;border:1px solid rgba(0,0,0,0.1)" title="Castle interior"></span>
+        <span style="width:28px;height:28px;border-radius:6px;background:#f4efe5;display:block;border:1px solid rgba(0,0,0,0.1)" title="Parchment"></span>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:8px;font-style:italic">Mood: Miyazaki warmth, hand-painted world, fire and sky, ancient and alive</div>
+    </div>
+  </div>
+</div>
+
+<!-- Core Colors -->
+<div class="section">
+  <div class="section-title">Core Palette</div>
+  <div class="section-desc">ძირითადი ფერები რომლებიც ცვალებადია თემის მიხედვით. CSS variables-ით მართულია — კომპონენტები ავტომატურად ადაპტირდებიან.</div>
+
+  <div class="color-grid" id="coreGrid"></div>
+</div>
+
+<!-- Semantic Colors -->
+<div class="section">
+  <div class="section-title">Semantic Colors</div>
+  <div class="section-desc">მნიშვნელობაზე დაფუძნებული ფერები. success, warn, danger, info — ყველა თემაში თანმიმდევრული.</div>
+
+  <div class="semantic-row">
+    <div class="semantic-card" style="background:var(--success-soft);border-color:var(--success)">
+      <h4 style="color:var(--success)">Success</h4>
+      <div style="font-size:11px;color:var(--text-sec)">Active flows, completed instances, passing checks</div>
+      <div class="pair">
+        <span class="chip" style="background:var(--success);color:white">Solid</span>
+        <span class="chip" style="background:var(--success-soft);color:var(--success);border:1px solid var(--success)">Soft</span>
+      </div>
+    </div>
+    <div class="semantic-card" style="background:var(--warn-soft);border-color:var(--warn)">
+      <h4 style="color:var(--warn)">Warning</h4>
+      <div style="font-size:11px;color:var(--text-sec)">Waiting instances, draft states, paused flows</div>
+      <div class="pair">
+        <span class="chip" style="background:var(--warn);color:white">Solid</span>
+        <span class="chip" style="background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn)">Soft</span>
+      </div>
+    </div>
+    <div class="semantic-card" style="background:var(--danger-soft);border-color:var(--danger)">
+      <h4 style="color:var(--danger)">Danger</h4>
+      <div style="font-size:11px;color:var(--text-sec)">Failed instances, errors, delete actions</div>
+      <div class="pair">
+        <span class="chip" style="background:var(--danger);color:white">Solid</span>
+        <span class="chip" style="background:var(--danger-soft);color:var(--danger);border:1px solid var(--danger)">Soft</span>
+      </div>
+    </div>
+    <div class="semantic-card" style="background:var(--info-soft);border-color:var(--info)">
+      <h4 style="color:var(--info)">Info</h4>
+      <div style="font-size:11px;color:var(--text-sec)">Running instances, trigger nodes, informational</div>
+      <div class="pair">
+        <span class="chip" style="background:var(--info);color:white">Solid</span>
+        <span class="chip" style="background:var(--info-soft);color:var(--info);border:1px solid var(--info)">Soft</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Node Category Colors -->
+<div class="section">
+  <div class="section-title">Node Category Colors</div>
+  <div class="section-desc">Flow editor-ში ყოველ node კატეგორიას თავისი ფერი აქვს. ეს mappings ყველა თემაში ერთნაირია.</div>
+
+  <table class="token-table">
+    <thead><tr><th>Category</th><th>Color Token</th><th>Preview</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Trigger</strong></td><td><code>--info</code> / <code>--info-soft</code></td><td><span class="token-swatch" style="background:var(--info)"></span><span class="token-swatch" style="background:var(--info-soft);border-color:var(--info)"></span></td><td>segment_entry, event_entry, webhook_entry</td></tr>
+      <tr><td><strong>Condition</strong></td><td><code>--warn</code> / <code>--warn-soft</code></td><td><span class="token-swatch" style="background:var(--warn)"></span><span class="token-swatch" style="background:var(--warn-soft);border-color:var(--warn)"></span></td><td>condition, ab_split, frequency_cap, check_segment</td></tr>
+      <tr><td><strong>Wait</strong></td><td><code>--accent</code> / <code>--accent-soft</code></td><td><span class="token-swatch" style="background:var(--accent)"></span><span class="token-swatch" style="background:var(--accent-soft);border-color:var(--accent)"></span></td><td>wait, wait_until, wait_for_event</td></tr>
+      <tr><td><strong>Action</strong></td><td><code>--primary</code> / <code>--primary-soft</code></td><td><span class="token-swatch" style="background:var(--primary)"></span><span class="token-swatch" style="background:var(--primary-soft);border-color:var(--primary)"></span></td><td>send_email, send_sms, send_push, call_webhook, etc.</td></tr>
+      <tr><td><strong>End</strong></td><td><code>--success</code> / <code>--success-soft</code></td><td><span class="token-swatch" style="background:var(--success)"></span><span class="token-swatch" style="background:var(--success-soft);border-color:var(--success)"></span></td><td>end</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Full Token Table -->
+<div class="section">
+  <div class="section-title">All Tokens</div>
+  <div class="section-desc">სრული ცვლადების ცხრილი მიმდინარე თემისთვის. ღილაკებით თემა შეცვალე და ნახე როგორ იცვლება.</div>
+
+  <table class="token-table" id="tokenTable"></table>
+</div>
+
+<!-- Live Preview -->
+<div class="section">
+  <div class="section-title">Live Component Preview</div>
+  <div class="section-desc">კომპონენტები მიმდინარე თემის ფერებით. თემა შეცვალე ზემოთ და ნახე როგორ ადაპტირდებიან.</div>
+
+  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+    <div class="preview-card">
+      <h4>Flow Card</h4>
+      <p>Spring Sale Push — 312 running instances</p>
+      <div class="preview-row" style="margin-top:10px">
+        <span class="preview-badge" style="background:var(--success-soft);color:var(--success)">Active</span>
+        <span class="preview-badge" style="background:var(--info-soft);color:var(--info)">v2</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="preview-row">
+        <button class="preview-btn preview-btn-primary">Publish Flow</button>
+        <button class="preview-btn preview-btn-outline">Dry Run</button>
+      </div>
+      <input class="preview-input" placeholder="Search flows...">
+      <div class="preview-row">
+        <span class="preview-badge" style="background:var(--success-soft);color:var(--success)">completed</span>
+        <span class="preview-badge" style="background:var(--warn-soft);color:var(--warn)">waiting</span>
+        <span class="preview-badge" style="background:var(--danger-soft);color:var(--danger)">failed</span>
+        <span class="preview-badge" style="background:var(--info-soft);color:var(--info)">running</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function setTheme(name, btn) {
+  document.body.setAttribute('data-theme', name);
+  document.querySelectorAll('.th-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderCoreGrid();
+  renderTokenTable();
+}
+
+function getVar(name) {
+  return getComputedStyle(document.body).getPropertyValue(name).trim();
+}
+
+function renderCoreGrid() {
+  const tokens = [
+    { name:'Background', var:'--bg', use:'Page background' },
+    { name:'Surface', var:'--surface', use:'Cards, panels, popups' },
+    { name:'Surface Dim', var:'--surface-dim', use:'Subtle backgrounds, inputs' },
+    { name:'Primary', var:'--primary', use:'Buttons, links, active states' },
+    { name:'Primary Hover', var:'--primary-hover', use:'Hover state for primary' },
+    { name:'Primary Soft', var:'--primary-soft', use:'Light backgrounds, selected states' },
+    { name:'Accent', var:'--accent', use:'Secondary emphasis, code text' },
+    { name:'Border', var:'--border', use:'Card borders, dividers' },
+    { name:'Text', var:'--text', use:'Primary text content' },
+    { name:'Text Secondary', var:'--text-sec', use:'Descriptions, table cells' },
+    { name:'Text Muted', var:'--text-muted', use:'Labels, placeholders, hints' },
+    { name:'Text on Primary', var:'--text-on-primary', use:'Text on primary-colored backgrounds' }
+  ];
+  const grid = document.getElementById('coreGrid');
+  grid.innerHTML = tokens.map(t => {
+    const val = getVar(t.var);
+    return `<div class="color-card">
+      <div class="color-swatch" style="background:${val}"><span class="value">${val}</span></div>
+      <div class="color-meta">
+        <div class="color-name">${t.name}</div>
+        <div class="color-var"><code>${t.var}</code></div>
+        <div class="color-use">${t.use}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTokenTable() {
+  const allTokens = [
+    '--bg','--surface','--surface-dim','--surface-raised',
+    '--primary','--primary-hover','--primary-soft','--primary-muted',
+    '--accent','--accent-soft',
+    '--border','--border-light','--border-focus',
+    '--text','--text-sec','--text-muted','--text-on-primary',
+    '--success','--success-soft','--warn','--warn-soft',
+    '--danger','--danger-soft','--info','--info-soft',
+    '--shadow-sm','--shadow-md','--shadow-lg',
+    '--radius','--radius-sm','--radius-xs'
+  ];
+  const table = document.getElementById('tokenTable');
+  table.innerHTML = `<thead><tr><th>Token</th><th>Value</th><th>Preview</th></tr></thead><tbody>` +
+    allTokens.map(t => {
+      const val = getVar(t);
+      const isShadow = t.includes('shadow');
+      const isRadius = t.includes('radius');
+      let preview = '';
+      if(isShadow) preview = `<div style="width:40px;height:24px;background:var(--surface);border-radius:4px;box-shadow:${val}"></div>`;
+      else if(isRadius) preview = `<div style="width:40px;height:24px;background:var(--primary-soft);border:1px solid var(--primary);border-radius:${val}"></div>`;
+      else preview = `<span class="token-swatch" style="background:${val}"></span>`;
+      return `<tr><td><code>${t}</code></td><td style="font-family:var(--font-mono);font-size:11px">${val}</td><td>${preview}</td></tr>`;
+    }).join('') + `</tbody>`;
+}
+
+// Init
+renderCoreGrid();
+renderTokenTable();
+</script>
+</body>
+</html>

@@ -3,45 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalcifer — Flow Partner</title>
+<title>Kalcifer</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-:root {
-  --bg:#f5f0eb;--surface:#ffffff;--surface-dim:#faf7f4;
-  --primary:#c4956a;--primary-hover:#b5845c;--primary-soft:rgba(196,149,106,0.10);
-  --accent:#8b7355;--accent-soft:rgba(139,115,85,0.08);
-  --border:#e8ddd3;--border-light:#f0e8df;
-  --text:#2d2a26;--text-sec:#6b6560;--text-muted:#a09890;--text-on-primary:#fff;
-  --success:#5a9e6f;--success-soft:rgba(90,158,111,0.08);
-  --warn:#c49a5c;--warn-soft:rgba(196,154,92,0.08);
-  --danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);
-  --info:#6a8fa0;--info-soft:rgba(106,143,160,0.08);
+/* ========================================
+   DESIGN TOKENS
+   ======================================== */
+:root, [data-theme="hearth-light"] {
+  --bg:#f6f1ea;--surface:#ffffff;--surface-dim:#faf7f2;
+  --primary:#c07a3e;--primary-hover:#a96830;--primary-soft:rgba(192,122,62,0.10);
+  --accent:#8b6d4a;--accent-soft:rgba(139,109,74,0.08);
+  --border:#e6ddd2;--border-light:#f0e8de;
+  --text:#2c2720;--text-sec:#6b6358;--text-muted:#a09686;--text-on-primary:#fff;
+  --success:#5a9e6f;--success-soft:rgba(90,158,111,0.10);
+  --warn:#c49a4a;--warn-soft:rgba(196,154,74,0.10);
+  --danger:#c4655a;--danger-soft:rgba(196,101,90,0.10);
+  --info:#6a8fa0;--info-soft:rgba(106,143,160,0.10);
   --radius:14px;--radius-sm:10px;--radius-xs:6px;
+  --sidebar-w:240px;--topbar-h:48px;
 }
-[data-theme="lavender"]{--bg:#f7f5f0;--surface:#fff;--surface-dim:#f5f2f8;--primary:#9b8ec4;--primary-hover:#8a7db5;--primary-soft:rgba(155,142,196,0.10);--accent:#7c6fa0;--accent-soft:rgba(124,111,160,0.08);--border:#e6e1ec;--border-light:#eeebf3;--text:#2d2a33;--text-sec:#65606e;--text-muted:#9e96a8;--success:#6a9e7a;--success-soft:rgba(106,158,122,0.08);--warn:#c4a05c;--warn-soft:rgba(196,160,92,0.08);--danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);--info:#7a8ec4;--info-soft:rgba(122,142,196,0.08)}
-[data-theme="sage"]{--bg:#f4f1ec;--surface:#fefdfb;--surface-dim:#f6f4f0;--primary:#6b8f6e;--primary-hover:#5c7e60;--primary-soft:rgba(107,143,110,0.10);--accent:#4a6b4d;--accent-soft:rgba(74,107,77,0.08);--border:#e2ddd6;--border-light:#eae6e0;--text:#2a2d28;--text-sec:#5c5f58;--text-muted:#969990;--success:#6b8f6e;--success-soft:rgba(107,143,110,0.08);--warn:#c49a5c;--warn-soft:rgba(196,154,92,0.08);--danger:#b86e5a;--danger-soft:rgba(184,110,90,0.08);--info:#5a8b9e;--info-soft:rgba(90,139,158,0.08)}
-[data-theme="teal"]{--bg:#f5f2ed;--surface:#fff;--surface-dim:#f9f7f4;--primary:#3d8b80;--primary-hover:#2d7b70;--primary-soft:rgba(61,139,128,0.10);--accent:#2d6b62;--accent-soft:rgba(45,107,98,0.08);--border:#e5dfd8;--border-light:#ede8e2;--text:#2a2825;--text-sec:#5c5855;--text-muted:#9a9590;--success:#5a9e6f;--success-soft:rgba(90,158,111,0.08);--warn:#c4956a;--warn-soft:rgba(196,149,106,0.08);--danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);--info:#3d8b80;--info-soft:rgba(61,139,128,0.08)}
-[data-theme="dark"]{--bg:#0f0f14;--surface:#1a1a24;--surface-dim:#141420;--primary:#a89cf0;--primary-hover:#bdb3f5;--primary-soft:rgba(168,156,240,0.10);--accent:#c4b8f0;--accent-soft:rgba(196,184,240,0.06);--border:#2a2a3a;--border-light:#22222f;--text:#e4e2ec;--text-sec:#9896a8;--text-muted:#5c5a6e;--text-on-primary:#0f0f14;--success:#6ee0a0;--success-soft:rgba(110,224,160,0.08);--warn:#f0c060;--warn-soft:rgba(240,192,96,0.08);--danger:#f08070;--danger-soft:rgba(240,128,112,0.08);--info:#70b0f0;--info-soft:rgba(112,176,240,0.08)}
+[data-theme="hearth-dark"]{--bg:#161210;--surface:#211c18;--surface-dim:#1a1614;--primary:#e0a060;--primary-hover:#eab070;--primary-soft:rgba(224,160,96,0.12);--accent:#d4b896;--accent-soft:rgba(212,184,150,0.08);--border:#332c26;--border-light:#2a2420;--text:#ede6dc;--text-sec:#a89a88;--text-muted:#6b6054;--text-on-primary:#161210;--success:#70c490;--success-soft:rgba(112,196,144,0.10);--warn:#e0b860;--warn-soft:rgba(224,184,96,0.10);--danger:#e07060;--danger-soft:rgba(224,112,96,0.10);--info:#70a8c0;--info-soft:rgba(112,168,192,0.10)}
+[data-theme="command-light"]{--bg:#f0f1f5;--surface:#ffffff;--surface-dim:#f6f7fa;--primary:#4a5eb0;--primary-hover:#3d4f9a;--primary-soft:rgba(74,94,176,0.10);--accent:#5c6a8a;--accent-soft:rgba(92,106,138,0.08);--border:#dde0e8;--border-light:#e8eaf0;--text:#1a1e2c;--text-sec:#5a6070;--text-muted:#9298a8;--text-on-primary:#fff;--success:#3d9e6f;--success-soft:rgba(61,158,111,0.10);--warn:#c49a4a;--warn-soft:rgba(196,154,74,0.10);--danger:#c45050;--danger-soft:rgba(196,80,80,0.10);--info:#4a8ab0;--info-soft:rgba(74,138,176,0.10)}
+[data-theme="command-dark"]{--bg:#0e1018;--surface:#181a24;--surface-dim:#12141c;--primary:#8090e0;--primary-hover:#96a4ea;--primary-soft:rgba(128,144,224,0.12);--accent:#a0a8d0;--accent-soft:rgba(160,168,208,0.08);--border:#282a38;--border-light:#20222e;--text:#e0e2f0;--text-sec:#8a8ea0;--text-muted:#505468;--text-on-primary:#0e1018;--success:#60d090;--success-soft:rgba(96,208,144,0.10);--warn:#e0c060;--warn-soft:rgba(224,192,96,0.10);--danger:#e06060;--danger-soft:rgba(224,96,96,0.10);--info:#60a0e0;--info-soft:rgba(96,160,224,0.10)}
+[data-theme="grove-light"]{--bg:#f0f3ee;--surface:#fefffe;--surface-dim:#f5f7f3;--primary:#4a8a5a;--primary-hover:#3d7a4d;--primary-soft:rgba(74,138,90,0.10);--accent:#5a7a5e;--accent-soft:rgba(90,122,94,0.08);--border:#d8e0d6;--border-light:#e4eae2;--text:#1e261e;--text-sec:#586058;--text-muted:#8a968a;--text-on-primary:#fff;--success:#4a9e60;--success-soft:rgba(74,158,96,0.10);--warn:#b89a40;--warn-soft:rgba(184,154,64,0.10);--danger:#b85a4a;--danger-soft:rgba(184,90,74,0.10);--info:#4a889e;--info-soft:rgba(74,136,158,0.10)}
+[data-theme="grove-dark"]{--bg:#0e1410;--surface:#161e18;--surface-dim:#121a14;--primary:#6cc480;--primary-hover:#80d494;--primary-soft:rgba(108,196,128,0.12);--accent:#90c4a0;--accent-soft:rgba(144,196,160,0.08);--border:#243028;--border-light:#1e2820;--text:#dce8de;--text-sec:#88a08a;--text-muted:#4a6050;--text-on-primary:#0e1410;--success:#60d080;--success-soft:rgba(96,208,128,0.10);--warn:#d0b850;--warn-soft:rgba(208,184,80,0.10);--danger:#d06050;--danger-soft:rgba(208,96,80,0.10);--info:#50b0d0;--info-soft:rgba(80,176,208,0.10)}
+[data-theme="calcifer-light"]{--bg:#f4efe5;--surface:#fefcf7;--surface-dim:#f8f3ea;--primary:#c07838;--primary-hover:#a86828;--primary-soft:rgba(192,120,56,0.10);--accent:#8a6878;--accent-soft:rgba(138,104,120,0.08);--border:#dfd4c4;--border-light:#ebe4d8;--text:#2a1e14;--text-sec:#6a5e4e;--text-muted:#a09278;--text-on-primary:#fefcf7;--success:#5a7a42;--success-soft:rgba(90,122,66,0.10);--warn:#b89a40;--warn-soft:rgba(184,154,64,0.10);--danger:#a04040;--danger-soft:rgba(160,64,64,0.10);--info:#5a80a0;--info-soft:rgba(90,128,160,0.10)}
+[data-theme="calcifer-dark"]{--bg:#141010;--surface:#1e1a14;--surface-dim:#18140e;--primary:#e09848;--primary-hover:#eaaa58;--primary-soft:rgba(224,152,72,0.12);--accent:#c0a090;--accent-soft:rgba(192,160,144,0.08);--border:#342a20;--border-light:#2a221a;--text:#e8e0d0;--text-sec:#a89868;--text-muted:#685840;--text-on-primary:#141010;--success:#80b060;--success-soft:rgba(128,176,96,0.10);--warn:#d0b048;--warn-soft:rgba(208,176,72,0.10);--danger:#c85040;--danger-soft:rgba(200,80,64,0.10);--info:#6898b8;--info-soft:rgba(104,152,184,0.10)}
 
+/* ========================================
+   RESET & BASE
+   ======================================== */
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;transition:background 0.4s,color 0.3s}
 
-/* LAYOUT */
-.app{display:grid;grid-template-columns:240px 1fr;grid-template-rows:48px 1fr;height:100vh}
+/* ========================================
+   APP SHELL — FLUID STAGE
+   ======================================== */
+.app{display:flex;flex-direction:column;height:100vh}
 
-/* TOPBAR */
-.topbar{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;transition:all 0.3s}
+/* ---- TOPBAR ---- */
+.topbar{height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;flex-shrink:0;transition:all 0.4s}
+
+/* Welcome: topbar is minimal */
+[data-stage="welcome"] .topbar{border-bottom-color:transparent;background:transparent}
+
 .top-left{display:flex;align-items:center;gap:14px}
-.logo{font-size:17px;font-weight:700;color:var(--primary);letter-spacing:-0.5px}
-.logo span{font-weight:400;color:var(--text-muted);font-size:12px}
+.logo{font-size:17px;font-weight:700;color:var(--primary);letter-spacing:-0.5px;cursor:pointer}
+.logo span{font-weight:400;color:var(--text-muted);font-size:12px;margin-left:2px;transition:opacity 0.3s}
+[data-stage="welcome"] .logo span{opacity:0}
+
 .top-right{display:flex;align-items:center;gap:6px}
 .top-btn{background:var(--surface-dim);border:1px solid var(--border);color:var(--text-sec);height:30px;padding:0 10px;border-radius:var(--radius-xs);cursor:pointer;font-size:11px;font-family:inherit;display:flex;align-items:center;gap:4px;transition:all 0.2s}
 .top-btn:hover{border-color:var(--primary);color:var(--text)}
+[data-stage="welcome"] .top-btn{opacity:0.5}
 .avatar{width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--text-on-primary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600}
 
-/* Theme */
+/* Theme dropdown */
 .theme-wrap{position:relative}
 .theme-dd{display:none;position:absolute;top:36px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:500;min-width:160px}
 .theme-dd.open{display:block}
@@ -51,8 +70,25 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .th-sw{display:flex;gap:2px}
 .th-sw i{width:10px;height:10px;border-radius:2px;display:block}
 
-/* SIDEBAR */
-.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:all 0.3s}
+/* ---- STAGE: the main content area ---- */
+.stage{flex:1;display:flex;overflow:hidden;position:relative;min-height:0}
+
+/* ---- SIDEBAR (sessions/flows) ---- */
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width 0.4s ease,min-width 0.4s ease,margin-left 0.4s ease,opacity 0.3s}
+
+/* Welcome: sidebar hidden */
+[data-stage="welcome"] .sidebar{width:0;min-width:0;opacity:0;border-right:none;overflow:hidden}
+/* Context-dominant: sidebar collapses */
+[data-stage="context"] .sidebar{width:48px;min-width:48px}
+[data-stage="context"] .sidebar .sb-full{display:none}
+[data-stage="context"] .sidebar .sb-mini{display:flex}
+
+.sb-full{display:flex;flex-direction:column;height:100%}
+.sb-mini{display:none;flex-direction:column;align-items:center;padding:8px 0;gap:6px;height:100%}
+.sb-mini-btn{width:32px;height:32px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface-dim);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all 0.2s}
+.sb-mini-btn:hover{border-color:var(--primary);color:var(--primary)}
+.sb-mini-btn.active{background:var(--primary-soft);color:var(--primary);border-color:var(--primary)}
+
 .sb-section{padding:10px 10px 4px}
 .sb-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);padding:0 6px;margin-bottom:4px}
 .sb-new{display:flex;align-items:center;gap:6px;width:100%;padding:7px 10px;background:var(--primary-soft);border:1px dashed var(--primary);border-radius:var(--radius-sm);color:var(--primary);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all 0.2s;margin-bottom:6px}
@@ -65,7 +101,10 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .flow-item:hover{background:var(--surface-dim)}
 .flow-item.active{background:var(--primary-soft);border-color:var(--primary)}
 .flow-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
-.dot-draft{background:var(--text-muted)} .dot-active{background:var(--success);animation:pulse 2s infinite} .dot-paused{background:var(--warn)} .dot-archived{background:var(--border)}
+.dot-draft{background:var(--text-muted)}
+.dot-active{background:var(--success);animation:pulse 2s infinite}
+.dot-paused{background:var(--warn)}
+.dot-archived{background:var(--border)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 .flow-info{flex:1;min-width:0}
 .flow-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -75,14 +114,56 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .tenant-btn{display:flex;align-items:center;gap:6px;width:100%;padding:6px 8px;background:var(--surface-dim);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;color:var(--text-sec);cursor:pointer;font-family:inherit}
 .t-dot{width:6px;height:6px;border-radius:50%;background:var(--success)}
 
-/* MAIN CONTENT AREA */
-.main-area{display:flex;overflow:hidden;min-height:0}
-.main-area{transition:all 0.4s ease}
+/* ---- CHAT AREA ---- */
+.chat-area{display:flex;flex-direction:column;transition:flex 0.5s ease,max-width 0.5s ease;overflow:hidden;min-height:0;min-width:0}
 
-/* Chat Column */
-.chat-col{display:flex;flex-direction:column;overflow:hidden;min-height:0;border-right:1px solid var(--border);background:var(--bg);transition:width 0.4s ease,flex 0.4s ease}
+/* Welcome: chat is centered, takes full stage */
+[data-stage="welcome"] .chat-area{flex:1;max-width:100%;align-items:center;justify-content:center}
+/* Chat: chat dominant */
+[data-stage="chat"] .chat-area{flex:3;border-right:1px solid var(--border);background:var(--bg)}
+/* Split: balanced */
+[data-stage="split"] .chat-area{flex:1;border-right:1px solid var(--border);background:var(--bg);max-width:480px}
+/* Context: chat compact */
+[data-stage="context"] .chat-area{flex:0;width:340px;min-width:340px;max-width:340px;border-right:1px solid var(--border);background:var(--bg)}
 
-.chat-head{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+/* ---- WELCOME CENTER ---- */
+.welcome-center{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;padding:40px;transition:opacity 0.4s,transform 0.5s ease}
+[data-stage="welcome"] .welcome-center{opacity:1}
+.app:not([data-stage="welcome"]) .welcome-center{display:none}
+/* Transition out: elements fly up, input drops down */
+.welcome-center.exiting{opacity:1;pointer-events:none}
+.welcome-center.exiting .welcome-avatar,
+.welcome-center.exiting .welcome-title,
+.welcome-center.exiting .welcome-sub,
+.welcome-center.exiting .welcome-hints{animation:wFadeUp 0.4s ease forwards}
+.welcome-center.exiting .welcome-input-area{animation:wDropDown 0.5s ease forwards}
+@keyframes wFadeUp{to{opacity:0;transform:translateY(-30px)}}
+@keyframes wDropDown{to{opacity:0;transform:translateY(60px)}}
+
+.welcome-avatar{width:80px;height:80px;border-radius:50%;background:var(--primary-soft);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:var(--primary);margin-bottom:20px;animation:breathe 4s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1);box-shadow:0 0 0 0 var(--primary-soft)}50%{transform:scale(1.04);box-shadow:0 0 0 16px transparent}}
+.welcome-title{font-size:22px;font-weight:600;color:var(--text);margin-bottom:6px}
+.welcome-sub{font-size:13px;color:var(--text-muted);max-width:360px;line-height:1.6;margin-bottom:24px}
+.welcome-hints{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:440px}
+.welcome-hint{background:var(--surface);border:1px solid var(--border);color:var(--text-sec);padding:6px 14px;border-radius:20px;font-size:11.5px;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.welcome-hint:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
+
+/* Welcome input (centered) */
+.welcome-input-area{width:100%;max-width:520px;margin-top:16px}
+.chat-input-wrap{display:flex;align-items:flex-end;gap:6px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:8px 12px;transition:all 0.2s}
+.chat-input-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.chat-input{flex:1;background:none;border:none;color:var(--text);font-size:13px;font-family:inherit;resize:none;outline:none;max-height:80px;line-height:1.5}
+.chat-input::placeholder{color:var(--text-muted)}
+.send-btn{background:var(--primary);border:none;color:var(--text-on-primary);width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+.send-btn:hover{background:var(--primary-hover)}
+.send-btn svg{width:13px;height:13px}
+
+/* ---- CHAT COLUMN (active stages) ---- */
+.chat-col{display:none;flex-direction:column;flex:1;min-height:0}
+.app:not([data-stage="welcome"]) .chat-col{display:flex}
+.app[data-stage="welcome"] .chat-col{display:none}
+
+.chat-head{height:40px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
 .chat-head-left{display:flex;align-items:center;gap:8px}
 .ai-dot{width:7px;height:7px;border-radius:50%;background:var(--success);animation:pulse 2.5s infinite}
 .chat-head h2{font-size:13px;font-weight:600}
@@ -98,7 +179,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .msg-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600}
 .msg-ai .msg-av{background:var(--primary-soft);color:var(--primary);border:1px solid var(--border)}
 .msg-user .msg-av{background:var(--surface-dim);color:var(--text-muted);border:1px solid var(--border)}
-.msg-body{padding:10px 14px;border-radius:var(--radius);font-size:12.5px;line-height:1.6;max-width:90%}
+.msg-body{padding:10px 14px;border-radius:var(--radius);font-size:12.5px;line-height:1.6;max-width:92%}
 .msg-ai .msg-body{background:var(--surface);border:1px solid var(--border)}
 .msg-user .msg-body{background:var(--primary);color:var(--text-on-primary)}
 .msg-body code{background:var(--accent-soft);padding:1px 4px;border-radius:3px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent)}
@@ -131,44 +212,73 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .sug{background:var(--surface);border:1px solid var(--border);color:var(--text-sec);padding:4px 10px;border-radius:16px;font-size:10.5px;cursor:pointer;font-family:inherit;transition:all 0.2s}
 .sug:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
 
-.chat-input-area{padding:10px 16px 12px;flex-shrink:0;border-top:1px solid var(--border)}
-.chat-input-wrap{display:flex;align-items:flex-end;gap:6px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:8px 12px;transition:all 0.2s}
-.chat-input-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
-.chat-input{flex:1;background:none;border:none;color:var(--text);font-size:13px;font-family:inherit;resize:none;outline:none;max-height:80px;line-height:1.5}
-.chat-input::placeholder{color:var(--text-muted)}
-.send-btn{background:var(--primary);border:none;color:var(--text-on-primary);width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
-.send-btn:hover{background:var(--primary-hover)}
-.send-btn svg{width:13px;height:13px}
+.chat-input-bottom{padding:10px 16px 12px;flex-shrink:0;border-top:1px solid var(--border)}
 
 .typing-ind{display:flex;gap:3px;padding:3px 0}
 .typing-ind span{width:5px;height:5px;border-radius:50%;background:var(--primary);animation:td 1.2s infinite}
 .typing-ind span:nth-child(2){animation-delay:0.2s}.typing-ind span:nth-child(3){animation-delay:0.4s}
 @keyframes td{0%,60%,100%{opacity:0.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 
-/* Dashboard Column */
-.dash-col{flex:1;overflow-y:auto;padding:16px;background:var(--bg);transition:all 0.4s ease;min-height:0}
-.dash-col::-webkit-scrollbar{width:5px}
-.dash-col::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+/* ---- RESIZE HANDLE ---- */
+.resize-handle{width:5px;cursor:col-resize;background:transparent;flex-shrink:0;position:relative;z-index:50;transition:background 0.2s}
+.resize-handle:hover,.resize-handle.active{background:var(--primary)}
+.resize-handle::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:3px;height:32px;border-radius:2px;background:var(--border);transition:background 0.2s}
+.resize-handle:hover::after,.resize-handle.active::after{background:var(--primary)}
+[data-stage="welcome"] .resize-handle,[data-stage="chat"] .resize-handle{display:none}
 
-.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.dash-title{font-size:15px;font-weight:600}
-.dash-subtitle{font-size:11px;color:var(--text-muted)}
+/* ---- CONTEXT AREA (right panel) ---- */
+.context-area{flex:0;overflow:hidden;background:var(--bg);transition:flex 0.5s ease,opacity 0.4s;opacity:0;min-height:0;display:flex;flex-direction:column}
+#ctxContent{flex:1;display:flex;flex-direction:column;min-height:0}
+.context-area.scrollable{overflow-y:auto;overflow-x:hidden}
+.context-area::-webkit-scrollbar{width:5px}
+.context-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 
-.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px}
+[data-stage="welcome"] .context-area{flex:0;opacity:0;overflow:hidden}
+[data-stage="chat"] .context-area{flex:0;opacity:0;overflow:hidden}
+[data-stage="split"] .context-area{flex:2;opacity:1}
+[data-stage="split"] .context-area.scrollable{padding:16px}
+[data-stage="context"] .context-area{flex:3;opacity:1}
+[data-stage="context"] .context-area.scrollable{padding:16px}
 
-.d-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;transition:all 0.2s}
-.d-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.04)}
-.d-card.wide{grid-column:span 2}
-.d-card.full{grid-column:1/-1}
+/* ---- CONTEXT CONTENT (dashboard, canvas, etc.) ---- */
+.ctx-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ctx-title{font-size:15px;font-weight:600}
+.ctx-subtitle{font-size:11px;color:var(--text-muted)}
+.ctx-tag{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:600}
 
-.d-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted)}
-.d-value{font-size:24px;font-weight:700;color:var(--primary);margin-top:3px}
-.d-change{font-size:10px;margin-top:2px}
+.ctx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px}
+.ctx-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;transition:all 0.2s}
+.ctx-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.ctx-card.wide{grid-column:span 2}
+.ctx-card.full{grid-column:1/-1}
+
+.ctx-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted)}
+.ctx-value{font-size:24px;font-weight:700;color:var(--primary);margin-top:3px}
+.ctx-change{font-size:10px;margin-top:2px}
 .change-up{color:var(--success)}.change-down{color:var(--danger)}
 
-.d-section-title{font-size:12px;font-weight:600;color:var(--text);margin:14px 0 8px;display:flex;align-items:center;gap:6px}
+.ctx-section{font-size:12px;font-weight:600;color:var(--text);margin:14px 0 8px;display:flex;align-items:center;gap:6px}
 
-/* Progress bars */
+/* Funnel */
+.funnel{display:flex;flex-direction:column;gap:3px}
+.funnel-step{display:flex;align-items:center;gap:8px}
+.funnel-bar{height:24px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;color:white;transition:width 0.8s ease}
+.funnel-label{font-size:10px;color:var(--text-muted);min-width:70px}
+.funnel-val{font-size:10px;color:var(--text-sec);min-width:50px;text-align:right}
+
+/* Table */
+.ctx-table{width:100%;border-collapse:collapse;font-size:11px}
+.ctx-table th{text-align:left;padding:5px 6px;color:var(--text-muted);font-weight:500;text-transform:uppercase;font-size:9px;letter-spacing:0.5px;border-bottom:1px solid var(--border)}
+.ctx-table td{padding:5px 6px;border-bottom:1px solid var(--border-light);color:var(--text-sec)}
+.ctx-table tr:hover td{background:var(--primary-soft)}
+
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500}
+.b-green{background:var(--success-soft);color:var(--success)}
+.b-orange{background:var(--warn-soft);color:var(--warn)}
+.b-red{background:var(--danger-soft);color:var(--danger)}
+.b-blue{background:var(--info-soft);color:var(--info)}
+
+/* Progress */
 .prog-row{margin-bottom:10px}
 .prog-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
 .prog-label span:first-child{color:var(--text-sec)}
@@ -176,7 +286,15 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .prog-bar{height:8px;background:var(--surface-dim);border-radius:4px;overflow:hidden;border:1px solid var(--border-light)}
 .prog-fill{height:100%;border-radius:3px;transition:width 1s ease}
 
-/* Live stream mini */
+/* Insight cards */
+.insight{padding:8px 10px;border-left:3px solid;border-radius:0 var(--radius-xs) var(--radius-xs) 0;margin-bottom:6px}
+.insight-type{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.insight-text{font-size:11px;margin-top:2px;color:var(--text-sec);line-height:1.4}
+
+/* Chart */
+.chart-box{position:relative;height:180px}
+
+/* Live stream */
 .live-mini{font-family:'JetBrains Mono',monospace;font-size:10px;max-height:160px;overflow-y:auto;background:var(--surface-dim);border-radius:var(--radius-sm);padding:8px;border:1px solid var(--border-light)}
 .live-mini::-webkit-scrollbar{width:3px}
 .live-mini::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -186,559 +304,1300 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .lm-name{color:var(--primary)}
 .lm-detail{color:var(--text-sec)}
 
-/* Chart */
-.chart-box{position:relative;height:180px}
+/* ---- CANVAS EDITOR (inside context area) ---- */
+.canvas-wrap{position:relative;flex:1;display:flex;flex-direction:column;background:var(--surface-dim);overflow:hidden;min-height:0}
 
-/* Table mini */
-.d-table{width:100%;border-collapse:collapse;font-size:11px}
-.d-table th{text-align:left;padding:5px 6px;color:var(--text-muted);font-weight:500;text-transform:uppercase;font-size:9px;letter-spacing:0.5px;border-bottom:1px solid var(--border)}
-.d-table td{padding:5px 6px;border-bottom:1px solid var(--border-light);color:var(--text-sec)}
-.d-table tr:hover td{background:var(--primary-soft)}
+/* Canvas body: toolbar + middle + footer */
+.canvas-middle{position:relative;flex:1;display:flex;overflow:hidden;min-height:0}
 
-.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500}
-.b-green{background:var(--success-soft);color:var(--success)}
-.b-orange{background:var(--warn-soft);color:var(--warn)}
-.b-red{background:var(--danger-soft);color:var(--danger)}
-.b-blue{background:var(--info-soft);color:var(--info)}
+/* The scrollable canvas pane */
+.canvas-pane{flex:1;position:relative;overflow:auto;min-height:0}
+.canvas-pane::-webkit-scrollbar{width:5px;height:5px}
+.canvas-pane::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 
-/* Funnel */
-.funnel{display:flex;flex-direction:column;gap:3px}
-.funnel-step{display:flex;align-items:center;gap:8px}
-.funnel-bar{height:24px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;color:white;transition:width 0.8s ease}
-.funnel-label{font-size:10px;color:var(--text-muted);min-width:70px}
-.funnel-val{font-size:10px;color:var(--text-sec);min-width:50px;text-align:right}
+/* Zoom wrapper inside canvas-pane */
+.canvas-zoom{position:relative;min-width:900px;min-height:1200px;transform-origin:0 0;transition:transform 0.15s ease}
 
-/* Empty dash state */
-.dash-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:var(--text-muted)}
-.dash-empty-icon{font-size:48px;margin-bottom:10px;opacity:0.3}
-.dash-empty h3{font-size:15px;color:var(--text-sec);font-weight:500;margin-bottom:4px}
-.dash-empty p{font-size:12px;max-width:280px;line-height:1.5}
+/* Zoom controls — inside canvas-pane, bottom-right */
+.canvas-zoom-ctrl{position:absolute;bottom:12px;right:12px;display:flex;flex-direction:column;gap:3px;z-index:20}
+.cz-btn{width:30px;height:30px;border-radius:var(--radius-xs);background:var(--surface);border:1px solid var(--border);color:var(--text-sec);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;font-family:inherit;transition:all 0.2s;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
+.cz-btn:hover{border-color:var(--primary);color:var(--text)}
+.cz-label{font-size:9px;text-align:center;color:var(--text-muted);font-weight:500}
 
-/* Insight cards */
-.insight{padding:8px 10px;border-left:3px solid;border-radius:0 var(--radius-xs) var(--radius-xs) 0;margin-bottom:6px}
-.insight-type{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
-.insight-text{font-size:11px;margin-top:2px;color:var(--text-sec);line-height:1.4}
+/* Canvas footer */
+.canvas-footer{height:36px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0}
+.cf-left{display:flex;align-items:center;gap:12px}
+.cf-right{display:flex;align-items:center;gap:8px}
+.cf-pill{font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
+.cf-pill strong{color:var(--text-sec)}
+.cf-dot{width:5px;height:5px;border-radius:50%}
+.cf-status{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;padding:3px 8px;background:var(--surface-dim);border-radius:var(--radius-xs)}
+
+/* Node palette — right side panel, below toolbar */
+.node-palette{position:absolute;top:0;right:0;width:220px;height:100%;background:var(--surface);border-left:1px solid var(--border);z-index:25;overflow-y:auto;transform:translateX(100%);transition:transform 0.3s ease;box-shadow:-4px 0 16px rgba(0,0,0,0.06)}
+.node-palette.open{transform:translateX(0)}
+.node-palette::-webkit-scrollbar{width:3px}
+.node-palette::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.np-header{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+.np-header h4{font-size:12px;font-weight:600}
+.np-close{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:var(--radius-xs)}
+.np-close:hover{color:var(--text);background:var(--surface-dim)}
+.np-section{padding:8px 10px 4px}
+.np-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:4px}
+.np-item{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:var(--radius-xs);cursor:pointer;border:1px solid transparent;transition:all 0.15s;margin-bottom:2px}
+.np-item:hover{background:var(--surface-dim);border-color:var(--border)}
+.np-item:active{opacity:0.7}
+.np-icon{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.np-name{font-size:10.5px;font-weight:500;color:var(--text)}
+
+/* Node config panel — right side, below toolbar */
+.node-config{position:absolute;top:0;right:0;width:280px;height:100%;background:var(--surface);border-left:1px solid var(--border);z-index:28;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.3s ease;box-shadow:-4px 0 16px rgba(0,0,0,0.08)}
+.node-config.open{transform:translateX(0)}
+.nc-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.nc-header h4{font-size:12px;font-weight:600}
+.nc-close{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:var(--radius-xs)}
+.nc-close:hover{color:var(--text);background:var(--surface-dim)}
+.nc-body{flex:1;overflow-y:auto;padding:12px 14px}
+.nc-body::-webkit-scrollbar{width:3px}
+.nc-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.nc-field{margin-bottom:12px}
+.nc-label{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:3px;display:block}
+.nc-input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text);background:var(--surface-dim);outline:none;transition:border-color 0.2s}
+.nc-input:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+.nc-select{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text);background:var(--surface-dim);outline:none;cursor:pointer}
+.nc-select:focus{border-color:var(--primary)}
+.nc-textarea{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text);background:var(--surface-dim);outline:none;resize:vertical;min-height:50px;line-height:1.5}
+.nc-textarea:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+.nc-divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+.nc-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:6px;flex-shrink:0}
+.nc-btn{flex:1;padding:7px;border-radius:var(--radius-xs);font-size:11px;font-family:inherit;cursor:pointer;font-weight:500;transition:all 0.2s;border:none}
+.nc-btn-save{background:var(--primary);color:var(--text-on-primary)}
+.nc-btn-save:hover{background:var(--primary-hover)}
+.nc-btn-del{background:var(--danger-soft);color:var(--danger);border:1px solid transparent}
+.nc-btn-del:hover{background:var(--danger);color:white}
+
+.edge-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5}
+.edge-path{fill:none;stroke:var(--border);stroke-width:2}
+.edge-path.sim-edge{stroke:var(--success);stroke-width:3;stroke-dasharray:8 4;animation:edgeFlow 1s linear infinite}
+@keyframes edgeFlow{to{stroke-dashoffset:-12}}
+.edge-arrow{fill:var(--border)}
+.edge-label{font-size:9px;fill:var(--text-muted);font-family:'JetBrains Mono',monospace}
+
+.canvas-node{position:absolute;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);cursor:grab;user-select:none;transition:box-shadow 0.2s,border-color 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.06);min-width:170px;z-index:10}
+.canvas-node:hover{box-shadow:0 4px 16px rgba(0,0,0,0.10);border-color:var(--primary);z-index:11}
+.canvas-node.selected{box-shadow:0 0 0 3px var(--primary-soft),0 4px 16px rgba(0,0,0,0.10);border-color:var(--primary);z-index:12}
+.canvas-node.dragging{cursor:grabbing;opacity:0.85;z-index:100}
+.canvas-node.sim-active{animation:simPulse 1.5s ease infinite}
+@keyframes simPulse{0%,100%{box-shadow:0 2px 8px rgba(0,0,0,0.06)}50%{box-shadow:0 0 0 6px var(--primary-soft)}}
+
+.node-header{display:flex;align-items:center;gap:8px;padding:10px 12px 8px;border-bottom:1px solid var(--border-light)}
+.node-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.node-icon.trigger{background:var(--info-soft);color:var(--info)}
+.node-icon.action{background:var(--primary-soft);color:var(--primary)}
+.node-icon.condition{background:var(--warn-soft);color:var(--warn)}
+.node-icon.wait{background:var(--accent-soft);color:var(--accent)}
+.node-icon.end{background:var(--success-soft);color:var(--success)}
+.node-title{font-size:11.5px;font-weight:600;color:var(--text)}
+.node-type{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+.node-body{padding:8px 12px 10px}
+.node-desc{font-size:10.5px;color:var(--text-sec);line-height:1.4}
+.node-config-tag{font-size:9.5px;color:var(--text-muted);margin-top:4px;font-family:'JetBrains Mono',monospace;background:var(--surface-dim);padding:3px 6px;border-radius:var(--radius-xs);display:inline-block}
+
+.node-port{width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--border);position:absolute;cursor:crosshair;z-index:15;transition:all 0.2s}
+.node-port:hover{border-color:var(--primary);background:var(--primary-soft);transform:scale(1.3)}
+.node-port.port-in{top:-5px;left:50%;transform:translateX(-50%)}
+.node-port.port-in:hover{transform:translateX(-50%) scale(1.3)}
+.node-port.port-out{bottom:-5px;left:50%;transform:translateX(-50%)}
+.node-port.port-out:hover{transform:translateX(-50%) scale(1.3)}
+.node-port.port-true{bottom:-5px;left:30%;transform:translateX(-50%)}
+.node-port.port-false{bottom:-5px;left:70%;transform:translateX(-50%)}
+.port-lbl{position:absolute;font-size:8px;font-weight:600;pointer-events:none}
+.port-lbl.lbl-t{bottom:-16px;left:30%;transform:translateX(-50%);color:var(--success)}
+.port-lbl.lbl-f{bottom:-16px;left:70%;transform:translateX(-50%);color:var(--danger)}
+
+.sim-badge{position:absolute;top:-7px;right:-7px;width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:white;border:2px solid var(--surface);z-index:16}
+.sim-badge.show{display:flex}
+.sim-badge.pass{background:var(--success)}
+.sim-badge.skip{background:var(--warn)}
+.sim-badge.fail{background:var(--danger)}
+
+/* Canvas controls */
+.canvas-toolbar{height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.ct-left{display:flex;align-items:center;gap:8px}
+.ct-right{display:flex;align-items:center;gap:4px}
+.ct-btn{height:28px;padding:0 10px;border-radius:var(--radius-xs);font-size:10.5px;font-family:inherit;cursor:pointer;transition:all 0.2s;border:1px solid var(--border);background:var(--surface-dim);color:var(--text-sec);font-weight:500;display:flex;align-items:center;gap:4px}
+.ct-btn:hover{border-color:var(--primary);color:var(--text)}
+.ct-btn.active{background:var(--primary);color:var(--text-on-primary);border-color:var(--primary)}
+.ct-btn.sim-run{background:var(--success-soft);color:var(--success);border-color:var(--success)}
+.ct-btn.sim-run:hover{background:var(--success);color:white}
+.ct-status{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+
+/* Sim log */
+.sim-log{margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;max-height:200px}
+.sim-log-head{padding:6px 10px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;background:var(--surface-dim)}
+.sim-log-body{max-height:160px;overflow-y:auto;padding:6px;font-family:'JetBrains Mono',monospace;font-size:10px}
+.sim-log-body::-webkit-scrollbar{width:3px}
+.sim-log-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.sim-entry{padding:3px 4px;border-bottom:1px solid var(--border-light);display:flex;gap:6px}
+.sim-entry:last-child{border:none}
+.sim-t{color:var(--text-muted);min-width:24px}
+.sim-n{color:var(--primary);min-width:80px}
+.sim-r{color:var(--text-sec)}
+.sim-r.ok{color:var(--success)}
+.sim-r.sk{color:var(--warn)}
+.sim-r.er{color:var(--danger)}
+
 </style>
 </head>
-<body data-theme="warm">
-<div class="app">
+<body data-theme="hearth-light">
+<div class="app" data-stage="welcome" id="app">
 
-<!-- TOPBAR -->
+<!-- ========== TOPBAR ========== -->
 <div class="topbar">
-  <div class="top-left"><div class="logo">Kalcifer <span>Work</span></div></div>
+  <div class="top-left">
+    <div class="logo" onclick="goWelcome()">Kalcifer</div>
+  </div>
+  <div class="top-center" style="display:flex;align-items:center;gap:4px">
+    <button class="top-btn" style="background:var(--primary);color:var(--text-on-primary);border-color:var(--primary)">Work</button>
+    <button class="top-btn" onclick="location.href='browse.html?theme='+(document.body.dataset.theme||'hearth-light')">Browse</button>
+    <button class="top-btn" onclick="location.href='engine-room.html?theme='+(document.body.dataset.theme||'hearth-light')">Engine Room</button>
+  </div>
   <div class="top-right">
-    <button class="top-btn" onclick="window.location.href='browse.html?theme='+(document.body.getAttribute('data-theme')||'warm')" title="დათვალიერება">Browse</button>
-    <button class="top-btn" onclick="openSettings()">Engine Room</button>
+    <button class="top-btn" onclick="location.href='design-system/colors.html'" style="color:var(--primary)">DS</button>
     <div class="theme-wrap">
       <button class="top-btn" onclick="document.getElementById('thDD').classList.toggle('open')">&#9684;</button>
       <div class="theme-dd" id="thDD">
-        <button class="th-opt active" onclick="setTh('warm',this)"><span class="th-sw"><i style="background:#f5f0eb"></i><i style="background:#c4956a"></i></span>Warm Paper</button>
-        <button class="th-opt" onclick="setTh('lavender',this)"><span class="th-sw"><i style="background:#f7f5f0"></i><i style="background:#9b8ec4"></i></span>Lavender</button>
-        <button class="th-opt" onclick="setTh('sage',this)"><span class="th-sw"><i style="background:#f4f1ec"></i><i style="background:#6b8f6e"></i></span>Sand & Sage</button>
-        <button class="th-opt" onclick="setTh('teal',this)"><span class="th-sw"><i style="background:#f5f2ed"></i><i style="background:#3d8b80"></i></span>Paper & Teal</button>
-        <button class="th-opt" onclick="setTh('dark',this)"><span class="th-sw"><i style="background:#0f0f14"></i><i style="background:#a89cf0"></i></span>Dark</button>
+        <button class="th-opt active" onclick="setTh('hearth-light',this)"><span class="th-sw"><i style="background:#f6f1ea"></i><i style="background:#c07a3e"></i></span>Hearth</button>
+        <button class="th-opt" onclick="setTh('hearth-dark',this)"><span class="th-sw"><i style="background:#161210"></i><i style="background:#e0a060"></i></span>Hearth Dark</button>
+        <button class="th-opt" onclick="setTh('command-light',this)"><span class="th-sw"><i style="background:#f0f1f5"></i><i style="background:#4a5eb0"></i></span>Command</button>
+        <button class="th-opt" onclick="setTh('command-dark',this)"><span class="th-sw"><i style="background:#0e1018"></i><i style="background:#8090e0"></i></span>Command Dark</button>
+        <button class="th-opt" onclick="setTh('grove-light',this)"><span class="th-sw"><i style="background:#f0f3ee"></i><i style="background:#4a8a5a"></i></span>Grove</button>
+        <button class="th-opt" onclick="setTh('grove-dark',this)"><span class="th-sw"><i style="background:#0e1410"></i><i style="background:#6cc480"></i></span>Grove Dark</button>
+        <div style="height:1px;background:var(--border);margin:4px 0"></div>
+        <button class="th-opt" onclick="setTh('calcifer-light',this)"><span class="th-sw"><i style="background:#f4efe5"></i><i style="background:#c07838"></i></span>Calcifer</button>
+        <button class="th-opt" onclick="setTh('calcifer-dark',this)"><span class="th-sw"><i style="background:#141010"></i><i style="background:#e09848"></i></span>Calcifer Dark</button>
       </div>
     </div>
     <div class="avatar">DG</div>
   </div>
 </div>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <div class="sb-section">
-    <button class="sb-new" onclick="ask('ახალი flow')">+ ახალი Flow</button>
-    <div class="sb-label">Active Flows</div>
-  </div>
-  <div class="sb-scroll">
-    <div class="flow-item active" id="flow-churn" onclick="loadFlow('planning')">
-      <div class="flow-dot dot-draft"></div>
-      <div class="flow-info"><div class="flow-name">Churn Re-engagement</div><div class="flow-meta">Draft v1 &middot; 4 nodes</div></div>
-    </div>
-    <div class="flow-item" id="flow-spring" onclick="loadFlow('live')">
-      <div class="flow-dot dot-active"></div>
-      <div class="flow-info"><div class="flow-name">Spring Sale Push</div><div class="flow-meta">Active v2 &middot; 312 running</div></div>
-    </div>
-    <div class="flow-item" id="flow-onb" onclick="loadFlow('live-onb')">
-      <div class="flow-dot dot-active"></div>
-      <div class="flow-info"><div class="flow-name">Onboarding Sequence</div><div class="flow-meta">Active v3 &middot; 2,100 running</div></div>
-    </div>
-    <div style="padding:8px 6px 4px"><div class="sb-label">Archived</div></div>
-    <div class="flow-item" id="flow-q4" onclick="loadFlow('done')">
-      <div class="flow-dot dot-archived"></div>
-      <div class="flow-info"><div class="flow-name">Q4 Upsell Journey</div><div class="flow-meta">Archived &middot; 794 completed</div></div>
-    </div>
-    <div class="flow-item" id="flow-holiday" onclick="loadFlow('done-holiday')">
-      <div class="flow-dot dot-archived"></div>
-      <div class="flow-info"><div class="flow-name">Holiday Promo 2025</div><div class="flow-meta">Archived &middot; 505 completed</div></div>
-    </div>
-  </div>
-  <div class="sb-bottom"><button class="tenant-btn"><span class="t-dot"></span>Acme SaaS <span style="margin-left:auto;font-size:10px;color:var(--text-muted)">&blacktriangledown;</span></button></div>
-</div>
+<!-- ========== STAGE ========== -->
+<div class="stage">
 
-<!-- MAIN AREA -->
-<div class="main-area" id="mainArea">
-
-  <!-- CHAT COLUMN -->
-  <div class="chat-col" id="chatCol" style="flex:3">
-    <div class="chat-head">
-      <div class="chat-head-left">
-        <div class="ai-dot"></div>
-        <h2>Flow Partner</h2>
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-full">
+      <div class="sb-section">
+        <button class="sb-new" onclick="goWelcome()">+ ახალი სესია</button>
+        <div class="sb-label">Active Flows</div>
       </div>
-      <span class="phase-tag" id="phaseTag" style="background:var(--info-soft);color:var(--info)">Draft</span>
+      <div class="sb-scroll" id="sbScroll">
+        <div class="flow-item active" id="fi-new" onclick="loadSession('new')">
+          <div class="flow-dot dot-draft"></div>
+          <div class="flow-info"><div class="flow-name">Churn Re-engagement</div><div class="flow-meta">Draft &middot; just now</div></div>
+        </div>
+        <div class="flow-item" id="fi-spring" onclick="loadSession('spring')">
+          <div class="flow-dot dot-active"></div>
+          <div class="flow-info"><div class="flow-name">Spring Sale Push</div><div class="flow-meta">Active v2 &middot; 312 running</div></div>
+        </div>
+        <div class="flow-item" id="fi-onb" onclick="loadSession('onboarding')">
+          <div class="flow-dot dot-active"></div>
+          <div class="flow-info"><div class="flow-name">Onboarding Sequence</div><div class="flow-meta">Active v3 &middot; 2,100 running</div></div>
+        </div>
+        <div style="padding:8px 6px 4px"><div class="sb-label">Archived</div></div>
+        <div class="flow-item" id="fi-q4" onclick="loadSession('q4')">
+          <div class="flow-dot dot-archived"></div>
+          <div class="flow-info"><div class="flow-name">Q4 Upsell Journey</div><div class="flow-meta">Archived &middot; 794 completed</div></div>
+        </div>
+      </div>
+      <div class="sb-bottom"><button class="tenant-btn"><span class="t-dot"></span>Acme SaaS <span style="margin-left:auto;font-size:10px;color:var(--text-muted)">&#9662;</span></button></div>
     </div>
-    <div class="chat-msgs" id="chatMsgs"></div>
-    <div class="suggestions" id="sugs"></div>
-    <div class="chat-input-area">
-      <div class="chat-input-wrap">
-        <textarea class="chat-input" id="chatInput" placeholder="მიამბე რა გინდა გააკეთო..." rows="1"></textarea>
-        <button class="send-btn" onclick="sendMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+    <div class="sb-mini">
+      <button class="sb-mini-btn" onclick="expandSidebar()" title="Expand">&#9776;</button>
+      <button class="sb-mini-btn active" title="Current session">C</button>
+      <button class="sb-mini-btn" onclick="loadSession('spring')" title="Spring Sale">S</button>
+      <button class="sb-mini-btn" onclick="loadSession('onboarding')" title="Onboarding">O</button>
+    </div>
+  </div>
+
+  <!-- CHAT AREA -->
+  <div class="chat-area" id="chatArea">
+
+    <!-- Welcome Center (Stage 0) -->
+    <div class="welcome-center" id="welcomeCenter">
+      <div class="welcome-avatar">K</div>
+      <div class="welcome-title">რაზე ვიმუშაოთ?</div>
+      <div class="welcome-sub">მიამბე რა გინდა გააკეთო &mdash; flow-ს ავაწყობ, გავტესტავ, გავაანალიზებ. ან აირჩიე მარცხნიდან არსებული flow.</div>
+      <div class="welcome-hints">
+        <button class="welcome-hint" onclick="startSession('90 დღე არააქტიურ მომხმარებლებს email და SMS გავუგზავნო')">Churn re-engagement</button>
+        <button class="welcome-hint" onclick="startSession('ახალ მომხმარებლებს onboarding flow გავუკეთო')">Onboarding flow</button>
+        <button class="welcome-hint" onclick="startSession('A/B ტესტი email subject-ებისთვის')">A/B ტესტი</button>
+        <button class="welcome-hint" onclick="startSession('რა nodes არსებობს?')">რა nodes არსებობს?</button>
+      </div>
+      <div class="welcome-input-area">
+        <div class="chat-input-wrap">
+          <textarea class="chat-input" id="welcomeInput" placeholder="მიამბე რა გინდა გააკეთო..." rows="1"></textarea>
+          <button class="send-btn" onclick="sendWelcome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Column (Stages 1-3) -->
+    <div class="chat-col" id="chatCol">
+      <div class="chat-head">
+        <div class="chat-head-left"><div class="ai-dot"></div><h2>Kalcifer</h2></div>
+        <span class="phase-tag" id="phaseTag" style="background:var(--info-soft);color:var(--info)">Draft</span>
+      </div>
+      <div class="chat-msgs" id="chatMsgs"></div>
+      <div class="suggestions" id="sugs" style="display:none"></div>
+      <div class="chat-input-bottom">
+        <div class="chat-input-wrap">
+          <textarea class="chat-input" id="chatInput" placeholder="მიამბე..." rows="1"></textarea>
+          <button class="send-btn" onclick="sendMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- DASHBOARD COLUMN -->
-  <div class="dash-col" id="dashCol" style="flex:0">
-    <div id="dashContent"></div>
+  <!-- RESIZE HANDLE -->
+  <div class="resize-handle" id="resizeHandle"></div>
+
+  <!-- CONTEXT AREA (right panel) -->
+  <div class="context-area" id="ctxArea">
+    <div id="ctxContent"></div>
   </div>
 
 </div>
 </div>
 
 <script>
-const chatMsgs=document.getElementById('chatMsgs');
-const chatInput=document.getElementById('chatInput');
-const chatCol=document.getElementById('chatCol');
-const dashCol=document.getElementById('dashCol');
-const dashContent=document.getElementById('dashContent');
-let charts={};
-let liveInterval=null;
+// ====================================
+// STATE
+// ====================================
+const app = document.getElementById('app');
+const chatMsgs = document.getElementById('chatMsgs');
+const chatInput = document.getElementById('chatInput');
+const welcomeInput = document.getElementById('welcomeInput');
+const ctxContent = document.getElementById('ctxContent');
+let charts = {};
+let liveInterval = null;
+let currentSession = null;
 
-chatInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
-chatInput.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'});
+// Canvas state
+let canvasNodes = [];
+let canvasEdges = [];
+let nextNodeId = 1;
+let selectedNodeId = null;
+let draggingNode = null;
+let dragOffset = {x:0,y:0};
+let simRunning = false;
+let simStep = 0;
+let simInterval = null;
 
-function setTh(n,b){document.body.setAttribute('data-theme',n);document.querySelectorAll('.th-opt').forEach(x=>x.classList.remove('active'));b?.classList.add('active');document.getElementById('thDD').classList.remove('open');rebuildCharts()}
-document.addEventListener('click',e=>{if(!e.target.closest('.theme-wrap'))document.getElementById('thDD').classList.remove('open')});
+const NODE_TYPES = {
+  segment_entry:{cat:'trigger',icon:'T',title:'Segment Entry',desc:'Enters segment'},
+  event_entry:{cat:'trigger',icon:'T',title:'Event Entry',desc:'Custom event'},
+  webhook_entry:{cat:'trigger',icon:'T',title:'Webhook Entry',desc:'External webhook'},
+  condition:{cat:'condition',icon:'?',title:'Condition',desc:'Branch by expression'},
+  ab_split:{cat:'condition',icon:'AB',title:'A/B Split',desc:'Random split'},
+  frequency_cap:{cat:'condition',icon:'#',title:'Frequency Cap',desc:'Message limit'},
+  check_segment:{cat:'condition',icon:'S',title:'Check Segment',desc:'Segment check'},
+  wait:{cat:'wait',icon:'W',title:'Wait',desc:'Duration delay'},
+  wait_for_event:{cat:'wait',icon:'W',title:'Wait for Event',desc:'Wait for event'},
+  wait_until:{cat:'wait',icon:'W',title:'Wait Until',desc:'Wait until time'},
+  send_email:{cat:'action',icon:'\u2709',title:'Send Email',desc:'via SendGrid'},
+  send_sms:{cat:'action',icon:'\u260E',title:'Send SMS',desc:'via Twilio'},
+  send_push:{cat:'action',icon:'\uD83D\uDD14',title:'Send Push',desc:'via Firebase'},
+  send_whatsapp:{cat:'action',icon:'W',title:'WhatsApp',desc:'via Twilio'},
+  call_webhook:{cat:'action',icon:'{}',title:'Webhook',desc:'HTTP POST'},
+  track_conversion:{cat:'action',icon:'$',title:'Track Conversion',desc:'Record event'},
+  add_tag:{cat:'action',icon:'#',title:'Add Tag',desc:'Tag profile'},
+  end:{cat:'end',icon:'\u2713',title:'End',desc:'Complete instance'}
+};
 
-function openSettings(){window.location.href='engine-room.html?theme='+(document.body.getAttribute('data-theme')||'warm')}
-
-function pc(){return getComputedStyle(document.body).getPropertyValue('--primary').trim()}
-function bc(){return getComputedStyle(document.body).getPropertyValue('--border').trim()}
-function tc(){return getComputedStyle(document.body).getPropertyValue('--text-muted').trim()}
-
-// ADAPTIVE LAYOUT
-function setLayout(chatFlex, dashFlex){
-  chatCol.style.flex=chatFlex;
-  dashCol.style.flex=dashFlex;
+// ====================================
+// STAGE MANAGEMENT
+// ====================================
+function setStage(stage, scrollable) {
+  app.dataset.stage = stage;
+  const ctx = document.getElementById('ctxArea');
+  if(scrollable) ctx.classList.add('scrollable');
+  else ctx.classList.remove('scrollable');
+  // Rebuild charts on transition
+  if(stage !== 'welcome') rebuildCharts();
+  // Re-render edges after layout transition
+  if(canvasMode) setTimeout(renderEdges, 500);
 }
 
-// FLOWS
-function loadFlow(type){
-  document.querySelectorAll('.flow-item').forEach(c=>c.classList.remove('active'));
+function goWelcome() {
+  setStage('welcome');
+  currentSession = null;
+  if(liveInterval){clearInterval(liveInterval);liveInterval=null}
+  document.querySelectorAll('.flow-item').forEach(f=>f.classList.remove('active'));
+}
+
+function expandSidebar() {
+  const isScrollable = document.getElementById('ctxArea').classList.contains('scrollable');
+  if(app.dataset.stage === 'context') setStage('split', isScrollable);
+}
+
+// ====================================
+// SESSION START
+// ====================================
+function startSession(text) {
+  const wc = document.getElementById('welcomeCenter');
+  const isFromWelcome = app.dataset.stage === 'welcome';
+
+  if(isFromWelcome && wc) {
+    // Animate welcome out first
+    wc.classList.add('exiting');
+    setTimeout(() => {
+      wc.classList.remove('exiting');
+      doStartSession(text);
+    }, 450);
+  } else {
+    doStartSession(text);
+  }
+}
+
+function doStartSession(text) {
+  setStage('chat');
+  currentSession = 'new';
+  document.getElementById('fi-new').classList.add('active');
+  chatMsgs.innerHTML = '';
+  setPhaseTag('Draft','var(--info-soft)','var(--info)');
+  addAI(`<strong>ახალი სესია</strong> &mdash; მზადაა!<br><br>მიამბე რა გინდა გააკეთო და ავაწყობ.`);
+  // Focus the chat input
+  setTimeout(() => chatInput.focus(), 100);
+  if(text) {
+    setTimeout(() => { addUser(text); setTimeout(() => respond(text), 500); }, 300);
+  }
+}
+
+function sendWelcome() {
+  const t = welcomeInput.value.trim();
+  if(!t) return;
+  welcomeInput.value = '';
+  startSession(t);
+}
+
+// ====================================
+// LOAD EXISTING SESSIONS
+// ====================================
+function loadSession(id) {
+  document.querySelectorAll('.flow-item').forEach(f=>f.classList.remove('active'));
   if(liveInterval){clearInterval(liveInterval);liveInterval=null}
   Object.values(charts).forEach(c=>c.destroy());charts={};
+  currentSession = id;
 
-  if(type==='planning') loadPlanning();
-  else if(type==='live') loadLive();
-  else if(type==='live-onb') loadLiveOnboarding();
-  else if(type==='done') loadDone();
-  else if(type==='done-holiday') loadDoneHoliday();
+  if(id === 'new') { startSession(null); document.getElementById('fi-new').classList.add('active'); }
+  else if(id === 'spring') loadSpring();
+  else if(id === 'onboarding') loadOnboarding();
+  else if(id === 'q4') loadQ4();
 }
 
-// --- PLANNING: Chat-dominant ---
-function loadPlanning(){
-  document.getElementById('flow-churn').classList.add('active');
-  setLayout(3,0);
-  setPhaseTag('Draft','var(--info-soft)','var(--info)');
-  dashContent.innerHTML='';
-
-  chatMsgs.innerHTML='';
-  addAI(`<strong>Churn Re-engagement</strong> &mdash; draft flow<br><br><strong>1,880</strong> customer Churn Risk 90d segment-ში.<br><br>როგორი flow გინდა? მიამბე რა უნდა მოხდეს &mdash; trigger, რა არხით მივწვდეთ, რა პირობებით, და მე ავაწყობ.<br><br>წინა Q4 flow-ში personalized email-მა +34% open rate მოიტანა.`);
-  setSugs(['Email + SMS flow','A/B ტესტით','Dry run გავუშვა','რა nodes არსებობს?']);
-}
-
-// --- LIVE: Split view with monitoring ---
-function loadLive(){
-  document.getElementById('flow-spring').classList.add('active');
-  setLayout(1,2);
+function loadSpring() {
+  document.getElementById('fi-spring').classList.add('active');
+  setStage('split',true);
   setPhaseTag('Active','var(--success-soft)','var(--success)');
+  chatMsgs.innerHTML = '';
+  addAI(`<strong>Spring Sale Push</strong> &mdash; v2 active, 6 საათის წინ.<br><br><strong>312 instance</strong> running, 2,502 completed. Variant A 41% open rate-ით ლიდერობს.<br><br>
+    <button class="msg-btn msg-btn-s" onclick="setStage('context',true)">&#8594; Full Dashboard</button>
+    <button class="msg-btn msg-btn-s" onclick="ask('Instance-ები')">Instances</button>
+    <button class="msg-btn msg-btn-s" onclick="ask('Failed instances')">Errors</button>`);
+  setSugs(['Flow დავპაუზო','Dry run v3-ით','Failed instances']);
 
-  chatMsgs.innerHTML='';
-  addAI(`<strong>Spring Sale Push</strong> &mdash; v2 active, 6 საათის წინ გაეშვა.<br><br><strong>312 instance</strong> running, 2,502 completed. Variant A 41% open rate-ით ლიდერობს. Wait node-ზე 186 instance დგას &mdash; SMS follow-up 2 საათში.<br><br>რაიმე ცვლილება გინდა?`);
-  setSugs(['Instance-ები ვნახო','Flow დავპაუზო','Dry run ახალ version-ზე','Failed instances']);
-
-  dashContent.innerHTML=`
-    <div class="dash-header"><div><div class="dash-title">Spring Sale Push</div><div class="dash-subtitle">Active v2 &middot; started 6h ago &middot; 4,200 triggered</div></div></div>
-
-    <div class="dash-grid">
-      <div class="d-card"><div class="d-label">Running</div><div class="d-value" style="color:var(--info)">312</div><div class="d-change">in 6 different nodes</div></div>
-      <div class="d-card"><div class="d-label">Waiting</div><div class="d-value" style="color:var(--warn)">186</div><div class="d-change">at wait_for_event</div></div>
-      <div class="d-card"><div class="d-label">Completed</div><div class="d-value" style="color:var(--success)">2,502</div><div class="d-change">59.6% completion</div></div>
-      <div class="d-card"><div class="d-label">Failed</div><div class="d-value" style="color:var(--danger)">14</div><div class="d-change">0.3% error rate</div></div>
+  ctxContent.innerHTML = `
+    <div class="ctx-header"><div><div class="ctx-title">Spring Sale Push</div><div class="ctx-subtitle">Active v2 &middot; 6h ago &middot; 4,200 triggered</div></div><span class="ctx-tag" style="background:var(--success-soft);color:var(--success)">Active</span></div>
+    <div class="ctx-grid">
+      <div class="ctx-card"><div class="ctx-label">Running</div><div class="ctx-value" style="color:var(--info)">312</div></div>
+      <div class="ctx-card"><div class="ctx-label">Waiting</div><div class="ctx-value" style="color:var(--warn)">186</div></div>
+      <div class="ctx-card"><div class="ctx-label">Completed</div><div class="ctx-value" style="color:var(--success)">2,502</div></div>
+      <div class="ctx-card"><div class="ctx-label">Failed</div><div class="ctx-value" style="color:var(--danger)">14</div><div class="ctx-change">0.3%</div></div>
     </div>
-
-    <div class="d-section-title">Flow Execution Path</div>
-    <div class="d-card full">
+    <div class="ctx-section">Execution Funnel</div>
+    <div class="ctx-card full">
       <div class="funnel">
         <div class="funnel-step"><span class="funnel-label">Triggered</span><div class="funnel-bar" style="width:100%;background:var(--info)">4,200</div></div>
         <div class="funnel-step"><span class="funnel-label">Email sent</span><div class="funnel-bar" style="width:67%;background:var(--primary)">2,814</div></div>
-        <div class="funnel-step"><span class="funnel-label">Condition: opened?</span><div class="funnel-bar" style="width:27%;background:var(--warn)">1,147</div></div>
+        <div class="funnel-step"><span class="funnel-label">Opened?</span><div class="funnel-bar" style="width:27%;background:var(--warn)">1,147</div></div>
         <div class="funnel-step"><span class="funnel-label">SMS sent</span><div class="funnel-bar" style="width:15%;background:var(--primary)">630</div></div>
-        <div class="funnel-step"><span class="funnel-label">End node</span><div class="funnel-bar" style="width:60%;background:var(--success)">2,502</div></div>
+        <div class="funnel-step"><span class="funnel-label">Completed</span><div class="funnel-bar" style="width:60%;background:var(--success)">2,502</div></div>
       </div>
     </div>
-
-    <div class="d-section-title">Node Execution Log</div>
-    <div class="d-card full"><div class="live-mini" id="liveStream"></div></div>
-
-    <div class="d-section-title">A/B Split Results</div>
-    <div class="d-card full">
-      <table class="d-table">
-        <thead><tr><th>Branch</th><th>Instances</th><th>Open %</th><th>CTR</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td><strong>A</strong> &mdash; "20% off spring"</td><td>1,407</td><td style="color:var(--success)"><strong>41.0%</strong></td><td>14.2%</td><td><span class="badge b-green">Leading</span></td></tr>
-          <tr><td><strong>B</strong> &mdash; "Spring refresh"</td><td>1,407</td><td>33.6%</td><td>11.1%</td><td><span class="badge b-orange">Behind</span></td></tr>
-        </tbody>
-      </table>
+    <div class="ctx-section">A/B Split Results</div>
+    <div class="ctx-card full">
+      <table class="ctx-table"><thead><tr><th>Branch</th><th>Instances</th><th>Open %</th><th>CTR</th><th>Status</th></tr></thead><tbody>
+        <tr><td><strong>A</strong> &mdash; "20% off spring"</td><td>1,407</td><td style="color:var(--success)"><strong>41.0%</strong></td><td>14.2%</td><td><span class="badge b-green">Leading</span></td></tr>
+        <tr><td><strong>B</strong> &mdash; "Spring refresh"</td><td>1,407</td><td>33.6%</td><td>11.1%</td><td><span class="badge b-orange">Behind</span></td></tr>
+      </tbody></table>
     </div>
-
-    <div class="d-section-title">Recent Errors</div>
-    <div class="d-card full">
-      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)">
-        <div class="insight-type" style="color:var(--danger)">send_email failed &times; 8</div>
-        <div class="insight-text">No message provider configured for this channel. Set up a provider (e.g., SendGrid) in Engine Room.</div>
-      </div>
-      <div class="insight" style="border-color:var(--warn);background:var(--warn-soft)">
-        <div class="insight-type" style="color:var(--warn)">frequency_cap &times; 6</div>
-        <div class="insight-text">Message limit reached for these customers. They received the maximum messages in the configured time window.</div>
-      </div>
-    </div>
+    <div class="ctx-section">Live Events</div>
+    <div class="ctx-card full"><div class="live-mini" id="liveStream"></div></div>
   `;
-
   startLiveStream();
 }
 
-// --- LIVE ONBOARDING ---
-function loadLiveOnboarding(){
-  document.getElementById('flow-onb').classList.add('active');
-  setLayout(1,2);
+function loadOnboarding() {
+  document.getElementById('fi-onb').classList.add('active');
+  setStage('split',true);
   setPhaseTag('Active','var(--success-soft)','var(--success)');
+  chatMsgs.innerHTML = '';
+  addAI(`<strong>Onboarding Sequence</strong> v3.<br><br><strong>2,100</strong> instances. Step 3-ზე 22% იკარგება &mdash; condition config შესაცვლელია.<br><br>
+    <button class="msg-btn msg-btn-s" onclick="setStage('context',true)">&#8594; Full View</button>
+    <button class="msg-btn msg-btn-s" onclick="ask('Dry run v4-ით')">Dry Run</button>`);
+  setSugs(['Step-by-step','Wait node config','Failed']);
 
-  chatMsgs.innerHTML='';
-  addAI(`<strong>Onboarding Sequence</strong> v3 active.<br><br><strong>2,100</strong> instance running. Step 3 ("first value moment") &mdash; wait node-ზე 22% იკარგება. Condition node-ის config შეიძლება საჭიროებს შეცვლას.<br><br>Dry run გავუშვა ახალ config-ით?`);
-  setSugs(['Step-by-step breakdown','Dry run v4-ით','Wait node-ის config','Failed instances']);
-
-  dashContent.innerHTML=`
-    <div class="dash-header"><div><div class="dash-title">Onboarding Sequence</div><div class="dash-subtitle">Active v3 &middot; 2,100 instances &middot; running 12 days</div></div></div>
-
-    <div class="dash-grid">
-      <div class="d-card"><div class="d-label">Running</div><div class="d-value">398</div><div class="d-change change-up">+180 this week</div></div>
-      <div class="d-card"><div class="d-label">Completed</div><div class="d-value" style="color:var(--success)">1,240</div><div class="d-change">59% completion</div></div>
-      <div class="d-card"><div class="d-label">Failed / Exited</div><div class="d-value" style="color:var(--danger)">462</div><div class="d-change change-down">22% drop-off</div></div>
-      <div class="d-card"><div class="d-label">Waiting</div><div class="d-value" style="color:var(--warn)">210</div><div class="d-change">at wait nodes</div></div>
+  ctxContent.innerHTML = `
+    <div class="ctx-header"><div><div class="ctx-title">Onboarding Sequence</div><div class="ctx-subtitle">Active v3 &middot; 2,100 instances &middot; 12 days</div></div></div>
+    <div class="ctx-grid">
+      <div class="ctx-card"><div class="ctx-label">Running</div><div class="ctx-value">398</div><div class="ctx-change change-up">+180 this week</div></div>
+      <div class="ctx-card"><div class="ctx-label">Completed</div><div class="ctx-value" style="color:var(--success)">1,240</div><div class="ctx-change">59%</div></div>
+      <div class="ctx-card"><div class="ctx-label">Failed</div><div class="ctx-value" style="color:var(--danger)">462</div><div class="ctx-change change-down">22%</div></div>
+      <div class="ctx-card"><div class="ctx-label">Waiting</div><div class="ctx-value" style="color:var(--warn)">210</div></div>
     </div>
-
-    <div class="d-section-title">Node-by-Node Funnel</div>
-    <div class="d-card full">
-      <div class="funnel">
-        <div class="funnel-step"><span class="funnel-label">segment_entry</span><div class="funnel-bar" style="width:100%;background:var(--info)">2,100</div><span class="funnel-val">100%</span></div>
-        <div class="funnel-step"><span class="funnel-label">send_email</span><div class="funnel-bar" style="width:82%;background:var(--primary)">1,722</div><span class="funnel-val">82%</span></div>
-        <div class="funnel-step"><span class="funnel-label">wait 2d</span><div class="funnel-bar" style="width:68%;background:var(--warn)">1,428</div><span class="funnel-val">68%</span></div>
-        <div class="funnel-step"><span class="funnel-label">condition: activated?</span><div class="funnel-bar" style="width:46%;background:var(--warn)">966</div><span class="funnel-val">46%</span></div>
-        <div class="funnel-step"><span class="funnel-label">end</span><div class="funnel-bar" style="width:35%;background:var(--success)">735</div><span class="funnel-val">35%</span></div>
-      </div>
-    </div>
-
-    <div class="d-section-title">Bottleneck Analysis</div>
-    <div class="d-card full">
-      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)">
-        <div class="insight-type" style="color:var(--danger)">Bottleneck</div>
-        <div class="insight-text">condition node "activated?" &mdash; 22% false branch leads to exit. Customers see the dashboard but don't take action.</div>
-      </div>
-      <div class="insight" style="border-color:var(--info);background:var(--info-soft)">
-        <div class="insight-type" style="color:var(--info)">Suggestion</div>
-        <div class="insight-text">Add a send_push node before the condition with a "Try the dashboard" CTA. Similar change in v2 improved conversion +15%.</div>
-      </div>
+    <div class="ctx-section">Funnel</div>
+    <div class="ctx-card full"><div class="funnel">
+      <div class="funnel-step"><span class="funnel-label">segment_entry</span><div class="funnel-bar" style="width:100%;background:var(--info)">2,100</div><span class="funnel-val">100%</span></div>
+      <div class="funnel-step"><span class="funnel-label">send_email</span><div class="funnel-bar" style="width:82%;background:var(--primary)">1,722</div><span class="funnel-val">82%</span></div>
+      <div class="funnel-step"><span class="funnel-label">wait 2d</span><div class="funnel-bar" style="width:68%;background:var(--warn)">1,428</div><span class="funnel-val">68%</span></div>
+      <div class="funnel-step"><span class="funnel-label">condition</span><div class="funnel-bar" style="width:46%;background:var(--warn)">966</div><span class="funnel-val">46%</span></div>
+      <div class="funnel-step"><span class="funnel-label">end</span><div class="funnel-bar" style="width:35%;background:var(--success)">735</div><span class="funnel-val">35%</span></div>
+    </div></div>
+    <div class="ctx-section">Bottleneck</div>
+    <div class="ctx-card full">
+      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)"><div class="insight-type" style="color:var(--danger)">Bottleneck</div><div class="insight-text">condition "activated?" &mdash; 22% exit. Customers see dashboard but don't act.</div></div>
+      <div class="insight" style="border-color:var(--info);background:var(--info-soft)"><div class="insight-type" style="color:var(--info)">Suggestion</div><div class="insight-text">Add send_push before condition with "Try the dashboard" CTA. Similar change: +15%.</div></div>
     </div>
   `;
 }
 
-// --- DONE: Dashboard dominant ---
-function loadDone(){
-  document.getElementById('flow-q4').classList.add('active');
-  setLayout(1,3);
+function loadQ4() {
+  document.getElementById('fi-q4').classList.add('active');
+  setStage('split',true);
   setPhaseTag('Archived','var(--accent-soft)','var(--text-muted)');
+  chatMsgs.innerHTML = '';
+  addAI(`<strong>Q4 Upsell</strong> &mdash; 794 completed, 12.4% conversion, $48,200.<br><br>
+    <button class="msg-btn msg-btn-s" onclick="setStage('context',true)">&#8594; Full Results</button>
+    <button class="msg-btn msg-btn-s" onclick="ask('Clone as new flow')">Clone</button>`);
 
-  chatMsgs.innerHTML='';
-  addAI(`<strong>Q4 Upsell Journey</strong> &mdash; archived.<br><br><strong>794 instances completed</strong>, 12.4% conversion, $48,200 revenue.<br><br>რა გაინტერესებს &mdash; execution timeline, node performance, ან ახალი flow ამის ბაზაზე?`);
-  setSugs(['Node performance','Execution timeline','Clone as new flow','Failed instances']);
-
-  dashContent.innerHTML=`
-    <div class="dash-header"><div><div class="dash-title">Q4 Upsell Journey &mdash; Results</div><div class="dash-subtitle">Archived &middot; Oct 15 &ndash; Nov 12, 2025 &middot; 6,400 triggered</div></div></div>
-
-    <div class="dash-grid">
-      <div class="d-card"><div class="d-label">Triggered</div><div class="d-value">6,400</div></div>
-      <div class="d-card"><div class="d-label">Completed</div><div class="d-value" style="color:var(--success)">5,312</div><div class="d-change">83% completion</div></div>
-      <div class="d-card"><div class="d-label">Converted</div><div class="d-value" style="color:var(--primary)">794</div><div class="d-change change-up">12.4% conversion</div></div>
-      <div class="d-card"><div class="d-label">Failed</div><div class="d-value" style="color:var(--danger)">88</div><div class="d-change">1.4% error rate</div></div>
+  ctxContent.innerHTML = `
+    <div class="ctx-header"><div><div class="ctx-title">Q4 Upsell &mdash; Results</div><div class="ctx-subtitle">Oct 15 &ndash; Nov 12, 2025 &middot; 6,400 triggered</div></div></div>
+    <div class="ctx-grid">
+      <div class="ctx-card"><div class="ctx-label">Triggered</div><div class="ctx-value">6,400</div></div>
+      <div class="ctx-card"><div class="ctx-label">Completed</div><div class="ctx-value" style="color:var(--success)">5,312</div><div class="ctx-change">83%</div></div>
+      <div class="ctx-card"><div class="ctx-label">Converted</div><div class="ctx-value" style="color:var(--primary)">794</div><div class="ctx-change change-up">12.4%</div></div>
+      <div class="ctx-card"><div class="ctx-label">Failed</div><div class="ctx-value" style="color:var(--danger)">88</div><div class="ctx-change">1.4%</div></div>
     </div>
-
-    <div class="d-section-title">Execution Over Time</div>
-    <div class="d-card full"><div class="chart-box"><canvas id="perfChart"></canvas></div></div>
-
-    <div class="d-section-title">Node Performance</div>
-    <div class="d-card full">
-      <table class="d-table">
-        <thead><tr><th>Node</th><th>Type</th><th>Executed</th><th>Avg Duration</th><th>Failed</th></tr></thead>
-        <tbody>
-          <tr><td>Entry trigger</td><td><code>segment_entry</code></td><td>6,400</td><td>12ms</td><td>0</td></tr>
-          <tr><td>Send offer email</td><td><code>send_email</code></td><td>6,400</td><td>340ms</td><td>32</td></tr>
-          <tr><td>Wait 2 days</td><td><code>wait</code></td><td>6,368</td><td>2d</td><td>0</td></tr>
-          <tr><td>Opened email?</td><td><code>condition</code></td><td>6,368</td><td>8ms</td><td>0</td></tr>
-          <tr><td>Send SMS</td><td><code>send_sms</code></td><td>3,820</td><td>280ms</td><td>44</td></tr>
-          <tr><td>Track conversion</td><td><code>track_conversion</code></td><td>794</td><td>15ms</td><td>12</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="d-section-title">Learnings</div>
-    <div class="d-card full">
-      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Effective</div><div class="insight-text">Personalized subject line &rarr; +34% open rate. The condition node branched 41% to "opened" vs 33% for generic.</div></div>
-      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Effective</div><div class="insight-text">SMS follow-up on day 3 via wait node &rarr; +18% CTR. send_sms after wait(2d) is an effective pattern.</div></div>
-      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)"><div class="insight-type" style="color:var(--danger)">Issue</div><div class="insight-text">send_email node had 32 failures &mdash; all "no_provider" errors. Provider was misconfigured for 2 hours after launch.</div></div>
+    <div class="ctx-section">Execution Over Time</div>
+    <div class="ctx-card full"><div class="chart-box"><canvas id="perfChart"></canvas></div></div>
+    <div class="ctx-section">Node Performance</div>
+    <div class="ctx-card full"><table class="ctx-table"><thead><tr><th>Node</th><th>Type</th><th>Executed</th><th>Avg</th><th>Failed</th></tr></thead><tbody>
+      <tr><td>Entry</td><td><code>segment_entry</code></td><td>6,400</td><td>12ms</td><td>0</td></tr>
+      <tr><td>Send email</td><td><code>send_email</code></td><td>6,400</td><td>340ms</td><td>32</td></tr>
+      <tr><td>Wait 2d</td><td><code>wait</code></td><td>6,368</td><td>2d</td><td>0</td></tr>
+      <tr><td>Opened?</td><td><code>condition</code></td><td>6,368</td><td>8ms</td><td>0</td></tr>
+      <tr><td>Send SMS</td><td><code>send_sms</code></td><td>3,820</td><td>280ms</td><td>44</td></tr>
+      <tr><td>Conversion</td><td><code>track_conversion</code></td><td>794</td><td>15ms</td><td>12</td></tr>
+    </tbody></table></div>
+    <div class="ctx-section">Learnings</div>
+    <div class="ctx-card full">
+      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Effective</div><div class="insight-text">Personalized subject &rarr; +34% open rate.</div></div>
+      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Effective</div><div class="insight-text">SMS after wait(2d) &rarr; +18% CTR.</div></div>
+      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)"><div class="insight-type" style="color:var(--danger)">Issue</div><div class="insight-text">32 email failures &mdash; provider misconfigured for 2h.</div></div>
     </div>
   `;
-
   setTimeout(()=>{
     const ctx=document.getElementById('perfChart');if(!ctx)return;
-    const days=['Oct 15','Oct 18','Oct 21','Oct 24','Oct 27','Oct 30','Nov 2','Nov 5','Nov 8','Nov 12'];
-    charts.perf=new Chart(ctx,{type:'line',data:{labels:days,datasets:[
+    charts.perf=new Chart(ctx,{type:'line',data:{labels:['Oct 15','Oct 18','Oct 21','Oct 24','Oct 27','Oct 30','Nov 2','Nov 5','Nov 8','Nov 12'],datasets:[
       {label:'Completed',data:[120,340,680,1200,1800,2600,3400,4200,4800,5312],borderColor:pc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,pointBackgroundColor:pc()},
-      {label:'Failed',data:[18,24,32,40,48,55,62,70,78,88],borderColor:getComputedStyle(document.body).getPropertyValue('--danger').trim(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,yAxisID:'y1'}
+      {label:'Failed',data:[18,24,32,40,48,55,62,70,78,88],borderColor:dc(),backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:3,yAxisID:'y1'}
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:tc()}}},scales:{x:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y:{grid:{color:bc()},ticks:{color:tc(),font:{size:9}}},y1:{position:'right',grid:{display:false},ticks:{color:tc(),font:{size:9}}}}}});
-  },50);
+  },100);
 }
 
-function loadDoneHoliday(){
-  document.getElementById('flow-holiday').classList.add('active');
-  setLayout(1,3);
-  setPhaseTag('Archived','var(--accent-soft)','var(--text-muted)');
-  chatMsgs.innerHTML='';
-  addAI(`<strong>Holiday Promo 2025</strong> &mdash; 505 instances completed, 8.7% conversion.<br><br>Multi-channel flow (email &rarr; wait &rarr; condition &rarr; SMS/push). send_push node-მა 2% opt-out გამოიწვია churn-risk segment-ზე. შემდეგ flow-ში push-ს ავიცილებთ იმ segment-ისთვის.`);
-  setSugs(['Node performance','Clone flow','Execution errors']);
-  dashContent.innerHTML=`
-    <div class="dash-header"><div><div class="dash-title">Holiday Promo 2025 &mdash; Results</div><div class="dash-subtitle">Archived &middot; Dec 1&ndash;24, 2025 &middot; 5,800 triggered</div></div></div>
-    <div class="dash-grid">
-      <div class="d-card"><div class="d-label">Triggered</div><div class="d-value">5,800</div></div>
-      <div class="d-card"><div class="d-label">Completed</div><div class="d-value" style="color:var(--success)">4,640</div><div class="d-change">80%</div></div>
-      <div class="d-card"><div class="d-label">Converted</div><div class="d-value" style="color:var(--primary)">505</div><div class="d-change">8.7%</div></div>
-      <div class="d-card"><div class="d-label">Failed</div><div class="d-value" style="color:var(--danger)">160</div><div class="d-change">2.8%</div></div>
-    </div>
-    <div class="d-section-title">Learnings</div>
-    <div class="d-card full">
-      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Effective</div><div class="insight-text">wait(2d) &rarr; condition(opened?) &rarr; send_sms pattern works. 10% discount outperformed free trial by 2.3x.</div></div>
-      <div class="insight" style="border-color:var(--danger);background:var(--danger-soft)"><div class="insight-type" style="color:var(--danger)">Avoid</div><div class="insight-text">send_push on churn-risk segment &rarr; 2% opt-out. Add frequency_cap condition before push nodes for at-risk customers.</div></div>
-    </div>
-  `;
-}
+// ====================================
+// CHAT
+// ====================================
+chatInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
+chatInput.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'});
+welcomeInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendWelcome()}});
 
-// HELPERS
-function setPhaseTag(text,bg,color){
-  const tag=document.getElementById('phaseTag');
-  tag.innerHTML=text;tag.style.background=bg;tag.style.color=color;
-}
-
-function addAI(html){
-  const d=document.createElement('div');d.className='msg msg-ai';
-  d.innerHTML=`<div class="msg-av">K</div><div class="msg-body">${html}</div>`;
-  chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
-}
-function addUser(text){
-  const d=document.createElement('div');d.className='msg msg-user';
-  d.innerHTML=`<div class="msg-av">DG</div><div class="msg-body">${text}</div>`;
-  chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
-}
-function addTyping(){
-  const d=document.createElement('div');d.className='msg msg-ai';d.id='typing';
-  d.innerHTML='<div class="msg-av">K</div><div class="msg-body"><div class="typing-ind"><span></span><span></span><span></span></div></div>';
-  chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight;
-}
-
-function setSugs(list){
-  const el=document.getElementById('sugs');
-  el.style.display='flex';
-  el.innerHTML=list.map(s=>`<button class="sug" onclick="ask('${s.replace(/'/g,"\\'")}')">${s}</button>`).join('');
-}
-
+function addAI(html){const d=document.createElement('div');d.className='msg msg-ai';d.innerHTML=`<div class="msg-av">K</div><div class="msg-body">${html}</div>`;chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight}
+function addUser(text){const d=document.createElement('div');d.className='msg msg-user';d.innerHTML=`<div class="msg-av">DG</div><div class="msg-body">${text}</div>`;chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight}
+function addTyping(){const d=document.createElement('div');d.className='msg msg-ai';d.id='typing';d.innerHTML='<div class="msg-av">K</div><div class="msg-body"><div class="typing-ind"><span></span><span></span><span></span></div></div>';chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight}
+function setPhaseTag(t,bg,c){const tag=document.getElementById('phaseTag');tag.innerHTML=t;tag.style.background=bg;tag.style.color=c}
+function setSugs(list){const el=document.getElementById('sugs');el.style.display='flex';el.innerHTML=list.map(s=>`<button class="sug" onclick="ask('${s.replace(/'/g,"\\'")}')">${s}</button>`).join('')}
 function ask(text){chatInput.value=text;sendMsg()}
-function sendMsg(){
-  const text=chatInput.value.trim();if(!text)return;
-  addUser(text);chatInput.value='';chatInput.style.height='auto';
-  document.getElementById('sugs').style.display='none';
-  addTyping();
-  setTimeout(()=>{document.getElementById('typing')?.remove();respond(text)},600+Math.random()*400);
-}
+function sendMsg(){const text=chatInput.value.trim();if(!text)return;addUser(text);chatInput.value='';chatInput.style.height='auto';document.getElementById('sugs').style.display='none';addTyping();setTimeout(()=>{document.getElementById('typing')?.remove();respond(text)},500+Math.random()*400)}
 
+// ====================================
+// AI RESPONSES
+// ====================================
 function respond(text){
-  const t=text.toLowerCase();
+  const t = text.toLowerCase();
 
-  if(t.includes('email')&&t.includes('sms')||t.includes('re-activation')||t.includes('email + sms')){
-    addAI(`კარგი! აი ასეთი flow გამოვა:<br>
-    <div class="flow-v">
-      <div class="f-step"><div class="f-dot trigger">T</div><div class="f-info"><div class="f-name">segment_entry</div><div class="f-desc">Trigger: enters "Churn Risk 90d"</div></div></div>
-      <div class="f-step"><div class="f-dot action">A</div><div class="f-info"><div class="f-name">send_email</div><div class="f-desc">Personal offer + 10% discount &middot; SendGrid</div></div></div>
-      <div class="f-step"><div class="f-dot wait">W</div><div class="f-info"><div class="f-name">wait "2d"</div><div class="f-desc">2 days delay</div></div></div>
-      <div class="f-step"><div class="f-dot condition">?</div><div class="f-info"><div class="f-name">condition: email_opened?</div><div class="f-desc">true &rarr; end &middot; false &rarr; SMS</div></div></div>
-      <div class="f-branch">false &darr;</div>
-      <div class="f-step"><div class="f-dot action">A</div><div class="f-info"><div class="f-name">send_sms</div><div class="f-desc">Reminder + discount code &middot; Twilio</div></div></div>
-      <div class="f-step"><div class="f-dot wait">W</div><div class="f-info"><div class="f-name">wait "5d"</div><div class="f-desc">5 days delay</div></div></div>
-      <div class="f-step"><div class="f-dot end">E</div><div class="f-info"><div class="f-name">end</div><div class="f-desc">Track conversion &amp; exit</div></div></div>
-    </div>
-    6 nodes, 2 channels. Q4-დან: personalized subject +34%, wait+SMS +18% CTR.<br><br>
-    <button class="msg-btn msg-btn-p" onclick="expandToBuild()">Publish draft</button>
-    <button class="msg-btn msg-btn-s" onclick="ask('Dry run გავუშვა')">Dry run</button>
-    <button class="msg-btn msg-btn-s" onclick="ask('A/B ტესტით')">+ A/B split</button>`);
+  if(t.includes('email') && t.includes('sms') || t.includes('re-engagement') || t.includes('re-activation') || t.includes('email + sms') || t.includes('არააქტიურ')) {
+    buildFlowOnCanvas();
+    addAI(`ავაწყე! Canvas-ზე ხედავ მარჯვნივ:<br><br><code>segment_entry</code> &rarr; <code>send_email</code> &rarr; <code>wait "2d"</code> &rarr; <code>condition</code> &rarr; <code>send_sms</code> &rarr; <code>end</code><br><br>6 nodes, 2 channels. Q4-დან: +34% open rate personalized subject-ით.<br><br>
+      <button class="msg-btn msg-btn-p" onclick="runSim()">&#9654; Dry Run</button>
+      <button class="msg-btn msg-btn-s" onclick="ask('A/B ტესტი')">+ A/B Split</button>
+      <button class="msg-btn msg-btn-s" onclick="ask('frequency cap')">+ Freq Cap</button>`);
+    setSugs(['Dry Run','Node დავამატო','რა გავუმჯობესო?']);
 
-  } else if(t.includes('a/b')||t.includes('ტესტ')){
-    addAI(`A/B split node-ს ვამატებ send_email-ის წინ:<br><br>
-    <div class="flow-v">
-      <div class="f-step"><div class="f-dot trigger">T</div><div class="f-info"><div class="f-name">segment_entry</div></div></div>
-      <div class="f-step"><div class="f-dot condition">AB</div><div class="f-info"><div class="f-name">ab_split</div><div class="f-desc">50/50 &mdash; A: "10% discount" / B: "something new"</div></div></div>
-      <div class="f-step"><div class="f-dot action">A</div><div class="f-info"><div class="f-name">send_email</div><div class="f-desc">variant-based subject line</div></div></div>
-      <div class="f-step"><div class="f-dot wait">W</div><div class="f-info"><div class="f-name">wait "2d"</div></div></div>
-      <div class="f-step"><div class="f-dot end">E</div><div class="f-info"><div class="f-name">end</div></div></div>
-    </div>
-    940/940 split. Winner auto-promoted 24h-ში.<br><br>
-    <button class="msg-btn msg-btn-p" onclick="expandToBuild()">Publish</button>
-    <button class="msg-btn msg-btn-s" onclick="ask('Dry run გავუშვა')">Dry run first</button>`);
-
-  } else if(t.includes('dry run')){
-    setLayout(2,1);
-    setPhaseTag('Dry Run','var(--warn-soft)','var(--warn)');
-    dashContent.innerHTML=`
-      <div class="dash-header"><div><div class="dash-title">Dry Run Results</div><div class="dash-subtitle">Churn Re-engagement &middot; simulated execution</div></div></div>
-      <div class="dash-grid">
-        <div class="d-card"><div class="d-label">Nodes traversed</div><div class="d-value" style="color:var(--success)">6</div></div>
-        <div class="d-card"><div class="d-label">Side effects</div><div class="d-value" style="color:var(--info)">0</div><div class="d-change">all skipped (dry run)</div></div>
-        <div class="d-card"><div class="d-label">Branching</div><div class="d-value">2</div><div class="d-change">condition + end</div></div>
-        <div class="d-card"><div class="d-label">Duration</div><div class="d-value">45ms</div><div class="d-change">simulated</div></div>
+  } else if(t.includes('a/b') || t.includes('ტესტ')) {
+    addAI(`A/B Split node-ს ვამატებ!<br><br>
+      <div class="flow-v">
+        <div class="f-step"><div class="f-dot trigger">T</div><div class="f-info"><div class="f-name">segment_entry</div></div></div>
+        <div class="f-step"><div class="f-dot condition">AB</div><div class="f-info"><div class="f-name">ab_split</div><div class="f-desc">50/50 &mdash; A: "10% discount" / B: "free trial"</div></div></div>
+        <div class="f-step"><div class="f-dot action">A</div><div class="f-info"><div class="f-name">send_email</div></div></div>
+        <div class="f-step"><div class="f-dot wait">W</div><div class="f-info"><div class="f-name">wait "2d"</div></div></div>
+        <div class="f-step"><div class="f-dot end">E</div><div class="f-info"><div class="f-name">end</div></div></div>
       </div>
-      <div class="d-section-title">Execution Path</div>
-      <div class="d-card full">
-        <table class="d-table">
-          <thead><tr><th>Step</th><th>Node</th><th>Type</th><th>Result</th><th>Side Effects</th></tr></thead>
-          <tbody>
-            <tr><td>1</td><td>entry</td><td><code>segment_entry</code></td><td><span class="badge b-green">completed</span></td><td>none</td></tr>
-            <tr><td>2</td><td>send offer</td><td><code>send_email</code></td><td><span class="badge b-blue">skipped (dry)</span></td><td>email NOT sent</td></tr>
-            <tr><td>3</td><td>wait 2d</td><td><code>wait</code></td><td><span class="badge b-blue">skipped (dry)</span></td><td>no delay</td></tr>
-            <tr><td>4</td><td>opened?</td><td><code>condition</code></td><td><span class="badge b-green">branched: false</span></td><td>none</td></tr>
-            <tr><td>5</td><td>send SMS</td><td><code>send_sms</code></td><td><span class="badge b-blue">skipped (dry)</span></td><td>SMS NOT sent</td></tr>
-            <tr><td>6</td><td>end</td><td><code>end</code></td><td><span class="badge b-green">completed</span></td><td>none</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="d-section-title">Preflight Checks</div>
-      <div class="d-card full">
-        <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Pass</div><div class="insight-text">Graph structure valid &mdash; no cycles, no orphan nodes, all edges connected.</div></div>
-        <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Pass</div><div class="insight-text">All node types registered in NodeRegistry.</div></div>
-        <div class="insight" style="border-color:var(--warn);background:var(--warn-soft)"><div class="insight-type" style="color:var(--warn)">Warning</div><div class="insight-text">send_email config: subject line uses <code>{{name}}</code> &mdash; ensure context has "name" field.</div></div>
-      </div>
-    `;
-    addAI(`Dry run &mdash; ყველაფერი გაიარა! 6 node traversed, side effects 0.<br><br>1 warning: email template <code>{{name}}</code>-ს იყენებს &mdash; trigger-ის context-ში "name" ფილდი უნდა იყოს.<br><br>
-    <button class="msg-btn msg-btn-p" onclick="expandToBuild()">Publish flow</button>
-    <button class="msg-btn msg-btn-s" onclick="ask('სხვა context-ით dry run')">სხვა context-ით</button>`);
+      <button class="msg-btn msg-btn-p" onclick="runSim()">Dry Run</button>`);
 
-  } else if(t.includes('nodes')||t.includes('რა node')){
-    addAI(`კალციფერში <strong>23 built-in node</strong> არის 5 კატეგორიაში:<br><br>
-    <table>
-    <tr><th>Category</th><th>Nodes</th></tr>
-    <tr><td style="color:var(--info)">Trigger</td><td><code>segment_entry</code>, <code>event_entry</code>, <code>webhook_entry</code></td></tr>
-    <tr><td style="color:var(--warn)">Condition</td><td><code>condition</code>, <code>ab_split</code>, <code>check_segment</code>, <code>frequency_cap</code>, <code>preference_gate</code></td></tr>
-    <tr><td>Wait</td><td><code>wait</code>, <code>wait_until</code>, <code>wait_for_event</code></td></tr>
-    <tr><td style="color:var(--primary)">Action</td><td><code>send_email</code>, <code>send_sms</code>, <code>send_push</code>, <code>send_whatsapp</code>, <code>send_in_app</code>, <code>call_webhook</code>, <code>add_tag</code>, <code>update_profile</code>, <code>track_conversion</code></td></tr>
-    <tr><td style="color:var(--success)">End</td><td><code>end</code></td></tr>
-    </table><br>
-    უბრალოდ მითხარი რა გინდა მოხდეს და მე შესაბამის node-ებს შევარჩევ.`);
-    setSugs(['Email + SMS flow','Webhook-based flow','Wait for event']);
+  } else if(t.includes('dry run') || t.includes('გავუშვა')) {
+    showDryRunResults();
+    addAI(`Dry run გავარდა! 6 node traversed, 0 side effects.<br><br>1 warning: <code>{{name}}</code> template variable &mdash; context-ში "name" ფილდი საჭიროა.<br><br>
+      <button class="msg-btn msg-btn-p" onclick="publishFlow()">Publish Flow</button>
+      <button class="msg-btn msg-btn-s" onclick="ask('სხვა context-ით')">სხვა context-ით</button>`);
 
-  } else if(t.includes('instance')||t.includes('ინსტანს')){
-    addAI(`<strong>Spring Sale Push</strong> &mdash; instance breakdown:<br><br>
-    <table>
-    <tr><th>Status</th><th>Count</th><th>%</th></tr>
-    <tr><td style="color:var(--success)">completed</td><td>2,502</td><td>59.6%</td></tr>
-    <tr><td style="color:var(--info)">running</td><td>312</td><td>7.4%</td></tr>
-    <tr><td style="color:var(--warn)">waiting</td><td>186</td><td>4.4%</td></tr>
-    <tr><td style="color:var(--danger)">failed</td><td>14</td><td>0.3%</td></tr>
-    <tr><td>exited</td><td>1,186</td><td>28.2%</td></tr>
-    </table>`);
-    setSugs(['Failed instances ვნახო','Waiting instances','Instance timeline']);
+  } else if(t.includes('nodes') || t.includes('რა node')) {
+    addAI(`<strong>23 built-in node</strong>, 5 კატეგორია:<br><br><table>
+      <tr><th>Category</th><th>Nodes</th></tr>
+      <tr><td style="color:var(--info)">Trigger</td><td><code>segment_entry</code>, <code>event_entry</code>, <code>webhook_entry</code></td></tr>
+      <tr><td style="color:var(--warn)">Condition</td><td><code>condition</code>, <code>ab_split</code>, <code>check_segment</code>, <code>frequency_cap</code></td></tr>
+      <tr><td>Wait</td><td><code>wait</code>, <code>wait_until</code>, <code>wait_for_event</code></td></tr>
+      <tr><td style="color:var(--primary)">Action</td><td><code>send_email</code>, <code>send_sms</code>, <code>send_push</code>, <code>send_whatsapp</code>, <code>call_webhook</code>, <code>add_tag</code>, <code>update_profile</code>, <code>track_conversion</code></td></tr>
+      <tr><td style="color:var(--success)">End</td><td><code>end</code></td></tr>
+      </table><br>მითხარი რა გინდა და შესაბამის node-ებს ავარჩევ.`);
+    setSugs(['Email + SMS flow','Onboarding flow','Webhook-based']);
 
-  } else if(t.includes('failed')||t.includes('error')){
-    addAI(`<strong>14 failed instance:</strong><br><br>8 &times; <code>send_email</code> &mdash; "No message provider configured for this channel"<br>6 &times; <code>frequency_cap</code> &mdash; "Message limit reached"<br><br>Email failures provider-ის misconfiguration-ით იყო &mdash; უკვე გასწორებულია. Frequency cap &mdash; ეს expected behavior-ია, ის customers უკვე მიიღეს max messages.<br><br>
-    <button class="msg-btn msg-btn-s" onclick="ask('retry failed instances')">Retry failed</button>`);
+  } else if(t.includes('onboarding') || t.includes('ონბორდინგ')) {
+    buildOnboardingCanvas();
+    addAI(`Onboarding flow ავაწყე!<br><br><code>segment_entry</code> &rarr; <code>send_email</code> (welcome) &rarr; <code>wait "1d"</code> &rarr; <code>send_push</code> &rarr; <code>wait "2d"</code> &rarr; <code>condition</code> (activated?) &rarr; <code>end</code><br><br>
+      <button class="msg-btn msg-btn-p" onclick="runSim()">Dry Run</button>
+      <button class="msg-btn msg-btn-s" onclick="ask('frequency cap')">+ Freq Cap</button>`);
 
-  } else if(t.includes('ახალი flow')||t.includes('new flow')){
-    chatMsgs.innerHTML='';
-    setLayout(3,0);
-    setPhaseTag('New Flow','var(--info-soft)','var(--info)');
-    dashContent.innerHTML='';
-    addAI(`ახალი flow! მიამბე:<br><br>1. <strong>რა უნდა მოხდეს?</strong> (მაგ. "როცა customer-ი 30 დღე არაქტიურია, email გავუგზავნო")<br>2. <strong>რა არხით?</strong> (email, SMS, push, webhook...)<br>3. <strong>რამე პირობა?</strong> (A/B test, frequency cap, segment check...)<br><br>ან უბრალოდ თავისუფლად მიამბე რა გინდა და მე flow-ს ავაწყობ.`);
-    setSugs(['Re-engagement flow','Onboarding sequence','Event-based webhook','Upsell journey']);
+  } else if(t.includes('publish')) {
+    publishFlow();
+    addAI(`Flow published! <strong>Active</strong> სტატუსში გადავიდა.<br><br>
+      <button class="msg-btn msg-btn-s" onclick="loadSession('spring')">Monitor instances</button>`);
 
-  } else if(t.includes('პაუზ')||t.includes('pause')){
-    addAI(`Flow დაპაუზდა. ყველა running instance "paused" სტატუსში გადადის &mdash; wait node-ები და scheduled jobs შეჩერდება.<br><br>
-    <button class="msg-btn msg-btn-p" onclick="ask('resume flow')">Resume</button>
-    <button class="msg-btn msg-btn-s" onclick="ask('instance-ები ვნახო')">Instance status</button>`);
-    setPhaseTag('Paused','var(--warn-soft)','var(--warn)');
+  } else if(t.includes('frequency') || t.includes('freq cap')) {
+    addAI(`Frequency Cap დავამატე &mdash; max 3 messages 7 დღეში.<br><br>ეს დაიცავს churn-risk segment-ს over-messaging-ისგან. Q4-ში push-მა 2% opt-out გამოიწვია.`);
+
+  } else if(t.includes('failed') || t.includes('error')) {
+    addAI(`<strong>14 failed:</strong><br><br>8 &times; <code>send_email</code> &mdash; "No provider configured"<br>6 &times; <code>frequency_cap</code> &mdash; "Message limit reached"<br><br>Email failures უკვე გასწორდა. Freq cap &mdash; expected behavior.`);
+
+  } else if(t.includes('instance') || t.includes('ინსტანს')) {
+    addAI(`Instance breakdown:<br><br><table><tr><th>Status</th><th>Count</th><th>%</th></tr>
+      <tr><td style="color:var(--success)">completed</td><td>2,502</td><td>59.6%</td></tr>
+      <tr><td style="color:var(--info)">running</td><td>312</td><td>7.4%</td></tr>
+      <tr><td style="color:var(--warn)">waiting</td><td>186</td><td>4.4%</td></tr>
+      <tr><td style="color:var(--danger)">failed</td><td>14</td><td>0.3%</td></tr></table>`);
+
+  } else if(t.includes('გავუმჯობესო') || t.includes('improve')) {
+    addAI(`რეკომენდაციები:<br><br>1. <strong>Personalization</strong> &mdash; <code>{{name}}</code> + <code>{{last_product}}</code> subject-ში<br>2. <strong>Smart wait</strong> &mdash; activity-ზე დამოკიდებული delay<br>3. <strong>Push notification</strong> &mdash; SMS-ის გარდა, freq_cap-ით<br><br>
+      <button class="msg-btn msg-btn-s" onclick="ask('push დავამატო')">+ Push</button>
+      <button class="msg-btn msg-btn-s" onclick="ask('personalization')">Personalize</button>`);
 
   } else {
-    addAI(`კარგი. რა გინდა გავაკეთო ამ flow-ში? შემიძლია:<br>&bull; Flow graph-ის აწყობა/შეცვლა<br>&bull; Dry run (ტესტირება)<br>&bull; Instance-ების მონიტორინგი<br>&bull; Error-ების ანალიზი<br>&bull; ახალი version-ის publish`);
+    addAI(`გაგიგონე. შემიძლია:<br>&bull; Flow-ს აწყობა/შეცვლა<br>&bull; Dry run (ტესტირება)<br>&bull; Monitoring<br>&bull; Error ანალიზი<br><br>მითხარი რა გინდა.`);
+    setSugs(['Email + SMS flow','Dry Run','რა nodes არსებობს?','ახალი flow']);
   }
 }
 
-function expandToBuild(){
-  setLayout(2,1);
-  setPhaseTag('Publishing','var(--warn-soft)','var(--warn)');
-  dashContent.innerHTML=`
-    <div class="dash-header"><div><div class="dash-title">Publishing Flow</div><div class="dash-subtitle">Churn Re-engagement v1</div></div></div>
-    <div class="d-card full">
-      <div class="prog-row"><div class="prog-label"><span>Preflight validation</span><span>Pass</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
+// ====================================
+// BUILD FLOW ON CANVAS
+// ====================================
+function buildFlowOnCanvas() {
+  setStage('context');
+  canvasNodes=[];canvasEdges=[];nextNodeId=1;
+
+  const cx=220,gap=100;let y=30;
+  const n1=mkNode('segment_entry',cx,y,{desc:'Enters "Churn Risk 90d"',detail:'Churn Risk 90d',config:{segment:'Churn Risk 90d'}});y+=gap;
+  const n2=mkNode('send_email',cx,y,{desc:'Personal offer + 10% discount',detail:'SendGrid \u00B7 tmpl_churn_v1',config:{provider:'SendGrid',subject:'{{name}}, we miss you!',template:'tmpl_churn_v1'}});y+=gap;
+  const n3=mkNode('wait',cx,y,{desc:'2 days delay',detail:'duration: "2d"',config:{duration:'2d'}});y+=gap;
+  const n4=mkNode('condition',cx,y,{desc:'Did they open email?',detail:'email_opened == true',config:{expr:'context.email_opened == true'}});y+=gap;
+  const n5=mkNode('send_sms',cx-80,y,{desc:'Reminder + code',detail:'Twilio \u00B7 SAVE10',config:{provider:'Twilio',message:'{{name}}, use code SAVE10'}});
+  const n6=mkNode('end',cx+120,y-30,{desc:'Already engaged'});y+=gap;
+  const n7=mkNode('end',cx-80,y,{desc:'Track & exit'});
+
+  canvasEdges.push({from:n1,to:n2},{from:n2,to:n3},{from:n3,to:n4},{from:n4,to:n5,label:'false'},{from:n4,to:n6,label:'true'},{from:n5,to:n7});
+  renderCanvas();
+}
+
+function buildOnboardingCanvas() {
+  setStage('context');
+  canvasNodes=[];canvasEdges=[];nextNodeId=1;
+
+  const cx=220,gap=100;let y=30;
+  const n1=mkNode('segment_entry',cx,y,{desc:'New signup'});y+=gap;
+  const n2=mkNode('send_email',cx,y,{desc:'Welcome email'});y+=gap;
+  const n3=mkNode('wait',cx,y,{desc:'1 day',detail:'"1d"'});y+=gap;
+  const n4=mkNode('send_push',cx,y,{desc:'Try the dashboard'});y+=gap;
+  const n5=mkNode('wait',cx,y,{desc:'2 days',detail:'"2d"'});y+=gap;
+  const n6=mkNode('condition',cx,y,{desc:'Activated?'});y+=gap;
+  const n7=mkNode('end',cx,y,{desc:'Complete'});
+
+  canvasEdges.push({from:n1,to:n2},{from:n2,to:n3},{from:n3,to:n4},{from:n4,to:n5},{from:n5,to:n6},{from:n6,to:n7,label:'true'});
+  renderCanvas();
+}
+
+function mkNode(type,x,y,cfg={}){
+  const def=NODE_TYPES[type];if(!def)return null;
+  const id='n'+(nextNodeId++);
+  canvasNodes.push({id,type,x,y,title:cfg.title||def.title,desc:cfg.desc||def.desc,detail:cfg.detail||'',cat:def.cat,config:cfg.config||{}});
+  return id;
+}
+
+// ====================================
+// RENDER CANVAS
+// ====================================
+function renderCanvas(){
+  // Remove scrollable class, canvas fills the area
+  document.getElementById('ctxArea').classList.remove('scrollable');
+  canvasMode = true;
+
+  let nodesHtml = '';
+  canvasNodes.forEach(n=>{
+    const def=NODE_TYPES[n.type];
+    const isBranch=['condition','ab_split','frequency_cap','check_segment'].includes(n.type);
+    nodesHtml+=`<div class="canvas-node" id="${n.id}" style="left:${n.x}px;top:${n.y}px" onmousedown="startDrag(event,'${n.id}')">
+      <div class="sim-badge" id="sb_${n.id}"></div>
+      ${n.cat!=='trigger'?'<div class="node-port port-in"></div>':''}
+      <div class="node-header"><div class="node-icon ${n.cat}">${def.icon}</div><div><div class="node-title">${n.title}</div><div class="node-type">${n.type}</div></div></div>
+      <div class="node-body"><div class="node-desc">${n.desc}</div>${n.detail?'<div class="node-config-tag">'+n.detail+'</div>':''}</div>
+      ${n.cat!=='end'?(isBranch?'<div class="node-port port-true"></div><div class="node-port port-false"></div><span class="port-lbl lbl-t">true</span><span class="port-lbl lbl-f">false</span>':'<div class="node-port port-out"></div>'):''}
+    </div>`;
+  });
+
+  // Count categories for footer
+  const cats={trigger:0,condition:0,wait:0,action:0,end:0};
+  canvasNodes.forEach(n=>{if(cats[n.cat]!==undefined)cats[n.cat]++});
+
+  ctxContent.innerHTML=`<div class="canvas-wrap">
+    <!-- Toolbar -->
+    <div class="canvas-toolbar">
+      <div class="ct-left">
+        <span class="ct-status" id="ctStatus">${canvasNodes.length} nodes &middot; ${canvasEdges.length} edges</span>
+      </div>
+      <div class="ct-right">
+        <button class="ct-btn sim-run" onclick="runSim()">&#9654; Dry Run</button>
+        <button class="ct-btn" onclick="togglePalette()">+ Node</button>
+        <button class="ct-btn" onclick="setStage(app.dataset.stage==='context'?'split':'context',false)" id="expandBtn">&#8644; Expand</button>
+      </div>
+    </div>
+
+    <!-- Middle: canvas pane + side panels -->
+    <div class="canvas-middle">
+      <!-- Canvas pane -->
+      <div class="canvas-pane" id="canvasPane">
+        <div class="canvas-zoom" id="canvasZoom">
+          <svg class="edge-svg" id="edgeSvg">
+            <defs><marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" class="edge-arrow"/></marker></defs>
+          </svg>
+          ${nodesHtml}
+        </div>
+        <!-- Zoom controls -->
+        <div class="canvas-zoom-ctrl">
+          <button class="cz-btn" onclick="zoomCanvas(10)">+</button>
+          <div class="cz-label" id="zoomLbl">${zoomLevel}%</div>
+          <button class="cz-btn" onclick="zoomCanvas(-10)">&minus;</button>
+          <button class="cz-btn" onclick="zoomCanvas(0)" title="Fit" style="font-size:10px">&#8634;</button>
+        </div>
+      </div>
+
+      <!-- Node Palette (slides inside canvas-middle) -->
+      <div class="node-palette" id="nodePalette">
+        <div class="np-header"><h4>+ Node</h4><button class="np-close" onclick="togglePalette()">&times;</button></div>
+        <div class="np-section"><div class="np-label">Trigger</div>
+          <div class="np-item" onclick="addPaletteNode('segment_entry')"><div class="np-icon" style="background:var(--info-soft);color:var(--info)">T</div><div class="np-name">Segment Entry</div></div>
+          <div class="np-item" onclick="addPaletteNode('event_entry')"><div class="np-icon" style="background:var(--info-soft);color:var(--info)">T</div><div class="np-name">Event Entry</div></div>
+          <div class="np-item" onclick="addPaletteNode('webhook_entry')"><div class="np-icon" style="background:var(--info-soft);color:var(--info)">T</div><div class="np-name">Webhook</div></div>
+        </div>
+        <div class="np-section"><div class="np-label">Condition</div>
+          <div class="np-item" onclick="addPaletteNode('condition')"><div class="np-icon" style="background:var(--warn-soft);color:var(--warn)">?</div><div class="np-name">Condition</div></div>
+          <div class="np-item" onclick="addPaletteNode('ab_split')"><div class="np-icon" style="background:var(--warn-soft);color:var(--warn)">AB</div><div class="np-name">A/B Split</div></div>
+          <div class="np-item" onclick="addPaletteNode('frequency_cap')"><div class="np-icon" style="background:var(--warn-soft);color:var(--warn)">#</div><div class="np-name">Frequency Cap</div></div>
+        </div>
+        <div class="np-section"><div class="np-label">Wait</div>
+          <div class="np-item" onclick="addPaletteNode('wait')"><div class="np-icon" style="background:var(--accent-soft);color:var(--accent)">W</div><div class="np-name">Wait (duration)</div></div>
+          <div class="np-item" onclick="addPaletteNode('wait_for_event')"><div class="np-icon" style="background:var(--accent-soft);color:var(--accent)">W</div><div class="np-name">Wait for Event</div></div>
+        </div>
+        <div class="np-section"><div class="np-label">Action &mdash; Channel</div>
+          <div class="np-item" onclick="addPaletteNode('send_email')"><div class="np-icon" style="background:var(--primary-soft);color:var(--primary)">&crarr;</div><div class="np-name">Send Email</div></div>
+          <div class="np-item" onclick="addPaletteNode('send_sms')"><div class="np-icon" style="background:var(--primary-soft);color:var(--primary)">&phone;</div><div class="np-name">Send SMS</div></div>
+          <div class="np-item" onclick="addPaletteNode('send_push')"><div class="np-icon" style="background:var(--primary-soft);color:var(--primary)">&ofcir;</div><div class="np-name">Send Push</div></div>
+        </div>
+        <div class="np-section"><div class="np-label">Action &mdash; Data</div>
+          <div class="np-item" onclick="addPaletteNode('call_webhook')"><div class="np-icon" style="background:var(--primary-soft);color:var(--primary)">{}</div><div class="np-name">Call Webhook</div></div>
+          <div class="np-item" onclick="addPaletteNode('track_conversion')"><div class="np-icon" style="background:var(--primary-soft);color:var(--primary)">$</div><div class="np-name">Track Conversion</div></div>
+          <div class="np-item" onclick="addPaletteNode('add_tag')"><div class="np-icon" style="background:var(--primary-soft);color:var(--primary)">#</div><div class="np-name">Add Tag</div></div>
+        </div>
+        <div class="np-section"><div class="np-label">End</div>
+          <div class="np-item" onclick="addPaletteNode('end')"><div class="np-icon" style="background:var(--success-soft);color:var(--success)">&check;</div><div class="np-name">End</div></div>
+        </div>
+      </div>
+
+      <!-- Node Config Panel (slides inside canvas-middle) -->
+      <div class="node-config" id="nodeConfig">
+        <div class="nc-header"><h4 id="ncTitle">Node Config</h4><button class="nc-close" onclick="closeNodeConfig()">&times;</button></div>
+        <div class="nc-body" id="ncBody"></div>
+        <div class="nc-footer">
+          <button class="nc-btn nc-btn-save" onclick="saveNodeConfig()">Save</button>
+          <button class="nc-btn nc-btn-del" onclick="deleteSelectedNode()">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="canvas-footer">
+      <div class="cf-left">
+        <div class="cf-pill"><div class="cf-dot" style="background:var(--info)"></div><strong>${cats.trigger}</strong> trigger</div>
+        <div class="cf-pill"><div class="cf-dot" style="background:var(--primary)"></div><strong>${cats.action}</strong> action</div>
+        <div class="cf-pill"><div class="cf-dot" style="background:var(--warn)"></div><strong>${cats.condition}</strong> condition</div>
+        <div class="cf-pill"><div class="cf-dot" style="background:var(--accent)"></div><strong>${cats.wait}</strong> wait</div>
+        <div class="cf-pill"><div class="cf-dot" style="background:var(--success)"></div><strong>${cats.end}</strong> end</div>
+        <div class="cf-pill" style="margin-left:8px;padding-left:8px;border-left:1px solid var(--border)">Segment: <strong>Churn Risk 90d</strong> &middot; 1,880 users</div>
+      </div>
+      <div class="cf-right">
+        <div class="cf-status" id="cfStatus">Ready</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Attach click handlers after DOM is ready
+  setTimeout(()=>{
+    canvasNodes.forEach(n=>{
+      const el=document.getElementById(n.id);
+      if(!el)return;
+      el.addEventListener('click',e=>{
+        if(e.target.classList.contains('node-port'))return;
+        selectCanvasNode(n.id);
+      });
+      el.addEventListener('dblclick',()=>openNodeConfig(n.id));
+    });
+    renderEdges();
+  },80);
+}
+
+function renderEdges(){
+  const svg=document.getElementById('edgeSvg');if(!svg)return;
+  while(svg.children.length>1)svg.removeChild(svg.lastChild);
+  const wrap=document.getElementById('canvasZoom');if(!wrap)return;
+  const wRect=wrap.getBoundingClientRect();
+  const scale = zoomLevel/100;
+
+  canvasEdges.forEach(e=>{
+    const fEl=document.getElementById(e.from);
+    const tEl=document.getElementById(e.to);
+    if(!fEl||!tEl)return;
+    const fR=fEl.getBoundingClientRect();
+    const tR=tEl.getBoundingClientRect();
+    const fNode=canvasNodes.find(n=>n.id===e.from);
+    const isBranch=['condition','ab_split','frequency_cap','check_segment'].includes(fNode?.type);
+
+    let x1=(fR.left-wRect.left)/scale+fR.width/scale/2;
+    if(isBranch&&e.label==='true')x1=(fR.left-wRect.left)/scale+fR.width/scale*0.3;
+    if(isBranch&&e.label==='false')x1=(fR.left-wRect.left)/scale+fR.width/scale*0.7;
+    const y1=(fR.bottom-wRect.top)/scale;
+    const x2=(tR.left-wRect.left)/scale+tR.width/scale/2;
+    const y2=(tR.top-wRect.top)/scale;
+    const my=(y1+y2)/2;
+
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`);
+    path.setAttribute('class','edge-path'+(e.simActive?' sim-edge':''));
+    path.setAttribute('marker-end','url(#ah)');
+    svg.appendChild(path);
+
+    if(e.label){
+      const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+      txt.setAttribute('x',(x1+x2)/2);
+      txt.setAttribute('y',my-6);
+      txt.setAttribute('class','edge-label');
+      txt.setAttribute('text-anchor','middle');
+      txt.textContent=e.label;
+      svg.appendChild(txt);
+    }
+  });
+}
+
+// ====================================
+// DRAG
+// ====================================
+function startDrag(ev,id){
+  if(ev.target.classList.contains('node-port'))return;
+  draggingNode=canvasNodes.find(n=>n.id===id);if(!draggingNode)return;
+  const el=document.getElementById(id);
+  const r=el.getBoundingClientRect();
+  dragOffset.x=ev.clientX-r.left;dragOffset.y=ev.clientY-r.top;
+  el.classList.add('dragging');ev.preventDefault();
+}
+document.addEventListener('mousemove',ev=>{
+  if(!draggingNode)return;
+  const wrap=document.getElementById('canvasZoom');if(!wrap)return;
+  const wr=wrap.getBoundingClientRect();
+  const scale=zoomLevel/100;
+  draggingNode.x=Math.max(0,(ev.clientX-wr.left-dragOffset.x)/scale);
+  draggingNode.y=Math.max(0,(ev.clientY-wr.top-dragOffset.y)/scale);
+  const el=document.getElementById(draggingNode.id);
+  if(el){el.style.left=draggingNode.x+'px';el.style.top=draggingNode.y+'px'}
+  renderEdges();
+});
+document.addEventListener('mouseup',()=>{
+  if(draggingNode){document.getElementById(draggingNode.id)?.classList.remove('dragging');draggingNode=null}
+});
+
+// ====================================
+// ZOOM
+// ====================================
+let zoomLevel=100;
+function zoomCanvas(delta){
+  if(delta===0){zoomLevel=100}else{zoomLevel=Math.max(50,Math.min(150,zoomLevel+delta))}
+  const el=document.getElementById('canvasZoom');
+  if(el)el.style.transform=`scale(${zoomLevel/100})`;
+  const lbl=document.getElementById('zoomLbl');
+  if(lbl)lbl.textContent=zoomLevel+'%';
+  setTimeout(renderEdges,20);
+}
+
+// ====================================
+// NODE PALETTE
+// ====================================
+let canvasMode=false;
+function togglePalette(){
+  const p=document.getElementById('nodePalette');
+  if(p)p.classList.toggle('open');
+}
+function addPaletteNode(type){
+  const last=canvasNodes[canvasNodes.length-1];
+  const x=last?last.x:200;
+  const y=last?last.y+110:40;
+  const id=mkNode(type,x,y,{});
+  // Auto-connect to last
+  if(last&&id){
+    const lastNode=canvasNodes.find(n=>n.id===last.id||n.id===last);
+    if(lastNode&&NODE_TYPES[lastNode.type]?.cat!=='end'){
+      canvasEdges.push({from:lastNode.id||last,to:id});
+    }
+  }
+  renderCanvas();
+  const st=document.getElementById('ctStatus');
+  if(st)st.textContent=canvasNodes.length+' nodes \u00B7 '+canvasEdges.length+' edges';
+}
+
+// ====================================
+// NODE CONFIG
+// ====================================
+function selectCanvasNode(id){
+  document.querySelectorAll('.canvas-node').forEach(n=>n.classList.remove('selected'));
+  selectedNodeId = id;
+  const el=document.getElementById(id);
+  if(el)el.classList.add('selected');
+}
+
+function openNodeConfig(id){
+  selectCanvasNode(id);
+  const node=canvasNodes.find(n=>n.id===id);
+  if(!node)return;
+  const def=NODE_TYPES[node.type];
+
+  // Close palette, open config
+  const pal=document.getElementById('nodePalette');if(pal)pal.classList.remove('open');
+  const panel=document.getElementById('nodeConfig');if(panel)panel.classList.add('open');
+  const title=document.getElementById('ncTitle');
+  if(title)title.textContent=node.title+' — Config';
+
+  let html=`
+    <div class="nc-field">
+      <label class="nc-label">Display Name</label>
+      <input class="nc-input" id="ncName" value="${node.title}">
+    </div>
+    <div class="nc-field">
+      <label class="nc-label">Type</label>
+      <input class="nc-input" value="${node.type}" disabled style="opacity:0.5">
+    </div>
+    <div class="nc-field">
+      <label class="nc-label">Description</label>
+      <input class="nc-input" id="ncDesc" value="${node.desc}">
+    </div>`;
+
+  // Type-specific fields
+  if(node.type==='send_email'){
+    html+=`
+      <hr class="nc-divider">
+      <div class="nc-field">
+        <label class="nc-label">Provider</label>
+        <select class="nc-select" id="ncProvider"><option ${(node.config?.provider||'')==='SendGrid'?'selected':''}>SendGrid</option><option>Mailgun</option><option>Postmark</option></select>
+      </div>
+      <div class="nc-field">
+        <label class="nc-label">Subject Template</label>
+        <input class="nc-input" id="ncSubject" value="${node.config?.subject||'{{name}}, we have an offer for you'}" placeholder="Email subject...">
+      </div>
+      <div class="nc-field">
+        <label class="nc-label">Template ID</label>
+        <input class="nc-input" id="ncTemplate" value="${node.config?.template||'tmpl_default'}" placeholder="tmpl_...">
+      </div>`;
+  } else if(node.type==='send_sms'){
+    html+=`
+      <hr class="nc-divider">
+      <div class="nc-field">
+        <label class="nc-label">Provider</label>
+        <select class="nc-select" id="ncProvider"><option>Twilio</option><option>Vonage</option></select>
+      </div>
+      <div class="nc-field">
+        <label class="nc-label">Message</label>
+        <textarea class="nc-textarea" id="ncMessage">${node.config?.message||'{{name}}, your code: SAVE10'}</textarea>
+      </div>`;
+  } else if(node.type==='send_push'){
+    html+=`
+      <hr class="nc-divider">
+      <div class="nc-field">
+        <label class="nc-label">Provider</label>
+        <select class="nc-select"><option>Firebase FCM</option><option>OneSignal</option></select>
+      </div>
+      <div class="nc-field">
+        <label class="nc-label">Title</label>
+        <input class="nc-input" id="ncPushTitle" value="${node.config?.pushTitle||'Hey {{name}}!'}" placeholder="Push title">
+      </div>
+      <div class="nc-field">
+        <label class="nc-label">Body</label>
+        <textarea class="nc-textarea" id="ncPushBody">${node.config?.pushBody||'Check out what\'s new'}</textarea>
+      </div>`;
+  } else if(node.type==='wait'){
+    html+=`
+      <hr class="nc-divider">
+      <div class="nc-field">
+        <label class="nc-label">Duration</label>
+        <input class="nc-input" id="ncDuration" value="${node.config?.duration||'2d'}" placeholder='"2d", "4h", "30m"'>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:-6px">Formats: "2d" (days), "4h" (hours), "30m" (minutes), "2d4h"</div>`;
+  } else if(node.type==='wait_for_event'){
+    html+=`
+      <hr class="nc-divider">
+      <div class="nc-field">
+        <label class="nc-label">Event Name</label>
+        <input class="nc-input" id="ncEvent" value="${node.config?.event||'purchase_completed'}" placeholder="event_name">
+      </div>
+      <div class="nc-field">
+        <label class="nc-label">Timeout</label>
+        <input class="nc-input" id="ncTimeout" value="${node.config?.timeout||'7d'}" placeholder="Max wait time">
+      </div>`;
+  } else if(node.type==='condition'){
+    html+=`
+      <hr class="nc-divider">
+      <div class="nc-field">
+        <label class="nc-label">Expression</label>
+        <textarea class="nc-textarea" id="ncExpr">${node.config?.expr||'context.email_opened == true'}</textarea>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:-6px">Access flow context via <code style="font-size:10px">context.*</code></div>`;
+  } else if(node.type==='ab_split'){
+    html+=`
+      <hr class="nc-divider">
+      <div class="nc-field">
+        <label class="nc-label">Split Ratio</label>
+        <input class="nc-input" id="ncRatio" value="${node.config?.ratio||'50/50'}" placeholder="50/50">
+      </div>
+      <div class="nc-field">
+        <label class="nc-label">Variant A</label>
+        <input class="nc-input" id="ncVarA" value="${node.config?.varA||'Control'}">
+      </div>
+      <div class="nc-field">
+        <label class="nc-label">Variant B</label>
+        <input class="nc-input" id="ncVarB" value="${node.config?.varB||'Treatment'}">
+      </div>`;
+  } else if(node.type==='frequency_cap'){
+    html+=`
+      <hr class="nc-divider">
+      <div class="nc-field">
+        <label class="nc-label">Max Messages</label>
+        <input class="nc-input" id="ncMax" type="number" value="${node.config?.max||3}">
+      </div>
+      <div class="nc-field">
+        <label class="nc-label">Time Window</label>
+        <input class="nc-input" id="ncWindow" value="${node.config?.window||'7d'}" placeholder='"7d", "24h"'>
+      </div>`;
+  } else if(node.type==='segment_entry'){
+    html+=`
+      <hr class="nc-divider">
+      <div class="nc-field">
+        <label class="nc-label">Segment Name</label>
+        <input class="nc-input" id="ncSegment" value="${node.config?.segment||'Churn Risk 90d'}">
+      </div>`;
+  } else if(node.type==='call_webhook'){
+    html+=`
+      <hr class="nc-divider">
+      <div class="nc-field">
+        <label class="nc-label">URL</label>
+        <input class="nc-input" id="ncUrl" value="${node.config?.url||'https://api.example.com/webhook'}" placeholder="https://...">
+      </div>
+      <div class="nc-field">
+        <label class="nc-label">Method</label>
+        <select class="nc-select" id="ncMethod"><option>POST</option><option>PUT</option><option>PATCH</option></select>
+      </div>
+      <div class="nc-field">
+        <label class="nc-label">Headers (JSON)</label>
+        <textarea class="nc-textarea" id="ncHeaders">${node.config?.headers||'{"Content-Type": "application/json"}'}</textarea>
+      </div>`;
+  } else if(node.type==='track_conversion'){
+    html+=`
+      <hr class="nc-divider">
+      <div class="nc-field">
+        <label class="nc-label">Conversion Event</label>
+        <input class="nc-input" id="ncConvEvent" value="${node.config?.convEvent||'purchase'}" placeholder="event name">
+      </div>
+      <div class="nc-field">
+        <label class="nc-label">Value Field</label>
+        <input class="nc-input" id="ncConvValue" value="${node.config?.convValue||'context.order_value'}" placeholder="context.field">
+      </div>`;
+  } else if(node.type==='add_tag'){
+    html+=`
+      <hr class="nc-divider">
+      <div class="nc-field">
+        <label class="nc-label">Tag Name</label>
+        <input class="nc-input" id="ncTag" value="${node.config?.tag||'engaged_user'}" placeholder="tag_name">
+      </div>`;
+  }
+
+  // Raw JSON config at bottom
+  html+=`
+    <hr class="nc-divider">
+    <div class="nc-field">
+      <label class="nc-label">Raw Config (JSON)</label>
+      <textarea class="nc-textarea" id="ncRaw" style="min-height:80px">${JSON.stringify(node.config||{},null,2)}</textarea>
+    </div>`;
+
+  document.getElementById('ncBody').innerHTML=html;
+}
+
+function saveNodeConfig(){
+  if(!selectedNodeId)return;
+  const node=canvasNodes.find(n=>n.id===selectedNodeId);
+  if(!node)return;
+
+  const name=document.getElementById('ncName');
+  const desc=document.getElementById('ncDesc');
+  if(name)node.title=name.value;
+  if(desc)node.desc=desc.value;
+
+  // Save type-specific config
+  if(!node.config)node.config={};
+  const map={
+    ncSubject:'subject',ncTemplate:'template',ncProvider:'provider',
+    ncMessage:'message',ncDuration:'duration',ncExpr:'expr',
+    ncRatio:'ratio',ncVarA:'varA',ncVarB:'varB',
+    ncMax:'max',ncWindow:'window',ncSegment:'segment',
+    ncUrl:'url',ncMethod:'method',ncHeaders:'headers',
+    ncEvent:'event',ncTimeout:'timeout',
+    ncPushTitle:'pushTitle',ncPushBody:'pushBody',
+    ncConvEvent:'convEvent',ncConvValue:'convValue',ncTag:'tag'
+  };
+  Object.entries(map).forEach(([elId,key])=>{
+    const el=document.getElementById(elId);
+    if(el)node.config[key]=el.value;
+  });
+
+  // Build display detail
+  if(node.type==='send_email')node.detail=(node.config.provider||'SendGrid')+' \u00B7 '+node.config.template;
+  else if(node.type==='send_sms')node.detail='Twilio \u00B7 SMS';
+  else if(node.type==='wait')node.detail='duration: "'+node.config.duration+'"';
+  else if(node.type==='condition')node.detail=node.config.expr;
+  else if(node.type==='ab_split')node.detail=node.config.ratio+' split';
+  else if(node.type==='frequency_cap')node.detail='max '+node.config.max+' / '+node.config.window;
+  else if(node.type==='segment_entry')node.detail=node.config.segment;
+
+  closeNodeConfig();
+  renderCanvas();
+}
+
+function deleteSelectedNode(){
+  if(!selectedNodeId)return;
+  canvasEdges=canvasEdges.filter(e=>e.from!==selectedNodeId&&e.to!==selectedNodeId);
+  canvasNodes=canvasNodes.filter(n=>n.id!==selectedNodeId);
+  selectedNodeId=null;
+  closeNodeConfig();
+  renderCanvas();
+}
+
+function closeNodeConfig(){
+  const panel=document.getElementById('nodeConfig');
+  if(panel)panel.classList.remove('open');
+}
+
+// ====================================
+// SIMULATION
+// ====================================
+function runSim(){
+  if(canvasNodes.length===0)return;
+  const trigger=canvasNodes.find(n=>NODE_TYPES[n.type]?.cat==='trigger');
+  if(!trigger)return;
+  // Clear badges
+  canvasNodes.forEach(n=>{const b=document.getElementById('sb_'+n.id);if(b){b.className='sim-badge';b.textContent=''}});
+  canvasEdges.forEach(e=>e.simActive=false);
+
+  const order=buildOrder(trigger.id);
+  let step=0;
+  const fs=document.getElementById('cfStatus');
+  if(fs)fs.textContent='Dry Run \u2014 starting...';
+  const iv=setInterval(()=>{
+    if(step>=order.length){
+      clearInterval(iv);
+      if(fs)fs.textContent='Dry Run complete \u2014 '+order.length+' nodes, 0 side effects';
+      return;
+    }
+    const nid=order[step];
+    const node=canvasNodes.find(n=>n.id===nid);
+    const def=NODE_TYPES[node.type];
+    const b=document.getElementById('sb_'+nid);
+    if(b){
+      if(def.cat==='action'){b.className='sim-badge show skip';b.textContent='~'}
+      else if(def.cat==='wait'){b.className='sim-badge show skip';b.textContent='W'}
+      else{b.className='sim-badge show pass';b.textContent='\u2713'}
+    }
+    const el=document.getElementById(nid);if(el){el.classList.add('sim-active');setTimeout(()=>el.classList.remove('sim-active'),600)}
+    const edge=canvasEdges.find(e=>e.from===nid);if(edge)edge.simActive=true;
+    renderEdges();
+    if(fs)fs.textContent='Step '+(step+1)+'/'+order.length+' \u2014 '+node.type+(def.cat==='action'?' (skipped)':'');
+    step++;
+  },600);
+}
+
+function buildOrder(startId){
+  const order=[];const visited=new Set();
+  function go(id){if(!id||visited.has(id))return;visited.add(id);order.push(id);canvasEdges.filter(e=>e.from===id).forEach(e=>go(e.to))}
+  go(startId);return order;
+}
+
+function showDryRunResults(){
+  setStage('split',true);
+  ctxContent.innerHTML=`
+    <div class="ctx-header"><div><div class="ctx-title">Dry Run Results</div><div class="ctx-subtitle">Simulated execution &middot; 0 side effects</div></div><span class="ctx-tag" style="background:var(--warn-soft);color:var(--warn)">Dry Run</span></div>
+    <div class="ctx-grid">
+      <div class="ctx-card"><div class="ctx-label">Nodes</div><div class="ctx-value" style="color:var(--success)">6</div></div>
+      <div class="ctx-card"><div class="ctx-label">Side Effects</div><div class="ctx-value" style="color:var(--info)">0</div></div>
+      <div class="ctx-card"><div class="ctx-label">Branches</div><div class="ctx-value">2</div></div>
+      <div class="ctx-card"><div class="ctx-label">Duration</div><div class="ctx-value">45ms</div></div>
+    </div>
+    <div class="ctx-section">Execution Path</div>
+    <div class="ctx-card full"><table class="ctx-table"><thead><tr><th>#</th><th>Node</th><th>Type</th><th>Result</th><th>Effects</th></tr></thead><tbody>
+      <tr><td>1</td><td>entry</td><td><code>segment_entry</code></td><td><span class="badge b-green">completed</span></td><td>none</td></tr>
+      <tr><td>2</td><td>send offer</td><td><code>send_email</code></td><td><span class="badge b-blue">skipped</span></td><td>NOT sent</td></tr>
+      <tr><td>3</td><td>wait 2d</td><td><code>wait</code></td><td><span class="badge b-blue">skipped</span></td><td>no delay</td></tr>
+      <tr><td>4</td><td>opened?</td><td><code>condition</code></td><td><span class="badge b-green">false</span></td><td>none</td></tr>
+      <tr><td>5</td><td>send SMS</td><td><code>send_sms</code></td><td><span class="badge b-blue">skipped</span></td><td>NOT sent</td></tr>
+      <tr><td>6</td><td>end</td><td><code>end</code></td><td><span class="badge b-green">completed</span></td><td>none</td></tr>
+    </tbody></table></div>
+    <div class="ctx-section">Preflight</div>
+    <div class="ctx-card full">
+      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Pass</div><div class="insight-text">Graph valid &mdash; no cycles, all edges connected.</div></div>
+      <div class="insight" style="border-color:var(--success);background:var(--success-soft)"><div class="insight-type" style="color:var(--success)">Pass</div><div class="insight-text">All node types in NodeRegistry.</div></div>
+      <div class="insight" style="border-color:var(--warn);background:var(--warn-soft)"><div class="insight-type" style="color:var(--warn)">Warning</div><div class="insight-text"><code>{{name}}</code> in email subject &mdash; ensure context has "name".</div></div>
+    </div>`;
+}
+
+function publishFlow(){
+  setStage('split',true);
+  setPhaseTag('Active','var(--success-soft)','var(--success)');
+  ctxContent.innerHTML=`
+    <div class="ctx-header"><div><div class="ctx-title">Publishing Flow</div><div class="ctx-subtitle">Churn Re-engagement v1</div></div></div>
+    <div class="ctx-card full">
+      <div class="prog-row"><div class="prog-label"><span>Preflight</span><span>Pass</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
       <div class="prog-row"><div class="prog-label"><span>Graph structure</span><span>Valid</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
       <div class="prog-row"><div class="prog-label"><span>Node configs</span><span>Complete</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
       <div class="prog-row"><div class="prog-label"><span>Provider check</span><span>Connected</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--success)"></div></div></div>
-    </div>
-  `;
-  addAI(`Flow published! <strong>Churn Re-engagement v1</strong> active-ია.<br><br>1,880 customers segment-ში &mdash; trigger-ი ავტომატურად ამუშავდება segment_entry-ით.<br><br>
-  <button class="msg-btn msg-btn-s" onclick="loadFlow('live')">Monitor instances</button>`);
-  setTimeout(()=>{setPhaseTag('Active','var(--success-soft)','var(--success)')},1500);
+    </div>`;
 }
 
+// ====================================
+// LIVE STREAM
+// ====================================
 function startLiveStream(){
-  const nodes=['segment_entry','send_email','wait','condition','send_sms','ab_split','end','track_conversion'];
-  const statuses=['completed','completed','completed','branched:true','branched:false','waiting','completed','failed'];
-  const ids=['inst-a3f2','inst-b7c1','inst-d4e8','inst-f1a9','inst-c2b5','inst-e6d3'];
+  const nds=['segment_entry','send_email','wait','condition','send_sms','ab_split','end'];
+  const sts=['completed','completed','branched:true','branched:false','waiting','completed','failed'];
+  const ids=['inst-a3f2','inst-b7c1','inst-d4e8','inst-f1a9','inst-c2b5'];
   function addEv(){
     const s=document.getElementById('liveStream');if(!s){clearInterval(liveInterval);return}
-    const n=new Date(),tm=`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}:${n.getSeconds().toString().padStart(2,'0')}`;
+    const now=new Date(),tm=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
     const d=document.createElement('div');d.className='lm-ev';
-    const node=nodes[Math.floor(Math.random()*nodes.length)];
-    const status=statuses[Math.floor(Math.random()*statuses.length)];
-    const id=ids[Math.floor(Math.random()*ids.length)];
-    d.innerHTML=`<span class="lm-time">${tm}</span><span class="lm-name">${node}</span><span class="lm-detail">${id} &rarr; ${status}</span>`;
-    s.insertBefore(d,s.firstChild);
-    if(s.children.length>30)s.removeChild(s.lastChild);
+    d.innerHTML=`<span class="lm-time">${tm}</span><span class="lm-name">${nds[Math.floor(Math.random()*nds.length)]}</span><span class="lm-detail">${ids[Math.floor(Math.random()*ids.length)]} &rarr; ${sts[Math.floor(Math.random()*sts.length)]}</span>`;
+    s.insertBefore(d,s.firstChild);if(s.children.length>25)s.removeChild(s.lastChild);
   }
-  for(let i=0;i<5;i++)addEv();
+  for(let i=0;i<4;i++)addEv();
   liveInterval=setInterval(addEv,1200);
 }
 
-function rebuildCharts(){
-  Object.values(charts).forEach(c=>c.destroy());charts={};
-}
+// ====================================
+// HELPERS
+// ====================================
+function pc(){return getComputedStyle(document.body).getPropertyValue('--primary').trim()}
+function bc(){return getComputedStyle(document.body).getPropertyValue('--border').trim()}
+function tc(){return getComputedStyle(document.body).getPropertyValue('--text-muted').trim()}
+function dc(){return getComputedStyle(document.body).getPropertyValue('--danger').trim()}
+function rebuildCharts(){Object.values(charts).forEach(c=>c.destroy());charts={}}
+function setTh(n,b){document.body.setAttribute('data-theme',n);document.querySelectorAll('.th-opt').forEach(x=>x.classList.remove('active'));b?.classList.add('active');document.getElementById('thDD').classList.remove('open');renderEdges()}
+document.addEventListener('click',e=>{if(!e.target.closest('.theme-wrap'))document.getElementById('thDD').classList.remove('open')});
 
-// INIT
-(function(){const p=new URLSearchParams(window.location.search).get('theme');if(p&&['warm','lavender','sage','teal','dark'].includes(p)){document.body.setAttribute('data-theme',p);document.querySelectorAll('.th-opt').forEach(b=>{b.classList.remove('active');if(b.textContent.toLowerCase().includes(p==='warm'?'warm':p))b.classList.add('active')})}})();
-loadPlanning();
+// ====================================
+// RESIZE HANDLE
+// ====================================
+(function(){
+  const handle=document.getElementById('resizeHandle');
+  const chatArea=document.getElementById('chatArea');
+  const ctxArea=document.getElementById('ctxArea');
+  const stage=document.querySelector('.stage');
+  let resizing=false;
+
+  handle.addEventListener('mousedown',e=>{
+    if(app.dataset.stage==='welcome'||app.dataset.stage==='chat')return;
+    resizing=true;
+    handle.classList.add('active');
+    document.body.style.cursor='col-resize';
+    document.body.style.userSelect='none';
+    // Disable flex transitions during drag
+    chatArea.style.transition='none';
+    ctxArea.style.transition='none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove',e=>{
+    if(!resizing)return;
+    const stageRect=stage.getBoundingClientRect();
+    const sidebar=document.getElementById('sidebar');
+    const sidebarW=sidebar.getBoundingClientRect().width;
+    const handleW=5;
+    const availableW=stageRect.width-sidebarW-handleW;
+    // mouseX is relative to the start of chat area
+    const mouseX=e.clientX-stageRect.left-sidebarW;
+    const chatW=Math.max(200,Math.min(availableW-200,mouseX));
+    const ctxW=availableW-chatW;
+
+    // Use cssText to override specificity
+    chatArea.style.cssText=`flex:0 0 ${chatW}px !important;width:${chatW}px;max-width:none;min-width:0;border-right:1px solid var(--border);background:var(--bg);transition:none;overflow:hidden`;
+    ctxArea.style.cssText=`flex:0 0 ${ctxW}px !important;width:${ctxW}px;opacity:1;transition:none;overflow:hidden;display:flex;flex-direction:column`;
+
+    // Re-render edges
+    renderEdges();
+  });
+
+  document.addEventListener('mouseup',()=>{
+    if(!resizing)return;
+    resizing=false;
+    handle.classList.remove('active');
+    document.body.style.cursor='';
+    document.body.style.userSelect='';
+    // Keep the manually set widths but restore transitions
+    chatArea.style.transition='';
+    ctxArea.style.transition='';
+    renderEdges();
+  });
+})();
+
+// URL theme
+(function(){const p=new URLSearchParams(location.search).get('theme');if(p&&['hearth-light','hearth-dark','command-light','command-dark','grove-light','grove-dark','calcifer-light','calcifer-dark'].includes(p)){document.body.setAttribute('data-theme',p);document.querySelectorAll('.th-opt').forEach(b=>{b.classList.remove('active');if(b.textContent.toLowerCase().includes(p.split('-')[0]))b.classList.add('active')})}})();
 </script>
 </body>
 </html>

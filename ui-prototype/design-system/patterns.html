@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalcifer Design System — Patterns</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ============================================================
+   KALCIFER DESIGN SYSTEM — COLOR TOKENS
+   ============================================================ */
+
+/* ---- HEARTH LIGHT (default) ---- */
+:root, [data-theme="hearth-light"] {
+  --bg: #f6f1ea;
+  --surface: #ffffff;
+  --surface-dim: #faf7f2;
+  --surface-raised: #fff;
+
+  --primary: #c07a3e;
+  --primary-hover: #a96830;
+  --primary-soft: rgba(192,122,62,0.10);
+  --primary-muted: rgba(192,122,62,0.40);
+
+  --accent: #8b6d4a;
+  --accent-soft: rgba(139,109,74,0.08);
+
+  --border: #e6ddd2;
+  --border-light: #f0e8de;
+  --border-focus: var(--primary);
+
+  --text: #2c2720;
+  --text-sec: #6b6358;
+  --text-muted: #a09686;
+  --text-on-primary: #ffffff;
+  --text-on-surface: var(--text);
+
+  --success: #5a9e6f;
+  --success-soft: rgba(90,158,111,0.10);
+  --warn: #c49a4a;
+  --warn-soft: rgba(196,154,74,0.10);
+  --danger: #c4655a;
+  --danger-soft: rgba(196,101,90,0.10);
+  --info: #6a8fa0;
+  --info-soft: rgba(106,143,160,0.10);
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+
+  --shadow-sm: 0 1px 3px rgba(44,39,32,0.06);
+  --shadow-md: 0 4px 12px rgba(44,39,32,0.08);
+  --shadow-lg: 0 8px 24px rgba(44,39,32,0.10);
+
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ---- HEARTH DARK ---- */
+[data-theme="hearth-dark"] {
+  --bg: #161210;
+  --surface: #211c18;
+  --surface-dim: #1a1614;
+  --surface-raised: #2a2420;
+
+  --primary: #e0a060;
+  --primary-hover: #eab070;
+  --primary-soft: rgba(224,160,96,0.12);
+  --primary-muted: rgba(224,160,96,0.35);
+
+  --accent: #d4b896;
+  --accent-soft: rgba(212,184,150,0.08);
+
+  --border: #332c26;
+  --border-light: #2a2420;
+  --border-focus: var(--primary);
+
+  --text: #ede6dc;
+  --text-sec: #a89a88;
+  --text-muted: #6b6054;
+  --text-on-primary: #161210;
+  --text-on-surface: var(--text);
+
+  --success: #70c490;
+  --success-soft: rgba(112,196,144,0.10);
+  --warn: #e0b860;
+  --warn-soft: rgba(224,184,96,0.10);
+  --danger: #e07060;
+  --danger-soft: rgba(224,112,96,0.10);
+  --info: #70a8c0;
+  --info-soft: rgba(112,168,192,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.25);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.30);
+}
+
+/* ---- COMMAND LIGHT ---- */
+[data-theme="command-light"] {
+  --bg: #f0f1f5;
+  --surface: #ffffff;
+  --surface-dim: #f6f7fa;
+  --surface-raised: #fff;
+
+  --primary: #4a5eb0;
+  --primary-hover: #3d4f9a;
+  --primary-soft: rgba(74,94,176,0.10);
+  --primary-muted: rgba(74,94,176,0.35);
+
+  --accent: #5c6a8a;
+  --accent-soft: rgba(92,106,138,0.08);
+
+  --border: #dde0e8;
+  --border-light: #e8eaf0;
+  --border-focus: var(--primary);
+
+  --text: #1a1e2c;
+  --text-sec: #5a6070;
+  --text-muted: #9298a8;
+  --text-on-primary: #ffffff;
+  --text-on-surface: var(--text);
+
+  --success: #3d9e6f;
+  --success-soft: rgba(61,158,111,0.10);
+  --warn: #c49a4a;
+  --warn-soft: rgba(196,154,74,0.10);
+  --danger: #c45050;
+  --danger-soft: rgba(196,80,80,0.10);
+  --info: #4a8ab0;
+  --info-soft: rgba(74,138,176,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(26,30,44,0.06);
+  --shadow-md: 0 4px 12px rgba(26,30,44,0.08);
+  --shadow-lg: 0 8px 24px rgba(26,30,44,0.10);
+}
+
+/* ---- COMMAND DARK ---- */
+[data-theme="command-dark"] {
+  --bg: #0e1018;
+  --surface: #181a24;
+  --surface-dim: #12141c;
+  --surface-raised: #222430;
+
+  --primary: #8090e0;
+  --primary-hover: #96a4ea;
+  --primary-soft: rgba(128,144,224,0.12);
+  --primary-muted: rgba(128,144,224,0.35);
+
+  --accent: #a0a8d0;
+  --accent-soft: rgba(160,168,208,0.08);
+
+  --border: #282a38;
+  --border-light: #20222e;
+  --border-focus: var(--primary);
+
+  --text: #e0e2f0;
+  --text-sec: #8a8ea0;
+  --text-muted: #505468;
+  --text-on-primary: #0e1018;
+  --text-on-surface: var(--text);
+
+  --success: #60d090;
+  --success-soft: rgba(96,208,144,0.10);
+  --warn: #e0c060;
+  --warn-soft: rgba(224,192,96,0.10);
+  --danger: #e06060;
+  --danger-soft: rgba(224,96,96,0.10);
+  --info: #60a0e0;
+  --info-soft: rgba(96,160,224,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.30);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+/* ---- GROVE LIGHT ---- */
+[data-theme="grove-light"] {
+  --bg: #f0f3ee;
+  --surface: #fefffe;
+  --surface-dim: #f5f7f3;
+  --surface-raised: #fff;
+
+  --primary: #4a8a5a;
+  --primary-hover: #3d7a4d;
+  --primary-soft: rgba(74,138,90,0.10);
+  --primary-muted: rgba(74,138,90,0.35);
+
+  --accent: #5a7a5e;
+  --accent-soft: rgba(90,122,94,0.08);
+
+  --border: #d8e0d6;
+  --border-light: #e4eae2;
+  --border-focus: var(--primary);
+
+  --text: #1e261e;
+  --text-sec: #586058;
+  --text-muted: #8a968a;
+  --text-on-primary: #ffffff;
+  --text-on-surface: var(--text);
+
+  --success: #4a9e60;
+  --success-soft: rgba(74,158,96,0.10);
+  --warn: #b89a40;
+  --warn-soft: rgba(184,154,64,0.10);
+  --danger: #b85a4a;
+  --danger-soft: rgba(184,90,74,0.10);
+  --info: #4a889e;
+  --info-soft: rgba(74,136,158,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(30,38,30,0.06);
+  --shadow-md: 0 4px 12px rgba(30,38,30,0.08);
+  --shadow-lg: 0 8px 24px rgba(30,38,30,0.10);
+}
+
+/* ---- GROVE DARK ---- */
+[data-theme="grove-dark"] {
+  --bg: #0e1410;
+  --surface: #161e18;
+  --surface-dim: #121a14;
+  --surface-raised: #1e2a20;
+
+  --primary: #6cc480;
+  --primary-hover: #80d494;
+  --primary-soft: rgba(108,196,128,0.12);
+  --primary-muted: rgba(108,196,128,0.35);
+
+  --accent: #90c4a0;
+  --accent-soft: rgba(144,196,160,0.08);
+
+  --border: #243028;
+  --border-light: #1e2820;
+  --border-focus: var(--primary);
+
+  --text: #dce8de;
+  --text-sec: #88a08a;
+  --text-muted: #4a6050;
+  --text-on-primary: #0e1410;
+  --text-on-surface: var(--text);
+
+  --success: #60d080;
+  --success-soft: rgba(96,208,128,0.10);
+  --warn: #d0b850;
+  --warn-soft: rgba(208,184,80,0.10);
+  --danger: #d06050;
+  --danger-soft: rgba(208,96,80,0.10);
+  --info: #50b0d0;
+  --info-soft: rgba(80,176,208,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.30);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+/* ============================================================
+   PAGE STYLES
+   ============================================================ */
+* { margin:0; padding:0; box-sizing:border-box }
+body { font-family:var(--font-body); background:var(--bg); color:var(--text); line-height:1.6; transition:background 0.4s,color 0.3s }
+
+.page { max-width:1200px; margin:0 auto; padding:32px 24px }
+
+/* Header */
+.ds-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:40px; padding-bottom:20px; border-bottom:1px solid var(--border) }
+.ds-logo { font-size:20px; font-weight:700; color:var(--primary) }
+.ds-logo span { font-weight:400; color:var(--text-muted); font-size:13px; margin-left:6px }
+.ds-nav { display:flex; gap:4px }
+.ds-nav a { font-size:12px; padding:6px 14px; border-radius:var(--radius-xs); color:var(--text-sec); text-decoration:none; border:1px solid var(--border); transition:all 0.2s }
+.ds-nav a:hover { border-color:var(--primary); color:var(--primary) }
+.ds-nav a.active { background:var(--primary); color:var(--text-on-primary); border-color:var(--primary) }
+
+/* Theme switcher */
+.theme-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:40px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm) }
+.th-btn { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:var(--radius-xs); border:1.5px solid var(--border); background:var(--surface-dim); cursor:pointer; font-size:12px; font-family:inherit; color:var(--text-sec); transition:all 0.2s; font-weight:500 }
+.th-btn:hover { border-color:var(--primary); color:var(--text) }
+.th-btn.active { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); font-weight:600 }
+.th-swatch { display:flex; gap:2px; flex-shrink:0 }
+.th-swatch i { width:14px; height:14px; border-radius:3px; display:block; border:1px solid rgba(0,0,0,0.08) }
+.th-label { display:block; font-size:9px; color:var(--text-muted); margin-top:1px }
+
+/* Section */
+.section { margin-bottom:48px }
+.section-title { font-size:18px; font-weight:700; color:var(--text); margin-bottom:4px }
+.section-desc { font-size:13px; color:var(--text-sec); margin-bottom:20px; max-width:640px; line-height:1.6 }
+
+/* Back link */
+.back-link { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text-muted); text-decoration:none; margin-bottom:16px; transition:color 0.2s }
+.back-link:hover { color:var(--primary) }
+
+/* Pattern cards and layouts */
+.pattern-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:20px; margin-bottom:16px }
+.pattern-title { font-size:14px; font-weight:600; color:var(--text); margin-bottom:6px }
+.pattern-desc { font-size:12px; color:var(--text-sec); margin-bottom:16px; line-height:1.5 }
+
+/* Stage diagrams */
+.stage-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; margin-bottom:24px }
+.stage-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden }
+.stage-diagram { height:180px; background:linear-gradient(135deg,var(--primary-soft),var(--surface-dim)); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden }
+.stage-diagram.stage-0 { background:linear-gradient(135deg,var(--surface-dim),var(--surface-raised)) }
+.stage-diagram.stage-1 { background:linear-gradient(90deg,var(--primary-soft) 20%,var(--surface-dim) 20%) }
+.stage-diagram.stage-2 { background:linear-gradient(90deg,var(--primary-soft) 35%,var(--accent-soft) 35%) }
+.stage-diagram.stage-3 { background:linear-gradient(90deg,var(--primary-soft) 70%,var(--accent-soft) 70%) }
+
+.diagram-element { position:absolute; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:var(--text); border:2px solid; opacity:0.8 }
+.diagram-element.kalcifer { background:var(--primary); color:var(--text-on-primary); border-color:var(--primary) }
+.diagram-element.chat { background:var(--info); color:white; border-color:var(--info) }
+.diagram-element.context { background:var(--accent); color:white; border-color:var(--accent) }
+.diagram-element.sidebar { background:var(--warn); color:white; border-color:var(--warn) }
+
+.stage-label { padding:14px; background:var(--surface-dim); border-top:1px solid var(--border); text-align:center }
+.stage-label h4 { font-size:13px; font-weight:600; color:var(--text); margin-bottom:2px }
+.stage-label p { font-size:11px; color:var(--text-muted) }
+.stage-label .georgian { font-size:10px; font-style:italic; color:var(--text-sec); margin-top:2px }
+
+/* Door cards */
+.door-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-bottom:24px }
+.door-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:20px; text-align:center; transition:all 0.2s }
+.door-card:hover { box-shadow:var(--shadow-md); border-color:var(--primary) }
+.door-icon { font-size:32px; margin-bottom:12px; display:block }
+.door-title { font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px }
+.door-desc { font-size:12px; color:var(--text-sec); line-height:1.5 }
+.door-subtitle { font-size:11px; font-style:italic; color:var(--text-muted); margin-top:8px }
+
+/* Code blocks */
+.code-block { background:var(--surface-dim); border:1px solid var(--border); border-radius:var(--radius-xs); padding:12px; margin:12px 0; font-family:var(--font-mono); font-size:11px; color:var(--accent); overflow-x:auto; line-height:1.4 }
+
+/* Interaction demo */
+.demo-section { background:var(--surface-dim); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; margin-top:12px }
+.demo-title { font-size:12px; font-weight:600; color:var(--text); margin-bottom:8px }
+.demo-steps { font-size:11px; color:var(--text-sec); line-height:1.6 }
+.demo-steps ol { margin-left:16px }
+.demo-steps li { margin-bottom:6px }
+
+/* Grid/canvas preview */
+.canvas-demo { background:var(--surface); border:2px dashed var(--border); border-radius:var(--radius-sm); padding:24px; margin-top:12px; min-height:200px; position:relative }
+.canvas-grid { display:grid; grid-template-columns:60px 1fr 100px; gap:8px; height:180px; opacity:0.4 }
+.canvas-grid-item { background:var(--primary-soft); border:1px solid var(--primary); border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--primary) }
+
+/* Node badges */
+.node-badge { display:inline-block; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:600; margin:2px 4px 2px 0 }
+.node-badge.trigger { background:var(--info-soft); color:var(--info) }
+.node-badge.condition { background:var(--warn-soft); color:var(--warn) }
+.node-badge.wait { background:var(--accent-soft); color:var(--accent) }
+.node-badge.action { background:var(--primary-soft); color:var(--primary) }
+.node-badge.end { background:var(--success-soft); color:var(--success) }
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+  .stage-grid { grid-template-columns:1fr }
+  .door-grid { grid-template-columns:1fr }
+  .canvas-grid { grid-template-columns:1fr }
+}
+</style>
+</head>
+<body data-theme="hearth-light">
+<div class="page">
+
+<!-- Header -->
+<a class="back-link" href="../main.html">&larr; Back to Kalcifer</a>
+<div class="ds-header">
+  <div class="ds-logo">Kalcifer <span>Design System</span></div>
+  <div class="ds-nav">
+    <a href="colors.html">Colors</a>
+    <a href="components.html">Components</a>
+    <a href="patterns.html" class="active">Patterns</a>
+  </div>
+</div>
+
+<!-- Theme Switcher -->
+<div class="theme-bar">
+  <button class="th-btn active" onclick="setTheme('hearth-light',this)">
+    <span class="th-swatch"><i style="background:#f6f1ea"></i><i style="background:#c07a3e"></i></span>
+    <span>Hearth Light<span class="th-label">ბუხარი</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('hearth-dark',this)">
+    <span class="th-swatch"><i style="background:#161210"></i><i style="background:#e0a060"></i></span>
+    <span>Hearth Dark<span class="th-label">ბუხარი</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('command-light',this)">
+    <span class="th-swatch"><i style="background:#f0f1f5"></i><i style="background:#4a5eb0"></i></span>
+    <span>Command Light<span class="th-label">მეთაური</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('command-dark',this)">
+    <span class="th-swatch"><i style="background:#0e1018"></i><i style="background:#8090e0"></i></span>
+    <span>Command Dark<span class="th-label">მეთაური</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('grove-light',this)">
+    <span class="th-swatch"><i style="background:#f0f3ee"></i><i style="background:#4a8a5a"></i></span>
+    <span>Grove Light<span class="th-label">კორომი</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('grove-dark',this)">
+    <span class="th-swatch"><i style="background:#0e1410"></i><i style="background:#6cc480"></i></span>
+    <span>Grove Dark<span class="th-label">კორომი</span></span>
+  </button>
+</div>
+
+<!-- 1. Fluid Stage Model -->
+<div class="section">
+  <div class="section-title">1. Fluid Stage Model</div>
+  <div class="section-desc">Kalcifer's layout evolves fluidly as conversation deepens. Four stages of interface transformation, from empty welcome to fully expanded context workspace. The user flows through stages as they build and explore.</div>
+
+  <div class="stage-grid">
+    <!-- Stage 0 -->
+    <div class="stage-box">
+      <div class="stage-diagram stage-0">
+        <div class="diagram-element kalcifer" style="width:60px;height:60px">კ</div>
+      </div>
+      <div class="stage-label">
+        <h4>Stage 0: Welcome</h4>
+        <p>Kalcifer centered, empty canvas</p>
+        <div class="georgian">მისაღები ოთახი</div>
+      </div>
+    </div>
+
+    <!-- Stage 1 -->
+    <div class="stage-box">
+      <div class="stage-diagram stage-1">
+        <div class="diagram-element sidebar" style="width:45px;height:140px;left:6px;top:20px">S</div>
+        <div class="diagram-element chat" style="width:140px;height:140px;left:60px;top:20px">Chat</div>
+      </div>
+      <div class="stage-label">
+        <h4>Stage 1: Chat</h4>
+        <p>Sidebar + chat dominant</p>
+        <div class="georgian">საკონსულტაციო ოთახი</div>
+      </div>
+    </div>
+
+    <!-- Stage 2 -->
+    <div class="stage-box">
+      <div class="stage-diagram stage-2">
+        <div class="diagram-element sidebar" style="width:45px;height:140px;left:6px;top:20px">S</div>
+        <div class="diagram-element chat" style="width:70px;height:140px;left:60px;top:20px">Chat</div>
+        <div class="diagram-element context" style="width:60px;height:140px;right:6px;top:20px">Ctx</div>
+      </div>
+      <div class="stage-label">
+        <h4>Stage 2: Split</h4>
+        <p>Chat + Context balanced</p>
+        <div class="georgian">სამუშაო მაგიდა იხსნება</div>
+      </div>
+    </div>
+
+    <!-- Stage 3 -->
+    <div class="stage-box">
+      <div class="stage-diagram stage-3">
+        <div class="diagram-element chat" style="width:50px;height:140px;left:6px;top:20px">Chat</div>
+        <div class="diagram-element context" style="width:130px;height:140px;left:65px;top:20px">Context</div>
+      </div>
+      <div class="stage-label">
+        <h4>Stage 3: Context</h4>
+        <p>Context dominant, chat compact</p>
+        <div class="georgian">სცენა ეთმობა ნამუშევარს</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Implementation Details</div>
+    <div class="pattern-desc">Each stage uses CSS Grid or Flexbox to manage proportions. Resize handle between chat and context is draggable. Sidebar collapse/expand triggered by scroll depth or explicit toggle.</div>
+    <div class="code-block">
+/* Stage transitions via CSS Grid */
+.stage-1 { grid-template-columns: 50px 1fr; }
+.stage-2 { grid-template-columns: 50px 1fr 300px; }
+.stage-3 { grid-template-columns: 60px 1fr; }
+
+/* Resize handle */
+.resize-handle {
+  width: 4px; cursor: col-resize;
+  background: var(--border);
+}
+.resize-handle:hover { background: var(--primary); }
+    </div>
+  </div>
+</div>
+
+<!-- 2. The Moving Castle (ჰაულის ციხესიმაგრე) -->
+<div class="section">
+  <div class="section-title">2. The Moving Castle — Three Doors</div>
+  <div class="section-desc">Like Howl's castle with three different worlds behind three doors. Each represents a distinct mindset and capability within Kalcifer.</div>
+
+  <div class="door-grid">
+    <div class="door-card">
+      <span class="door-icon">🔥</span>
+      <div class="door-title">Hearth</div>
+      <div class="door-desc">Creative workshop. Flow building, ideation, canvas design, node manipulation, dry runs.</div>
+      <div class="door-subtitle">ბუხარი — where ideas become flows</div>
+    </div>
+    <div class="door-card">
+      <span class="door-icon">⚔</span>
+      <div class="door-title">Command</div>
+      <div class="door-desc">War room. Live instance monitoring, analytics, metrics, performance, segment overlap, audience insights.</div>
+      <div class="door-subtitle">მეთაური — where campaigns run</div>
+    </div>
+    <div class="door-card">
+      <span class="door-icon">🌱</span>
+      <div class="door-title">Grove</div>
+      <div class="door-desc">Garden. Results, learnings, growth metrics, harvest measurement, success rates, insights ripening.</div>
+      <div class="door-subtitle">კორომი — where growth is measured</div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Mental Model</div>
+    <div class="pattern-desc">Each door is a complete context shift. Navigation between them is top-level and intentional, not buried in sidebar. User can glimpse data from other doors (e.g., "Draft: 2 instances running") but must enter to interact deeply.</div>
+  </div>
+</div>
+
+<!-- 3. Navigation Patterns -->
+<div class="section">
+  <div class="section-title">3. Navigation Patterns</div>
+  <div class="section-desc">How users move through Kalcifer: cross-page navigation, intra-page flow, and dynamic session management.</div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Cross-Page Navigation (Header)</div>
+    <div class="pattern-desc">Top-level navigation: Hearth → Command → Grove. Each is a complete view switch. Secondary nav within each door (Browse, Detail, Simulate, etc.) is local to that context.</div>
+    <div class="code-block">
+&lt;header class="main-nav"&gt;
+  &lt;button class="nav-door" data-door="hearth"&gt;🔥 Hearth&lt;/button&gt;
+  &lt;button class="nav-door" data-door="command"&gt;⚔ Command&lt;/button&gt;
+  &lt;button class="nav-door" data-door="grove"&gt;🌱 Grove&lt;/button&gt;
+&lt;/header&gt;
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Intra-Page Navigation (Sidebar)</div>
+    <div class="pattern-desc">Within a door, sidebar shows sessions, saved flows, or instances. Sessions are expandable. Quick-access chips below chat for suggestions and commands.</div>
+    <div class="demo-section">
+      <div class="demo-title">Sidebar + Chat Flow</div>
+      <div class="demo-steps">
+        <ol>
+          <li><strong>Session collapse:</strong> Sidebar shows list of sessions with icons (🔥 for new, ✓ for saved)</li>
+          <li><strong>Click session:</strong> Loads history and context into chat panel</li>
+          <li><strong>Chat suggestions:</strong> AI proposes next steps (chips: "Add condition", "Dry run", "Publish")</li>
+          <li><strong>Resize handle:</strong> User drags to balance chat ↔ context visibility</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Resize Handle & Layout Lock</div>
+    <div class="pattern-desc">Resize handle between chat and context panel is always visible (when Stage 2+). Position persists in localStorage. Double-click handle to snap to preset widths (50/50, 60/40, 70/30).</div>
+    <div class="code-block">
+.resize-handle {
+  position: absolute; width: 4px;
+  cursor: col-resize; z-index: 10;
+  background: var(--border-light);
+}
+.resize-handle:hover {
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary-soft);
+}
+    </div>
+  </div>
+</div>
+
+<!-- 4. AI Interaction Patterns -->
+<div class="section">
+  <div class="section-title">4. AI Interaction Patterns</div>
+  <div class="section-desc">How Claude and the user collaborate to build and refine flows. Patterns for suggestion, disagreement, and rehearsal.</div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Welcome → Session Start</div>
+    <div class="pattern-desc">User enters. Kalcifer shows brief intro. On first message, smooth fade/slide transition to Stage 1 (chat appears, sidebar slides). Subtle "Welcome back!" if returning.</div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Chat Suggestions (Chips)</div>
+    <div class="pattern-desc">After each Claude message, show 2–4 suggestion chips below. Examples: "Add email action", "Set frequency cap", "Run dry run". Click to populate input. Chips are context-aware and update as flow evolves.</div>
+    <div class="demo-section">
+      <div class="demo-title">Suggestion Chip Example</div>
+      <div style="margin-top:8px">
+        <span class="node-badge action" style="cursor:pointer">+ Add send_email</span>
+        <span class="node-badge condition" style="cursor:pointer">+ Add condition</span>
+        <span class="node-badge" style="background:var(--primary-soft);color:var(--primary);cursor:pointer">▶ Dry Run</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Canvas Builds from Chat</div>
+    <div class="pattern-desc">As user describes flow in chat, AI generates or updates canvas in real-time. User sees drag-and-drop nodes, edges, and labels materialize. No modal → canvas is always visible in context panel.</div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">AI Disagreement / Clarification</div>
+    <div class="pattern-desc">If user's request conflicts with flow logic or best practices, Claude flags it: "⚠ Frequency cap after email will skip most users. Suggest moving to beginning." User can accept, reject, or ask for refinement. Visual diff shows proposed changes.</div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Dry Run as "Rehearsal"</div>
+    <div class="pattern-desc">Before publishing, user triggers Dry Run. Flow nodes get animated badges (▶ running, ✓ completed, ⏸ waiting). Timeline shows which node fires when. Cancellable mid-run. Results feed back to canvas and chat.</div>
+    <div class="demo-section">
+      <div class="demo-title">Dry Run Badges on Nodes</div>
+      <div style="margin-top:8px">
+        <span class="node-badge info" style="background:var(--info-soft);color:var(--info)">▶ trigger</span>
+        <span class="node-badge condition" style="background:var(--warn-soft);color:var(--warn)">→ condition</span>
+        <span class="node-badge action" style="background:var(--success-soft);color:var(--success)">✓ send_email</span>
+        <span class="node-badge" style="background:var(--warn-soft);color:var(--warn)">⏸ wait</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. Canvas Editor Patterns -->
+<div class="section">
+  <div class="section-title">5. Canvas Editor Patterns</div>
+  <div class="section-desc">How flows are built and edited: toolbar, palette, node placement, zoom, and simulation.</div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Toolbar → Canvas → Footer</div>
+    <div class="pattern-desc">Top toolbar has zoom, pan, and layout controls. Canvas is center stage. Footer shows selected node details and quick actions (delete, duplicate, edit config).</div>
+    <div class="canvas-demo">
+      <div style="text-align:center;color:var(--text-muted);font-size:11px">
+        Toolbar: [+] [Zoom] [Layout] [Simulate]
+        <div style="height:120px;margin:8px 0;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center">
+          Canvas with draggable nodes
+        </div>
+        Footer: Selected node details
+      </div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Node Palette (Slide-In)</div>
+    <div class="pattern-desc">Clicking [+] slides palette in from right. Categorized: Triggers, Conditions, Waits, Actions, Ends. Drag node to canvas. Palette stays open for rapid multi-add, or close after one drag.</div>
+    <div class="code-block">
+.palette { position: fixed; right: 0; top: 0; width: 260px;
+  height: 100%; background: var(--surface);
+  transform: translateX(100%); transition: transform 0.3s;
+  box-shadow: -2px 0 8px var(--shadow-lg);
+}
+.palette.open { transform: translateX(0); }
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Node Config Panel (Replaces Palette)</div>
+    <div class="pattern-desc">Click a node on canvas or in palette → config panel slides in (replaces palette). Shows node-specific settings: channel (email/sms), template, retry logic, etc. Back button to palette.</div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Drag-and-Drop Nodes</div>
+    <div class="pattern-desc">Nodes have drag handles. Drag from palette to canvas, or drag existing nodes to reposition. Snap-to-grid optional. Edges auto-route; no overlapping lines.</div>
+    <div class="code-block">
+// Node drag with ghost preview
+node.addEventListener('dragstart', (e) => {
+  const ghost = node.cloneNode(true);
+  ghost.style.opacity = '0.5';
+  e.dataTransfer.setDragImage(ghost, 0, 0);
+});
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Zoom Controls & Pan</div>
+    <div class="pattern-desc">Mouse wheel zoom (Ctrl + scroll). Toolbar buttons for zoom presets (100%, Fit All). Pan with spacebar + drag or middle mouse button.</div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Simulation Flow & Badges</div>
+    <div class="pattern-desc">During dry run, nodes get animated status badges: ▶ (running), ✓ (completed), ✗ (failed), ⏸ (waiting). Edges highlight in sequence. Timeline sidebar shows which node fires when.</div>
+  </div>
+</div>
+
+<!-- 6. Responsive Stage Transitions -->
+<div class="section">
+  <div class="section-title">6. Responsive Stage Transitions</div>
+  <div class="section-desc">How layout adapts to screen size and user behavior. Collapsing sidebar, compressing chat, handling mobile.</div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Sidebar Collapse in Context Mode</div>
+    <div class="pattern-desc">In Stage 3, sidebar narrows to icon-only (~50px). Hover reveals labels. On mobile, sidebar hidden by default; hamburger toggles it as overlay. Stage reverts to 2.5 on mobile.</div>
+    <div class="code-block">
+/* Desktop: sidebar always visible */
+@media (min-width: 1200px) {
+  .sidebar { width: 200px; }
+  .sidebar.collapsed { width: 50px; }
+}
+
+/* Mobile: sidebar as overlay */
+@media (max-width: 768px) {
+  .sidebar { position: fixed; z-index: 100;
+    transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+}
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Chat Area Compression</div>
+    <div class="pattern-desc">As context panel expands, chat shrinks. Below ~400px width, chat becomes vertical stack of messages (no columns). Input stays at bottom.</div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Resize Handle Behavior</div>
+    <div class="pattern-desc">On mobile, resize disabled (pinch to zoom instead). On tablet, resize appears but snaps to grid (25% increments). Desktop: smooth continuous drag.</div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">Canvas on Mobile</div>
+    <div class="pattern-desc">Canvas editor becomes touch-friendly: larger tap targets, simplified toolbar, single-column palette. Pinch to zoom, two-finger pan. Geometry reflows to portrait orientation.</div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function setTheme(name, btn) {
+  document.body.setAttribute('data-theme', name);
+  document.querySelectorAll('.th-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+</script>
+</body>
+</html>

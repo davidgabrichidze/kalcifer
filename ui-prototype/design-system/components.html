@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalcifer Design System — Components</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ============================================================
+   KALCIFER DESIGN SYSTEM — COLOR TOKENS
+   3 Palettes × 2 Modes = 6 Themes
+   ============================================================ */
+
+/* ---- HEARTH LIGHT (default) ---- */
+:root, [data-theme="hearth-light"] {
+  --bg: #f6f1ea;
+  --surface: #ffffff;
+  --surface-dim: #faf7f2;
+  --surface-raised: #fff;
+
+  --primary: #c07a3e;
+  --primary-hover: #a96830;
+  --primary-soft: rgba(192,122,62,0.10);
+  --primary-muted: rgba(192,122,62,0.40);
+
+  --accent: #8b6d4a;
+  --accent-soft: rgba(139,109,74,0.08);
+
+  --border: #e6ddd2;
+  --border-light: #f0e8de;
+  --border-focus: var(--primary);
+
+  --text: #2c2720;
+  --text-sec: #6b6358;
+  --text-muted: #a09686;
+  --text-on-primary: #ffffff;
+  --text-on-surface: var(--text);
+
+  --success: #5a9e6f;
+  --success-soft: rgba(90,158,111,0.10);
+  --warn: #c49a4a;
+  --warn-soft: rgba(196,154,74,0.10);
+  --danger: #c4655a;
+  --danger-soft: rgba(196,101,90,0.10);
+  --info: #6a8fa0;
+  --info-soft: rgba(106,143,160,0.10);
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+
+  --shadow-sm: 0 1px 3px rgba(44,39,32,0.06);
+  --shadow-md: 0 4px 12px rgba(44,39,32,0.08);
+  --shadow-lg: 0 8px 24px rgba(44,39,32,0.10);
+
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ---- HEARTH DARK ---- */
+[data-theme="hearth-dark"] {
+  --bg: #161210;
+  --surface: #211c18;
+  --surface-dim: #1a1614;
+  --surface-raised: #2a2420;
+
+  --primary: #e0a060;
+  --primary-hover: #eab070;
+  --primary-soft: rgba(224,160,96,0.12);
+  --primary-muted: rgba(224,160,96,0.35);
+
+  --accent: #d4b896;
+  --accent-soft: rgba(212,184,150,0.08);
+
+  --border: #332c26;
+  --border-light: #2a2420;
+  --border-focus: var(--primary);
+
+  --text: #ede6dc;
+  --text-sec: #a89a88;
+  --text-muted: #6b6054;
+  --text-on-primary: #161210;
+  --text-on-surface: var(--text);
+
+  --success: #70c490;
+  --success-soft: rgba(112,196,144,0.10);
+  --warn: #e0b860;
+  --warn-soft: rgba(224,184,96,0.10);
+  --danger: #e07060;
+  --danger-soft: rgba(224,112,96,0.10);
+  --info: #70a8c0;
+  --info-soft: rgba(112,168,192,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.20);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.25);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.30);
+}
+
+/* ---- COMMAND LIGHT ---- */
+[data-theme="command-light"] {
+  --bg: #f0f1f5;
+  --surface: #ffffff;
+  --surface-dim: #f6f7fa;
+  --surface-raised: #fff;
+
+  --primary: #4a5eb0;
+  --primary-hover: #3d4f9a;
+  --primary-soft: rgba(74,94,176,0.10);
+  --primary-muted: rgba(74,94,176,0.35);
+
+  --accent: #5c6a8a;
+  --accent-soft: rgba(92,106,138,0.08);
+
+  --border: #dde0e8;
+  --border-light: #e8eaf0;
+  --border-focus: var(--primary);
+
+  --text: #1a1e2c;
+  --text-sec: #5a6070;
+  --text-muted: #9298a8;
+  --text-on-primary: #ffffff;
+  --text-on-surface: var(--text);
+
+  --success: #3d9e6f;
+  --success-soft: rgba(61,158,111,0.10);
+  --warn: #c49a4a;
+  --warn-soft: rgba(196,154,74,0.10);
+  --danger: #c45050;
+  --danger-soft: rgba(196,80,80,0.10);
+  --info: #4a8ab0;
+  --info-soft: rgba(74,138,176,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(26,30,44,0.06);
+  --shadow-md: 0 4px 12px rgba(26,30,44,0.08);
+  --shadow-lg: 0 8px 24px rgba(26,30,44,0.10);
+}
+
+/* ---- COMMAND DARK ---- */
+[data-theme="command-dark"] {
+  --bg: #0e1018;
+  --surface: #181a24;
+  --surface-dim: #12141c;
+  --surface-raised: #222430;
+
+  --primary: #8090e0;
+  --primary-hover: #96a4ea;
+  --primary-soft: rgba(128,144,224,0.12);
+  --primary-muted: rgba(128,144,224,0.35);
+
+  --accent: #a0a8d0;
+  --accent-soft: rgba(160,168,208,0.08);
+
+  --border: #282a38;
+  --border-light: #20222e;
+  --border-focus: var(--primary);
+
+  --text: #e0e2f0;
+  --text-sec: #8a8ea0;
+  --text-muted: #505468;
+  --text-on-primary: #0e1018;
+  --text-on-surface: var(--text);
+
+  --success: #60d090;
+  --success-soft: rgba(96,208,144,0.10);
+  --warn: #e0c060;
+  --warn-soft: rgba(224,192,96,0.10);
+  --danger: #e06060;
+  --danger-soft: rgba(224,96,96,0.10);
+  --info: #60a0e0;
+  --info-soft: rgba(96,160,224,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.30);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+/* ---- GROVE LIGHT ---- */
+[data-theme="grove-light"] {
+  --bg: #f0f3ee;
+  --surface: #fefffe;
+  --surface-dim: #f5f7f3;
+  --surface-raised: #fff;
+
+  --primary: #4a8a5a;
+  --primary-hover: #3d7a4d;
+  --primary-soft: rgba(74,138,90,0.10);
+  --primary-muted: rgba(74,138,90,0.35);
+
+  --accent: #5a7a5e;
+  --accent-soft: rgba(90,122,94,0.08);
+
+  --border: #d8e0d6;
+  --border-light: #e4eae2;
+  --border-focus: var(--primary);
+
+  --text: #1e261e;
+  --text-sec: #586058;
+  --text-muted: #8a968a;
+  --text-on-primary: #ffffff;
+  --text-on-surface: var(--text);
+
+  --success: #4a9e60;
+  --success-soft: rgba(74,158,96,0.10);
+  --warn: #b89a40;
+  --warn-soft: rgba(184,154,64,0.10);
+  --danger: #b85a4a;
+  --danger-soft: rgba(184,90,74,0.10);
+  --info: #4a889e;
+  --info-soft: rgba(74,136,158,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(30,38,30,0.06);
+  --shadow-md: 0 4px 12px rgba(30,38,30,0.08);
+  --shadow-lg: 0 8px 24px rgba(30,38,30,0.10);
+}
+
+/* ---- GROVE DARK ---- */
+[data-theme="grove-dark"] {
+  --bg: #0e1410;
+  --surface: #161e18;
+  --surface-dim: #121a14;
+  --surface-raised: #1e2a20;
+
+  --primary: #6cc480;
+  --primary-hover: #80d494;
+  --primary-soft: rgba(108,196,128,0.12);
+  --primary-muted: rgba(108,196,128,0.35);
+
+  --accent: #90c4a0;
+  --accent-soft: rgba(144,196,160,0.08);
+
+  --border: #243028;
+  --border-light: #1e2820;
+  --border-focus: var(--primary);
+
+  --text: #dce8de;
+  --text-sec: #88a08a;
+  --text-muted: #4a6050;
+  --text-on-primary: #0e1410;
+  --text-on-surface: var(--text);
+
+  --success: #60d080;
+  --success-soft: rgba(96,208,128,0.10);
+  --warn: #d0b850;
+  --warn-soft: rgba(208,184,80,0.10);
+  --danger: #d06050;
+  --danger-soft: rgba(208,96,80,0.10);
+  --info: #50b0d0;
+  --info-soft: rgba(80,176,208,0.10);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.30);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+/* ============================================================
+   PAGE STYLES
+   ============================================================ */
+* { margin:0; padding:0; box-sizing:border-box }
+body { font-family:var(--font-body); background:var(--bg); color:var(--text); line-height:1.6; transition:background 0.4s,color 0.3s }
+
+.page { max-width:1200px; margin:0 auto; padding:32px 24px }
+
+/* Header */
+.ds-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:40px; padding-bottom:20px; border-bottom:1px solid var(--border) }
+.ds-logo { font-size:20px; font-weight:700; color:var(--primary) }
+.ds-logo span { font-weight:400; color:var(--text-muted); font-size:13px; margin-left:6px }
+.ds-nav { display:flex; gap:4px }
+.ds-nav a { font-size:12px; padding:6px 14px; border-radius:var(--radius-xs); color:var(--text-sec); text-decoration:none; border:1px solid var(--border); transition:all 0.2s }
+.ds-nav a:hover { border-color:var(--primary); color:var(--primary) }
+.ds-nav a.active { background:var(--primary); color:var(--text-on-primary); border-color:var(--primary) }
+
+/* Theme switcher */
+.theme-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:40px; padding:14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm) }
+.th-btn { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:var(--radius-xs); border:1.5px solid var(--border); background:var(--surface-dim); cursor:pointer; font-size:12px; font-family:inherit; color:var(--text-sec); transition:all 0.2s; font-weight:500 }
+.th-btn:hover { border-color:var(--primary); color:var(--text) }
+.th-btn.active { border-color:var(--primary); background:var(--primary-soft); color:var(--primary); font-weight:600 }
+.th-swatch { display:flex; gap:2px; flex-shrink:0 }
+.th-swatch i { width:14px; height:14px; border-radius:3px; display:block; border:1px solid rgba(0,0,0,0.08) }
+.th-label { display:block; font-size:9px; color:var(--text-muted); margin-top:1px }
+
+/* Section */
+.section { margin-bottom:48px }
+.section-title { font-size:18px; font-weight:700; color:var(--text); margin-bottom:4px }
+.section-desc { font-size:13px; color:var(--text-sec); margin-bottom:20px; max-width:640px; line-height:1.6 }
+
+/* Showcase area */
+.showcase { background:var(--surface-dim); border:1px solid var(--border); border-radius:var(--radius-sm); padding:20px; margin-top:12px }
+
+/* Back link */
+.back-link { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text-muted); text-decoration:none; margin-bottom:16px; transition:color 0.2s }
+.back-link:hover { color:var(--primary) }
+
+/* ============================================================
+   COMPONENT STYLES
+   ============================================================ */
+
+/* Typography */
+.typo-row { display:flex; flex-direction:column; gap:16px; margin-top:12px }
+.typo-sample { padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-xs); display:flex; align-items:center; gap:12px }
+.typo-label { font-size:10px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; width:120px; flex-shrink:0 }
+
+h1, h2, h3 { margin:0 }
+.h1 { font-size:18px; font-weight:700; line-height:1.4 }
+.h2 { font-size:15px; font-weight:600; line-height:1.4 }
+.h3 { font-size:12px; font-weight:600; line-height:1.4; text-transform:uppercase; letter-spacing:0.5px }
+.body-text { font-size:13px; font-weight:400 }
+.body-sec { font-size:12px; font-weight:400; color:var(--text-sec) }
+.text-muted { font-size:11px; font-weight:400; color:var(--text-muted) }
+.code-text { font-family:var(--font-mono); font-size:11px; font-weight:400; color:var(--accent); background:var(--primary-soft); padding:2px 6px; border-radius:3px }
+
+/* Buttons */
+.button-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px }
+.btn { padding:7px 16px; border-radius:var(--radius-xs); font-size:12px; font-weight:500; font-family:inherit; cursor:pointer; transition:all 0.2s; border:none; display:inline-flex; align-items:center; gap:6px }
+.btn:disabled { opacity:0.5; cursor:not-allowed }
+.btn-primary { background:var(--primary); color:var(--text-on-primary) }
+.btn-primary:not(:disabled):hover { background:var(--primary-hover) }
+.btn-outline { background:transparent; color:var(--primary); border:1.5px solid var(--primary) }
+.btn-outline:not(:disabled):hover { background:var(--primary-soft) }
+.btn-ghost { background:transparent; color:var(--primary); border:none }
+.btn-ghost:not(:disabled):hover { background:var(--primary-soft) }
+.btn-danger { background:var(--danger); color:white }
+.btn-danger:not(:disabled):hover { background:var(--danger) }
+.btn-sm { padding:5px 12px; font-size:11px }
+.btn-default { height:30px }
+.btn-sm { height:26px }
+
+/* Badges */
+.badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:10px; font-weight:600; line-height:1.2 }
+.badge-success { background:var(--success-soft); color:var(--success) }
+.badge-draft { background:var(--info-soft); color:var(--info) }
+.badge-paused { background:var(--warn-soft); color:var(--warn) }
+.badge-archived { background:var(--primary-soft); color:var(--text-muted) }
+.badge-failed { background:var(--danger-soft); color:var(--danger) }
+.badge-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px }
+
+/* Cards */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; transition:all 0.2s }
+.card:hover { box-shadow:var(--shadow-md) }
+.card-title { font-size:13px; font-weight:600; margin-bottom:4px }
+.card-text { font-size:12px; color:var(--text-sec) }
+.card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:12px }
+
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; text-align:center }
+.stat-label { font-size:10px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px }
+.stat-value { font-size:28px; font-weight:700; color:var(--primary); margin-bottom:4px }
+.stat-change { font-size:11px; color:var(--success) }
+
+.insight-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; border-left:3px solid var(--primary) }
+.insight-type { font-size:9px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px }
+.insight-desc { font-size:12px; color:var(--text-sec) }
+
+/* Form Controls */
+.form-group { display:flex; flex-direction:column; gap:6px; margin-top:12px }
+.form-label { font-size:12px; font-weight:600; color:var(--text) }
+.form-input, .form-select, .form-textarea { padding:7px 12px; border:1.5px solid var(--border); border-radius:var(--radius-xs); font-size:12px; font-family:inherit; color:var(--text); background:var(--surface-dim); outline:none; transition:all 0.2s }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft) }
+.form-input::placeholder { color:var(--text-muted) }
+.form-textarea { font-family:var(--font-mono); resize:vertical; min-height:80px }
+.form-select { cursor:pointer }
+
+/* Tables */
+.data-table { width:100%; border-collapse:collapse; font-size:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; margin-top:12px }
+.data-table thead { background:var(--surface-dim) }
+.data-table th { text-align:left; padding:8px 12px; color:var(--text-muted); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid var(--border) }
+.data-table td { padding:8px 12px; border-bottom:1px solid var(--border-light); color:var(--text-sec) }
+.data-table tr:last-child td { border:none }
+.data-table tr:hover td { background:var(--primary-soft) }
+
+/* Chat */
+.chat-container { display:flex; flex-direction:column; gap:12px; margin-top:12px }
+.chat-message { display:flex; gap:8px; align-items:flex-start }
+.chat-avatar { width:28px; height:28px; border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:white }
+.chat-avatar-ai { background:var(--primary); color:var(--text-on-primary) }
+.chat-avatar-user { background:var(--info); color:white }
+.chat-body { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-xs); padding:10px; font-size:12px; max-width:400px }
+.chat-message.user .chat-body { background:var(--primary); color:var(--text-on-primary); border-color:var(--primary) }
+.chat-typing { display:flex; gap:3px; align-items:center }
+.chat-dot { width:5px; height:5px; border-radius:50%; background:var(--text-sec); animation:bounce 1.4s infinite }
+.chat-dot:nth-child(2) { animation-delay:0.2s }
+.chat-dot:nth-child(3) { animation-delay:0.4s }
+@keyframes bounce { 0%,80%,100% { opacity:0.5; transform:scale(0.8) } 40% { opacity:1; transform:scale(1) } }
+.chat-suggestions { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px }
+.chat-chip { padding:5px 12px; border-radius:12px; font-size:11px; background:var(--primary-soft); color:var(--primary); cursor:pointer; transition:all 0.2s; border:1px solid transparent }
+.chat-chip:hover { background:var(--primary); color:var(--text-on-primary) }
+
+/* Canvas Node */
+.node-card { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:12px; width:200px; position:relative; transition:all 0.2s }
+.node-card:hover { box-shadow:var(--shadow-md); border-color:var(--primary) }
+.node-header { display:flex; align-items:flex-start; gap:8px; margin-bottom:8px }
+.node-icon { width:32px; height:32px; border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:16px }
+.node-icon-trigger { background:var(--info-soft); color:var(--info) }
+.node-icon-condition { background:var(--warn-soft); color:var(--warn) }
+.node-icon-wait { background:var(--accent-soft); color:var(--accent) }
+.node-icon-action { background:var(--primary-soft); color:var(--primary) }
+.node-icon-end { background:var(--success-soft); color:var(--success) }
+.node-meta { flex:1 }
+.node-title { font-size:12px; font-weight:600; color:var(--text); margin-bottom:2px }
+.node-type { font-size:9px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px }
+.node-desc { font-size:10px; color:var(--text-sec); margin:8px 0; line-height:1.4 }
+.node-tag { display:inline-block; padding:3px 8px; background:var(--primary-soft); color:var(--primary); border-radius:3px; font-size:9px; font-weight:600 }
+.node-ports { display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px solid var(--border-light) }
+.node-port { width:8px; height:8px; border-radius:50%; border:1.5px solid var(--border); background:var(--surface-raised) }
+.node-pass { color:var(--success) }
+.node-skip { color:var(--warn) }
+.node-fail { color:var(--danger) }
+
+/* Progress */
+.progress-bar { width:100%; height:6px; background:var(--surface-dim); border-radius:3px; overflow:hidden; margin-top:6px }
+.progress-fill { height:100%; background:var(--primary); transition:width 0.3s }
+.progress-label { display:flex; justify-content:space-between; font-size:10px; color:var(--text-sec); margin-bottom:4px }
+
+/* Funnel */
+.funnel-step { display:flex; align-items:center; gap:8px; margin:6px 0 }
+.funnel-bar { height:24px; border-radius:3px; display:flex; align-items:center; padding:0 8px; font-size:10px; font-weight:600; color:white; flex:1 }
+.funnel-label { font-size:11px; color:var(--text-sec); min-width:80px }
+
+/* Spacing */
+.spacing-demo { display:flex; gap:12px; margin-top:12px; flex-wrap:wrap }
+.spacing-box { display:flex; flex-direction:column; align-items:center; gap:6px }
+.spacing-swatch { background:var(--primary-soft); border:1px dashed var(--primary); border-radius:var(--radius-xs) }
+
+/* Radius */
+.radius-demo { display:flex; gap:12px; margin-top:12px; flex-wrap:wrap }
+.radius-swatch { width:60px; height:60px; background:var(--primary-soft); border:1px solid var(--primary); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; color:var(--text-sec) }
+
+/* Shadow */
+.shadow-demo { display:flex; gap:12px; margin-top:12px; flex-wrap:wrap }
+.shadow-swatch { width:80px; height:40px; background:var(--surface); border-radius:var(--radius-xs) }
+</style>
+</head>
+<body data-theme="hearth-light">
+<div class="page">
+
+<!-- Header -->
+<a class="back-link" href="../main.html">&larr; Back to Kalcifer</a>
+<div class="ds-header">
+  <div class="ds-logo">Kalcifer <span>Design System</span></div>
+  <div class="ds-nav">
+    <a href="colors.html">Colors</a>
+    <a href="components.html" class="active">Components</a>
+    <a href="patterns.html">Patterns</a>
+  </div>
+</div>
+
+<!-- Theme Switcher -->
+<div class="theme-bar">
+  <button class="th-btn active" onclick="setTheme('hearth-light',this)">
+    <span class="th-swatch"><i style="background:#f6f1ea"></i><i style="background:#c07a3e"></i></span>
+    <span>Hearth Light<span class="th-label">ბუხარი</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('hearth-dark',this)">
+    <span class="th-swatch"><i style="background:#161210"></i><i style="background:#e0a060"></i></span>
+    <span>Hearth Dark<span class="th-label">ბუხარი</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('command-light',this)">
+    <span class="th-swatch"><i style="background:#f0f1f5"></i><i style="background:#4a5eb0"></i></span>
+    <span>Command Light<span class="th-label">მეთაური</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('command-dark',this)">
+    <span class="th-swatch"><i style="background:#0e1018"></i><i style="background:#8090e0"></i></span>
+    <span>Command Dark<span class="th-label">მეთაური</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('grove-light',this)">
+    <span class="th-swatch"><i style="background:#f0f3ee"></i><i style="background:#4a8a5a"></i></span>
+    <span>Grove Light<span class="th-label">კორომი</span></span>
+  </button>
+  <button class="th-btn" onclick="setTheme('grove-dark',this)">
+    <span class="th-swatch"><i style="background:#0e1410"></i><i style="background:#6cc480"></i></span>
+    <span>Grove Dark<span class="th-label">კორომი</span></span>
+  </button>
+</div>
+
+<!-- ============================================================
+     SECTION: TYPOGRAPHY
+     ============================================================ -->
+<div class="section">
+  <div class="section-title">Typography</div>
+  <div class="section-desc">Font system using Inter for body text and JetBrains Mono for code. All components adapt to theme colors.</div>
+
+  <div class="showcase">
+    <div class="typo-row">
+      <div class="typo-sample">
+        <div class="typo-label">h1 / Section</div>
+        <h1 class="h1">Heading Level 1 — 18px, Weight 700</h1>
+      </div>
+      <div class="typo-sample">
+        <div class="typo-label">h2 / Card Title</div>
+        <h2 class="h2">Heading Level 2 — 15px, Weight 600</h2>
+      </div>
+      <div class="typo-sample">
+        <div class="typo-label">h3 / Label</div>
+        <h3 class="h3">heading level 3 — 12px, weight 600</h3>
+      </div>
+      <div class="typo-sample">
+        <div class="typo-label">Body Text</div>
+        <p class="body-text">Regular body text — 13px, weight 400. Used for primary content, descriptions, and flow labels.</p>
+      </div>
+      <div class="typo-sample">
+        <div class="typo-label">Body Sec</div>
+        <p class="body-sec">Secondary body text — 12px, color: --text-sec. Use for table content and descriptions.</p>
+      </div>
+      <div class="typo-sample">
+        <div class="typo-label">Muted Text</div>
+        <p class="text-muted">Muted text — 11px, color: --text-muted. Use for labels, placeholders, and hints.</p>
+      </div>
+      <div class="typo-sample">
+        <div class="typo-label">Code / Mono</div>
+        <span class="code-text">const results = await flow.execute()</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION: BUTTONS
+     ============================================================ -->
+<div class="section">
+  <div class="section-title">Buttons</div>
+  <div class="section-desc">Button variants for all interaction contexts. All support :hover, :disabled, and size variations.</div>
+
+  <div class="showcase">
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Primary (default height 30px)</div>
+        <div class="button-grid">
+          <button class="btn btn-primary btn-default">Publish Flow</button>
+          <button class="btn btn-primary btn-default">Start Now</button>
+          <button class="btn btn-primary btn-default" disabled>Disabled</button>
+          <button class="btn btn-primary btn-default">📧 Send Email</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Outline</div>
+        <div class="button-grid">
+          <button class="btn btn-outline btn-default">Dry Run</button>
+          <button class="btn btn-outline btn-default">Edit</button>
+          <button class="btn btn-outline btn-default" disabled>Disabled</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Ghost</div>
+        <div class="button-grid">
+          <button class="btn btn-ghost btn-default">Learn More</button>
+          <button class="btn btn-ghost btn-default">View Details</button>
+          <button class="btn btn-ghost btn-default" disabled>Disabled</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Danger</div>
+        <div class="button-grid">
+          <button class="btn btn-danger btn-default">Delete</button>
+          <button class="btn btn-danger btn-default">Remove</button>
+          <button class="btn btn-danger btn-default" disabled>Disabled</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Small Buttons (height 26px)</div>
+        <div class="button-grid">
+          <button class="btn btn-primary btn-sm">Save</button>
+          <button class="btn btn-outline btn-sm">Cancel</button>
+          <button class="btn btn-danger btn-sm">Clear</button>
+          <button class="btn btn-ghost btn-sm">More</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION: BADGES / TAGS
+     ============================================================ -->
+<div class="section">
+  <div class="section-title">Badges / Tags</div>
+  <div class="section-desc">Status badges and category chips for flows, instances, and nodes. All use semantic colors.</div>
+
+  <div class="showcase">
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Instance Status</div>
+        <div class="badge-grid">
+          <span class="badge badge-success">✓ Active</span>
+          <span class="badge badge-draft">○ Draft</span>
+          <span class="badge badge-paused">◮ Paused</span>
+          <span class="badge badge-archived">□ Archived</span>
+          <span class="badge badge-failed">✕ Failed</span>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Node Categories</div>
+        <div class="badge-grid">
+          <span class="badge" style="background:var(--info-soft); color:var(--info)">⚡ Trigger</span>
+          <span class="badge" style="background:var(--warn-soft); color:var(--warn)">◇ Condition</span>
+          <span class="badge" style="background:var(--accent-soft); color:var(--accent)">⏱ Wait</span>
+          <span class="badge" style="background:var(--primary-soft); color:var(--primary)">→ Action</span>
+          <span class="badge" style="background:var(--success-soft); color:var(--success)">✓ End</span>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Counter Badges</div>
+        <div class="badge-grid">
+          <span class="badge" style="background:var(--primary); color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; padding:0">5</span>
+          <span class="badge" style="background:var(--success); color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; padding:0">42</span>
+          <span class="badge" style="background:var(--danger); color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; padding:0">3</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION: CARDS
+     ============================================================ -->
+<div class="section">
+  <div class="section-title">Cards</div>
+  <div class="section-desc">Card layouts for flows, stats, insights, and structured content. All inherit theme colors.</div>
+
+  <div class="showcase">
+    <div style="display:flex; flex-direction:column; gap:20px">
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Basic Cards</div>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-title">Spring Sale Push</div>
+            <div class="card-text">312 running instances • Active since Mar 10</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Birthday Reminder</div>
+            <div class="card-text">1.2k total sent • Paused</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Onboarding Flow</div>
+            <div class="card-text">Draft • 8 nodes ready to deploy</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Stat Cards</div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px">
+          <div class="stat-card">
+            <div class="stat-label">Total Sent</div>
+            <div class="stat-value">24,512</div>
+            <div class="stat-change">↑ 12% from last week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Open Rate</div>
+            <div class="stat-value">34.2%</div>
+            <div class="stat-change">↑ 2.1% from last week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Active Flows</div>
+            <div class="stat-value">12</div>
+            <div class="stat-change">↑ 3 new flows this week</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Insight Cards</div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px">
+          <div class="insight-card" style="border-left-color:var(--info)">
+            <div class="insight-type">Performance</div>
+            <div class="insight-desc">Flow 'Spring Sale' hit new engagement high. Click rates +8% week-over-week.</div>
+          </div>
+          <div class="insight-card" style="border-left-color:var(--warn)">
+            <div class="insight-type">Alert</div>
+            <div class="insight-desc">2 flows approaching daily send limit. Consider adjusting frequency caps.</div>
+          </div>
+          <div class="insight-card" style="border-left-color:var(--success)">
+            <div class="insight-type">Milestone</div>
+            <div class="insight-desc">Birthday Reminder flow hit 10k instances. Celebrate growth!</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION: FORM CONTROLS
+     ============================================================ -->
+<div class="section">
+  <div class="section-title">Form Controls</div>
+  <div class="section-desc">Input elements, selects, and textareas with focus states. All respond to theme colors.</div>
+
+  <div class="showcase">
+    <div style="display:flex; flex-direction:column; gap:16px; max-width:400px">
+      <div class="form-group">
+        <label class="form-label">Flow Name</label>
+        <input type="text" class="form-input" placeholder="Enter flow name...">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input type="text" class="form-input" placeholder="What does this flow do?">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Template</label>
+        <select class="form-select">
+          <option>Select template...</option>
+          <option>Welcome Series</option>
+          <option>Re-engagement Campaign</option>
+          <option>Drip Sequence</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Filter Expression</label>
+        <textarea class="form-textarea" placeholder="e.g., (segment == 'premium') AND (days_since_signup > 7)"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Search Participants</label>
+        <input type="text" class="form-input" placeholder="🔍 Search by name or email...">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION: TABLES
+     ============================================================ -->
+<div class="section">
+  <div class="section-title">Tables</div>
+  <div class="section-desc">Data table with hover states, semantic colors, and responsive layout.</div>
+
+  <div class="showcase">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Flow Name</th>
+          <th>Status</th>
+          <th>Running</th>
+          <th>Last Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Spring Sale Push</strong></td>
+          <td><span class="badge badge-success">Active</span></td>
+          <td>312</td>
+          <td>Mar 19, 2026</td>
+        </tr>
+        <tr>
+          <td><strong>Birthday Reminder</strong></td>
+          <td><span class="badge badge-paused">Paused</span></td>
+          <td>0</td>
+          <td>Mar 15, 2026</td>
+        </tr>
+        <tr>
+          <td><strong>Onboarding Flow</strong></td>
+          <td><span class="badge badge-draft">Draft</span></td>
+          <td>—</td>
+          <td>Mar 18, 2026</td>
+        </tr>
+        <tr>
+          <td><strong>Re-engagement Drip</strong></td>
+          <td><span class="badge badge-success">Active</span></td>
+          <td>1,204</td>
+          <td>Mar 19, 2026</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION: CHAT COMPONENTS
+     ============================================================ -->
+<div class="section">
+  <div class="section-title">Chat Components</div>
+  <div class="section-desc">AI and user messages, typing indicators, and suggestion chips for conversational UI.</div>
+
+  <div class="showcase">
+    <div class="chat-container">
+      <div class="chat-message">
+        <div class="chat-avatar chat-avatar-ai">K</div>
+        <div class="chat-body">What would you like to build today? I can help you create flows, debug issues, or optimize existing campaigns.</div>
+      </div>
+
+      <div class="chat-message user">
+        <div class="chat-avatar chat-avatar-user">DG</div>
+        <div class="chat-body">Create a welcome email for new users</div>
+      </div>
+
+      <div class="chat-message">
+        <div class="chat-avatar chat-avatar-ai">K</div>
+        <div class="chat-body">Great! I'll help you build a welcome email flow. First, let me ask: Do you want to segment by user type (individual, company, etc.), or send to all new signups?</div>
+        <div class="chat-suggestions">
+          <div class="chat-chip">Send to all</div>
+          <div class="chat-chip">Add segmentation</div>
+          <div class="chat-chip">Use existing segment</div>
+        </div>
+      </div>
+
+      <div class="chat-message">
+        <div class="chat-avatar chat-avatar-ai">K</div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <span style="font-size:12px; color:var(--text-sec)">Assembling your flow</span>
+          <div class="chat-typing">
+            <div class="chat-dot"></div>
+            <div class="chat-dot"></div>
+            <div class="chat-dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION: CANVAS NODES
+     ============================================================ -->
+<div class="section">
+  <div class="section-title">Canvas Nodes</div>
+  <div class="section-desc">Flow editor nodes for all categories. Each shows icon, type, description, and port indicators.</div>
+
+  <div class="showcase">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px">
+
+      <!-- Trigger Node -->
+      <div class="node-card">
+        <div class="node-header">
+          <div class="node-icon node-icon-trigger">⚡</div>
+          <div class="node-meta">
+            <div class="node-title">Segment Entry</div>
+            <div class="node-type">Trigger</div>
+          </div>
+        </div>
+        <div class="node-desc">Add participants from a segment when criteria are met.</div>
+        <div style="margin-top:8px"><span class="node-tag">segment_entry</span></div>
+        <div class="node-ports">
+          <div></div>
+          <div class="node-port"></div>
+        </div>
+      </div>
+
+      <!-- Condition Node -->
+      <div class="node-card">
+        <div class="node-header">
+          <div class="node-icon node-icon-condition">◇</div>
+          <div class="node-meta">
+            <div class="node-title">Condition</div>
+            <div class="node-type">Condition</div>
+          </div>
+        </div>
+        <div class="node-desc">Branch flow based on attribute or event conditions.</div>
+        <div style="margin-top:8px"><span class="node-tag">condition</span></div>
+        <div class="node-ports">
+          <div class="node-port"></div>
+          <div class="node-port"></div>
+        </div>
+      </div>
+
+      <!-- Wait Node -->
+      <div class="node-card">
+        <div class="node-header">
+          <div class="node-icon node-icon-wait">⏱</div>
+          <div class="node-meta">
+            <div class="node-title">Wait</div>
+            <div class="node-type">Wait</div>
+          </div>
+        </div>
+        <div class="node-desc">Pause flow for duration or until event.</div>
+        <div style="margin-top:8px"><span class="node-tag">wait</span></div>
+        <div class="node-ports">
+          <div class="node-port"></div>
+          <div class="node-port"></div>
+        </div>
+      </div>
+
+      <!-- Action Node -->
+      <div class="node-card">
+        <div class="node-header">
+          <div class="node-icon node-icon-action">📧</div>
+          <div class="node-meta">
+            <div class="node-title">Send Email</div>
+            <div class="node-type">Action</div>
+          </div>
+        </div>
+        <div class="node-desc">Send templated email to participant.</div>
+        <div style="margin-top:8px"><span class="node-tag">send_email</span></div>
+        <div class="node-ports">
+          <div class="node-port"></div>
+          <div class="node-port"></div>
+        </div>
+      </div>
+
+      <!-- End Node -->
+      <div class="node-card">
+        <div class="node-header">
+          <div class="node-icon node-icon-end">✓</div>
+          <div class="node-meta">
+            <div class="node-title">End</div>
+            <div class="node-type">End</div>
+          </div>
+        </div>
+        <div class="node-desc">Terminate flow for participant.</div>
+        <div style="margin-top:8px"><span class="node-tag">end</span></div>
+        <div class="node-ports">
+          <div class="node-port"></div>
+          <div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION: PROGRESS & FUNNEL
+     ============================================================ -->
+<div class="section">
+  <div class="section-title">Progress & Funnel</div>
+  <div class="section-desc">Progress bars and funnel visualizations for metrics and flow stages.</div>
+
+  <div class="showcase">
+    <div style="display:flex; flex-direction:column; gap:20px">
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Progress Bar</div>
+        <div style="max-width:300px">
+          <div class="progress-label">
+            <span>Flow completion rate</span>
+            <span>68%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:68%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Funnel Steps</div>
+        <div style="max-width:300px">
+          <div class="funnel-step">
+            <div class="funnel-label" style="text-align:right">Received</div>
+            <div class="funnel-bar" style="background:var(--info); width:100%">12,400</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-label" style="text-align:right">Opened</div>
+            <div class="funnel-bar" style="background:var(--primary); width:65%">8,060</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-label" style="text-align:right">Clicked</div>
+            <div class="funnel-bar" style="background:var(--success); width:48%">5,952</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-label" style="text-align:right">Converted</div>
+            <div class="funnel-bar" style="background:var(--success); width:24%">2,976</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION: SPACING & LAYOUT TOKENS
+     ============================================================ -->
+<div class="section">
+  <div class="section-title">Spacing & Radius Tokens</div>
+  <div class="section-desc">Visual scale for spacing, border radius, and shadows. Consistent across all components.</div>
+
+  <div class="showcase">
+    <div style="display:flex; flex-direction:column; gap:20px">
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Spacing Scale (px)</div>
+        <div class="spacing-demo">
+          <div class="spacing-box">
+            <div class="spacing-swatch" style="width:20px; height:20px; border-radius:2px"></div>
+            <span style="font-size:10px; color:var(--text-sec)">4px</span>
+          </div>
+          <div class="spacing-box">
+            <div class="spacing-swatch" style="width:32px; height:32px; border-radius:3px"></div>
+            <span style="font-size:10px; color:var(--text-sec)">8px</span>
+          </div>
+          <div class="spacing-box">
+            <div class="spacing-swatch" style="width:44px; height:44px; border-radius:4px"></div>
+            <span style="font-size:10px; color:var(--text-sec)">12px</span>
+          </div>
+          <div class="spacing-box">
+            <div class="spacing-swatch" style="width:56px; height:56px; border-radius:5px"></div>
+            <span style="font-size:10px; color:var(--text-sec)">16px</span>
+          </div>
+          <div class="spacing-box">
+            <div class="spacing-swatch" style="width:80px; height:80px; border-radius:6px"></div>
+            <span style="font-size:10px; color:var(--text-sec)">24px</span>
+          </div>
+          <div class="spacing-box">
+            <div class="spacing-swatch" style="width:104px; height:104px; border-radius:7px"></div>
+            <span style="font-size:10px; color:var(--text-sec)">32px</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Border Radius</div>
+        <div class="radius-demo">
+          <div class="radius-swatch" style="border-radius:var(--radius-xs)">xs (6px)</div>
+          <div class="radius-swatch" style="border-radius:var(--radius-sm)">sm (10px)</div>
+          <div class="radius-swatch" style="border-radius:var(--radius)">default (14px)</div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Shadows</div>
+        <div class="radius-demo">
+          <div class="shadow-swatch" style="box-shadow:var(--shadow-sm)"><span style="font-size:10px; color:var(--text-sec)">sm</span></div>
+          <div class="shadow-swatch" style="box-shadow:var(--shadow-md)"><span style="font-size:10px; color:var(--text-sec)">md</span></div>
+          <div class="shadow-swatch" style="box-shadow:var(--shadow-lg)"><span style="font-size:10px; color:var(--text-sec)">lg</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function setTheme(name, btn) {
+  document.body.setAttribute('data-theme', name);
+  document.querySelectorAll('.th-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+
+// Init
+setTheme('hearth-light', document.querySelector('.th-btn.active'));
+</script>
+</body>
+</html>

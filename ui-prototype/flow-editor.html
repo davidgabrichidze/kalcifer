@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalcifer — Flow Editor</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:#f5f0eb;--surface:#ffffff;--surface-dim:#faf7f4;
+  --primary:#c4956a;--primary-hover:#b5845c;--primary-soft:rgba(196,149,106,0.10);
+  --accent:#8b7355;--accent-soft:rgba(139,115,85,0.08);
+  --border:#e8ddd3;--border-light:#f0e8df;
+  --text:#2d2a26;--text-sec:#6b6560;--text-muted:#a09890;--text-on-primary:#fff;
+  --success:#5a9e6f;--success-soft:rgba(90,158,111,0.08);
+  --warn:#c49a5c;--warn-soft:rgba(196,154,92,0.08);
+  --danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);
+  --info:#6a8fa0;--info-soft:rgba(106,143,160,0.08);
+  --radius:14px;--radius-sm:10px;--radius-xs:6px;
+  --canvas-grid:#f0ebe5;
+  --node-shadow:0 2px 8px rgba(0,0,0,0.06);
+  --node-shadow-hover:0 4px 16px rgba(0,0,0,0.10);
+  --node-shadow-active:0 0 0 3px var(--primary-soft),0 4px 16px rgba(0,0,0,0.10);
+}
+[data-theme="lavender"]{--bg:#f7f5f0;--surface:#fff;--surface-dim:#f5f2f8;--primary:#9b8ec4;--primary-hover:#8a7db5;--primary-soft:rgba(155,142,196,0.10);--accent:#7c6fa0;--accent-soft:rgba(124,111,160,0.08);--border:#e6e1ec;--border-light:#eeebf3;--text:#2d2a33;--text-sec:#65606e;--text-muted:#9e96a8;--success:#6a9e7a;--success-soft:rgba(106,158,122,0.08);--warn:#c4a05c;--warn-soft:rgba(196,160,92,0.08);--danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);--info:#7a8ec4;--info-soft:rgba(122,142,196,0.08);--canvas-grid:#eeebf3}
+[data-theme="sage"]{--bg:#f4f1ec;--surface:#fefdfb;--surface-dim:#f6f4f0;--primary:#6b8f6e;--primary-hover:#5c7e60;--primary-soft:rgba(107,143,110,0.10);--accent:#4a6b4d;--accent-soft:rgba(74,107,77,0.08);--border:#e2ddd6;--border-light:#eae6e0;--text:#2a2d28;--text-sec:#5c5f58;--text-muted:#969990;--success:#6b8f6e;--success-soft:rgba(107,143,110,0.08);--warn:#c49a5c;--warn-soft:rgba(196,154,92,0.08);--danger:#b86e5a;--danger-soft:rgba(184,110,90,0.08);--info:#5a8b9e;--info-soft:rgba(90,139,158,0.08);--canvas-grid:#eae6e0}
+[data-theme="teal"]{--bg:#f5f2ed;--surface:#fff;--surface-dim:#f9f7f4;--primary:#3d8b80;--primary-hover:#2d7b70;--primary-soft:rgba(61,139,128,0.10);--accent:#2d6b62;--accent-soft:rgba(45,107,98,0.08);--border:#e5dfd8;--border-light:#ede8e2;--text:#2a2825;--text-sec:#5c5855;--text-muted:#9a9590;--success:#5a9e6f;--success-soft:rgba(90,158,111,0.08);--warn:#c4956a;--warn-soft:rgba(196,149,106,0.08);--danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);--info:#3d8b80;--info-soft:rgba(61,139,128,0.08);--canvas-grid:#ede8e2}
+[data-theme="dark"]{--bg:#0f0f14;--surface:#1a1a24;--surface-dim:#141420;--primary:#a89cf0;--primary-hover:#bdb3f5;--primary-soft:rgba(168,156,240,0.10);--accent:#c4b8f0;--accent-soft:rgba(196,184,240,0.06);--border:#2a2a3a;--border-light:#22222f;--text:#e4e2ec;--text-sec:#9896a8;--text-muted:#5c5a6e;--text-on-primary:#0f0f14;--success:#6ee0a0;--success-soft:rgba(110,224,160,0.08);--warn:#f0c060;--warn-soft:rgba(240,192,96,0.08);--danger:#f08070;--danger-soft:rgba(240,128,112,0.08);--info:#70b0f0;--info-soft:rgba(112,176,240,0.08);--canvas-grid:#1e1e2a}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;transition:background 0.4s,color 0.3s}
+
+/* === LAYOUT === */
+.app{display:grid;grid-template-columns:1fr;grid-template-rows:48px 1fr 44px;height:100vh}
+
+/* === TOPBAR === */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
+.top-left{display:flex;align-items:center;gap:14px}
+.logo{font-size:17px;font-weight:700;color:var(--primary);letter-spacing:-0.5px}
+.logo span{font-weight:400;color:var(--text-muted);font-size:12px;margin-left:2px}
+
+/* Flow name editable */
+.flow-name-area{display:flex;align-items:center;gap:8px;margin-left:16px;padding-left:16px;border-left:1px solid var(--border)}
+.flow-name-edit{font-size:14px;font-weight:600;color:var(--text);background:none;border:1px solid transparent;padding:3px 8px;border-radius:var(--radius-xs);font-family:inherit;outline:none;transition:all 0.2s;max-width:260px}
+.flow-name-edit:hover{border-color:var(--border)}
+.flow-name-edit:focus{border-color:var(--primary);background:var(--surface)}
+.flow-status{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:600}
+.flow-version{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+
+.top-center{display:flex;align-items:center;gap:4px}
+.mode-btn{height:30px;padding:0 12px;border-radius:var(--radius-xs);font-size:11px;font-family:inherit;cursor:pointer;transition:all 0.2s;border:1px solid var(--border);background:var(--surface-dim);color:var(--text-sec);font-weight:500;display:flex;align-items:center;gap:5px}
+.mode-btn:hover{border-color:var(--primary);color:var(--text)}
+.mode-btn.active{background:var(--primary);color:var(--text-on-primary);border-color:var(--primary)}
+
+.top-right{display:flex;align-items:center;gap:6px}
+.top-btn{background:var(--surface-dim);border:1px solid var(--border);color:var(--text-sec);height:30px;padding:0 10px;border-radius:var(--radius-xs);cursor:pointer;font-size:11px;font-family:inherit;display:flex;align-items:center;gap:4px;transition:all 0.2s}
+.top-btn:hover{border-color:var(--primary);color:var(--text)}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--text-on-primary);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+
+/* Theme */
+.theme-wrap{position:relative}
+.theme-dd{display:none;position:absolute;top:36px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:500;min-width:160px}
+.theme-dd.open{display:block}
+.th-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius-xs);cursor:pointer;font-size:11px;color:var(--text-sec);border:none;background:none;width:100%;font-family:inherit;transition:all 0.15s}
+.th-opt:hover{background:var(--primary-soft)}
+.th-opt.active{color:var(--primary);font-weight:600}
+.th-sw{display:flex;gap:2px}
+.th-sw i{width:10px;height:10px;border-radius:2px;display:block}
+
+/* === MAIN CONTENT: Chat + Canvas + Panel === */
+.main-content{display:flex;overflow:hidden;min-height:0}
+
+/* === AI CHAT PANEL === */
+.chat-panel{width:340px;min-width:280px;max-width:480px;display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--bg);transition:width 0.3s;overflow:hidden}
+.chat-panel.collapsed{width:48px;min-width:48px}
+.chat-panel.collapsed .chat-body{display:none}
+.chat-panel.collapsed .chat-toggle-label{writing-mode:vertical-rl;text-orientation:mixed;font-size:11px;color:var(--text-muted);padding:8px 0}
+
+.chat-header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.chat-header-left{display:flex;align-items:center;gap:8px}
+.ai-dot{width:7px;height:7px;border-radius:50%;background:var(--success);animation:pulse 2.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.chat-header h3{font-size:13px;font-weight:600}
+.chat-toggle{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:var(--radius-xs);transition:all 0.2s}
+.chat-toggle:hover{background:var(--surface-dim);color:var(--text)}
+
+.chat-body{display:flex;flex-direction:column;flex:1;min-height:0}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;min-height:0}
+.chat-msgs::-webkit-scrollbar{width:4px}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.msg{display:flex;gap:8px;animation:msgIn 0.3s ease}
+.msg-user{flex-direction:row-reverse}
+@keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.msg-av{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600}
+.msg-ai .msg-av{background:var(--primary-soft);color:var(--primary);border:1px solid var(--border)}
+.msg-user .msg-av{background:var(--surface-dim);color:var(--text-muted);border:1px solid var(--border)}
+.msg-body{padding:8px 12px;border-radius:var(--radius);font-size:12px;line-height:1.6;max-width:92%}
+.msg-ai .msg-body{background:var(--surface);border:1px solid var(--border)}
+.msg-user .msg-body{background:var(--primary);color:var(--text-on-primary)}
+.msg-body code{background:var(--accent-soft);padding:1px 4px;border-radius:3px;font-size:10.5px;font-family:'JetBrains Mono',monospace;color:var(--accent)}
+
+.msg-btn{display:inline-flex;align-items:center;gap:4px;margin-top:6px;margin-right:4px;padding:4px 10px;border-radius:var(--radius-xs);font-size:10.5px;font-family:inherit;cursor:pointer;transition:all 0.2s;font-weight:500;border:none}
+.msg-btn-p{background:var(--primary);color:var(--text-on-primary)}
+.msg-btn-p:hover{background:var(--primary-hover)}
+.msg-btn-s{background:var(--surface-dim);color:var(--text-sec);border:1px solid var(--border)}
+.msg-btn-s:hover{border-color:var(--primary);color:var(--text)}
+
+.suggestions{padding:6px 14px;display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0}
+.sug{background:var(--surface);border:1px solid var(--border);color:var(--text-sec);padding:4px 10px;border-radius:16px;font-size:10px;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.sug:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
+
+.chat-input-area{padding:8px 14px 10px;flex-shrink:0;border-top:1px solid var(--border)}
+.chat-input-wrap{display:flex;align-items:flex-end;gap:6px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:6px 10px;transition:all 0.2s}
+.chat-input-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.chat-input{flex:1;background:none;border:none;color:var(--text);font-size:12px;font-family:inherit;resize:none;outline:none;max-height:80px;line-height:1.5}
+.chat-input::placeholder{color:var(--text-muted)}
+.send-btn{background:var(--primary);border:none;color:var(--text-on-primary);width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+.send-btn:hover{background:var(--primary-hover)}
+.send-btn svg{width:12px;height:12px}
+
+.typing-ind{display:flex;gap:3px;padding:3px 0}
+.typing-ind span{width:4px;height:4px;border-radius:50%;background:var(--primary);animation:td 1.2s infinite}
+.typing-ind span:nth-child(2){animation-delay:0.2s}.typing-ind span:nth-child(3){animation-delay:0.4s}
+@keyframes td{0%,60%,100%{opacity:0.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+
+/* === CANVAS AREA === */
+.canvas-area{flex:1;position:relative;overflow:hidden;background:var(--bg)}
+
+/* Grid pattern */
+.canvas-svg{width:100%;height:100%;position:absolute;top:0;left:0}
+
+/* Zoom controls */
+.canvas-controls{position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;gap:4px;z-index:20}
+.canvas-ctrl-btn{width:32px;height:32px;border-radius:var(--radius-xs);background:var(--surface);border:1px solid var(--border);color:var(--text-sec);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;font-family:inherit;transition:all 0.2s}
+.canvas-ctrl-btn:hover{border-color:var(--primary);color:var(--text)}
+.zoom-label{font-size:9px;text-align:center;color:var(--text-muted);font-weight:500}
+
+/* Canvas minimap */
+.minimap{position:absolute;bottom:16px;left:16px;width:160px;height:100px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.minimap-viewport{position:absolute;border:2px solid var(--primary);border-radius:2px;opacity:0.5}
+
+/* === NODES ON CANVAS === */
+.canvas-node{position:absolute;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:0;cursor:grab;user-select:none;transition:box-shadow 0.2s,border-color 0.2s;box-shadow:var(--node-shadow);min-width:180px;z-index:10}
+.canvas-node:hover{box-shadow:var(--node-shadow-hover);border-color:var(--primary);z-index:11}
+.canvas-node.selected{box-shadow:var(--node-shadow-active);border-color:var(--primary);z-index:12}
+.canvas-node.dragging{cursor:grabbing;opacity:0.9;z-index:100}
+.canvas-node.simulating{animation:simPulse 1.5s ease infinite}
+@keyframes simPulse{0%,100%{box-shadow:var(--node-shadow)}50%{box-shadow:0 0 0 6px var(--primary-soft),var(--node-shadow-hover)}}
+
+.node-header{display:flex;align-items:center;gap:8px;padding:10px 12px 8px;border-bottom:1px solid var(--border-light)}
+.node-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.node-icon.trigger{background:var(--info-soft);color:var(--info);border:1px solid rgba(106,143,160,0.2)}
+.node-icon.action{background:var(--primary-soft);color:var(--primary);border:1px solid rgba(196,149,106,0.2)}
+.node-icon.condition{background:var(--warn-soft);color:var(--warn);border:1px solid rgba(196,154,92,0.2)}
+.node-icon.wait{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(139,115,85,0.2)}
+.node-icon.end{background:var(--success-soft);color:var(--success);border:1px solid rgba(90,158,111,0.2)}
+.node-title{font-size:12px;font-weight:600;color:var(--text)}
+.node-type{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+
+.node-body{padding:8px 12px 10px}
+.node-desc{font-size:11px;color:var(--text-sec);line-height:1.4}
+.node-config{font-size:10px;color:var(--text-muted);margin-top:4px;font-family:'JetBrains Mono',monospace;background:var(--surface-dim);padding:4px 6px;border-radius:var(--radius-xs);display:inline-block}
+
+/* Node connection ports */
+.node-port{width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--border);position:absolute;cursor:crosshair;z-index:15;transition:all 0.2s}
+.node-port:hover{border-color:var(--primary);background:var(--primary-soft);transform:scale(1.3)}
+.node-port.port-in{top:-6px;left:50%;transform:translateX(-50%)}
+.node-port.port-in:hover{transform:translateX(-50%) scale(1.3)}
+.node-port.port-out{bottom:-6px;left:50%;transform:translateX(-50%)}
+.node-port.port-out:hover{transform:translateX(-50%) scale(1.3)}
+.node-port.port-branch-t{bottom:-6px;left:30%;transform:translateX(-50%)}
+.node-port.port-branch-t:hover{transform:translateX(-50%) scale(1.3)}
+.node-port.port-branch-f{bottom:-6px;left:70%;transform:translateX(-50%)}
+.node-port.port-branch-f:hover{transform:translateX(-50%) scale(1.3)}
+.port-label{position:absolute;font-size:8px;font-weight:600;color:var(--text-muted);pointer-events:none}
+.port-label.label-t{bottom:-18px;left:30%;transform:translateX(-50%);color:var(--success)}
+.port-label.label-f{bottom:-18px;left:70%;transform:translateX(-50%);color:var(--danger)}
+
+/* Simulation overlay on nodes */
+.sim-badge{position:absolute;top:-8px;right:-8px;background:var(--success);color:white;font-size:8px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--surface);z-index:16;display:none}
+.sim-badge.active{display:flex}
+.sim-badge.waiting{background:var(--warn)}
+.sim-badge.failed{background:var(--danger)}
+.sim-badge.skipped{background:var(--text-muted)}
+
+/* === NODE PALETTE (right panel) === */
+.palette-panel{width:0;overflow:hidden;border-left:1px solid var(--border);background:var(--surface);transition:width 0.3s;display:flex;flex-direction:column}
+.palette-panel.open{width:260px}
+
+.palette-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.palette-header h3{font-size:13px;font-weight:600}
+.palette-close{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:var(--radius-xs)}
+.palette-close:hover{color:var(--text);background:var(--surface-dim)}
+
+.palette-body{flex:1;overflow-y:auto;padding:10px}
+.palette-body::-webkit-scrollbar{width:3px}
+.palette-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.palette-section{margin-bottom:14px}
+.palette-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:6px;padding:0 4px}
+
+.palette-node{display:flex;align-items:center;gap:8px;padding:8px;border-radius:var(--radius-sm);cursor:grab;border:1px solid transparent;transition:all 0.15s;margin-bottom:3px}
+.palette-node:hover{background:var(--surface-dim);border-color:var(--border)}
+.palette-node:active{opacity:0.7}
+.pn-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.pn-info{flex:1;min-width:0}
+.pn-name{font-size:11px;font-weight:500;color:var(--text)}
+.pn-desc{font-size:9px;color:var(--text-muted);margin-top:1px}
+
+/* === NODE CONFIG PANEL === */
+.config-panel{width:0;overflow:hidden;border-left:1px solid var(--border);background:var(--surface);transition:width 0.3s;display:flex;flex-direction:column}
+.config-panel.open{width:300px}
+
+.config-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.config-header h3{font-size:13px;font-weight:600}
+
+.config-body{flex:1;overflow-y:auto;padding:14px}
+.config-body::-webkit-scrollbar{width:3px}
+.config-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.config-field{margin-bottom:14px}
+.config-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:4px;display:block}
+.config-input{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text);background:var(--surface-dim);outline:none;transition:all 0.2s}
+.config-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.config-select{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text);background:var(--surface-dim);outline:none;cursor:pointer}
+.config-textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text);background:var(--surface-dim);outline:none;resize:vertical;min-height:60px;line-height:1.5}
+.config-textarea:focus,.config-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+
+.config-actions{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:6px;flex-shrink:0}
+.config-btn{flex:1;padding:7px;border-radius:var(--radius-xs);font-size:11px;font-family:inherit;cursor:pointer;font-weight:500;transition:all 0.2s}
+.config-btn-p{background:var(--primary);color:var(--text-on-primary);border:none}
+.config-btn-p:hover{background:var(--primary-hover)}
+.config-btn-s{background:var(--surface-dim);color:var(--text-sec);border:1px solid var(--border)}
+.config-btn-s:hover{border-color:var(--primary);color:var(--text)}
+.config-btn-d{background:var(--danger-soft);color:var(--danger);border:1px solid transparent}
+.config-btn-d:hover{background:var(--danger);color:white}
+
+/* === BOTTOM BAR === */
+.bottombar{background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
+.bottom-left{display:flex;align-items:center;gap:12px}
+.bottom-right{display:flex;align-items:center;gap:8px}
+
+.stats-pill{font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
+.stats-pill strong{color:var(--text-sec)}
+.stats-dot{width:5px;height:5px;border-radius:50%}
+
+.sim-controls{display:flex;align-items:center;gap:6px}
+.sim-btn{height:28px;padding:0 12px;border-radius:var(--radius-xs);font-size:11px;font-family:inherit;cursor:pointer;transition:all 0.2s;border:1px solid;font-weight:500;display:flex;align-items:center;gap:4px}
+.sim-btn-run{background:var(--success-soft);color:var(--success);border-color:var(--success)}
+.sim-btn-run:hover{background:var(--success);color:white}
+.sim-btn-run.running{background:var(--success);color:white;animation:simPulse 2s infinite}
+.sim-btn-stop{background:var(--danger-soft);color:var(--danger);border-color:var(--danger)}
+.sim-btn-stop:hover{background:var(--danger);color:white}
+.sim-btn-step{background:var(--info-soft);color:var(--info);border-color:var(--info)}
+.sim-btn-step:hover{background:var(--info);color:white}
+
+.sim-status{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;padding:4px 8px;background:var(--surface-dim);border-radius:var(--radius-xs);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* === SVG EDGES === */
+.edge-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5}
+.edge-path{fill:none;stroke:var(--border);stroke-width:2;transition:stroke 0.3s}
+.edge-path.active-edge{stroke:var(--primary);stroke-width:2.5}
+.edge-path.sim-edge{stroke:var(--success);stroke-width:3;stroke-dasharray:8 4;animation:edgeFlow 1s linear infinite}
+@keyframes edgeFlow{to{stroke-dashoffset:-12}}
+.edge-arrow{fill:var(--border)}
+.edge-arrow.active-edge{fill:var(--primary)}
+.edge-label{font-size:9px;fill:var(--text-muted);font-family:'JetBrains Mono',monospace}
+
+/* === DROP ZONE === */
+.drop-zone{position:absolute;border:2px dashed var(--primary);border-radius:var(--radius);background:var(--primary-soft);opacity:0;pointer-events:none;transition:opacity 0.2s;z-index:20}
+.drop-zone.visible{opacity:1}
+
+/* Add node floating button */
+.add-node-fab{position:absolute;bottom:60px;right:60px;width:44px;height:44px;border-radius:50%;background:var(--primary);color:var(--text-on-primary);border:none;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:all 0.2s;z-index:20}
+.add-node-fab:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(0,0,0,0.2)}
+
+/* Simulation log overlay */
+.sim-log{position:absolute;bottom:50px;left:16px;width:320px;max-height:200px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;z-index:20;box-shadow:0 4px 16px rgba(0,0,0,0.1);display:none}
+.sim-log.open{display:block}
+.sim-log-header{padding:6px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface-dim)}
+.sim-log-header h4{font-size:11px;font-weight:600}
+.sim-log-body{max-height:160px;overflow-y:auto;padding:6px;font-family:'JetBrains Mono',monospace;font-size:10px}
+.sim-log-body::-webkit-scrollbar{width:3px}
+.sim-log-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.sim-entry{padding:3px 4px;border-bottom:1px solid var(--border-light);display:flex;gap:6px;line-height:1.4}
+.sim-entry:last-child{border:none}
+.sim-time{color:var(--text-muted);min-width:40px;flex-shrink:0}
+.sim-node{color:var(--primary);min-width:80px;flex-shrink:0}
+.sim-result{color:var(--text-sec)}
+.sim-result.pass{color:var(--success)}
+.sim-result.fail{color:var(--danger)}
+.sim-result.skip{color:var(--warn)}
+
+/* Breadcrumb-style flow path hint */
+.flow-path{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;z-index:20;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.fp-step{font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:3px}
+.fp-step.current{color:var(--primary);font-weight:600}
+.fp-arrow{color:var(--border);font-size:8px}
+.fp-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+</style>
+</head>
+<body data-theme="warm">
+<div class="app">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="top-left">
+    <div class="logo">K<span>alcifer</span></div>
+    <div class="flow-name-area">
+      <input class="flow-name-edit" id="flowNameInput" value="Churn Re-engagement" spellcheck="false">
+      <span class="flow-status" id="flowStatus" style="background:var(--info-soft);color:var(--info)">Draft</span>
+      <span class="flow-version">v1</span>
+    </div>
+  </div>
+  <div class="top-center">
+    <button class="mode-btn active" id="modeEdit" onclick="setMode('edit')">&#9998; Edit</button>
+    <button class="mode-btn" id="modeSim" onclick="setMode('simulate')">&#9654; Simulate</button>
+    <button class="mode-btn" id="modeLive" onclick="setMode('live')">&#9673; Live</button>
+  </div>
+  <div class="top-right">
+    <button class="top-btn" onclick="window.location.href='main.html?theme='+(document.body.getAttribute('data-theme')||'warm')">&#8592; Work</button>
+    <button class="top-btn" onclick="togglePalette()">+ Node</button>
+    <div class="theme-wrap">
+      <button class="top-btn" onclick="document.getElementById('thDD').classList.toggle('open')">&#9684;</button>
+      <div class="theme-dd" id="thDD">
+        <button class="th-opt active" onclick="setTh('warm',this)"><span class="th-sw"><i style="background:#f5f0eb"></i><i style="background:#c4956a"></i></span>Warm Paper</button>
+        <button class="th-opt" onclick="setTh('lavender',this)"><span class="th-sw"><i style="background:#f7f5f0"></i><i style="background:#9b8ec4"></i></span>Lavender</button>
+        <button class="th-opt" onclick="setTh('sage',this)"><span class="th-sw"><i style="background:#f4f1ec"></i><i style="background:#6b8f6e"></i></span>Sand & Sage</button>
+        <button class="th-opt" onclick="setTh('teal',this)"><span class="th-sw"><i style="background:#f5f2ed"></i><i style="background:#3d8b80"></i></span>Paper & Teal</button>
+        <button class="th-opt" onclick="setTh('dark',this)"><span class="th-sw"><i style="background:#0f0f14"></i><i style="background:#a89cf0"></i></span>Dark</button>
+      </div>
+    </div>
+    <div class="avatar">DG</div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+  <!-- AI CHAT -->
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="ai-dot"></div>
+        <h3>Kalcifer</h3>
+      </div>
+      <button class="chat-toggle" onclick="toggleChat()" title="Toggle chat">&#9776;</button>
+    </div>
+    <div class="chat-body">
+      <div class="chat-msgs" id="chatMsgs"></div>
+      <div class="suggestions" id="sugs"></div>
+      <div class="chat-input-area">
+        <div class="chat-input-wrap">
+          <textarea class="chat-input" id="chatInput" placeholder="აღწერე რა გინდა..." rows="1"></textarea>
+          <button class="send-btn" onclick="sendMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CANVAS -->
+  <div class="canvas-area" id="canvasArea">
+    <!-- SVG for edges -->
+    <svg class="edge-svg" id="edgeSvg">
+      <defs>
+        <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" class="edge-arrow"/>
+        </marker>
+        <marker id="arrowhead-active" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" class="edge-arrow active-edge"/>
+        </marker>
+      </defs>
+    </svg>
+
+    <!-- Canvas nodes will be injected here -->
+    <div id="canvasNodes"></div>
+
+    <!-- Flow path breadcrumb -->
+    <div class="flow-path" id="flowPath"></div>
+
+    <!-- Zoom controls -->
+    <div class="canvas-controls">
+      <button class="canvas-ctrl-btn" onclick="zoomIn()">+</button>
+      <div class="zoom-label" id="zoomLabel">100%</div>
+      <button class="canvas-ctrl-btn" onclick="zoomOut()">&minus;</button>
+      <button class="canvas-ctrl-btn" onclick="zoomFit()" title="Fit to view">&#8644;</button>
+    </div>
+
+    <!-- Minimap -->
+    <div class="minimap" id="minimap">
+      <svg id="minimapSvg" width="160" height="100"></svg>
+    </div>
+
+    <!-- Simulation log -->
+    <div class="sim-log" id="simLog">
+      <div class="sim-log-header">
+        <h4>&#9654; Simulation Log</h4>
+        <button class="palette-close" onclick="document.getElementById('simLog').classList.remove('open')">&times;</button>
+      </div>
+      <div class="sim-log-body" id="simLogBody"></div>
+    </div>
+  </div>
+
+  <!-- NODE PALETTE -->
+  <div class="palette-panel" id="palettePanel">
+    <div class="palette-header">
+      <h3>Node Palette</h3>
+      <button class="palette-close" onclick="togglePalette()">&times;</button>
+    </div>
+    <div class="palette-body">
+      <div class="palette-section">
+        <div class="palette-label">Trigger</div>
+        <div class="palette-node" draggable="true" ondragstart="dragPaletteNode(event,'segment_entry')" onclick="addNodeFromPalette('segment_entry')">
+          <div class="pn-icon" style="background:var(--info-soft);color:var(--info);border:1px solid rgba(106,143,160,0.2)">T</div>
+          <div class="pn-info"><div class="pn-name">Segment Entry</div><div class="pn-desc">Trigger when user enters segment</div></div>
+        </div>
+        <div class="palette-node" draggable="true" ondragstart="dragPaletteNode(event,'event_entry')" onclick="addNodeFromPalette('event_entry')">
+          <div class="pn-icon" style="background:var(--info-soft);color:var(--info);border:1px solid rgba(106,143,160,0.2)">T</div>
+          <div class="pn-info"><div class="pn-name">Event Entry</div><div class="pn-desc">Trigger on custom event</div></div>
+        </div>
+        <div class="palette-node" draggable="true" ondragstart="dragPaletteNode(event,'webhook_entry')" onclick="addNodeFromPalette('webhook_entry')">
+          <div class="pn-icon" style="background:var(--info-soft);color:var(--info);border:1px solid rgba(106,143,160,0.2)">T</div>
+          <div class="pn-info"><div class="pn-name">Webhook Entry</div><div class="pn-desc">Trigger from external webhook</div></div>
+        </div>
+      </div>
+
+      <div class="palette-section">
+        <div class="palette-label">Condition</div>
+        <div class="palette-node" onclick="addNodeFromPalette('condition')">
+          <div class="pn-icon" style="background:var(--warn-soft);color:var(--warn);border:1px solid rgba(196,154,92,0.2)">?</div>
+          <div class="pn-info"><div class="pn-name">Condition</div><div class="pn-desc">Branch by expression</div></div>
+        </div>
+        <div class="palette-node" onclick="addNodeFromPalette('ab_split')">
+          <div class="pn-icon" style="background:var(--warn-soft);color:var(--warn);border:1px solid rgba(196,154,92,0.2)">AB</div>
+          <div class="pn-info"><div class="pn-name">A/B Split</div><div class="pn-desc">Random split for testing</div></div>
+        </div>
+        <div class="palette-node" onclick="addNodeFromPalette('frequency_cap')">
+          <div class="pn-icon" style="background:var(--warn-soft);color:var(--warn);border:1px solid rgba(196,154,92,0.2)">#</div>
+          <div class="pn-info"><div class="pn-name">Frequency Cap</div><div class="pn-desc">Limit message frequency</div></div>
+        </div>
+        <div class="palette-node" onclick="addNodeFromPalette('check_segment')">
+          <div class="pn-icon" style="background:var(--warn-soft);color:var(--warn);border:1px solid rgba(196,154,92,0.2)">S</div>
+          <div class="pn-info"><div class="pn-name">Check Segment</div><div class="pn-desc">Branch by segment membership</div></div>
+        </div>
+      </div>
+
+      <div class="palette-section">
+        <div class="palette-label">Wait</div>
+        <div class="palette-node" onclick="addNodeFromPalette('wait')">
+          <div class="pn-icon" style="background:var(--accent-soft);color:var(--accent);border:1px solid rgba(139,115,85,0.2)">W</div>
+          <div class="pn-info"><div class="pn-name">Wait</div><div class="pn-desc">Delay for duration (e.g. "2d")</div></div>
+        </div>
+        <div class="palette-node" onclick="addNodeFromPalette('wait_for_event')">
+          <div class="pn-icon" style="background:var(--accent-soft);color:var(--accent);border:1px solid rgba(139,115,85,0.2)">W</div>
+          <div class="pn-info"><div class="pn-name">Wait for Event</div><div class="pn-desc">Wait until event fires</div></div>
+        </div>
+        <div class="palette-node" onclick="addNodeFromPalette('wait_until')">
+          <div class="pn-icon" style="background:var(--accent-soft);color:var(--accent);border:1px solid rgba(139,115,85,0.2)">W</div>
+          <div class="pn-info"><div class="pn-name">Wait Until</div><div class="pn-desc">Wait until specific time</div></div>
+        </div>
+      </div>
+
+      <div class="palette-section">
+        <div class="palette-label">Action &mdash; Channel</div>
+        <div class="palette-node" onclick="addNodeFromPalette('send_email')">
+          <div class="pn-icon" style="background:var(--primary-soft);color:var(--primary);border:1px solid rgba(196,149,106,0.2)">&#9993;</div>
+          <div class="pn-info"><div class="pn-name">Send Email</div><div class="pn-desc">SendGrid, Mailgun...</div></div>
+        </div>
+        <div class="palette-node" onclick="addNodeFromPalette('send_sms')">
+          <div class="pn-icon" style="background:var(--primary-soft);color:var(--primary);border:1px solid rgba(196,149,106,0.2)">&#9742;</div>
+          <div class="pn-info"><div class="pn-name">Send SMS</div><div class="pn-desc">Twilio, Vonage...</div></div>
+        </div>
+        <div class="palette-node" onclick="addNodeFromPalette('send_push')">
+          <div class="pn-icon" style="background:var(--primary-soft);color:var(--primary);border:1px solid rgba(196,149,106,0.2)">&#128276;</div>
+          <div class="pn-info"><div class="pn-name">Send Push</div><div class="pn-desc">Firebase FCM</div></div>
+        </div>
+        <div class="palette-node" onclick="addNodeFromPalette('send_whatsapp')">
+          <div class="pn-icon" style="background:var(--primary-soft);color:var(--primary);border:1px solid rgba(196,149,106,0.2)">W</div>
+          <div class="pn-info"><div class="pn-name">Send WhatsApp</div><div class="pn-desc">Twilio WhatsApp</div></div>
+        </div>
+      </div>
+
+      <div class="palette-section">
+        <div class="palette-label">Action &mdash; Data</div>
+        <div class="palette-node" onclick="addNodeFromPalette('call_webhook')">
+          <div class="pn-icon" style="background:var(--primary-soft);color:var(--primary);border:1px solid rgba(196,149,106,0.2)">{}</div>
+          <div class="pn-info"><div class="pn-name">Call Webhook</div><div class="pn-desc">HTTP POST to external</div></div>
+        </div>
+        <div class="palette-node" onclick="addNodeFromPalette('track_conversion')">
+          <div class="pn-icon" style="background:var(--primary-soft);color:var(--primary);border:1px solid rgba(196,149,106,0.2)">$</div>
+          <div class="pn-info"><div class="pn-name">Track Conversion</div><div class="pn-desc">Record conversion event</div></div>
+        </div>
+        <div class="palette-node" onclick="addNodeFromPalette('add_tag')">
+          <div class="pn-icon" style="background:var(--primary-soft);color:var(--primary);border:1px solid rgba(196,149,106,0.2)">#</div>
+          <div class="pn-info"><div class="pn-name">Add Tag</div><div class="pn-desc">Tag profile for segmentation</div></div>
+        </div>
+      </div>
+
+      <div class="palette-section">
+        <div class="palette-label">End</div>
+        <div class="palette-node" onclick="addNodeFromPalette('end')">
+          <div class="pn-icon" style="background:var(--success-soft);color:var(--success);border:1px solid rgba(90,158,111,0.2)">&#10003;</div>
+          <div class="pn-info"><div class="pn-name">End</div><div class="pn-desc">Complete flow instance</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NODE CONFIG -->
+  <div class="config-panel" id="configPanel">
+    <div class="config-header">
+      <h3 id="configTitle">Node Config</h3>
+      <button class="palette-close" onclick="closeConfig()">&times;</button>
+    </div>
+    <div class="config-body" id="configBody"></div>
+    <div class="config-actions">
+      <button class="config-btn config-btn-p" onclick="saveConfig()">Save</button>
+      <button class="config-btn config-btn-d" onclick="deleteNode()">Delete</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottombar">
+  <div class="bottom-left">
+    <div class="stats-pill"><div class="stats-dot" style="background:var(--success)"></div><strong id="nodeCount">0</strong> nodes</div>
+    <div class="stats-pill"><div class="stats-dot" style="background:var(--info)"></div><strong id="edgeCount">0</strong> edges</div>
+    <div class="stats-pill">Segment: <strong>Churn Risk 90d</strong> &middot; 1,880 users</div>
+  </div>
+  <div class="bottom-right">
+    <div class="sim-status" id="simStatus">Ready</div>
+    <div class="sim-controls">
+      <button class="sim-btn sim-btn-run" id="simRunBtn" onclick="runSimulation()">&#9654; Dry Run</button>
+      <button class="sim-btn sim-btn-step" onclick="stepSimulation()">&#9654;| Step</button>
+      <button class="sim-btn sim-btn-stop" onclick="stopSimulation()">&#9632; Stop</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============================
+// STATE
+// ============================
+let nodes = [];
+let edges = [];
+let selectedNode = null;
+let draggingNode = null;
+let dragOffset = {x:0, y:0};
+let currentMode = 'edit'; // edit, simulate, live
+let simRunning = false;
+let simStep = 0;
+let simInterval = null;
+let nextNodeId = 1;
+
+// Node type definitions
+const NODE_TYPES = {
+  segment_entry: {cat:'trigger', icon:'T', title:'Segment Entry', desc:'Enters "Churn Risk 90d"'},
+  event_entry: {cat:'trigger', icon:'T', title:'Event Entry', desc:'Custom event trigger'},
+  webhook_entry: {cat:'trigger', icon:'T', title:'Webhook Entry', desc:'External webhook'},
+  condition: {cat:'condition', icon:'?', title:'Condition', desc:'Branch by expression'},
+  ab_split: {cat:'condition', icon:'AB', title:'A/B Split', desc:'50/50 random split'},
+  frequency_cap: {cat:'condition', icon:'#', title:'Frequency Cap', desc:'Message limit check'},
+  check_segment: {cat:'condition', icon:'S', title:'Check Segment', desc:'Segment membership'},
+  wait: {cat:'wait', icon:'W', title:'Wait', desc:'Duration delay'},
+  wait_for_event: {cat:'wait', icon:'W', title:'Wait for Event', desc:'Wait for event'},
+  wait_until: {cat:'wait', icon:'W', title:'Wait Until', desc:'Wait until time'},
+  send_email: {cat:'action', icon:'\u2709', title:'Send Email', desc:'via SendGrid'},
+  send_sms: {cat:'action', icon:'\u260E', title:'Send SMS', desc:'via Twilio'},
+  send_push: {cat:'action', icon:'\uD83D\uDD14', title:'Send Push', desc:'via Firebase'},
+  send_whatsapp: {cat:'action', icon:'W', title:'Send WhatsApp', desc:'via Twilio'},
+  send_in_app: {cat:'action', icon:'\u25A3', title:'In-App Message', desc:'via WebSocket'},
+  call_webhook: {cat:'action', icon:'{}', title:'Call Webhook', desc:'HTTP POST'},
+  track_conversion: {cat:'action', icon:'$', title:'Track Conversion', desc:'Record event'},
+  add_tag: {cat:'action', icon:'#', title:'Add Tag', desc:'Tag profile'},
+  update_profile: {cat:'action', icon:'\u270E', title:'Update Profile', desc:'Modify user data'},
+  end: {cat:'end', icon:'\u2713', title:'End', desc:'Complete instance'}
+};
+
+// ============================
+// INIT
+// ============================
+const chatMsgs = document.getElementById('chatMsgs');
+const chatInput = document.getElementById('chatInput');
+const canvasNodes = document.getElementById('canvasNodes');
+const edgeSvg = document.getElementById('edgeSvg');
+
+chatInput.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){e.preventDefault(); sendMsg()}
+});
+chatInput.addEventListener('input', function(){
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+});
+
+// Theme
+function setTh(n, b){
+  document.body.setAttribute('data-theme', n);
+  document.querySelectorAll('.th-opt').forEach(x => x.classList.remove('active'));
+  b?.classList.add('active');
+  document.getElementById('thDD').classList.remove('open');
+  renderEdges();
+}
+document.addEventListener('click', e => {
+  if(!e.target.closest('.theme-wrap')) document.getElementById('thDD').classList.remove('open');
+});
+
+// URL theme
+(function(){
+  const p = new URLSearchParams(window.location.search).get('theme');
+  if(p && ['warm','lavender','sage','teal','dark'].includes(p)){
+    document.body.setAttribute('data-theme', p);
+    document.querySelectorAll('.th-opt').forEach(b => {
+      b.classList.remove('active');
+      if(b.textContent.toLowerCase().includes(p === 'warm' ? 'warm' : p)) b.classList.add('active');
+    });
+  }
+})();
+
+// ============================
+// CANVAS NODE MANAGEMENT
+// ============================
+function createNode(type, x, y, config = {}) {
+  const def = NODE_TYPES[type];
+  if(!def) return null;
+  const id = 'node_' + (nextNodeId++);
+  const node = {
+    id, type, x, y,
+    title: config.title || def.title,
+    desc: config.desc || def.desc,
+    config: config.config || {},
+    cat: def.cat
+  };
+  nodes.push(node);
+  renderNode(node);
+  updateStats();
+  return node;
+}
+
+function renderNode(node) {
+  const def = NODE_TYPES[node.type];
+  const el = document.createElement('div');
+  el.className = 'canvas-node';
+  el.id = node.id;
+  el.style.left = node.x + 'px';
+  el.style.top = node.y + 'px';
+
+  const isBranching = ['condition', 'ab_split', 'frequency_cap', 'check_segment'].includes(node.type);
+
+  el.innerHTML = `
+    <div class="sim-badge" id="sim_${node.id}"></div>
+    ${node.cat !== 'trigger' ? '<div class="node-port port-in"></div>' : ''}
+    <div class="node-header">
+      <div class="node-icon ${node.cat}">${def.icon}</div>
+      <div>
+        <div class="node-title">${node.title}</div>
+        <div class="node-type">${node.type}</div>
+      </div>
+    </div>
+    <div class="node-body">
+      <div class="node-desc">${node.desc}</div>
+      ${node.config.detail ? '<div class="node-config">' + node.config.detail + '</div>' : ''}
+    </div>
+    ${node.cat !== 'end' ? (isBranching ?
+      `<div class="node-port port-branch-t" data-branch="true"></div>
+       <div class="node-port port-branch-f" data-branch="false"></div>
+       <span class="port-label label-t">true</span>
+       <span class="port-label label-f">false</span>` :
+      '<div class="node-port port-out"></div>') : ''}
+  `;
+
+  // Click to select
+  el.addEventListener('mousedown', e => {
+    if(e.target.classList.contains('node-port')) return;
+    selectNode(node.id);
+    startDrag(e, node);
+  });
+
+  // Double-click to configure
+  el.addEventListener('dblclick', () => openConfig(node.id));
+
+  canvasNodes.appendChild(el);
+}
+
+function selectNode(id) {
+  document.querySelectorAll('.canvas-node').forEach(n => n.classList.remove('selected'));
+  selectedNode = id;
+  const el = document.getElementById(id);
+  if(el) el.classList.add('selected');
+}
+
+function deleteNode() {
+  if(!selectedNode) return;
+  edges = edges.filter(e => e.from !== selectedNode && e.to !== selectedNode);
+  nodes = nodes.filter(n => n.id !== selectedNode);
+  document.getElementById(selectedNode)?.remove();
+  selectedNode = null;
+  closeConfig();
+  renderEdges();
+  updateStats();
+}
+
+// ============================
+// DRAG & DROP
+// ============================
+function startDrag(e, node) {
+  draggingNode = node;
+  const el = document.getElementById(node.id);
+  const rect = el.getBoundingClientRect();
+  dragOffset.x = e.clientX - rect.left;
+  dragOffset.y = e.clientY - rect.top;
+  el.classList.add('dragging');
+  e.preventDefault();
+}
+
+document.addEventListener('mousemove', e => {
+  if(!draggingNode) return;
+  const canvas = document.getElementById('canvasArea').getBoundingClientRect();
+  const x = e.clientX - canvas.left - dragOffset.x;
+  const y = e.clientY - canvas.top - dragOffset.y;
+  draggingNode.x = Math.max(0, x);
+  draggingNode.y = Math.max(0, y);
+  const el = document.getElementById(draggingNode.id);
+  if(el) {
+    el.style.left = draggingNode.x + 'px';
+    el.style.top = draggingNode.y + 'px';
+  }
+  renderEdges();
+});
+
+document.addEventListener('mouseup', () => {
+  if(draggingNode) {
+    document.getElementById(draggingNode.id)?.classList.remove('dragging');
+    draggingNode = null;
+  }
+});
+
+// ============================
+// EDGES
+// ============================
+function addEdge(fromId, toId, label = '') {
+  if(edges.find(e => e.from === fromId && e.to === toId)) return;
+  edges.push({from: fromId, to: toId, label});
+  renderEdges();
+  updateStats();
+}
+
+function renderEdges() {
+  // Clear existing paths
+  const svg = edgeSvg;
+  while(svg.children.length > 1) svg.removeChild(svg.lastChild); // keep defs
+
+  edges.forEach(edge => {
+    const fromEl = document.getElementById(edge.from);
+    const toEl = document.getElementById(edge.to);
+    if(!fromEl || !toEl) return;
+
+    const canvas = document.getElementById('canvasArea').getBoundingClientRect();
+    const fromRect = fromEl.getBoundingClientRect();
+    const toRect = toEl.getBoundingClientRect();
+
+    let x1, y1;
+    // Find outgoing port
+    const fromNode = nodes.find(n => n.id === edge.from);
+    const isBranching = ['condition','ab_split','frequency_cap','check_segment'].includes(fromNode?.type);
+
+    if(isBranching && edge.label === 'true') {
+      x1 = fromRect.left - canvas.left + fromRect.width * 0.3;
+    } else if(isBranching && edge.label === 'false') {
+      x1 = fromRect.left - canvas.left + fromRect.width * 0.7;
+    } else {
+      x1 = fromRect.left - canvas.left + fromRect.width / 2;
+    }
+    y1 = fromRect.bottom - canvas.top;
+
+    const x2 = toRect.left - canvas.left + toRect.width / 2;
+    const y2 = toRect.top - canvas.top;
+
+    // Curved path
+    const midY = (y1 + y2) / 2;
+    const d = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('class', 'edge-path');
+    path.setAttribute('marker-end', 'url(#arrowhead)');
+    if(edge.simActive) {
+      path.classList.add('sim-edge');
+    }
+    svg.appendChild(path);
+
+    // Edge label
+    if(edge.label) {
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', (x1 + x2) / 2);
+      text.setAttribute('y', midY - 6);
+      text.setAttribute('class', 'edge-label');
+      text.setAttribute('text-anchor', 'middle');
+      text.textContent = edge.label;
+      svg.appendChild(text);
+    }
+  });
+}
+
+// ============================
+// PALETTE & CONFIG
+// ============================
+function togglePalette() {
+  const p = document.getElementById('palettePanel');
+  const c = document.getElementById('configPanel');
+  c.classList.remove('open');
+  p.classList.toggle('open');
+}
+
+function addNodeFromPalette(type) {
+  // Place at a reasonable position
+  const lastNode = nodes[nodes.length - 1];
+  const x = lastNode ? lastNode.x : 200;
+  const y = lastNode ? lastNode.y + 120 : 60;
+  const node = createNode(type, x, y);
+
+  // Auto-connect to last node if possible
+  if(lastNode && node) {
+    const lastDef = NODE_TYPES[lastNode.type];
+    if(lastDef.cat !== 'end') {
+      addEdge(lastNode.id, node.id);
+    }
+  }
+
+  renderEdges();
+}
+
+function dragPaletteNode(e, type) {
+  e.dataTransfer.setData('text/plain', type);
+}
+
+function openConfig(nodeId) {
+  const node = nodes.find(n => n.id === nodeId);
+  if(!node) return;
+  selectedNode = nodeId;
+
+  const p = document.getElementById('palettePanel');
+  p.classList.remove('open');
+
+  const panel = document.getElementById('configPanel');
+  panel.classList.add('open');
+
+  document.getElementById('configTitle').textContent = node.title + ' Config';
+
+  const body = document.getElementById('configBody');
+  const def = NODE_TYPES[node.type];
+
+  let html = `
+    <div class="config-field">
+      <label class="config-label">Display Name</label>
+      <input class="config-input" id="cfgName" value="${node.title}">
+    </div>
+    <div class="config-field">
+      <label class="config-label">Type</label>
+      <input class="config-input" value="${node.type}" disabled style="opacity:0.6">
+    </div>
+    <div class="config-field">
+      <label class="config-label">Description</label>
+      <input class="config-input" id="cfgDesc" value="${node.desc}">
+    </div>
+  `;
+
+  // Type-specific config
+  if(node.type === 'send_email') {
+    html += `
+      <div class="config-field">
+        <label class="config-label">Provider</label>
+        <select class="config-select" id="cfgProvider"><option>SendGrid</option><option>Mailgun</option><option>Postmark</option></select>
+      </div>
+      <div class="config-field">
+        <label class="config-label">Subject Template</label>
+        <input class="config-input" id="cfgSubject" value="${node.config.subject || '{{name}}, exclusive offer for you'}" placeholder="Email subject...">
+      </div>
+      <div class="config-field">
+        <label class="config-label">Template ID</label>
+        <input class="config-input" id="cfgTemplate" value="${node.config.template || 'tmpl_churn_offer_v1'}" placeholder="template_id">
+      </div>
+    `;
+  } else if(node.type === 'wait') {
+    html += `
+      <div class="config-field">
+        <label class="config-label">Duration</label>
+        <input class="config-input" id="cfgDuration" value="${node.config.duration || '2d'}" placeholder='e.g. "2d", "4h", "30m"'>
+      </div>
+    `;
+  } else if(node.type === 'condition') {
+    html += `
+      <div class="config-field">
+        <label class="config-label">Expression</label>
+        <textarea class="config-textarea" id="cfgExpr" placeholder="context.email_opened == true">${node.config.expr || 'context.email_opened == true'}</textarea>
+      </div>
+    `;
+  } else if(node.type === 'ab_split') {
+    html += `
+      <div class="config-field">
+        <label class="config-label">Split Ratio</label>
+        <input class="config-input" id="cfgRatio" value="${node.config.ratio || '50/50'}" placeholder="50/50">
+      </div>
+      <div class="config-field">
+        <label class="config-label">Variant A Label</label>
+        <input class="config-input" value="${node.config.varA || '10% discount'}">
+      </div>
+      <div class="config-field">
+        <label class="config-label">Variant B Label</label>
+        <input class="config-input" value="${node.config.varB || 'free trial'}">
+      </div>
+    `;
+  } else if(node.type === 'send_sms') {
+    html += `
+      <div class="config-field">
+        <label class="config-label">Provider</label>
+        <select class="config-select"><option>Twilio</option><option>Vonage</option></select>
+      </div>
+      <div class="config-field">
+        <label class="config-label">Message Template</label>
+        <textarea class="config-textarea" placeholder="SMS text...">${node.config.message || '{{name}}, your discount code: SAVE10'}</textarea>
+      </div>
+    `;
+  } else if(node.type === 'segment_entry') {
+    html += `
+      <div class="config-field">
+        <label class="config-label">Segment Name</label>
+        <input class="config-input" id="cfgSegment" value="${node.config.segment || 'Churn Risk 90d'}" placeholder="Segment name...">
+      </div>
+    `;
+  }
+
+  html += `
+    <div class="config-field" style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border)">
+      <label class="config-label">JSON Config (raw)</label>
+      <textarea class="config-textarea" id="cfgRaw" style="min-height:100px">${JSON.stringify(node.config, null, 2)}</textarea>
+    </div>
+  `;
+
+  body.innerHTML = html;
+}
+
+function saveConfig() {
+  const node = nodes.find(n => n.id === selectedNode);
+  if(!node) return;
+  const nameEl = document.getElementById('cfgName');
+  const descEl = document.getElementById('cfgDesc');
+  if(nameEl) node.title = nameEl.value;
+  if(descEl) node.desc = descEl.value;
+
+  // Re-render
+  const el = document.getElementById(node.id);
+  if(el) {
+    el.querySelector('.node-title').textContent = node.title;
+    el.querySelector('.node-desc').textContent = node.desc;
+  }
+  closeConfig();
+}
+
+function closeConfig() {
+  document.getElementById('configPanel').classList.remove('open');
+}
+
+// ============================
+// SIMULATION
+// ============================
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mode' + mode.charAt(0).toUpperCase() + mode.slice(1))?.classList.add('active');
+
+  if(mode === 'simulate') {
+    document.getElementById('simStatus').textContent = 'Simulation mode \u2014 ready';
+  } else if(mode === 'edit') {
+    stopSimulation();
+    document.getElementById('simStatus').textContent = 'Ready';
+    document.getElementById('simLog').classList.remove('open');
+    clearSimBadges();
+  } else if(mode === 'live') {
+    document.getElementById('simStatus').textContent = 'Live \u2014 connected to engine';
+  }
+}
+
+function runSimulation() {
+  if(nodes.length === 0) return;
+  if(simRunning) { stopSimulation(); return; }
+
+  setMode('simulate');
+  simRunning = true;
+  simStep = 0;
+  clearSimBadges();
+  clearSimEdges();
+
+  document.getElementById('simRunBtn').classList.add('running');
+  document.getElementById('simRunBtn').innerHTML = '&#9646;&#9646; Pause';
+  document.getElementById('simLog').classList.add('open');
+  document.getElementById('simLogBody').innerHTML = '';
+
+  addSimLog('start', 'simulation', 'Dry run started \u2014 0 side effects');
+
+  // Find trigger node
+  const triggerNode = nodes.find(n => NODE_TYPES[n.type]?.cat === 'trigger');
+  if(!triggerNode) {
+    addSimLog('error', 'none', 'No trigger node found!');
+    stopSimulation();
+    return;
+  }
+
+  // Build execution order from edges
+  const order = buildExecutionOrder(triggerNode.id);
+
+  simInterval = setInterval(() => {
+    if(simStep >= order.length) {
+      addSimLog('done', 'simulation', 'Dry run complete \u2014 ' + order.length + ' nodes traversed');
+      document.getElementById('simStatus').textContent = 'Simulation complete \u2014 ' + order.length + ' nodes';
+      stopSimulation();
+      return;
+    }
+
+    const nodeId = order[simStep];
+    const node = nodes.find(n => n.id === nodeId);
+    if(!node) { simStep++; return; }
+
+    const def = NODE_TYPES[node.type];
+
+    // Animate node
+    const el = document.getElementById(nodeId);
+    if(el) el.classList.add('simulating');
+
+    // Set badge
+    const badge = document.getElementById('sim_' + nodeId);
+    if(badge) {
+      if(def.cat === 'action') {
+        badge.className = 'sim-badge active skipped';
+        badge.textContent = '~';
+        addSimLog(simStep, node.type, 'skipped (dry) \u2014 no side effects');
+      } else if(def.cat === 'wait') {
+        badge.className = 'sim-badge active waiting';
+        badge.textContent = 'W';
+        addSimLog(simStep, node.type, 'skipped (dry) \u2014 no delay');
+      } else if(def.cat === 'condition') {
+        badge.className = 'sim-badge active';
+        badge.textContent = '\u2713';
+        addSimLog(simStep, node.type, 'branched: true');
+      } else {
+        badge.className = 'sim-badge active';
+        badge.textContent = '\u2713';
+        addSimLog(simStep, node.type, 'completed');
+      }
+    }
+
+    // Highlight active edge
+    const edge = edges.find(e => e.from === nodeId);
+    if(edge) edge.simActive = true;
+    renderEdges();
+
+    document.getElementById('simStatus').textContent = 'Step ' + (simStep + 1) + '/' + order.length + ' \u2014 ' + node.type;
+
+    // Stop animating previous
+    setTimeout(() => {
+      if(el) el.classList.remove('simulating');
+    }, 600);
+
+    simStep++;
+  }, 800);
+}
+
+function stepSimulation() {
+  // Single step
+  if(!simRunning) {
+    simRunning = true;
+    simStep = 0;
+    clearSimBadges();
+    setMode('simulate');
+    document.getElementById('simLog').classList.add('open');
+    document.getElementById('simLogBody').innerHTML = '';
+  }
+
+  const triggerNode = nodes.find(n => NODE_TYPES[n.type]?.cat === 'trigger');
+  if(!triggerNode) return;
+  const order = buildExecutionOrder(triggerNode.id);
+
+  if(simStep >= order.length) {
+    addSimLog('done', 'simulation', 'Complete');
+    document.getElementById('simStatus').textContent = 'Simulation complete';
+    return;
+  }
+
+  const nodeId = order[simStep];
+  const node = nodes.find(n => n.id === nodeId);
+  if(!node) return;
+  const def = NODE_TYPES[node.type];
+
+  selectNode(nodeId);
+
+  const badge = document.getElementById('sim_' + nodeId);
+  if(badge) {
+    badge.className = 'sim-badge active';
+    badge.textContent = '\u2713';
+  }
+
+  addSimLog(simStep, node.type, def.cat === 'action' ? 'skipped (dry)' : 'completed');
+  document.getElementById('simStatus').textContent = 'Step ' + (simStep + 1) + '/' + order.length + ' \u2014 ' + node.type;
+
+  simStep++;
+}
+
+function stopSimulation() {
+  simRunning = false;
+  if(simInterval) { clearInterval(simInterval); simInterval = null; }
+  document.getElementById('simRunBtn').classList.remove('running');
+  document.getElementById('simRunBtn').innerHTML = '&#9654; Dry Run';
+  clearSimEdges();
+  renderEdges();
+}
+
+function clearSimBadges() {
+  document.querySelectorAll('.sim-badge').forEach(b => {
+    b.className = 'sim-badge';
+    b.textContent = '';
+  });
+  document.querySelectorAll('.canvas-node').forEach(n => n.classList.remove('simulating'));
+}
+
+function clearSimEdges() {
+  edges.forEach(e => e.simActive = false);
+}
+
+function buildExecutionOrder(startId) {
+  const order = [];
+  const visited = new Set();
+  function traverse(id) {
+    if(!id || visited.has(id)) return;
+    visited.add(id);
+    order.push(id);
+    // Find outgoing edges
+    const outEdges = edges.filter(e => e.from === id);
+    outEdges.forEach(e => traverse(e.to));
+  }
+  traverse(startId);
+  return order;
+}
+
+function addSimLog(step, node, result) {
+  const body = document.getElementById('simLogBody');
+  const d = document.createElement('div');
+  d.className = 'sim-entry';
+  const cls = result.includes('skip') ? 'skip' : result.includes('fail') ? 'fail' : 'pass';
+  d.innerHTML = `<span class="sim-time">${step}</span><span class="sim-node">${node}</span><span class="sim-result ${cls}">${result}</span>`;
+  body.appendChild(d);
+  body.scrollTop = body.scrollHeight;
+}
+
+// ============================
+// STATS
+// ============================
+function updateStats() {
+  document.getElementById('nodeCount').textContent = nodes.length;
+  document.getElementById('edgeCount').textContent = edges.length;
+  updateFlowPath();
+}
+
+function updateFlowPath() {
+  const trigger = nodes.find(n => NODE_TYPES[n.type]?.cat === 'trigger');
+  if(!trigger) { document.getElementById('flowPath').innerHTML = ''; return; }
+
+  const order = buildExecutionOrder(trigger.id);
+  const pathEl = document.getElementById('flowPath');
+  pathEl.innerHTML = order.map((id, i) => {
+    const node = nodes.find(n => n.id === id);
+    const def = NODE_TYPES[node.type];
+    const catColors = {trigger:'var(--info)',action:'var(--primary)',condition:'var(--warn)',wait:'var(--accent)',end:'var(--success)'};
+    return `<div class="fp-step${i === order.length - 1 ? ' current' : ''}">
+      <div class="fp-dot" style="background:${catColors[def.cat]}"></div>
+      ${node.type}
+    </div>${i < order.length - 1 ? '<span class="fp-arrow">\u203A</span>' : ''}`;
+  }).join('');
+}
+
+// ============================
+// AI CHAT
+// ============================
+function addAI(html) {
+  const d = document.createElement('div'); d.className = 'msg msg-ai';
+  d.innerHTML = `<div class="msg-av">K</div><div class="msg-body">${html}</div>`;
+  chatMsgs.appendChild(d); chatMsgs.scrollTop = chatMsgs.scrollHeight;
+}
+function addUser(text) {
+  const d = document.createElement('div'); d.className = 'msg msg-user';
+  d.innerHTML = `<div class="msg-av">DG</div><div class="msg-body">${text}</div>`;
+  chatMsgs.appendChild(d); chatMsgs.scrollTop = chatMsgs.scrollHeight;
+}
+function addTyping() {
+  const d = document.createElement('div'); d.className = 'msg msg-ai'; d.id = 'typing';
+  d.innerHTML = '<div class="msg-av">K</div><div class="msg-body"><div class="typing-ind"><span></span><span></span><span></span></div></div>';
+  chatMsgs.appendChild(d); chatMsgs.scrollTop = chatMsgs.scrollHeight;
+}
+function setSugs(list) {
+  const el = document.getElementById('sugs');
+  el.style.display = 'flex';
+  el.innerHTML = list.map(s => `<button class="sug" onclick="ask('${s.replace(/'/g, "\\'")}')">${s}</button>`).join('');
+}
+function ask(text) { chatInput.value = text; sendMsg(); }
+
+function sendMsg() {
+  const text = chatInput.value.trim(); if(!text) return;
+  addUser(text);
+  chatInput.value = ''; chatInput.style.height = 'auto';
+  document.getElementById('sugs').style.display = 'none';
+  addTyping();
+  setTimeout(() => {
+    document.getElementById('typing')?.remove();
+    respondAI(text);
+  }, 500 + Math.random() * 500);
+}
+
+function respondAI(text) {
+  const t = text.toLowerCase();
+
+  if(t.includes('email') && t.includes('sms') || t.includes('re-engagement') || t.includes('churn')) {
+    // Build the flow on canvas!
+    buildChurnFlow();
+    addAI(`ავაწყე flow! Canvas-ზე ხედავ:<br><br>
+      <code>segment_entry</code> \u2192 <code>send_email</code> \u2192 <code>wait "2d"</code> \u2192 <code>condition</code> \u2192 <code>send_sms</code> \u2192 <code>end</code><br><br>
+      6 nodes, 2 channels. Q4-\u10D3\u10D0\u10DC: personalized subject +34%, wait+SMS +18% CTR.<br><br>
+      <button class="msg-btn msg-btn-p" onclick="runSimulation()">Dry Run</button>
+      <button class="msg-btn msg-btn-s" onclick="ask('A/B \u10E2\u10D4\u10E1\u10E2\u10D8\u10D7')">+ A/B Split</button>
+      <button class="msg-btn msg-btn-s" onclick="ask('frequency cap \u10D3\u10D0\u10D0\u10DB\u10D0\u10E2\u10D4')">+ Freq Cap</button>`);
+    setSugs(['Dry Run \u10D2\u10D0\u10D5\u10E3\u10E8\u10D5\u10D0', 'Node \u10D3\u10D0\u10D5\u10D0\u10DB\u10D0\u10E2\u10DD', '\u10E0\u10D0 \u10D2\u10D0\u10D5\u10E3\u10DB\u10EF\u10DD\u10D1\u10D4\u10E1\u10DD?']);
+
+  } else if(t.includes('a/b') || t.includes('\u10E2\u10D4\u10E1\u10E2')) {
+    // Add AB split node
+    const triggerNode = nodes.find(n => n.type === 'segment_entry');
+    const emailNode = nodes.find(n => n.type === 'send_email');
+    if(triggerNode && emailNode) {
+      // Insert AB split between trigger and email
+      const ab = createNode('ab_split', triggerNode.x, triggerNode.y + 110, {
+        desc: '50/50 \u2014 A: "10% discount" / B: "free trial"',
+        config: {ratio: '50/50', varA: '10% discount', varB: 'free trial'}
+      });
+      // Move email and all after down
+      nodes.filter(n => n.id !== triggerNode.id && n.id !== ab.id).forEach(n => { n.y += 110; repositionNode(n); });
+      // Rewire edges
+      edges = edges.filter(e => !(e.from === triggerNode.id && e.to === emailNode.id));
+      addEdge(triggerNode.id, ab.id);
+      addEdge(ab.id, emailNode.id, 'true');
+      renderEdges();
+    }
+    addAI(`A/B Split \u10D3\u10D0\u10D5\u10D0\u10DB\u10D0\u10E2\u10D4! 50/50 split \u2014 variant A: "10% discount", variant B: "free trial".<br><br>
+      Canvas-\u10D6\u10D4 \u10EE\u10D4\u10D3\u10D0\u10D5 \u10D0\u10EE\u10D0\u10DA\u10D8 node-\u10E1 \u2014 \u10DD\u10E0 branch \u10D0\u10E5\u10D5\u10E1 true/false.\u10D3\u10D0\u10D0\u10D9\u10DA\u10D8\u10D9\u10D4 \u10E0\u10DD\u10DB config \u10D2\u10D0\u10D4\u10EE\u10E1\u10DC\u10D0\u10E1.<br><br>
+      <button class="msg-btn msg-btn-p" onclick="runSimulation()">Dry Run</button>`);
+
+  } else if(t.includes('dry run') || t.includes('\u10D2\u10D0\u10D5\u10E3\u10E8\u10D5\u10D0')) {
+    runSimulation();
+    addAI(`Dry run \u10D2\u10D0\u10D4\u10E8\u10D5\u10D0! Canvas-\u10D6\u10D4 \u10EE\u10D4\u10D3\u10D0\u10D5 \u10E0\u10DD\u10D2\u10DD\u10E0 \u10D2\u10D0\u10D3\u10D8\u10E1 \u10E7\u10D5\u10D4\u10DA\u10D0 node \u10D4\u10E2\u10D0\u10DE\u10DD\u10D1\u10E0\u10D8\u10D5\u10D0\u10D3. Simulation log-\u10E8\u10D8 \u10E7\u10D5\u10D4\u10DA\u10D0 \u10DC\u10D0\u10D1\u10D8\u10EF\u10D8\u10E1 \u10D3\u10D4\u10E2\u10D0\u10DA\u10D4\u10D1\u10D8 \u10D2\u10D0\u10DB\u10DD\u10E9\u10DC\u10D3\u10D4\u10D1\u10D0.`);
+
+  } else if(t.includes('frequency') || t.includes('freq cap')) {
+    const condNode = nodes.find(n => n.type === 'condition');
+    if(condNode) {
+      const fc = createNode('frequency_cap', condNode.x + 200, condNode.y, {
+        desc: 'Max 3 messages / 7d',
+        config: {max: 3, window: '7d'}
+      });
+      addEdge(condNode.id, fc.id, 'false');
+    }
+    addAI(`Frequency Cap \u10D3\u10D0\u10D5\u10D0\u10DB\u10D0\u10E2\u10D4 \u2014 max 3 messages 7 \u10D3\u10E6\u10D4\u10E8\u10D8. condition-\u10D8\u10E1 false branch-\u10D6\u10D4 \u10D3\u10D0\u10D5\u10D0\u10D9\u10D0\u10D5\u10E8\u10D8\u10E0\u10D4.<br><br>
+      \u10D4\u10E1 \u10D3\u10D0\u10D8\u10EA\u10D0\u10D5\u10E1 churn-risk segment-\u10E1 over-messaging-\u10D8\u10E1\u10D2\u10D0\u10DC \u2014 Q4-\u10E8\u10D8 push-\u10DB\u10D0 2% opt-out \u10D2\u10D0\u10DB\u10DD\u10D8\u10EC\u10D5\u10D8\u10D0.`);
+
+  } else if(t.includes('node') && t.includes('\u10D3\u10D0\u10D5\u10D0\u10DB\u10D0\u10E2\u10DD')) {
+    togglePalette();
+    addAI(`Node Palette \u10D2\u10D0\u10D8\u10EE\u10E1\u10DC\u10D0 \u10DB\u10D0\u10E0\u10EF\u10D5\u10DC\u10D8\u10D5. \u10D0\u10D8\u10E0\u10E9\u10D8\u10D4 \u10E1\u10D0\u10E1\u10E3\u10E0\u10D5\u10D4\u10DA\u10D8 node \u10D3\u10D0 canvas-\u10D6\u10D4 \u10D3\u10D0\u10D4\u10DB\u10D0\u10E2\u10D4\u10D1\u10D0. \u10D0\u10DC \u10DB\u10D8\u10D7\u10EE\u10D0\u10E0\u10D8 \u10E0\u10D0 \u10D2\u10D8\u10DC\u10D3\u10D0 \u10D3\u10D0 \u10DB\u10D4 \u10D3\u10D0\u10D5\u10D0\u10DB\u10D0\u10E2\u10D4\u10D1.`);
+
+  } else if(t.includes('\u10E0\u10D0 \u10D2\u10D0\u10D5\u10E3\u10DB\u10EF\u10DD\u10D1\u10D4\u10E1\u10DD') || t.includes('improve') || t.includes('\u10E3\u10D9\u10D4\u10D7\u10D4\u10E1\u10D8')) {
+    addAI(`\u10E0\u10D0\u10DB\u10D3\u10D4\u10DC\u10D8\u10DB\u10D4 \u10E8\u10D4\u10DB\u10D8\u10EB\u10DA\u10D8\u10D0 \u10E8\u10D4\u10D5\u10E2\u10D0\u10DC\u10DD:<br><br>
+      1. <strong>Personalization</strong> \u2014 email subject-\u10E8\u10D8 <code>{{name}}</code> + <code>{{last_product}}</code><br>
+      2. <strong>Wait \u10DD\u10DE\u10E2\u10D8\u10DB\u10D8\u10D6\u10D0\u10EA\u10D8\u10D0</strong> \u2014 2d \u10DC\u10D0\u10EA\u10D5\u10DA\u10D0\u10D3 "smart wait" \u2014 user activity-\u10D6\u10D4 \u10D3\u10D0\u10DB\u10DD\u10D9\u10D8\u10D3\u10D4\u10D1\u10E3\u10DA\u10D8<br>
+      3. <strong>Multi-channel</strong> \u2014 SMS-\u10D8\u10E1 \u10D2\u10D0\u10E0\u10D3\u10D0 push notification \u10D3\u10D0\u10D5\u10D0\u10DB\u10D0\u10E2\u10DD frequency_cap-\u10D8\u10D7<br><br>
+      \u10E0\u10DD\u10DB\u10D4\u10DA\u10D8 \u10D2\u10D8\u10DC\u10D3\u10D0?<br><br>
+      <button class="msg-btn msg-btn-s" onclick="ask('push notification \u10D3\u10D0\u10D0\u10DB\u10D0\u10E2\u10D4')">\u10D3\u10D0\u10D0\u10DB\u10D0\u10E2\u10D4 Push</button>
+      <button class="msg-btn msg-btn-s" onclick="ask('personalization \u10D2\u10D0\u10D0\u10E3\u10DB\u10EF\u10DD\u10D1\u10D4\u10E1\u10D4')">Personalize</button>`);
+
+  } else {
+    addAI(`\u10D2\u10D0\u10D2\u10D8\u10D2\u10DD\u10DC. Canvas-\u10D6\u10D4 \u10E8\u10D4\u10D2\u10D8\u10EB\u10DA\u10D8\u10D0:<br>
+      &bull; Node-\u10D4\u10D1\u10D8\u10E1 \u10D3\u10D0\u10DB\u10D0\u10E2\u10D4\u10D1\u10D0/\u10EC\u10D0\u10E8\u10DA\u10D0<br>
+      &bull; \u10D9\u10DD\u10DC\u10E4\u10D8\u10D2\u10E3\u10E0\u10D0\u10EA\u10D8\u10D0 (double-click)<br>
+      &bull; Drag \u10D3\u10D0 \u10D2\u10D0\u10D3\u10D0\u10D0\u10D3\u10D2\u10D8\u10DA\u10D4\u10D1\u10D0<br>
+      &bull; Dry Run \u10E1\u10D8\u10DB\u10E3\u10DA\u10D0\u10EA\u10D8\u10D0<br><br>
+      \u10D0\u10DC \u10DB\u10D8\u10D7\u10EE\u10D0\u10E0\u10D8 \u10E0\u10D0 \u10D2\u10D8\u10DC\u10D3\u10D0 \u10D3\u10D0 \u10DB\u10D4 \u10D0\u10D5\u10D0\u10EC\u10E7\u10DD\u10D1.`);
+    setSugs(['Email + SMS flow', 'Dry Run', 'Node \u10D3\u10D0\u10D5\u10D0\u10DB\u10D0\u10E2\u10DD', '\u10E0\u10D0 nodes \u10D0\u10E0\u10E1\u10D4\u10D1\u10DD\u10D1\u10E1?']);
+  }
+}
+
+// ============================
+// BUILD DEMO FLOWS
+// ============================
+function buildChurnFlow() {
+  // Clear canvas
+  nodes = []; edges = []; nextNodeId = 1;
+  canvasNodes.innerHTML = '';
+
+  const centerX = 300;
+  let y = 40;
+  const gap = 110;
+
+  const n1 = createNode('segment_entry', centerX, y, {desc: 'Enters "Churn Risk 90d"', config: {segment: 'Churn Risk 90d'}});
+  y += gap;
+  const n2 = createNode('send_email', centerX, y, {desc: 'Personal offer + 10% discount', config: {subject: '{{name}}, we miss you!', template: 'tmpl_churn_offer_v1', detail: 'SendGrid \u00B7 tmpl_churn_offer_v1'}});
+  y += gap;
+  const n3 = createNode('wait', centerX, y, {desc: '2 days delay', config: {duration: '2d', detail: 'duration: "2d"'}});
+  y += gap;
+  const n4 = createNode('condition', centerX, y, {desc: 'Did they open the email?', config: {expr: 'context.email_opened == true', detail: 'email_opened == true'}});
+  y += gap;
+  const n5 = createNode('send_sms', centerX - 100, y, {desc: 'Reminder + discount code', config: {message: '{{name}}, use SAVE10', detail: 'Twilio \u00B7 SAVE10'}});
+  const n6 = createNode('end', centerX + 120, y - 20, {desc: 'Already engaged \u2014 exit'});
+  y += gap;
+  const n7 = createNode('end', centerX - 100, y, {desc: 'Track conversion & exit'});
+
+  addEdge(n1.id, n2.id);
+  addEdge(n2.id, n3.id);
+  addEdge(n3.id, n4.id);
+  addEdge(n4.id, n5.id, 'false');
+  addEdge(n4.id, n6.id, 'true');
+  addEdge(n5.id, n7.id);
+
+  renderEdges();
+  updateStats();
+}
+
+function repositionNode(node) {
+  const el = document.getElementById(node.id);
+  if(el) {
+    el.style.left = node.x + 'px';
+    el.style.top = node.y + 'px';
+  }
+}
+
+// ============================
+// ZOOM (placeholder)
+// ============================
+let zoomLevel = 100;
+function zoomIn() { zoomLevel = Math.min(150, zoomLevel + 10); applyZoom(); }
+function zoomOut() { zoomLevel = Math.max(50, zoomLevel - 10); applyZoom(); }
+function zoomFit() { zoomLevel = 100; applyZoom(); }
+function applyZoom() {
+  document.getElementById('zoomLabel').textContent = zoomLevel + '%';
+  canvasNodes.style.transform = `scale(${zoomLevel / 100})`;
+  canvasNodes.style.transformOrigin = '0 0';
+}
+
+// ============================
+// TOGGLE CHAT
+// ============================
+function toggleChat() {
+  document.getElementById('chatPanel').classList.toggle('collapsed');
+}
+
+// ============================
+// INIT
+// ============================
+addAI(`\u10D2\u10D0\u10DB\u10D0\u10E0\u10EF\u10DD\u10D1\u10D0! \u10D4\u10E1 <strong>Churn Re-engagement</strong> flow-\u10D8\u10E1 editor-\u10D8\u10D0.<br><br>
+  \u10DB\u10D8\u10D0\u10DB\u10D1\u10D4 \u10E0\u10D0 \u10D2\u10D8\u10DC\u10D3\u10D0 \u10DB\u10DD\u10EE\u10D3\u10D4\u10E1 \u10D3\u10D0 \u10DB\u10D4 \u10D0\u10D5\u10D0\u10EC\u10E7\u10DD\u10D1 canvas-\u10D6\u10D4. \u10DB\u10D0\u10D2\u10D0\u10DA\u10D8\u10D7\u10D0\u10D3:<br><br>
+  <em>"90 \u10D3\u10E6\u10D4 \u10D0\u10E0\u10D0\u10E5\u10E2\u10D8\u10E3\u10E0 \u10DB\u10DD\u10DB\u10EE\u10DB\u10D0\u10E0\u10D4\u10D1\u10DA\u10D4\u10D1\u10E1 \u10D2\u10D0\u10D5\u10E3\u10D2\u10D6\u10D0\u10D5\u10DC\u10DD email \u10D3\u10D0 SMS"</em><br><br>
+  \u10D0\u10DC \u10DB\u10D0\u10E0\u10EF\u10D5\u10DC\u10D8\u10D5\u10D8\u10D3\u10D0\u10DC \u10D0\u10D8\u10E0\u10E9\u10D8\u10D4 <strong>+ Node</strong> \u10D3\u10D0 \u10D7\u10D5\u10D8\u10D7\u10DD\u10DC \u10D0\u10D0\u10EC\u10E7\u10D4.`);
+setSugs(['Email + SMS flow', 'A/B \u10E2\u10D4\u10E1\u10E2\u10D8\u10D7', 'Node \u10D3\u10D0\u10D5\u10D0\u10DB\u10D0\u10E2\u10DD', '\u10E0\u10D0 nodes \u10D0\u10E0\u10E1\u10D4\u10D1\u10DD\u10D1\u10E1?']);
+
+</script>
+</body>
+</html>

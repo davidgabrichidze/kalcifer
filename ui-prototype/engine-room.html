@@ -8,22 +8,25 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-:root {
-  --bg:#f5f0eb;--surface:#ffffff;--surface-dim:#faf7f4;
-  --primary:#c4956a;--primary-hover:#b5845c;--primary-soft:rgba(196,149,106,0.10);
-  --accent:#8b7355;--accent-soft:rgba(139,115,85,0.08);
-  --border:#e8ddd3;--border-light:#f0e8df;
-  --text:#2d2a26;--text-sec:#6b6560;--text-muted:#a09890;--text-on-primary:#fff;
-  --success:#5a9e6f;--success-soft:rgba(90,158,111,0.08);
-  --warn:#c49a5c;--warn-soft:rgba(196,154,92,0.08);
-  --danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);
-  --info:#6a8fa0;--info-soft:rgba(106,143,160,0.08);
+:root, [data-theme="hearth-light"] {
+  --bg:#f6f1ea;--surface:#ffffff;--surface-dim:#faf7f2;
+  --primary:#c07a3e;--primary-hover:#a96830;--primary-soft:rgba(192,122,62,0.10);
+  --accent:#8b6d4a;--accent-soft:rgba(139,109,74,0.08);
+  --border:#e6ddd2;--border-light:#f0e8de;
+  --text:#2c2720;--text-sec:#6b6358;--text-muted:#a09686;--text-on-primary:#fff;
+  --success:#5a9e6f;--success-soft:rgba(90,158,111,0.10);
+  --warn:#c49a4a;--warn-soft:rgba(196,154,74,0.10);
+  --danger:#c4655a;--danger-soft:rgba(196,101,90,0.10);
+  --info:#6a8fa0;--info-soft:rgba(106,143,160,0.10);
   --radius:14px;--radius-sm:10px;--radius-xs:6px;
 }
-[data-theme="lavender"]{--bg:#f7f5f0;--surface:#fff;--surface-dim:#f5f2f8;--primary:#9b8ec4;--primary-hover:#8a7db5;--primary-soft:rgba(155,142,196,0.10);--accent:#7c6fa0;--accent-soft:rgba(124,111,160,0.08);--border:#e6e1ec;--border-light:#eeebf3;--text:#2d2a33;--text-sec:#65606e;--text-muted:#9e96a8;--success:#6a9e7a;--success-soft:rgba(106,158,122,0.08);--warn:#c4a05c;--warn-soft:rgba(196,160,92,0.08);--danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);--info:#7a8ec4;--info-soft:rgba(122,142,196,0.08)}
-[data-theme="sage"]{--bg:#f4f1ec;--surface:#fefdfb;--surface-dim:#f6f4f0;--primary:#6b8f6e;--primary-hover:#5c7e60;--primary-soft:rgba(107,143,110,0.10);--accent:#4a6b4d;--accent-soft:rgba(74,107,77,0.08);--border:#e2ddd6;--border-light:#eae6e0;--text:#2a2d28;--text-sec:#5c5f58;--text-muted:#969990;--success:#6b8f6e;--success-soft:rgba(107,143,110,0.08);--warn:#c49a5c;--warn-soft:rgba(196,154,92,0.08);--danger:#b86e5a;--danger-soft:rgba(184,110,90,0.08);--info:#5a8b9e;--info-soft:rgba(90,139,158,0.08)}
-[data-theme="teal"]{--bg:#f5f2ed;--surface:#fff;--surface-dim:#f9f7f4;--primary:#3d8b80;--primary-hover:#2d7b70;--primary-soft:rgba(61,139,128,0.10);--accent:#2d6b62;--accent-soft:rgba(45,107,98,0.08);--border:#e5dfd8;--border-light:#ede8e2;--text:#2a2825;--text-sec:#5c5855;--text-muted:#9a9590;--success:#5a9e6f;--success-soft:rgba(90,158,111,0.08);--warn:#c4956a;--warn-soft:rgba(196,149,106,0.08);--danger:#c47a6e;--danger-soft:rgba(196,122,110,0.08);--info:#3d8b80;--info-soft:rgba(61,139,128,0.08)}
-[data-theme="dark"]{--bg:#0f0f14;--surface:#1a1a24;--surface-dim:#141420;--primary:#a89cf0;--primary-hover:#bdb3f5;--primary-soft:rgba(168,156,240,0.10);--accent:#c4b8f0;--accent-soft:rgba(196,184,240,0.06);--border:#2a2a3a;--border-light:#22222f;--text:#e4e2ec;--text-sec:#9896a8;--text-muted:#5c5a6e;--text-on-primary:#0f0f14;--success:#6ee0a0;--success-soft:rgba(110,224,160,0.08);--warn:#f0c060;--warn-soft:rgba(240,192,96,0.08);--danger:#f08070;--danger-soft:rgba(240,128,112,0.08);--info:#70b0f0;--info-soft:rgba(112,176,240,0.08)}
+[data-theme="hearth-dark"]{--bg:#161210;--surface:#211c18;--surface-dim:#1a1614;--primary:#e0a060;--primary-hover:#eab070;--primary-soft:rgba(224,160,96,0.12);--accent:#d4b896;--accent-soft:rgba(212,184,150,0.08);--border:#332c26;--border-light:#2a2420;--text:#ede6dc;--text-sec:#a89a88;--text-muted:#6b6054;--text-on-primary:#161210;--success:#70c490;--success-soft:rgba(112,196,144,0.10);--warn:#e0b860;--warn-soft:rgba(224,184,96,0.10);--danger:#e07060;--danger-soft:rgba(224,112,96,0.10);--info:#70a8c0;--info-soft:rgba(112,168,192,0.10)}
+[data-theme="command-light"]{--bg:#f0f1f5;--surface:#ffffff;--surface-dim:#f6f7fa;--primary:#4a5eb0;--primary-hover:#3d4f9a;--primary-soft:rgba(74,94,176,0.10);--accent:#5c6a8a;--accent-soft:rgba(92,106,138,0.08);--border:#dde0e8;--border-light:#e8eaf0;--text:#1a1e2c;--text-sec:#5a6070;--text-muted:#9298a8;--text-on-primary:#fff;--success:#3d9e6f;--success-soft:rgba(61,158,111,0.10);--warn:#c49a4a;--warn-soft:rgba(196,154,74,0.10);--danger:#c45050;--danger-soft:rgba(196,80,80,0.10);--info:#4a8ab0;--info-soft:rgba(74,138,176,0.10)}
+[data-theme="command-dark"]{--bg:#0e1018;--surface:#181a24;--surface-dim:#12141c;--primary:#8090e0;--primary-hover:#96a4ea;--primary-soft:rgba(128,144,224,0.12);--accent:#a0a8d0;--accent-soft:rgba(160,168,208,0.08);--border:#282a38;--border-light:#20222e;--text:#e0e2f0;--text-sec:#8a8ea0;--text-muted:#505468;--text-on-primary:#0e1018;--success:#60d090;--success-soft:rgba(96,208,144,0.10);--warn:#e0c060;--warn-soft:rgba(224,192,96,0.10);--danger:#e06060;--danger-soft:rgba(224,96,96,0.10);--info:#60a0e0;--info-soft:rgba(96,160,224,0.10)}
+[data-theme="grove-light"]{--bg:#f0f3ee;--surface:#fefffe;--surface-dim:#f5f7f3;--primary:#4a8a5a;--primary-hover:#3d7a4d;--primary-soft:rgba(74,138,90,0.10);--accent:#5a7a5e;--accent-soft:rgba(90,122,94,0.08);--border:#d8e0d6;--border-light:#e4eae2;--text:#1e261e;--text-sec:#586058;--text-muted:#8a968a;--text-on-primary:#fff;--success:#4a9e60;--success-soft:rgba(74,158,96,0.10);--warn:#b89a40;--warn-soft:rgba(184,154,64,0.10);--danger:#b85a4a;--danger-soft:rgba(184,90,74,0.10);--info:#4a889e;--info-soft:rgba(74,136,158,0.10)}
+[data-theme="grove-dark"]{--bg:#0e1410;--surface:#161e18;--surface-dim:#121a14;--primary:#6cc480;--primary-hover:#80d494;--primary-soft:rgba(108,196,128,0.12);--accent:#90c4a0;--accent-soft:rgba(144,196,160,0.08);--border:#243028;--border-light:#1e2820;--text:#dce8de;--text-sec:#88a08a;--text-muted:#4a6050;--text-on-primary:#0e1410;--success:#60d080;--success-soft:rgba(96,208,128,0.10);--warn:#d0b850;--warn-soft:rgba(208,184,80,0.10);--danger:#d06050;--danger-soft:rgba(208,96,80,0.10);--info:#50b0d0;--info-soft:rgba(80,176,208,0.10)}
+[data-theme="calcifer-light"]{--bg:#f4efe5;--surface:#fefcf7;--surface-dim:#f8f3ea;--primary:#c07838;--primary-hover:#a86828;--primary-soft:rgba(192,120,56,0.10);--accent:#8a6878;--accent-soft:rgba(138,104,120,0.08);--border:#dfd4c4;--border-light:#ebe4d8;--text:#2a1e14;--text-sec:#6a5e4e;--text-muted:#a09278;--text-on-primary:#fefcf7;--success:#5a7a42;--success-soft:rgba(90,122,66,0.10);--warn:#b89a40;--warn-soft:rgba(184,154,64,0.10);--danger:#a04040;--danger-soft:rgba(160,64,64,0.10);--info:#5a80a0;--info-soft:rgba(90,128,160,0.10)}
+[data-theme="calcifer-dark"]{--bg:#141010;--surface:#1e1a14;--surface-dim:#18140e;--primary:#e09848;--primary-hover:#eaaa58;--primary-soft:rgba(224,152,72,0.12);--accent:#c0a090;--accent-soft:rgba(192,160,144,0.08);--border:#342a20;--border-light:#2a221a;--text:#e8e0d0;--text-sec:#a89868;--text-muted:#685840;--text-on-primary:#141010;--success:#80b060;--success-soft:rgba(128,176,96,0.10);--warn:#d0b048;--warn-soft:rgba(208,176,72,0.10);--danger:#c85040;--danger-soft:rgba(200,80,64,0.10);--info:#6898b8;--info-soft:rgba(104,152,184,0.10)}
 
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;transition:background 0.4s,color 0.3s}
@@ -34,6 +37,8 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 /* ═══ TOPBAR ═══ */
 .topbar{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
 .top-left{display:flex;align-items:center;gap:10px}
+.logo{font-size:14px;font-weight:700;color:var(--primary);letter-spacing:-0.5px}
+.top-center{display:flex;align-items:center;gap:4px}
 .back-btn{display:flex;align-items:center;gap:6px;background:var(--surface-dim);border:1px solid var(--border);color:var(--text-sec);height:30px;padding:0 12px;border-radius:var(--radius-xs);cursor:pointer;font-size:11px;font-family:inherit;transition:all 0.2s}
 .back-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
 .top-title{display:flex;align-items:center;gap:8px}
@@ -301,27 +306,32 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 
 </style>
 </head>
-<body data-theme="warm">
+<body data-theme="hearth-light">
 <div class="app">
 
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="top-left">
-    <button class="back-btn" onclick="window.location.href='main.html?theme='+(document.body.getAttribute('data-theme')||'warm')">← Flow Builder</button>
-    <div class="top-title">
-      <h1>Engine Room</h1>
-      <span>System Configuration</span>
-    </div>
+    <div class="logo" style="cursor:pointer" onclick="location.href='main.html?theme='+(document.body.dataset.theme||'hearth-light')">Kalcifer</div>
+  </div>
+  <div class="top-center" style="display:flex;align-items:center;gap:4px">
+    <button class="top-btn" onclick="location.href='main.html?theme='+(document.body.dataset.theme||'hearth-light')">Work</button>
+    <button class="top-btn" onclick="location.href='browse.html?theme='+(document.body.dataset.theme||'hearth-light')">Browse</button>
+    <button class="top-btn" style="background:var(--primary);color:var(--text-on-primary);border-color:var(--primary)">Engine Room</button>
   </div>
   <div class="top-right">
     <div class="theme-wrap">
       <button class="top-btn" onclick="document.getElementById('thDD').classList.toggle('open')">&#9684;</button>
       <div class="theme-dd" id="thDD">
-        <button class="th-opt active" onclick="setTh('warm',this)"><span class="th-sw"><i style="background:#f5f0eb"></i><i style="background:#c4956a"></i></span>Warm Paper</button>
-        <button class="th-opt" onclick="setTh('lavender',this)"><span class="th-sw"><i style="background:#f7f5f0"></i><i style="background:#9b8ec4"></i></span>Lavender</button>
-        <button class="th-opt" onclick="setTh('sage',this)"><span class="th-sw"><i style="background:#f4f1ec"></i><i style="background:#6b8f6e"></i></span>Sand &amp; Sage</button>
-        <button class="th-opt" onclick="setTh('teal',this)"><span class="th-sw"><i style="background:#f5f2ed"></i><i style="background:#3d8b80"></i></span>Paper &amp; Teal</button>
-        <button class="th-opt" onclick="setTh('dark',this)"><span class="th-sw"><i style="background:#0f0f14"></i><i style="background:#a89cf0"></i></span>Dark</button>
+        <button class="th-opt active" onclick="setTh('hearth-light',this)"><span class="th-sw"><i style="background:#f6f1ea"></i><i style="background:#c07a3e"></i></span>Hearth</button>
+        <button class="th-opt" onclick="setTh('hearth-dark',this)"><span class="th-sw"><i style="background:#161210"></i><i style="background:#e0a060"></i></span>Hearth Dark</button>
+        <button class="th-opt" onclick="setTh('command-light',this)"><span class="th-sw"><i style="background:#f0f1f5"></i><i style="background:#4a5eb0"></i></span>Command</button>
+        <button class="th-opt" onclick="setTh('command-dark',this)"><span class="th-sw"><i style="background:#0e1018"></i><i style="background:#8090e0"></i></span>Command Dark</button>
+        <button class="th-opt" onclick="setTh('grove-light',this)"><span class="th-sw"><i style="background:#f0f3ee"></i><i style="background:#4a8a5a"></i></span>Grove</button>
+        <button class="th-opt" onclick="setTh('grove-dark',this)"><span class="th-sw"><i style="background:#0e1410"></i><i style="background:#6cc480"></i></span>Grove Dark</button>
+        <div style="height:1px;background:var(--border);margin:4px 0"></div>
+        <button class="th-opt" onclick="setTh('calcifer-light',this)"><span class="th-sw"><i style="background:#f4efe5"></i><i style="background:#c07838"></i></span>Calcifer</button>
+        <button class="th-opt" onclick="setTh('calcifer-dark',this)"><span class="th-sw"><i style="background:#141010"></i><i style="background:#e09848"></i></span>Calcifer Dark</button>
       </div>
     </div>
     <div class="avatar">DG</div>
@@ -1170,7 +1180,7 @@ function initPanelCharts(panel){
 }
 
 // ═══ INIT ═══
-(function(){const p=new URLSearchParams(window.location.search).get('theme');if(p&&['warm','lavender','sage','teal','dark'].includes(p)){document.body.setAttribute('data-theme',p);document.querySelectorAll('.th-opt').forEach(b=>{b.classList.remove('active');if(b.textContent.toLowerCase().includes(p==='warm'?'warm':p))b.classList.add('active')})}})();
+(function(){const p=new URLSearchParams(window.location.search).get('theme');if(p&&['hearth-light','hearth-dark','command-light','command-dark','grove-light','grove-dark','calcifer-light','calcifer-dark'].includes(p)){document.body.setAttribute('data-theme',p);document.querySelectorAll('.th-opt').forEach(b=>{b.classList.remove('active');if(b.textContent.toLowerCase().includes(p.replace('-light','').replace('-dark','')))b.classList.add('active')})}})();
 updateChatContext('channels');
 initPanelCharts('channels');
 </script>
