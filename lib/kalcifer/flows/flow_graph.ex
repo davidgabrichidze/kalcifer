@@ -56,20 +56,20 @@ defmodule Kalcifer.Flows.FlowGraph do
   def analyze_config_completeness(graph, registry) when is_map(graph) do
     errors =
       nodes(graph)
-      |> Enum.flat_map(fn node ->
-        with {:ok, module} <- registry.lookup(node["type"]),
-             {:error, reasons} <- module.validate(node["config"] || %{}) do
-          Enum.map(reasons, fn reason ->
-            "node #{node["id"]} (#{node["type"]}): #{reason}"
-          end)
-        else
-          _ -> []
-        end
-      end)
+      |> Enum.flat_map(&validate_node_config(&1, registry))
 
     case errors do
       [] -> :ok
       _ -> {:error, errors}
+    end
+  end
+
+  defp validate_node_config(node, registry) do
+    with {:ok, module} <- registry.lookup(node["type"]),
+         {:error, reasons} <- module.validate(node["config"] || %{}) do
+      Enum.map(reasons, &"node #{node["id"]} (#{node["type"]}): #{&1}")
+    else
+      _ -> []
     end
   end
 
@@ -80,23 +80,27 @@ defmodule Kalcifer.Flows.FlowGraph do
   """
   def analyze_context_deps(graph) when is_map(graph) do
     nodes(graph)
-    |> Enum.flat_map(fn node ->
-      case node["type"] do
-        "condition" ->
-          config = node["config"] || %{}
-          field = config["field"]
-          if is_binary(field) and field != "", do: [field], else: []
-
-        "check_segment" ->
-          config = node["config"] || %{}
-          field = config["segment_field"]
-          if is_binary(field) and field != "", do: [field], else: []
-
-        _ ->
-          []
-      end
-    end)
+    |> Enum.flat_map(&extract_context_field/1)
     |> Enum.uniq()
+  end
+
+  defp extract_context_field(%{"type" => "condition", "config" => config}),
+    do: extract_field(config, "field")
+
+  defp extract_context_field(%{"type" => "condition"} = _node),
+    do: []
+
+  defp extract_context_field(%{"type" => "check_segment", "config" => config}),
+    do: extract_field(config, "segment_field")
+
+  defp extract_context_field(%{"type" => "check_segment"} = _node),
+    do: []
+
+  defp extract_context_field(_node), do: []
+
+  defp extract_field(config, key) do
+    field = (config || %{})[key]
+    if is_binary(field) and field != "", do: [field], else: []
   end
 
   @doc """

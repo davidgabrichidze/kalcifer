@@ -1,9 +1,9 @@
 defmodule Kalcifer.Flows.FlowGraphTest do
   use ExUnit.Case, async: true
 
-  alias Kalcifer.Flows.FlowGraph
-  alias __MODULE__.StubValidNode
   alias __MODULE__.StubInvalidNode
+  alias __MODULE__.StubValidNode
+  alias Kalcifer.Flows.FlowGraph
 
   describe "validate/1" do
     test "accepts a valid minimal graph (entry → exit)" do
@@ -504,7 +504,7 @@ defmodule Kalcifer.Flows.FlowGraphTest do
         })
 
       assert {:ok, %{warnings: warnings}} = FlowGraph.preflight(graph, registry)
-      assert length(warnings) > 0
+      assert warnings != []
       assert Enum.any?(warnings, &String.contains?(&1, "missing required field"))
     end
 

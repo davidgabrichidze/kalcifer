@@ -1,4 +1,5 @@
 defmodule Kalcifer.Release do
+  @moduledoc "Release tasks for running migrations in production."
   @app :kalcifer
 
   def migrate do

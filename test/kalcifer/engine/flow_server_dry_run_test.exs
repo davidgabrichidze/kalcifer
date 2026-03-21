@@ -1,9 +1,9 @@
 defmodule Kalcifer.Engine.FlowServerDryRunTest do
   use Kalcifer.DataCase, async: false
 
+  alias Kalcifer.Channels.Delivery
   alias Kalcifer.Engine.FlowServer
   alias Kalcifer.Flows.ExecutionStep
-  alias Kalcifer.Channels.Delivery
   alias Kalcifer.Flows.FlowInstance
   alias Kalcifer.Repo
 

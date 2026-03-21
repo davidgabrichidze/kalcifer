@@ -70,30 +70,24 @@ defmodule Kalcifer.Flows do
   defp do_activate(nil, _flow, _registry), do: Repo.rollback(:no_draft_version)
 
   defp do_activate(version, flow, registry) do
-    case run_preflight(version.graph, registry) do
-      {:error, errors} ->
-        Repo.rollback({:preflight_failed, errors})
+    with {:ok, preflight_result} <- run_preflight(version.graph, registry),
+         {:ok, published_version} <- publish_version(version) do
+      activated =
+        flow
+        |> Flow.status_changeset("active")
+        |> Repo.update!()
+        |> Flow.active_version_changeset(published_version.id)
+        |> Repo.update!()
 
-      {:ok, preflight_result} ->
-        case publish_version(version) do
-          {:ok, published_version} ->
-            activated =
-              flow
-              |> Flow.status_changeset("active")
-              |> Repo.update!()
-              |> Flow.active_version_changeset(published_version.id)
-              |> Repo.update!()
-
-            case preflight_result do
-              %{warnings: []} -> activated
-              %{warnings: _} -> {activated, preflight_result}
-            end
-
-          {:error, changeset} ->
-            Repo.rollback(changeset)
-        end
+      attach_warnings(activated, preflight_result)
+    else
+      {:error, errors} when is_list(errors) -> Repo.rollback({:preflight_failed, errors})
+      {:error, changeset} -> Repo.rollback(changeset)
     end
   end
+
+  defp attach_warnings(activated, %{warnings: []}), do: activated
+  defp attach_warnings(activated, preflight_result), do: {activated, preflight_result}
 
   defp run_preflight(graph, registry) do
     FlowGraph.preflight(graph, registry)

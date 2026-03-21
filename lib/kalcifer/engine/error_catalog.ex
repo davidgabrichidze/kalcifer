@@ -111,68 +111,33 @@ defmodule Kalcifer.Engine.ErrorCatalog do
 
   # --- Node failure reasons (from ExecutionStep.error.reason) ---
 
+  @reason_patterns [
+    {"tag_failed", "Failed to add tag to customer profile.", "data_error",
+     "Check that the tag value is valid."},
+    {"update_failed", "Failed to update customer profile.", "data_error",
+     "Check that the field names and values are valid."},
+    {"no_variants", "A/B split has no variants configured.", "config_error",
+     "Add at least one variant to the A/B split node."},
+    {"not_resumable", "This node cannot be resumed.", "execution_error",
+     "This is an internal error. The node type does not support resume."},
+    {"unexpected_trigger", "Wait node received an unexpected trigger.", "execution_error",
+     "This usually resolves on its own. If it persists, check the flow configuration."},
+    {"unknown_node_type", "Unknown node type in the flow.", "config_error",
+     "The flow contains a node type that is not registered. Check the flow graph."},
+    {"no_provider", "No message provider configured for this channel.", "config_error",
+     "Set up a provider (e.g., SendGrid for email, Twilio for SMS) in your settings."},
+    {"server_crashed", "The flow execution was interrupted unexpectedly.", "system_error",
+     "This was an internal error. You can re-trigger the flow for this customer."}
+  ]
+
   defp humanize_reason_string(reason) do
-    cond do
-      String.contains?(reason, "tag_failed") ->
-        %{
-          message: "Failed to add tag to customer profile.",
-          category: "data_error",
-          suggestion: "Check that the tag value is valid."
-        }
+    @reason_patterns
+    |> Enum.find(fn {pattern, _, _, _} -> String.contains?(reason, pattern) end)
+    |> case do
+      {_, message, category, suggestion} ->
+        %{message: message, category: category, suggestion: suggestion}
 
-      String.contains?(reason, "update_failed") ->
-        %{
-          message: "Failed to update customer profile.",
-          category: "data_error",
-          suggestion: "Check that the field names and values are valid."
-        }
-
-      String.contains?(reason, "no_variants") ->
-        %{
-          message: "A/B split has no variants configured.",
-          category: "config_error",
-          suggestion: "Add at least one variant to the A/B split node."
-        }
-
-      String.contains?(reason, "not_resumable") ->
-        %{
-          message: "This node cannot be resumed.",
-          category: "execution_error",
-          suggestion: "This is an internal error. The node type does not support resume."
-        }
-
-      String.contains?(reason, "unexpected_trigger") ->
-        %{
-          message: "Wait node received an unexpected trigger.",
-          category: "execution_error",
-          suggestion:
-            "This usually resolves on its own. If it persists, check the flow configuration."
-        }
-
-      String.contains?(reason, "unknown_node_type") ->
-        %{
-          message: "Unknown node type in the flow.",
-          category: "config_error",
-          suggestion:
-            "The flow contains a node type that is not registered. Check the flow graph."
-        }
-
-      String.contains?(reason, "no_provider") ->
-        %{
-          message: "No message provider configured for this channel.",
-          category: "config_error",
-          suggestion:
-            "Set up a provider (e.g., SendGrid for email, Twilio for SMS) in your settings."
-        }
-
-      String.contains?(reason, "server_crashed") ->
-        %{
-          message: "The flow execution was interrupted unexpectedly.",
-          category: "system_error",
-          suggestion: "This was an internal error. You can re-trigger the flow for this customer."
-        }
-
-      true ->
+      nil ->
         %{
           message: "Node execution failed: #{truncate(reason, 200)}",
           category: "execution_error",
