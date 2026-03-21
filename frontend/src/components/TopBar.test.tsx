@@ -28,9 +28,8 @@ describe('TopBar', () => {
     expect(screen.queryByText('Engine Room')).not.toBeInTheDocument()
   })
 
-  it('renders ThemeSwitcher buttons', () => {
+  it('renders ThemeSwitcher trigger', () => {
     renderTopBar()
-    const buttons = screen.getAllByRole('button')
-    expect(buttons.length).toBeGreaterThanOrEqual(8)
+    expect(screen.getByTitle('Theme')).toBeInTheDocument()
   })
 })

@@ -4,26 +4,25 @@ import ThemeSwitcher from './ThemeSwitcher'
 import { THEMES } from '../lib/themes'
 
 describe('ThemeSwitcher', () => {
-  it('renders a button for each theme', () => {
+  it('renders a trigger button', () => {
     render(<ThemeSwitcher current="hearth-light" onChange={() => {}} />)
-    const buttons = screen.getAllByRole('button')
-    expect(buttons).toHaveLength(THEMES.length)
+    expect(screen.getByTitle('Theme')).toBeInTheDocument()
   })
 
-  it('calls onChange with theme id on click', () => {
+  it('opens dropdown on click', () => {
+    render(<ThemeSwitcher current="hearth-light" onChange={() => {}} />)
+    fireEvent.click(screen.getByTitle('Theme'))
+    // All 8 theme options visible
+    expect(screen.getAllByRole('button')).toHaveLength(1 + THEMES.length)
+  })
+
+  it('calls onChange and closes on theme select', () => {
     const onChange = vi.fn()
     render(<ThemeSwitcher current="hearth-light" onChange={onChange} />)
-
-    const buttons = screen.getAllByRole('button')
-    fireEvent.click(buttons[3]!) // command-dark (4th button)
-    expect(onChange).toHaveBeenCalledWith(THEMES[3]!.id)
-  })
-
-  it('shows title with palette name and mode', () => {
-    render(<ThemeSwitcher current="grove-light" onChange={() => {}} />)
-    expect(screen.getByTitle('Hearth light')).toBeInTheDocument()
-    expect(screen.getByTitle('Command dark')).toBeInTheDocument()
-    expect(screen.getByTitle('Grove light')).toBeInTheDocument()
-    expect(screen.getByTitle('Calcifer dark')).toBeInTheDocument()
+    fireEvent.click(screen.getByTitle('Theme'))
+    fireEvent.click(screen.getByTitle('Command dark'))
+    expect(onChange).toHaveBeenCalledWith('command-dark')
+    // Dropdown closed — only trigger button remains
+    expect(screen.getAllByRole('button')).toHaveLength(1)
   })
 })
