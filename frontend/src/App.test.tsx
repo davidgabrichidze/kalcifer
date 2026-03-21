@@ -5,7 +5,7 @@ import App from './App'
 describe('App', () => {
   it('renders TopBar with brand', () => {
     render(<App />)
-    expect(screen.getByText(/Kalcifer/)).toBeInTheDocument()
+    expect(screen.getByText('Kalcifer')).toBeInTheDocument()
   })
 
   it('shows Work page by default', () => {
@@ -13,15 +13,21 @@ describe('App', () => {
     expect(screen.getByText(/AI chat/)).toBeInTheDocument()
   })
 
-  it('navigates to Engine Room page', () => {
-    render(<App />)
-    fireEvent.click(screen.getByText('Engine Room'))
-    expect(screen.getByText(/Live monitoring/)).toBeInTheDocument()
-  })
-
   it('navigates to Browse page', () => {
     render(<App />)
     fireEvent.click(screen.getByText('Browse'))
     expect(screen.getByText(/Flow library/)).toBeInTheDocument()
+  })
+
+  it('has Engine Room icon in bottom-left', () => {
+    render(<App />)
+    const engineLink = screen.getByTitle('Engine Room')
+    expect(engineLink).toBeInTheDocument()
+  })
+
+  it('navigates to Engine Room via bottom icon', () => {
+    render(<App />)
+    fireEvent.click(screen.getByTitle('Engine Room'))
+    expect(screen.getByText(/Live monitoring/)).toBeInTheDocument()
   })
 })

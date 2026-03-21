@@ -14,19 +14,18 @@ function renderTopBar(theme = 'hearth-light' as const) {
 describe('TopBar', () => {
   it('renders Kalcifer brand', () => {
     renderTopBar()
-    expect(screen.getByText(/Kalcifer/)).toBeInTheDocument()
+    expect(screen.getByText('Kalcifer')).toBeInTheDocument()
   })
 
-  it('renders all 3 nav links', () => {
+  it('renders Work and Browse nav links', () => {
     renderTopBar()
     expect(screen.getByText('Work')).toBeInTheDocument()
-    expect(screen.getByText('Engine Room')).toBeInTheDocument()
     expect(screen.getByText('Browse')).toBeInTheDocument()
   })
 
-  it('does not render Editor nav link', () => {
+  it('does not render Engine Room in TopBar', () => {
     renderTopBar()
-    expect(screen.queryByText('Editor')).not.toBeInTheDocument()
+    expect(screen.queryByText('Engine Room')).not.toBeInTheDocument()
   })
 
   it('renders ThemeSwitcher buttons', () => {
