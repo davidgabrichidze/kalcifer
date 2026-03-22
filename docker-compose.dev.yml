@@ -49,6 +49,7 @@ services:
     ports:
       - "5173:5173"
     environment:
+      API_URL: http://app:4500
       VITE_API_URL: http://localhost:4500
       VITE_WS_URL: ws://localhost:4500
 

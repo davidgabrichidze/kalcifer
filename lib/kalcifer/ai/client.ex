@@ -170,15 +170,6 @@ defmodule Kalcifer.AI.Client do
     tool_results
   end
 
-  defp extract_text(content) when is_list(content) do
-    content
-    |> Enum.filter(fn block -> block["type"] == "text" end)
-    |> Enum.map(fn block -> block["text"] end)
-    |> Enum.join("")
-  end
-
-  defp extract_text(_), do: ""
-
   # ── Finch streaming internals ─────────────────────────────────
 
   defp do_stream(body, callback) do

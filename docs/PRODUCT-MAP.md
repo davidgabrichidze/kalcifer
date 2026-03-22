@@ -70,10 +70,10 @@ kalcifer
 │   └── presence                    # ❌ Online operators, live cursors
 │
 ├── ai                              # AI core — კალციფერის ტვინი
-│   ├── chat                        # ❌ Claude API client, streaming SSE
-│   ├── tools                       # ❌ AI tool definitions (create_flow, diagnose, etc.)
-│   ├── context                     # ❌ Context assembly — flow state, analytics, errors
-│   └── prompts                     # ❌ System prompt, persona, tool schemas
+│   ├── chat                        # ✅ Claude API client (Finch streaming), SSE endpoint
+│   ├── tools                       # ⚠️ 6 tools (list/get/create_flow, node_types, remember, recall)
+│   ├── context                     # ⚠️ Conversations + Memory schemas, CRUD (not wired to chat yet)
+│   └── prompts                     # ✅ System prompt with Calcifer personality (Georgian)
 │
 ├── simulators                      # Provider simulators (before real providers)
 │   ├── email                       # ❌ Email simulator (delays, bounces, opens, clicks)
@@ -83,10 +83,10 @@ kalcifer
 │   └── in-app                      # ❌ In-app message simulator
 │
 ├── fe                              # Frontend (React SPA)
-│   ├── shell                       # 🔨 App shell, routing, splash screen
-│   ├── design                      # ❌ Design system — 12 themes, tokens, components
-│   ├── chat                        # ❌ AI chat panel (persistent, contextual)
-│   ├── work                        # ❌ Work page — dashboard + AI assistant
+│   ├── shell                       # ✅ App shell, routing, TopBar, splash screen
+│   ├── design                      # ⚠️ 6 themes (hearth/ocean/forest/sunset/storm/minimal), tokens, dark mode
+│   ├── chat                        # ⚠️ ChatPanel (streaming SSE, markdown, tool badges) — no persistence
+│   ├── work                        # 🔨 Work page layout (sidebar + chat) — no context panel yet
 │   ├── editor                      # ❌ Flow editor — visual canvas + node palette
 │   ├── engine-room                 # ❌ Engine monitoring — live instances, logs
 │   └── browse                      # ❌ Flow library — search, templates, import/export
@@ -103,7 +103,7 @@ kalcifer
 
 ## Node Map
 
-> `engine/nodes` scope — 22 registered types across 5 categories
+> `engine/nodes` scope — 25 registered types across 5 categories (includes 3 AI nodes)
 
 ```
 engine/nodes
@@ -132,6 +132,11 @@ engine/nodes
 │   ├── add_tag                     # ✅ Add tags to customer
 │   ├── custom_code                 # ✅ Execute custom Elixir expression
 │   └── track_conversion           # ✅ Record conversion event
+│
+├── action/ai
+│   ├── ai_think                    # ✅ AI generates text/analysis from flow context
+│   ├── ai_decide                   # ✅ AI-powered branching (condition via Claude)
+│   └── ai_notify                   # ✅ AI-summarized operator notifications (PubSub)
 │
 ├── wait
 │   ├── wait                        # ✅ Delay for duration (e.g. "3d", "2h")
