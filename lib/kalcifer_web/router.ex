@@ -26,6 +26,11 @@ defmodule KalciferWeb.Router do
 
     get "/engine", EngineController, :show
 
+    # Browse mode — read-only flow/journey listing (dev frontend)
+    get "/flows", FlowController, :index
+    get "/flows/:id", FlowController, :show
+    get "/journeys", JourneyController, :index
+
     get "/conversations", ConversationController, :index
     get "/conversations/:id", ConversationController, :show
     put "/conversations/:id", ConversationController, :update

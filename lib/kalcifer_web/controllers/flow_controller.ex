@@ -11,7 +11,7 @@ defmodule KalciferWeb.FlowController do
   # --- CRUD ---
 
   def index(conn, params) do
-    tenant = conn.assigns.current_tenant
+    tenant = resolve_tenant(conn)
     opts = if params["status"], do: [status: params["status"]], else: []
     flows = Flows.list_flows(tenant.id, opts)
     json(conn, %{data: Enum.map(flows, &serialize_flow/1)})
@@ -140,5 +140,18 @@ defmodule KalciferWeb.FlowController do
     params
     |> Map.take(["name", "description", "entry_config", "exit_criteria", "frequency_cap"])
     |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
+  end
+
+  # Dev fallback: use current_tenant from auth plug, or find the demo tenant
+  defp resolve_tenant(conn) do
+    case conn.assigns[:current_tenant] do
+      nil ->
+        alias Kalcifer.Repo
+        alias Kalcifer.Tenants.Tenant
+        Repo.get_by!(Tenant, name: "Demo Tenant")
+
+      tenant ->
+        tenant
+    end
   end
 end
