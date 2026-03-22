@@ -20,7 +20,7 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Decide do
 
   use Kalcifer.Engine.NodeBehaviour
 
-  alias Kalcifer.AI.Client
+  defp client, do: Application.get_env(:kalcifer, :ai_client, Kalcifer.AI.Client)
 
   @impl true
   def execute(config, context) do
@@ -50,7 +50,7 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Decide do
       Reply with ONLY the chosen value, nothing else.
       """
 
-      case Client.chat([%{role: "user", content: prompt}]) do
+      case client().chat([%{role: "user", content: prompt}], []) do
         {:ok, response} ->
           chosen = parse_branch(response, branches)
 

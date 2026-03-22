@@ -19,9 +19,9 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Notify do
 
   use Kalcifer.Engine.NodeBehaviour
 
-  alias Kalcifer.AI.Client
-
   require Logger
+
+  defp client, do: Application.get_env(:kalcifer, :ai_client, Kalcifer.AI.Client)
 
   @impl true
   def execute(config, context) do
@@ -92,7 +92,7 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Notify do
     #{inspect(accumulated, limit: 2000, pretty: true)}
     """
 
-    case Client.chat([%{role: "user", content: prompt}]) do
+    case client().chat([%{role: "user", content: prompt}], []) do
       {:ok, summary} -> summary
       {:error, _} -> "ფლოუ დასრულდა. შედეგების ნახვა შეგიძლია დეტალებში."
     end

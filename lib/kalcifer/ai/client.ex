@@ -6,12 +6,14 @@ defmodule Kalcifer.AI.Client do
   and Req for non-streaming requests (including tool use rounds).
   """
 
+  @behaviour Kalcifer.AI.ClientBehaviour
+
   require Logger
 
   @api_url "https://api.anthropic.com/v1/messages"
   @model "claude-haiku-4-5-20251001"
   @max_tokens 4096
-  @max_tool_rounds 5
+  @max_tool_rounds 15
 
   @type message :: %{role: String.t(), content: String.t() | list()}
   @type stream_event ::
@@ -134,7 +136,8 @@ defmodule Kalcifer.AI.Client do
   end
 
   defp tool_loop(_messages, _tools, _executor, callback, _opts, _round) do
-    callback.({:error, "Too many tool rounds"})
+    Logger.warning("AI tool loop exceeded #{@max_tool_rounds} rounds")
+    callback.({:error, "ძალიან ბევრი ნაბიჯი დამჭირდა — სცადე უფრო მოკლე დავალებით."})
     {:error, :max_tool_rounds}
   end
 

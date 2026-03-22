@@ -19,7 +19,7 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Think do
 
   use Kalcifer.Engine.NodeBehaviour
 
-  alias Kalcifer.AI.Client
+  defp client, do: Application.get_env(:kalcifer, :ai_client, Kalcifer.AI.Client)
 
   @impl true
   def execute(config, context) do
@@ -42,7 +42,7 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Think do
           sys -> [system: sys]
         end
 
-      case Client.chat(messages, opts) do
+      case client().chat(messages, opts) do
         {:ok, response} ->
           {:completed, %{response: response, prompt: prompt}}
 

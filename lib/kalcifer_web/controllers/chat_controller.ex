@@ -87,7 +87,7 @@ defmodule KalciferWeb.ChatController do
         chunk_sse(conn, "done", %{text: full_text})
 
       {:error, reason} ->
-        chunk_sse(conn, "error", %{message: inspect(reason)})
+        chunk_sse(conn, "error", %{message: humanize_error(reason)})
     end
 
     tool_ctx = %{conversation_id: conversation_id}
@@ -109,7 +109,7 @@ defmodule KalciferWeb.ChatController do
         conn
 
       {:error, reason} ->
-        chunk_sse(conn, "error", %{message: inspect(reason)})
+        chunk_sse(conn, "error", %{message: humanize_error(reason)})
         conn
     end
   end
@@ -197,6 +197,17 @@ defmodule KalciferWeb.ChatController do
         tenant.id
     end
   end
+
+  defp humanize_error(:max_tool_rounds),
+    do: "ძალიან ბევრი ნაბიჯი დამჭირდა — სცადე უფრო მოკლე დავალებით."
+
+  defp humanize_error({:api_error, status, _body}),
+    do: "სერვისთან კავშირის პრობლემა (#{status}). სცადე თავიდან."
+
+  defp humanize_error(reason) when is_binary(reason), do: reason
+
+  defp humanize_error(_reason),
+    do: "რაღაც შეცდომა მოხდა. სცადე თავიდან."
 
   defp chunk_sse(conn, event, data) do
     payload = "event: #{event}\ndata: #{Jason.encode!(data)}\n\n"
