@@ -37,8 +37,11 @@ export default function WorkPage() {
       // No URL param — check if there are existing conversations
       fetchConversations({ status: 'all' }).then(convs => {
         if (convs.length > 0) {
-          // Has conversations — show lobby (sidebar + welcome, no auto-open)
-          setStage('lobby')
+          // Has conversations — open the most recent one
+          const latest = convs[0]!
+          setConversationId(latest.id)
+          setSearchParams({ c: latest.id }, { replace: true })
+          setStage('chat')
         }
         // else: no conversations — stay in welcome
       }).catch(() => {
