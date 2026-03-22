@@ -19,6 +19,7 @@ defmodule Kalcifer.AI.Tools do
   @spec definitions() :: list(map())
   def definitions do
     [
+      classify_session_tool(),
       list_flows_tool(),
       get_flow_tool(),
       create_flow_tool(),
@@ -26,6 +27,45 @@ defmodule Kalcifer.AI.Tools do
       remember_tool(),
       recall_tool()
     ]
+  end
+
+  defp classify_session_tool do
+    %{
+      name: "classify_session",
+      description: """
+      Propose a session type to the user. Use this when you understand what
+      the user wants to do. The result is shown as a suggestion that the user
+      confirms or rejects.
+
+      Session types:
+      - campaign: marketing campaign/journey (email sequences, onboarding, etc.)
+      - flow: standalone automation flow (not marketing-specific)
+      - analysis: reviewing metrics, funnel analysis, A/B results
+      - debug: diagnosing a problem with an instance or flow
+
+      Call this ONCE per session, when the purpose becomes clear.
+      Include a suggested title for the session.
+      """,
+      input_schema: %{
+        type: "object",
+        properties: %{
+          kind: %{
+            type: "string",
+            enum: ["campaign", "flow", "analysis", "debug"],
+            description: "The proposed session type"
+          },
+          title: %{
+            type: "string",
+            description: "A short, human-readable title for this session (e.g. 'Welcome კამპანია', 'Onboarding ფლოუ')"
+          },
+          reason: %{
+            type: "string",
+            description: "Brief explanation of why you think this is the right type (shown to user)"
+          }
+        },
+        required: ["kind", "title"]
+      }
+    }
   end
 
   defp list_flows_tool do
@@ -173,12 +213,15 @@ defmodule Kalcifer.AI.Tools do
 
   The `tenant_id` is injected by the caller (ChatController)
   so tools never need to resolve auth themselves.
+
+  `ctx` is an optional map with session context (e.g. conversation_id)
+  needed by tools like classify_session.
   """
-  @spec execute(String.t(), map(), String.t()) :: {:ok, String.t()} | {:error, String.t()}
-  def execute(tool_name, input, tenant_id) do
+  @spec execute(String.t(), map(), String.t(), map()) :: {:ok, String.t()} | {:error, String.t()}
+  def execute(tool_name, input, tenant_id, ctx \\ %{}) do
     Logger.info("AI tool call: #{tool_name} input=#{inspect(input)}")
 
-    case do_execute(tool_name, input, tenant_id) do
+    case do_execute(tool_name, input, tenant_id, ctx) do
       {:ok, result} ->
         {:ok, result}
 
@@ -192,7 +235,41 @@ defmodule Kalcifer.AI.Tools do
       {:error, "Internal error executing #{tool_name}"}
   end
 
-  defp do_execute("list_flows", input, tenant_id) do
+  defp do_execute("classify_session", input, _tenant_id, ctx) do
+    conversation_id = Map.get(ctx, :conversation_id)
+
+    unless conversation_id do
+      {:error, "No active conversation to classify"}
+    else
+      kind = Map.fetch!(input, "kind")
+      title = Map.get(input, "title")
+      reason = Map.get(input, "reason", "")
+
+      case Context.get_conversation(conversation_id) do
+        nil ->
+          {:error, "Conversation not found"}
+
+        conv ->
+          case Context.classify_conversation(conv, kind, title) do
+            {:ok, classified} ->
+              result = %{
+                classified: true,
+                kind: classified.kind,
+                title: classified.title,
+                reason: reason,
+                needs_confirmation: true
+              }
+
+              {:ok, Jason.encode!(result, pretty: true)}
+
+            {:error, changeset} ->
+              {:error, "Classification failed: #{format_changeset_errors(changeset)}"}
+          end
+      end
+    end
+  end
+
+  defp do_execute("list_flows", input, tenant_id, _ctx) do
     opts =
       case Map.get(input, "status") do
         nil -> []
@@ -214,7 +291,7 @@ defmodule Kalcifer.AI.Tools do
     {:ok, Jason.encode!(result, pretty: true)}
   end
 
-  defp do_execute("get_flow", %{"flow_id" => flow_id}, _tenant_id) do
+  defp do_execute("get_flow", %{"flow_id" => flow_id}, _tenant_id, _ctx) do
     case Flows.get_flow(flow_id) do
       nil ->
         {:error, "Flow not found: #{flow_id}"}
@@ -236,7 +313,7 @@ defmodule Kalcifer.AI.Tools do
     end
   end
 
-  defp do_execute("create_flow", input, tenant_id) do
+  defp do_execute("create_flow", input, tenant_id, _ctx) do
     attrs = %{
       name: Map.fetch!(input, "name"),
       description: Map.get(input, "description", "")
@@ -259,7 +336,7 @@ defmodule Kalcifer.AI.Tools do
     end
   end
 
-  defp do_execute("list_node_types", _input, _tenant_id) do
+  defp do_execute("list_node_types", _input, _tenant_id, _ctx) do
     nodes =
       NodeRegistry.list_all()
       |> Enum.map(fn {type, module} ->
@@ -277,7 +354,7 @@ defmodule Kalcifer.AI.Tools do
     {:ok, Jason.encode!(nodes, pretty: true)}
   end
 
-  defp do_execute("remember", input, tenant_id) do
+  defp do_execute("remember", input, tenant_id, _ctx) do
     key = Map.fetch!(input, "key")
     value = Map.fetch!(input, "value")
     category = Map.get(input, "category", "general")
@@ -291,7 +368,7 @@ defmodule Kalcifer.AI.Tools do
     end
   end
 
-  defp do_execute("recall", input, tenant_id) do
+  defp do_execute("recall", input, tenant_id, _ctx) do
     case Map.get(input, "key") do
       nil ->
         # Recall all memories
@@ -320,7 +397,7 @@ defmodule Kalcifer.AI.Tools do
     end
   end
 
-  defp do_execute(unknown_tool, _input, _tenant_id) do
+  defp do_execute(unknown_tool, _input, _tenant_id, _ctx) do
     {:error, "Unknown tool: #{unknown_tool}"}
   end
 

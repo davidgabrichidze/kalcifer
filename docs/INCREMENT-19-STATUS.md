@@ -35,46 +35,29 @@
 
 ## რა არის დარჩენილი ❌
 
-### ნაბიჯი 1: Conversation Persistence (backend)
-ChatController ახლა ephemeral-ია — საუბარს არსად ინახავს.
+### ნაბიჯი 1: Conversation Persistence (backend) ✅
+- [x] ChatController: conversation_id support, create/load history
+- [x] SSE `init` event → conversation_id frontend-ს
+- [x] User + assistant messages DB-ში
+- [x] Memory auto-load system prompt-ში
+- [x] 5 ChatController tests passing
 
-```
-1.1  ChatController-ში conversation_id parameter-ის მხარდაჭერა
-     - ახალი ჩათი: conversation_id არ მოდის → create_conversation()
-     - არსებული: conversation_id მოდის → load messages + append
-     - Response-ში conversation_id ბრუნდება (SSE init event)
-
-1.2  მესიჯების შენახვა
-     - User message → add_message(conv_id, "user", content)
-     - AI response → add_message(conv_id, "assistant", full_text)
-     - Tool calls → add_message(conv_id, "assistant", nil, tool_calls)
-
-1.3  Memory auto-load
-     - საუბრის დასაწყისში recall_all → system prompt-ში inject
-     - კალციფერმა იცის ვინ ხარ და რა გიყვარს
-```
-
-**ფაილები**: `chat_controller.ex`
-**ტესტი**: conversation create/load/append, message persistence
-
-### ნაბიჯი 2: Conversation API endpoints
-სია, წაშლა, არქივი — frontend-ისთვის.
-
-```
-2.1  GET  /api/v1/conversations           — tenant-ის საუბრების სია
-2.2  GET  /api/v1/conversations/:id       — ერთი საუბრის მესიჯებით
-2.3  POST /api/v1/conversations/:id/archive — არქივი
-```
-
-**ფაილები**: ახალი `conversation_controller.ex`, router.ex update
-**ტესტი**: CRUD endpoints, auth
+### ნაბიჯი 2: Session Classification + Conversation API ✅
+- [x] Conversation schema: kind, entity_type, entity_id
+- [x] classify_session AI tool (campaign/flow/analysis/debug)
+- [x] classify_changeset — ერთხელ კლასიფიცირებული ვეღარ იცვლება
+- [x] link_entity — სესია ↔ Journey/Flow კავშირი
+- [x] GET /conversations (kind filter), GET /conversations/:id, POST archive
+- [x] ConversationController + 5 tests
+- [x] Frontend: session_classified SSE event, kind badge header-ში
+- [x] System prompt: classify_session ინსტრუქცია
+- [x] Migration: add_kind_to_conversations
 
 ### ნაბიჯი 3: Frontend — Conversation History
 ```
-3.1  Sidebar-ში საუბრების სია (API-დან)
+3.1  Sidebar-ში საუბრების სია (API-დან, kind-ით გაფილტრული)
 3.2  საუბრის არჩევა → მესიჯების ჩატვირთვა
-3.3  "ახალი საუბარი" ღილაკი
-3.4  conversation_id-ის გაგზავნა chat request-ში
+3.3  Kind icons + labels sidebar-ში
 ```
 
 **ფაილები**: `ChatPanel.tsx`, `api.ts`, ახალი `ConversationList.tsx`

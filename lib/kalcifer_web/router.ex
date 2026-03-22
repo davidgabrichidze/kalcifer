@@ -19,6 +19,10 @@ defmodule KalciferWeb.Router do
     post "/webhooks/twilio", WebhookController, :twilio
 
     post "/chat", ChatController, :create
+
+    get "/conversations", ConversationController, :index
+    get "/conversations/:id", ConversationController, :show
+    post "/conversations/:id/archive", ConversationController, :archive
   end
 
   scope "/api/v1", KalciferWeb do

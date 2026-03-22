@@ -1,10 +1,17 @@
 const API_BASE = '/api/v1'
 
+export interface SessionClassification {
+  kind: 'campaign' | 'flow' | 'analysis' | 'debug'
+  title: string
+  reason?: string
+}
+
 export interface ChatStreamCallbacks {
   onInit?: (conversationId: string) => void
   onDelta: (text: string) => void
   onToolStart?: (tool: string, input: Record<string, unknown>) => void
   onToolDone?: (tool: string, result: string) => void
+  onSessionClassified?: (classification: SessionClassification) => void
   onDone: (fullText: string) => void
   onError: (message: string) => void
 }
@@ -90,6 +97,9 @@ async function readSSEStream(
             break
           case 'tool_done':
             callbacks.onToolDone?.(data.tool, data.result)
+            break
+          case 'session_classified':
+            callbacks.onSessionClassified?.(data)
             break
           case 'done':
             callbacks.onDone(data.text)

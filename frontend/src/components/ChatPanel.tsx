@@ -1,16 +1,24 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Markdown from 'react-markdown'
 import { type ChatMessage, type ToolActivity, createMessage } from '../lib/chat'
-import { streamChat, type ApiMessage } from '../lib/api'
+import { streamChat, type ApiMessage, type SessionClassification } from '../lib/api'
 
 // Human-readable names for tools
 const TOOL_LABELS: Record<string, string> = {
+  classify_session: 'სესიის კლასიფიკაცია',
   list_flows: 'ფლოუების ჩამონათვალი',
   get_flow: 'ფლოუს დეტალები',
   create_flow: 'ფლოუს შექმნა',
   list_node_types: 'ნაბიჯების ტიპები',
   remember: 'დამახსოვრება',
   recall: 'გახსენება',
+}
+
+const KIND_LABELS: Record<string, { label: string; icon: string }> = {
+  campaign: { label: 'კამპანია', icon: '📣' },
+  flow: { label: 'ფლოუ', icon: '⚡' },
+  analysis: { label: 'ანალიზი', icon: '📊' },
+  debug: { label: 'დიაგნოსტიკა', icon: '🔍' },
 }
 
 interface ChatPanelProps {
@@ -25,6 +33,7 @@ export default function ChatPanel({
   const [isTyping, setIsTyping] = useState(false)
   const [_streamingId, setStreamingId] = useState<string | null>(null)
   const [conversationId, setConversationId] = useState<string | null>(null)
+  const [sessionKind, setSessionKind] = useState<SessionClassification | null>(null)
   const msgsEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -86,6 +95,7 @@ export default function ChatPanel({
       apiMessages,
       {
         onInit: (convId) => setConversationId(convId),
+        onSessionClassified: (classification) => setSessionKind(classification),
         onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
         onToolStart: (tool) => {
           addToolToMessage(aiMsg.id, { tool, status: 'running' })
@@ -121,6 +131,7 @@ export default function ChatPanel({
     abortRef.current?.abort()
     setMessages([])
     setConversationId(null)
+    setSessionKind(null)
     setInput('')
   }
 
@@ -131,16 +142,47 @@ export default function ChatPanel({
       className="flex flex-col"
       style={{ height: '100%', minHeight: 0, background: 'var(--color-bg)' }}
     >
-      {/* Header with new chat button */}
+      {/* Header with session kind badge + new chat button */}
       {hasMessages && (
         <div
           style={{
             display: 'flex',
-            justifyContent: 'flex-end',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             padding: '8px 16px 0',
             flexShrink: 0,
           }}
         >
+          {/* Session kind badge */}
+          {sessionKind ? (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 12.5,
+                fontWeight: 600,
+                color: 'var(--color-text)',
+              }}
+            >
+              <span>{KIND_LABELS[sessionKind.kind]?.icon}</span>
+              <span>{sessionKind.title}</span>
+              <span
+                style={{
+                  fontSize: 10,
+                  padding: '2px 6px',
+                  borderRadius: 6,
+                  background: 'var(--color-primary-soft)',
+                  color: 'var(--color-primary)',
+                }}
+              >
+                {KIND_LABELS[sessionKind.kind]?.label}
+              </span>
+            </div>
+          ) : (
+            <div />
+          )}
+
           <button
             onClick={handleNewChat}
             disabled={isTyping}
@@ -154,6 +196,7 @@ export default function ChatPanel({
               cursor: isTyping ? 'default' : 'pointer',
               opacity: isTyping ? 0.4 : 1,
               transition: 'all 0.2s',
+              flexShrink: 0,
             }}
           >
             + ახალი საუბარი

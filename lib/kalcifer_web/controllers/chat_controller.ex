@@ -62,6 +62,22 @@ defmodule KalciferWeb.ChatController do
       {:tool_use, _id, name, input} ->
         chunk_sse(conn, "tool_start", %{tool: name, input: input})
 
+      {:tool_result, "classify_session" = name, result} ->
+        # Send both tool_done and a special session_classified event
+        chunk_sse(conn, "tool_done", %{tool: name, result: result})
+
+        case Jason.decode(result) do
+          {:ok, %{"classified" => true} = data} ->
+            chunk_sse(conn, "session_classified", %{
+              kind: data["kind"],
+              title: data["title"],
+              reason: data["reason"]
+            })
+
+          _ ->
+            :ok
+        end
+
       {:tool_result, name, result} ->
         chunk_sse(conn, "tool_done", %{tool: name, result: result})
 
@@ -74,8 +90,10 @@ defmodule KalciferWeb.ChatController do
         chunk_sse(conn, "error", %{message: inspect(reason)})
     end
 
+    tool_ctx = %{conversation_id: conversation_id}
+
     tool_executor = fn name, input ->
-      Tools.execute(name, input, tenant_id)
+      Tools.execute(name, input, tenant_id, tool_ctx)
     end
 
     opts = if system_prompt, do: [system: system_prompt], else: []

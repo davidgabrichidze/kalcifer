@@ -82,6 +82,46 @@ defmodule Kalcifer.AI.ContextTest do
     end
   end
 
+  describe "classify_conversation/3" do
+    test "classifies an untyped conversation" do
+      tenant = insert(:tenant)
+      {:ok, conv} = Context.create_conversation(tenant.id)
+
+      {:ok, classified} = Context.classify_conversation(conv, "campaign", "Welcome კამპანია")
+      assert classified.kind == "campaign"
+      assert classified.title == "Welcome კამპანია"
+    end
+
+    test "rejects re-classification" do
+      tenant = insert(:tenant)
+      {:ok, conv} = Context.create_conversation(tenant.id)
+      {:ok, classified} = Context.classify_conversation(conv, "campaign")
+
+      assert {:error, changeset} = Context.classify_conversation(classified, "flow")
+      assert errors_on(changeset).kind
+    end
+
+    test "rejects invalid kind" do
+      tenant = insert(:tenant)
+      {:ok, conv} = Context.create_conversation(tenant.id)
+
+      assert {:error, changeset} = Context.classify_conversation(conv, "invalid_kind")
+      assert errors_on(changeset).kind
+    end
+  end
+
+  describe "link_entity/3" do
+    test "links a conversation to an entity" do
+      tenant = insert(:tenant)
+      {:ok, conv} = Context.create_conversation(tenant.id)
+      entity_id = Ecto.UUID.generate()
+
+      {:ok, linked} = Context.link_entity(conv, "Journey", entity_id)
+      assert linked.entity_type == "Journey"
+      assert linked.entity_id == entity_id
+    end
+  end
+
   # ── Messages ───────────────────────────────────────────────
 
   describe "add_message/4" do

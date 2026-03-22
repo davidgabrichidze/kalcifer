@@ -32,9 +32,13 @@ defmodule Kalcifer.AI.Context do
 
   def list_conversations(tenant_id, opts \\ []) do
     status = Keyword.get(opts, :status, "active")
+    kind = Keyword.get(opts, :kind)
 
     Conversation
     |> where([c], c.tenant_id == ^tenant_id and c.status == ^status)
+    |> then(fn q ->
+      if kind, do: where(q, [c], c.kind == ^kind), else: q
+    end)
     |> order_by([c], desc: c.updated_at)
     |> limit(^Keyword.get(opts, :limit, 50))
     |> Repo.all()
@@ -43,6 +47,20 @@ defmodule Kalcifer.AI.Context do
   def archive_conversation(%Conversation{} = conv) do
     conv
     |> Conversation.archive_changeset()
+    |> Repo.update()
+  end
+
+  @doc "Classify a session — sets kind (campaign/flow/analysis/debug) and optional title."
+  def classify_conversation(%Conversation{} = conv, kind, title \\ nil) do
+    conv
+    |> Conversation.classify_changeset(kind, title)
+    |> Repo.update()
+  end
+
+  @doc "Link a classified conversation to a concrete entity (Journey, Flow, etc.)."
+  def link_entity(%Conversation{} = conv, entity_type, entity_id) do
+    conv
+    |> Conversation.link_entity_changeset(entity_type, entity_id)
     |> Repo.update()
   end
 

@@ -11,11 +11,12 @@ defmodule Kalcifer.AI.ToolsTest do
   end
 
   describe "definitions/0" do
-    test "returns 6 tool definitions" do
+    test "returns 7 tool definitions" do
       defs = Tools.definitions()
-      assert length(defs) == 6
+      assert length(defs) == 7
 
       names = Enum.map(defs, & &1.name)
+      assert "classify_session" in names
       assert "list_flows" in names
       assert "get_flow" in names
       assert "create_flow" in names
@@ -125,6 +126,45 @@ defmodule Kalcifer.AI.ToolsTest do
       assert {:ok, json} = Tools.execute("recall", %{}, tid)
       memories = Jason.decode!(json)
       assert length(memories) >= 2
+    end
+  end
+
+  describe "execute/4 — classify_session" do
+    test "classifies a conversation", %{tenant_id: tid} do
+      {:ok, conv} = Kalcifer.AI.Context.create_conversation(tid)
+
+      assert {:ok, json} = Tools.execute(
+        "classify_session",
+        %{"kind" => "campaign", "title" => "Welcome კამპანია"},
+        tid,
+        %{conversation_id: conv.id}
+      )
+
+      result = Jason.decode!(json)
+      assert result["classified"] == true
+      assert result["kind"] == "campaign"
+      assert result["title"] == "Welcome კამპანია"
+    end
+
+    test "returns error without conversation_id", %{tenant_id: tid} do
+      assert {:error, _} = Tools.execute(
+        "classify_session",
+        %{"kind" => "campaign", "title" => "Test"},
+        tid,
+        %{}
+      )
+    end
+
+    test "rejects re-classification", %{tenant_id: tid} do
+      {:ok, conv} = Kalcifer.AI.Context.create_conversation(tid)
+      {:ok, _} = Kalcifer.AI.Context.classify_conversation(conv, "campaign")
+
+      assert {:error, _} = Tools.execute(
+        "classify_session",
+        %{"kind" => "flow", "title" => "Changed"},
+        tid,
+        %{conversation_id: conv.id}
+      )
     end
   end
 

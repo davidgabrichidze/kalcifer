@@ -71,8 +71,8 @@ kalcifer
 │
 ├── ai                              # AI core — კალციფერის ტვინი
 │   ├── chat                        # ✅ Claude API client (Finch streaming), SSE endpoint
-│   ├── tools                       # ⚠️ 6 tools (list/get/create_flow, node_types, remember, recall)
-│   ├── context                     # ⚠️ Conversations + Memory schemas, CRUD (not wired to chat yet)
+│   ├── tools                       # ⚠️ 7 tools (classify_session, list/get/create_flow, node_types, remember, recall)
+│   ├── context                     # ✅ Conversations (persistent, classified), Memory (CRUD, auto-load)
 │   └── prompts                     # ✅ System prompt with Calcifer personality (Georgian)
 │
 ├── simulators                      # Provider simulators (before real providers)
