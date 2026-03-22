@@ -398,6 +398,157 @@ body {
 .chat-md h2 { font-size: 1.1em; }
 .chat-md h3 { font-size: 1.0em; }
 
+/* ─── Stage System ─── */
+
+/* Sidebar transitions */
+.work-sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.4s ease, min-width 0.4s ease, opacity 0.3s;
+}
+
+[data-stage="welcome"] .work-sidebar {
+  width: 0;
+  min-width: 0;
+  opacity: 0;
+  border-right: none;
+  overflow: hidden;
+}
+
+/* Chat area transitions */
+.work-chat {
+  display: flex;
+  flex-direction: column;
+  transition: flex 0.5s ease, max-width 0.5s ease;
+  overflow: hidden;
+  min-height: 0;
+  min-width: 0;
+}
+
+[data-stage="welcome"] .work-chat {
+  flex: 1;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-stage="chat"] .work-chat {
+  flex: 3;
+  background: var(--color-bg);
+}
+
+/* Welcome center */
+.welcome-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  padding: 40px;
+  transition: opacity 0.4s, transform 0.5s ease;
+}
+
+.work-stage:not([data-stage="welcome"]) .welcome-center {
+  display: none;
+}
+
+/* Welcome exit animations */
+.welcome-center.exiting {
+  opacity: 1;
+  pointer-events: none;
+}
+
+.welcome-center.exiting .welcome-avatar,
+.welcome-center.exiting .welcome-title,
+.welcome-center.exiting .welcome-sub,
+.welcome-center.exiting .welcome-hints {
+  animation: wFadeUp 0.4s ease forwards;
+}
+
+.welcome-center.exiting .welcome-input-area {
+  animation: wDropDown 0.5s ease forwards;
+}
+
+@keyframes wFadeUp {
+  to { opacity: 0; transform: translateY(-30px); }
+}
+
+@keyframes wDropDown {
+  to { opacity: 0; transform: translateY(60px); }
+}
+
+/* Welcome avatar breathing */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 var(--color-primary-soft); }
+  50% { transform: scale(1.04); box-shadow: 0 0 0 16px transparent; }
+}
+
+/* Chat column — hidden in welcome, visible otherwise */
+.chat-col {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.work-stage:not([data-stage="welcome"]) .chat-col {
+  display: flex;
+}
+
+/* Sidebar content */
+.sb-scroll::-webkit-scrollbar { width: 3px; }
+.sb-scroll::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+
+/* Flow item in sidebar */
+.flow-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+  border: 1px solid transparent;
+}
+
+.flow-item:hover { background: var(--color-surface-dim); }
+.flow-item.active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+
+.flow-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.dot-active { background: var(--color-success); animation: pulse 2s infinite; }
+.dot-draft { background: var(--color-text-muted); }
+.dot-archived { background: var(--color-border); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Message entrance animation */
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.msg-enter { animation: msgIn 0.3s ease; }
+
 /* ─── Animations ─── */
 @keyframes typingDot {
   0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }

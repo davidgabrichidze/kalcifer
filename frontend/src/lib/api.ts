@@ -1,5 +1,55 @@
 const API_BASE = '/api/v1'
 
+// ── Conversation types ──────────────────────────────────
+
+export interface Conversation {
+  id: string
+  title: string | null
+  kind: string | null
+  status: string
+  inserted_at: string
+  updated_at: string
+}
+
+export interface ConversationMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  inserted_at: string
+}
+
+export interface ConversationDetail extends Conversation {
+  messages: ConversationMessage[]
+}
+
+// ── Conversation API ────────────────────────────────────
+
+export async function fetchConversations(kind?: string): Promise<Conversation[]> {
+  const params = new URLSearchParams()
+  if (kind) params.set('kind', kind)
+  const url = `${API_BASE}/conversations${params.toString() ? '?' + params : ''}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const data = await res.json()
+  return data.conversations
+}
+
+export async function fetchConversation(id: string): Promise<ConversationDetail> {
+  const res = await fetch(`${API_BASE}/conversations/${id}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const data = await res.json()
+  return { ...data.conversation, messages: data.messages }
+}
+
+export async function archiveConversation(id: string): Promise<Conversation> {
+  const res = await fetch(`${API_BASE}/conversations/${id}/archive`, { method: 'POST' })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const data = await res.json()
+  return data.conversation
+}
+
+// ── Chat types ──────────────────────────────────────────
+
 export interface SessionClassification {
   kind: 'campaign' | 'flow' | 'analysis' | 'debug'
   title: string

@@ -13,37 +13,37 @@ vi.mock('../lib/api', () => ({
     }, 50)
     return { abort: vi.fn() }
   }),
+  fetchConversation: vi.fn(() => Promise.resolve({ messages: [] })),
 }))
+
+const defaultProps = {
+  conversationId: null,
+  sessionKind: null,
+}
 
 describe('ChatPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('renders welcome state with Kalcifer branding', () => {
-    render(<ChatPanel />)
-    expect(screen.getByText('Kalcifer')).toBeInTheDocument()
-    expect(screen.getByText('სახლის გული ცოცხალია')).toBeInTheDocument()
-  })
-
   it('renders input with Georgian placeholder', () => {
-    render(<ChatPanel />)
+    render(<ChatPanel {...defaultProps} />)
     expect(screen.getByPlaceholderText('მიამბე რა გინდა გააკეთო...')).toBeInTheDocument()
   })
 
   it('renders send button', () => {
-    render(<ChatPanel />)
+    render(<ChatPanel {...defaultProps} />)
     expect(screen.getByTitle('Send')).toBeInTheDocument()
   })
 
   it('send button is disabled when input is empty', () => {
-    render(<ChatPanel />)
+    render(<ChatPanel {...defaultProps} />)
     const sendBtn = screen.getByTitle('Send')
     expect(sendBtn).toBeDisabled()
   })
 
   it('sends a message on Enter', async () => {
-    render(<ChatPanel />)
+    render(<ChatPanel {...defaultProps} />)
     const textarea = screen.getByPlaceholderText('მიამბე რა გინდა გააკეთო...')
 
     fireEvent.change(textarea, { target: { value: 'გამარჯობა' } })
@@ -56,7 +56,7 @@ describe('ChatPanel', () => {
   })
 
   it('shows streamed AI response', async () => {
-    render(<ChatPanel />)
+    render(<ChatPanel {...defaultProps} />)
     const textarea = screen.getByPlaceholderText('მიამბე რა გინდა გააკეთო...')
 
     fireEvent.change(textarea, { target: { value: 'test' } })
@@ -68,7 +68,7 @@ describe('ChatPanel', () => {
   })
 
   it('does not send on Shift+Enter', () => {
-    render(<ChatPanel />)
+    render(<ChatPanel {...defaultProps} />)
     const textarea = screen.getByPlaceholderText('მიამბე რა გინდა გააკეთო...')
 
     fireEvent.change(textarea, { target: { value: 'test' } })
@@ -76,5 +76,22 @@ describe('ChatPanel', () => {
 
     // Message not sent — no user avatar
     expect(screen.queryByText('DG')).not.toBeInTheDocument()
+  })
+
+  it('sends initial message from welcome screen', async () => {
+    const onSent = vi.fn()
+    render(
+      <ChatPanel
+        {...defaultProps}
+        initialMessage="ტესტი"
+        onInitialMessageSent={onSent}
+      />,
+    )
+
+    // User message from initial message (effect runs async)
+    await waitFor(() => {
+      expect(screen.getByText('ტესტი')).toBeInTheDocument()
+    })
+    expect(onSent).toHaveBeenCalled()
   })
 })

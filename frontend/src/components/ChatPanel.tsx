@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Markdown from 'react-markdown'
 import { type ChatMessage, type ToolActivity, createMessage } from '../lib/chat'
-import { streamChat, type ApiMessage, type SessionClassification } from '../lib/api'
+import { streamChat, fetchConversation, type ApiMessage, type SessionClassification } from '../lib/api'
 
 // Human-readable names for tools
 const TOOL_LABELS: Record<string, string> = {
@@ -23,21 +23,35 @@ const KIND_LABELS: Record<string, { label: string; icon: string }> = {
 
 interface ChatPanelProps {
   placeholder?: string
+  conversationId: string | null
+  sessionKind: SessionClassification | null
+  onConversationId?: (id: string) => void
+  onSessionClassified?: (classification: SessionClassification) => void
+  onNewChat?: () => void
+  /** If set, send this text immediately on mount (used by welcome screen) */
+  initialMessage?: string | null
+  onInitialMessageSent?: () => void
 }
 
 export default function ChatPanel({
   placeholder = 'მიამბე რა გინდა გააკეთო...',
+  conversationId,
+  sessionKind,
+  onConversationId,
+  onSessionClassified,
+  onNewChat,
+  initialMessage,
+  onInitialMessageSent,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [_streamingId, setStreamingId] = useState<string | null>(null)
-  const [conversationId, setConversationId] = useState<string | null>(null)
-  const [sessionKind, setSessionKind] = useState<SessionClassification | null>(null)
   const msgsEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const activeAiIdRef = useRef<string | null>(null)
+  const initialMessageSentRef = useRef(false)
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -94,8 +108,8 @@ export default function ChatPanel({
     abortRef.current = streamChat(
       apiMessages,
       {
-        onInit: (convId) => setConversationId(convId),
-        onSessionClassified: (classification) => setSessionKind(classification),
+        onInit: (convId) => onConversationId?.(convId),
+        onSessionClassified: (classification) => onSessionClassified?.(classification),
         onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
         onToolStart: (tool) => {
           addToolToMessage(aiMsg.id, { tool, status: 'running' })
@@ -130,10 +144,86 @@ export default function ChatPanel({
     if (isTyping) return
     abortRef.current?.abort()
     setMessages([])
-    setConversationId(null)
-    setSessionKind(null)
     setInput('')
+    onNewChat?.()
   }
+
+  // Send initial message from welcome screen (ref guard prevents StrictMode double-fire)
+  useEffect(() => {
+    if (initialMessage && !isTyping && messages.length === 0 && !initialMessageSentRef.current) {
+      initialMessageSentRef.current = true
+      const text = initialMessage
+      onInitialMessageSent?.()
+
+      const userMsg = createMessage('user', text)
+      const aiMsg = createMessage('ai', '')
+      activeAiIdRef.current = aiMsg.id
+      setMessages([userMsg, aiMsg])
+      setIsTyping(true)
+      setStreamingId(aiMsg.id)
+
+      const apiMessages: ApiMessage[] = [{ role: 'user', content: text }]
+      abortRef.current = streamChat(
+        apiMessages,
+        {
+          onInit: (convId) => onConversationId?.(convId),
+          onSessionClassified: (classification) => onSessionClassified?.(classification),
+          onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
+          onToolStart: (tool) => {
+            addToolToMessage(aiMsg.id, { tool, status: 'running' })
+          },
+          onToolDone: (tool, result) => {
+            addToolToMessage(aiMsg.id, { tool, status: 'done', result })
+          },
+          onDone: () => {
+            setIsTyping(false)
+            setStreamingId(null)
+            activeAiIdRef.current = null
+          },
+          onError: (msg) => {
+            appendToMessage(aiMsg.id, `\n\n⚠ ${msg}`)
+            setIsTyping(false)
+            setStreamingId(null)
+            activeAiIdRef.current = null
+          },
+        },
+        conversationId ?? undefined,
+      )
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMessage])
+
+  // Load conversation history when switching via sidebar
+  const loadedConvRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!conversationId || conversationId === loadedConvRef.current) return
+    if (initialMessage) return // Skip if we're sending initial message
+    loadedConvRef.current = conversationId
+
+    async function loadHistory() {
+      try {
+        const detail = await fetchConversation(conversationId!)
+        const loaded: ChatMessage[] = detail.messages.map(m =>
+          createMessage(m.role === 'user' ? 'user' : 'ai', m.content),
+        )
+        setMessages(loaded)
+      } catch {
+        // Ignore — conversation might not exist yet
+      }
+    }
+    loadHistory()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId])
+
+  // Reset state when conversation is cleared (but not during initial message send)
+  useEffect(() => {
+    if (!conversationId && !initialMessage) {
+      loadedConvRef.current = null
+      initialMessageSentRef.current = false
+      setMessages([])
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId])
 
   const hasMessages = messages.length > 0
 
@@ -207,38 +297,8 @@ export default function ChatPanel({
       {/* Messages */}
       <div
         className="flex-1 overflow-y-auto"
-        style={{
-          padding: hasMessages ? '16px' : 0,
-          display: hasMessages ? 'block' : 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+        style={{ padding: '16px' }}
       >
-        {!hasMessages && (
-          <div style={{ textAlign: 'center', padding: 40 }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🔥</div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: 'var(--color-primary)',
-                letterSpacing: '-0.5px',
-                marginBottom: 6,
-              }}
-            >
-              Kalcifer
-            </div>
-            <div
-              style={{
-                fontSize: 14,
-                color: 'var(--color-text-muted)',
-              }}
-            >
-              სახლის გული ცოცხალია
-            </div>
-          </div>
-        )}
-
         {messages.map(msg => {
           const isUser = msg.role === 'user'
           const hasContent = msg.content.length > 0

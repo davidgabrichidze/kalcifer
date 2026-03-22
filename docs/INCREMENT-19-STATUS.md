@@ -62,49 +62,72 @@
 
 **ფაილები**: `ChatPanel.tsx`, `api.ts`, ახალი `ConversationList.tsx`
 
-### ნაბიჯი 4: AI Module Tests
+### ნაბიჯი 3: Frontend — Conversation History
 ```
-4.1  Context tests — conversation CRUD, message add, memory upsert/recall/forget
-4.2  Tools tests — ყველა 6 tool-ის execute (Mox-ით ან real DB)
-4.3  AI nodes tests — think (mock Claude), decide (branch selection), notify (PubSub)
-4.4  ChatController integration — SSE streaming, tool flow, error handling
+3.1  Sidebar-ში საუბრების სია (GET /conversations API-დან)
+3.2  საუბრის არჩევა → მესიჯების ჩატვირთვა (GET /conversations/:id)
+3.3  Kind icons + labels sidebar-ში (📣 კამპანია, ⚡ ფლოუ, ...)
+3.4  არქივი swipe/button
 ```
 
-**ფაილები**: `test/kalcifer/ai/` ფოლდერი
+**ფაილები**: `ChatPanel.tsx`, `api.ts`, ახალი `ConversationList.tsx`
 
-### ნაბიჯი 5: დამატებითი Tools (19c/19d გეგმიდან)
+### ნაბიჯი 4: დამატებითი Tools (19c/19d გეგმიდან)
 ```
-5.1  add_node tool — არსებულ flow-ში node-ის დამატება
-5.2  modify_node tool — node config-ის შეცვლა
-5.3  simulate tool — dry run გაშვება
-5.4  analyze_flow tool — flow structure analysis
-5.5  debug_instance tool — execution step diagnosis
+4.1  add_node tool — არსებულ flow-ში node-ის დამატება
+4.2  modify_node tool — node config-ის შეცვლა
+4.3  simulate tool — dry run გაშვება
+4.4  analyze_flow tool — flow structure analysis
+4.5  debug_instance tool — execution step diagnosis
 ```
 
 **ფაილები**: `tools.ex`-ში ახალი definitions + executors
 
+### ნაბიჯი 5: AI Nodes Tests
+```
+5.1  ai_think tests — mock Claude API, verify context injection
+5.2  ai_decide tests — branch selection, fallback behavior
+5.3  ai_notify tests — PubSub broadcast, template interpolation
+```
+
+**ფაილები**: `test/kalcifer/engine/nodes/action/ai/`
+
 ### ნაბიჯი 6: End-to-End Verification
 ```
-6.1  Docker-ში ყველაფრის გაშვება
+6.1  Docker-ში ყველაფრის გაშვება ✅
 6.2  ჩათში tool use flow-ის ცდა (create_flow, remember/recall)
-6.3  Conversation persistence-ის ვერიფიკაცია (refresh → history remains)
-6.4  Memory persistence-ის ვერიფიკაცია (new conversation → recalls old memories)
+6.3  classify_session-ის ვერიფიკაცია (badge ჩნდება header-ში?)
+6.4  Conversation persistence-ის ვერიფიკაცია (refresh → history remains)
+6.5  Memory persistence-ის ვერიფიკაცია (new conversation → recalls old memories)
 ```
+
+---
+
+## ტესტების სტატუსი
+
+| მოდული | ტესტები | სტატუსი |
+|--------|---------|---------|
+| Context (conversations, memory) | 22 | ✅ passing |
+| Tools (7 tools + classify) | 16 | ✅ passing |
+| ChatController (SSE, persistence) | 5 | ✅ passing |
+| ConversationController (API) | 5 | ✅ passing |
+| Client (API key check) | 1 | ⚠️ needs Mox (passes with real key) |
+| AI Nodes (think, decide, notify) | 0 | ❌ not written |
+| **სულ** | **49/50** | |
 
 ---
 
 ## პრიორიტეტი
 
 ```
-ნაბიჯი 1 (Persistence) ← ყველაზე მნიშვნელოვანი, ამის გარეშე AI-ს მეხსიერება არ აქვს
+ნაბიჯი 1 (Persistence)         ✅ დასრულდა
+ნაბიჯი 2 (Classification + API) ✅ დასრულდა
     ↓
-ნაბიჯი 4 (Tests) ← ტესტები პარალელურად ან მაშინვე მერე
+ნაბიჯი 3 (Frontend History)    ← შემდეგი
     ↓
-ნაბიჯი 2 (Conv API) ← frontend-ისთვის
+ნაბიჯი 4 (More Tools)          ← ფუნქციონალობა
     ↓
-ნაბიჯი 3 (Frontend History) ← UX
+ნაბიჯი 5 (AI Node Tests)       ← ხარისხი
     ↓
-ნაბიჯი 5 (More Tools) ← ფუნქციონალობა
-    ↓
-ნაბიჯი 6 (E2E) ← ვერიფიკაცია
+ნაბიჯი 6 (E2E)                 ← ვერიფიკაცია
 ```
