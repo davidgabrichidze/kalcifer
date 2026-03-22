@@ -120,7 +120,11 @@ defmodule Kalcifer.AI.Tools do
       name: "create_flow",
       description: """
       Create a new draft flow. The flow starts in "draft" status.
-      After creation, a version with a graph must be added before activation.
+      After creation, add nodes with add_node before activation.
+
+      IMPORTANT: Each session creates ONE flow. If a flow was already created
+      in this session, this tool returns the existing one. To create a different
+      flow, the user should start a new session.
       """,
       input_schema: %{
         type: "object",
@@ -470,26 +474,46 @@ defmodule Kalcifer.AI.Tools do
     end
   end
 
-  defp do_execute("create_flow", input, tenant_id, _ctx) do
-    attrs = %{
-      name: Map.fetch!(input, "name"),
-      description: Map.get(input, "description", "")
-    }
+  defp do_execute("create_flow", input, tenant_id, ctx) do
+    name = Map.fetch!(input, "name")
+    description = Map.get(input, "description", "")
+    conversation_id = Map.get(ctx, :conversation_id)
 
-    case Flows.create_flow(tenant_id, attrs) do
-      {:ok, flow} ->
-        result = %{
-          id: flow.id,
-          name: flow.name,
-          status: flow.status,
-          message: "Flow created successfully"
-        }
+    # Idempotency: one conversation → one flow.
+    # If this conversation already has a linked flow, return it.
+    existing = conversation_linked_flow(conversation_id)
 
-        {:ok, Jason.encode!(result, pretty: true)}
+    if existing do
+      result = %{
+        id: existing.id,
+        name: existing.name,
+        status: existing.status,
+        message: "This session already has a flow — use it or start a new session",
+        already_existed: true
+      }
 
-      {:error, changeset} ->
-        errors = format_changeset_errors(changeset)
-        {:error, "Failed to create flow: #{errors}"}
+      {:ok, Jason.encode!(result, pretty: true)}
+    else
+      case Flows.create_flow(tenant_id, %{name: name, description: description}) do
+        {:ok, flow} ->
+          # Link flow to conversation — future create_flow calls return this one
+          if conversation_id do
+            link_flow_to_conversation(conversation_id, flow.id)
+          end
+
+          result = %{
+            id: flow.id,
+            name: flow.name,
+            status: flow.status,
+            message: "Flow created successfully"
+          }
+
+          {:ok, Jason.encode!(result, pretty: true)}
+
+        {:error, changeset} ->
+          errors = format_changeset_errors(changeset)
+          {:error, "Failed to create flow: #{errors}"}
+      end
     end
   end
 
@@ -565,12 +589,18 @@ defmodule Kalcifer.AI.Tools do
           |> Ecto.Changeset.change(graph: updated_graph)
           |> Kalcifer.Repo.update()
 
+        # Include current node list so AI knows full state
+        all_node_ids =
+          (nodes ++ [node_map])
+          |> Enum.map(fn n -> %{id: n["id"], type: n["type"]} end)
+
         result = %{
           added_node: node_map["id"],
           added_edges: length(edge_maps),
           total_nodes: length(nodes) + 1,
           version_number: version.version_number,
-          validation_warnings: warnings
+          validation_warnings: warnings,
+          current_nodes: all_node_ids
         }
 
         {:ok, Jason.encode!(result, pretty: true)}
@@ -840,6 +870,34 @@ defmodule Kalcifer.AI.Tools do
         {:ok, version} -> version
         {:error, _} -> nil
       end
+    end
+  end
+
+  # Idempotency: look up the flow linked to this conversation.
+  # Returns the Flow struct or nil.
+  defp conversation_linked_flow(nil), do: nil
+
+  defp conversation_linked_flow(conversation_id) do
+    case Context.get_conversation(conversation_id) do
+      %{entity_type: "flow", entity_id: flow_id} when not is_nil(flow_id) ->
+        Flows.get_flow(flow_id)
+
+      _ ->
+        nil
+    end
+  end
+
+  # Link flow to conversation. First flow wins — once linked, immutable.
+  defp link_flow_to_conversation(conversation_id, flow_id) do
+    case Context.get_conversation(conversation_id) do
+      nil ->
+        :ok
+
+      %{entity_id: existing} when not is_nil(existing) ->
+        :ok
+
+      conv ->
+        Context.link_entity(conv, "flow", flow_id)
     end
   end
 
