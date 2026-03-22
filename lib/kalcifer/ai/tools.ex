@@ -7,8 +7,9 @@ defmodule Kalcifer.AI.Tools do
   functions — no new business logic here.
   """
 
-  alias Kalcifer.Flows
+  alias Kalcifer.AI.Context
   alias Kalcifer.Engine.NodeRegistry
+  alias Kalcifer.Flows
 
   require Logger
 
@@ -21,7 +22,9 @@ defmodule Kalcifer.AI.Tools do
       list_flows_tool(),
       get_flow_tool(),
       create_flow_tool(),
-      list_node_types_tool()
+      list_node_types_tool(),
+      remember_tool(),
+      recall_tool()
     ]
   end
 
@@ -100,6 +103,63 @@ defmodule Kalcifer.AI.Tools do
       input_schema: %{
         type: "object",
         properties: %{},
+        required: []
+      }
+    }
+  end
+
+  defp remember_tool do
+    %{
+      name: "remember",
+      description: """
+      Save something to long-term memory. Use this to remember user preferences,
+      project context, patterns, or anything useful for future conversations.
+      Memory persists across chat sessions.
+      """,
+      input_schema: %{
+        type: "object",
+        properties: %{
+          key: %{
+            type: "string",
+            description: "A short key for the memory, e.g. 'preferred_language', 'project_name'"
+          },
+          value: %{
+            type: "string",
+            description: "The value to remember"
+          },
+          category: %{
+            type: "string",
+            enum: ["general", "preference", "pattern", "context"],
+            description: "Category of the memory. Default: general"
+          }
+        },
+        required: ["key", "value"]
+      }
+    }
+  end
+
+  defp recall_tool do
+    %{
+      name: "recall",
+      description: """
+      Recall memories from long-term storage. Use this at the start of
+      conversations to remember user context, or when you need to check
+      what you know about the user/project.
+      Pass a specific key to recall one memory, or omit to recall all.
+      """,
+      input_schema: %{
+        type: "object",
+        properties: %{
+          key: %{
+            type: "string",
+            description: "Specific memory key to recall. Omit to list all memories."
+          },
+          category: %{
+            type: "string",
+            enum: ["general", "preference", "pattern", "context"],
+            description: "Filter by category"
+          }
+        },
         required: []
       }
     }
@@ -215,6 +275,49 @@ defmodule Kalcifer.AI.Tools do
       |> Enum.sort_by(& &1.category)
 
     {:ok, Jason.encode!(nodes, pretty: true)}
+  end
+
+  defp do_execute("remember", input, tenant_id) do
+    key = Map.fetch!(input, "key")
+    value = Map.fetch!(input, "value")
+    category = Map.get(input, "category", "general")
+
+    case Context.remember(tenant_id, key, value, category) do
+      {:ok, _memory} ->
+        {:ok, Jason.encode!(%{remembered: true, key: key})}
+
+      {:error, changeset} ->
+        {:error, "Failed to remember: #{format_changeset_errors(changeset)}"}
+    end
+  end
+
+  defp do_execute("recall", input, tenant_id) do
+    case Map.get(input, "key") do
+      nil ->
+        # Recall all memories
+        opts = case Map.get(input, "category") do
+          nil -> []
+          cat -> [category: cat]
+        end
+
+        memories = Context.recall_all(tenant_id, opts)
+
+        result =
+          Enum.map(memories, fn m ->
+            %{key: m.key, value: m.value, category: m.category}
+          end)
+
+        {:ok, Jason.encode!(result, pretty: true)}
+
+      key ->
+        case Context.recall(tenant_id, key) do
+          nil ->
+            {:ok, Jason.encode!(%{found: false, key: key})}
+
+          memory ->
+            {:ok, Jason.encode!(%{found: true, key: memory.key, value: memory.value, category: memory.category})}
+        end
+    end
   end
 
   defp do_execute(unknown_tool, _input, _tenant_id) do

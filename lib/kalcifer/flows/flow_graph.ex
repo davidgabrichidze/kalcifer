@@ -2,7 +2,7 @@ defmodule Kalcifer.Flows.FlowGraph do
   @moduledoc false
 
   @entry_types ~w(segment_entry event_entry webhook_entry)
-  @branching_types ~w(condition ab_split wait_for_event check_segment preference_gate frequency_cap)
+  @branching_types ~w(condition ab_split wait_for_event check_segment preference_gate frequency_cap ai_decide)
 
   @doc """
   Validates a flow graph structure.
@@ -321,6 +321,13 @@ defmodule Kalcifer.Flows.FlowGraph do
   defp required_branches(%{"type" => "check_segment"}), do: ["true", "false"]
   defp required_branches(%{"type" => "preference_gate"}), do: ["true", "false"]
   defp required_branches(%{"type" => "frequency_cap"}), do: ["capped", "allowed"]
+
+  defp required_branches(%{"type" => "ai_decide", "config" => %{"branches" => branches}})
+       when is_list(branches) do
+    branches
+  end
+
+  defp required_branches(%{"type" => "ai_decide"}), do: []
 
   defp required_branches(_), do: []
 end

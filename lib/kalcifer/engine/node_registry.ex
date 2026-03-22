@@ -28,7 +28,11 @@ defmodule Kalcifer.Engine.NodeRegistry do
     "send_in_app" => Kalcifer.Engine.Nodes.Action.Channel.SendInApp,
     "check_segment" => Kalcifer.Engine.Nodes.Condition.CheckSegment,
     "preference_gate" => Kalcifer.Engine.Nodes.Condition.PreferenceGate,
-    "track_conversion" => Kalcifer.Engine.Nodes.Action.Data.TrackConversion
+    "track_conversion" => Kalcifer.Engine.Nodes.Action.Data.TrackConversion,
+    # AI nodes — Kalcifer uses its own engine for thinking
+    "ai_think" => Kalcifer.Engine.Nodes.Action.AI.Think,
+    "ai_decide" => Kalcifer.Engine.Nodes.Action.AI.Decide,
+    "ai_notify" => Kalcifer.Engine.Nodes.Action.AI.Notify
   }
 
   # --- Public API ---
