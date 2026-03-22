@@ -1,21 +1,26 @@
 defmodule KalciferWeb.ChatController do
   use KalciferWeb, :controller
 
-  alias Kalcifer.AI.Client
-  alias Kalcifer.AI.Tools
+  alias Kalcifer.AI.{Client, Context, Tools}
 
   @doc """
   POST /api/v1/chat
 
-  Accepts `{"messages": [{"role": "user", "content": "..."}]}`.
+  Accepts:
+    - `messages`: list of `%{"role" => "user", "content" => "..."}`
+    - `conversation_id` (optional): existing conversation to continue
+
   Streams the AI response back as Server-Sent Events.
 
-  Tool use flow:
-  1. Non-streaming call with tools → check for tool_use
-  2. Execute tools, send SSE events for each
-  3. Stream final text response
+  SSE events:
+    - `init`       — conversation_id (sent first, always)
+    - `delta`      — streaming text chunk
+    - `tool_start` — tool execution started
+    - `tool_done`  — tool execution finished
+    - `done`       — full text of final response
+    - `error`      — error message
   """
-  def create(conn, %{"messages" => messages}) do
+  def create(conn, %{"messages" => messages} = params) do
     conn =
       conn
       |> put_resp_content_type("text/event-stream")
@@ -23,12 +28,32 @@ defmodule KalciferWeb.ChatController do
       |> put_resp_header("x-accel-buffering", "no")
       |> send_chunked(200)
 
-    api_messages =
-      Enum.map(messages, fn msg ->
-        %{role: msg["role"], content: msg["content"]}
-      end)
-
     tenant_id = resolve_dev_tenant()
+
+    # Resolve or create conversation
+    {conversation_id, history} =
+      resolve_conversation(tenant_id, params["conversation_id"])
+
+    # Send conversation_id to frontend immediately
+    chunk_sse(conn, "init", %{conversation_id: conversation_id})
+
+    # Save the new user message(s)
+    new_user_messages =
+      Enum.filter(messages, fn msg -> msg["role"] == "user" end)
+
+    for msg <- new_user_messages do
+      Context.add_message(conversation_id, "user", msg["content"])
+    end
+
+    # Build full message list: history + new messages
+    api_messages =
+      history ++
+        Enum.map(messages, fn msg ->
+          %{role: msg["role"], content: msg["content"]}
+        end)
+
+    # Load operator memory into system prompt
+    system_prompt = build_system_prompt(tenant_id)
 
     callback = fn
       {:text_delta, text} ->
@@ -41,6 +66,8 @@ defmodule KalciferWeb.ChatController do
         chunk_sse(conn, "tool_done", %{tool: name, result: result})
 
       {:done, full_text} ->
+        # Save assistant response to DB
+        Context.add_message(conversation_id, "assistant", full_text)
         chunk_sse(conn, "done", %{text: full_text})
 
       {:error, reason} ->
@@ -51,11 +78,14 @@ defmodule KalciferWeb.ChatController do
       Tools.execute(name, input, tenant_id)
     end
 
+    opts = if system_prompt, do: [system: system_prompt], else: []
+
     case Client.chat_with_tools(
            api_messages,
            Tools.definitions(),
            tool_executor,
-           callback
+           callback,
+           opts
          ) do
       {:ok, _full_text} ->
         conn
@@ -71,6 +101,62 @@ defmodule KalciferWeb.ChatController do
     |> put_status(400)
     |> json(%{error: "messages parameter required"})
   end
+
+  # ── Conversation resolution ──────────────────────────────────
+
+  # If conversation_id given, load its history; otherwise create new.
+  defp resolve_conversation(tenant_id, nil) do
+    {:ok, conv} = Context.create_conversation(tenant_id)
+    {conv.id, []}
+  end
+
+  defp resolve_conversation(tenant_id, conversation_id) do
+    case Context.get_conversation_with_messages(conversation_id) do
+      nil ->
+        # Conversation not found — create new
+        resolve_conversation(tenant_id, nil)
+
+      conv ->
+        history =
+          Enum.map(conv.messages, fn msg ->
+            %{role: msg.role, content: msg.content}
+          end)
+
+        {conv.id, history}
+    end
+  end
+
+  # ── System prompt with memory ────────────────────────────────
+
+  # Returns a memory block to append to the system prompt,
+  # or nil if no memories exist (Client will use its default prompt).
+  defp build_system_prompt(tenant_id) do
+    memories = Context.recall_all(tenant_id)
+
+    if Enum.empty?(memories) do
+      # nil means Client.base_body will use its default_system_prompt
+      nil
+    else
+      memory_block =
+        memories
+        |> Enum.map(fn m -> "- #{m.key}: #{m.value}" end)
+        |> Enum.join("\n")
+
+      memory_block_text = """
+
+      ## რაც მახსოვს ამ მომხმარებლის შესახებ:
+      #{memory_block}
+
+      გამოიყენე ეს ინფორმაცია საუბარში ბუნებრივად — ნუ ჩამოთვლი რა გახსოვს,
+      უბრალოდ იცოდე და გაითვალისწინე.
+      """
+
+      # Append to default prompt rather than replacing it
+      Client.default_system_prompt() <> memory_block_text
+    end
+  end
+
+  # ── Dev tenant resolution ────────────────────────────────────
 
   # In dev mode without auth, find or create a demo tenant.
   # In production, this would come from the authenticated session.

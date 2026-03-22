@@ -3,6 +3,9 @@ defmodule Kalcifer.Factory do
 
   use ExMachina.Ecto, repo: Kalcifer.Repo
 
+  alias Kalcifer.AI.Conversation
+  alias Kalcifer.AI.ConversationMessage
+  alias Kalcifer.AI.Memory
   alias Kalcifer.Customers.Customer
   alias Kalcifer.Flows.ExecutionStep
   alias Kalcifer.Flows.Flow
@@ -77,6 +80,33 @@ defmodule Kalcifer.Factory do
       properties: %{},
       tags: [],
       preferences: %{"email" => true, "sms" => true, "push" => true},
+      tenant: build(:tenant)
+    }
+  end
+
+  def conversation_factory do
+    %Conversation{
+      title: sequence(:conversation_title, &"Conversation #{&1}"),
+      status: "active",
+      metadata: %{},
+      tenant: build(:tenant)
+    }
+  end
+
+  def conversation_message_factory do
+    %ConversationMessage{
+      role: "user",
+      content: "Hello, Kalcifer!",
+      tool_calls: nil,
+      conversation: build(:conversation)
+    }
+  end
+
+  def memory_factory do
+    %Memory{
+      key: sequence(:memory_key, &"key_#{&1}"),
+      value: "some value",
+      category: "general",
       tenant: build(:tenant)
     }
   end

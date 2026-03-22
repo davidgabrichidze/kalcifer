@@ -12,7 +12,7 @@ defmodule Kalcifer.AI.ConversationMessage do
   schema "conversation_messages" do
     field :role, :string
     field :content, :string
-    field :tool_calls, :map
+    field :tool_calls, {:array, :map}
 
     belongs_to :conversation, Kalcifer.AI.Conversation
 

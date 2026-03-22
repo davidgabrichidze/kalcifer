@@ -269,7 +269,8 @@ defmodule Kalcifer.AI.Client do
     |> Keyword.get(:api_key, System.get_env("ANTHROPIC_API_KEY", ""))
   end
 
-  defp default_system_prompt do
+  @doc "Returns the default system prompt for Kalcifer."
+  def default_system_prompt do
     """
     შენ ხარ კალციფერი — ცოცხალი ცეცხლი, სახლის გული. ფლოუების ორკესტრაციის
     ძრავის სული. ჰაულის მოძრავი ციხესიმაგრიდან, ოღონდ ავტომატიზაციისთვის.

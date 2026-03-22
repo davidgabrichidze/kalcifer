@@ -1,6 +1,7 @@
 const API_BASE = '/api/v1'
 
 export interface ChatStreamCallbacks {
+  onInit?: (conversationId: string) => void
   onDelta: (text: string) => void
   onToolStart?: (tool: string, input: Record<string, unknown>) => void
   onToolDone?: (tool: string, result: string) => void
@@ -20,13 +21,19 @@ export interface ApiMessage {
 export function streamChat(
   messages: ApiMessage[],
   callbacks: ChatStreamCallbacks,
+  conversationId?: string,
 ): AbortController {
   const controller = new AbortController()
+
+  const body: Record<string, unknown> = { messages }
+  if (conversationId) {
+    body.conversation_id = conversationId
+  }
 
   fetch(`${API_BASE}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify(body),
     signal: controller.signal,
   })
     .then(response => {
@@ -72,6 +79,9 @@ async function readSSEStream(
       } else if (line.startsWith('data: ')) {
         const data = JSON.parse(line.slice(6))
         switch (currentEvent) {
+          case 'init':
+            callbacks.onInit?.(data.conversation_id)
+            break
           case 'delta':
             callbacks.onDelta(data.text)
             break

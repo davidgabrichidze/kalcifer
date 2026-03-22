@@ -8,7 +8,9 @@ const TOOL_LABELS: Record<string, string> = {
   list_flows: 'ფლოუების ჩამონათვალი',
   get_flow: 'ფლოუს დეტალები',
   create_flow: 'ფლოუს შექმნა',
-  list_node_types: 'Node ტიპების ჩამონათვალი',
+  list_node_types: 'ნაბიჯების ტიპები',
+  remember: 'დამახსოვრება',
+  recall: 'გახსენება',
 }
 
 interface ChatPanelProps {
@@ -22,6 +24,7 @@ export default function ChatPanel({
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [_streamingId, setStreamingId] = useState<string | null>(null)
+  const [conversationId, setConversationId] = useState<string | null>(null)
   const msgsEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -76,34 +79,34 @@ export default function ChatPanel({
     setIsTyping(true)
     setStreamingId(aiMsg.id)
 
-    const apiMessages: ApiMessage[] = [
-      ...messages.map(m => ({
-        role: (m.role === 'ai' ? 'assistant' : 'user') as ApiMessage['role'],
-        content: m.content,
-      })),
-      { role: 'user', content: text },
-    ]
+    // Only send the new user message — backend loads history from conversation
+    const apiMessages: ApiMessage[] = [{ role: 'user', content: text }]
 
-    abortRef.current = streamChat(apiMessages, {
-      onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
-      onToolStart: (tool) => {
-        addToolToMessage(aiMsg.id, { tool, status: 'running' })
+    abortRef.current = streamChat(
+      apiMessages,
+      {
+        onInit: (convId) => setConversationId(convId),
+        onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
+        onToolStart: (tool) => {
+          addToolToMessage(aiMsg.id, { tool, status: 'running' })
+        },
+        onToolDone: (tool, result) => {
+          addToolToMessage(aiMsg.id, { tool, status: 'done', result })
+        },
+        onDone: () => {
+          setIsTyping(false)
+          setStreamingId(null)
+          activeAiIdRef.current = null
+        },
+        onError: (msg) => {
+          appendToMessage(aiMsg.id, `\n\n⚠ ${msg}`)
+          setIsTyping(false)
+          setStreamingId(null)
+          activeAiIdRef.current = null
+        },
       },
-      onToolDone: (tool, result) => {
-        addToolToMessage(aiMsg.id, { tool, status: 'done', result })
-      },
-      onDone: () => {
-        setIsTyping(false)
-        setStreamingId(null)
-        activeAiIdRef.current = null
-      },
-      onError: (msg) => {
-        appendToMessage(aiMsg.id, `\n\n⚠ ${msg}`)
-        setIsTyping(false)
-        setStreamingId(null)
-        activeAiIdRef.current = null
-      },
-    })
+      conversationId ?? undefined,
+    )
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -113,6 +116,14 @@ export default function ChatPanel({
     }
   }
 
+  function handleNewChat() {
+    if (isTyping) return
+    abortRef.current?.abort()
+    setMessages([])
+    setConversationId(null)
+    setInput('')
+  }
+
   const hasMessages = messages.length > 0
 
   return (
@@ -120,6 +131,36 @@ export default function ChatPanel({
       className="flex flex-col"
       style={{ height: '100%', minHeight: 0, background: 'var(--color-bg)' }}
     >
+      {/* Header with new chat button */}
+      {hasMessages && (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            padding: '8px 16px 0',
+            flexShrink: 0,
+          }}
+        >
+          <button
+            onClick={handleNewChat}
+            disabled={isTyping}
+            style={{
+              background: 'none',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-muted)',
+              fontSize: 12,
+              padding: '4px 10px',
+              borderRadius: 8,
+              cursor: isTyping ? 'default' : 'pointer',
+              opacity: isTyping ? 0.4 : 1,
+              transition: 'all 0.2s',
+            }}
+          >
+            + ახალი საუბარი
+          </button>
+        </div>
+      )}
+
       {/* Messages */}
       <div
         className="flex-1 overflow-y-auto"
