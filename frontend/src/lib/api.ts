@@ -202,6 +202,52 @@ export async function fetchEngine(): Promise<EngineData> {
   return res.json()
 }
 
+// ── Browse: Flows ───────────────────────────────────────
+
+export interface Flow {
+  id: string
+  name: string
+  description: string | null
+  status: 'draft' | 'active' | 'paused' | 'archived'
+  active_version_id: string | null
+  entry_config: Record<string, unknown>
+  exit_criteria: Record<string, unknown>
+  frequency_cap: Record<string, unknown>
+  inserted_at: string
+  updated_at: string
+}
+
+export type FlowStatus = Flow['status']
+
+export async function fetchFlows(status?: FlowStatus): Promise<Flow[]> {
+  const params = status ? `?status=${status}` : ''
+  const res = await fetch(`${API_BASE}/flows${params}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
+export async function activateFlow(id: string): Promise<Flow> {
+  const res = await fetch(`${API_BASE}/flows/${id}/activate`, { method: 'POST' })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
+export async function pauseFlow(id: string): Promise<Flow> {
+  const res = await fetch(`${API_BASE}/flows/${id}/pause`, { method: 'POST' })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
+export async function archiveFlow(id: string): Promise<Flow> {
+  const res = await fetch(`${API_BASE}/flows/${id}/archive`, { method: 'POST' })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
 // ── Chat types ──────────────────────────────────────────
 
 export interface SessionClassification {
