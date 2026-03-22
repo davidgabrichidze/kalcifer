@@ -455,7 +455,7 @@ body {
   transition: opacity 0.4s, transform 0.5s ease;
 }
 
-.work-stage:not([data-stage="welcome"]) .welcome-center {
+[data-stage="chat"] .welcome-center {
   display: none;
 }
 

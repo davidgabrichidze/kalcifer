@@ -8,8 +8,13 @@ const TOOL_LABELS: Record<string, string> = {
   classify_session: 'სესიის კლასიფიკაცია',
   list_flows: 'ფლოუების ჩამონათვალი',
   get_flow: 'ფლოუს დეტალები',
+  get_flow_graph: 'გრაფის წაკითხვა',
   create_flow: 'ფლოუს შექმნა',
+  add_node: 'ნაბიჯის დამატება',
+  modify_node: 'ნაბიჯის შეცვლა',
   list_node_types: 'ნაბიჯების ტიპები',
+  analyze_flow: 'ფლოუს ანალიზი',
+  debug_instance: 'ინსტანსის დიაგნოსტიკა',
   remember: 'დამახსოვრება',
   recall: 'გახსენება',
 }
@@ -27,7 +32,6 @@ interface ChatPanelProps {
   sessionKind: SessionClassification | null
   onConversationId?: (id: string) => void
   onSessionClassified?: (classification: SessionClassification) => void
-  onNewChat?: () => void
   /** If set, send this text immediately on mount (used by welcome screen) */
   initialMessage?: string | null
   onInitialMessageSent?: () => void
@@ -39,7 +43,6 @@ export default function ChatPanel({
   sessionKind,
   onConversationId,
   onSessionClassified,
-  onNewChat,
   initialMessage,
   onInitialMessageSent,
 }: ChatPanelProps) {
@@ -108,7 +111,10 @@ export default function ChatPanel({
     abortRef.current = streamChat(
       apiMessages,
       {
-        onInit: (convId) => onConversationId?.(convId),
+        onInit: (convId) => {
+          loadedConvRef.current = convId // Prevent loadHistory from overwriting stream
+          onConversationId?.(convId)
+        },
         onSessionClassified: (classification) => onSessionClassified?.(classification),
         onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
         onToolStart: (tool) => {
@@ -140,14 +146,6 @@ export default function ChatPanel({
     }
   }
 
-  function handleNewChat() {
-    if (isTyping) return
-    abortRef.current?.abort()
-    setMessages([])
-    setInput('')
-    onNewChat?.()
-  }
-
   // Send initial message from welcome screen (ref guard prevents StrictMode double-fire)
   useEffect(() => {
     if (initialMessage && !isTyping && messages.length === 0 && !initialMessageSentRef.current) {
@@ -166,7 +164,10 @@ export default function ChatPanel({
       abortRef.current = streamChat(
         apiMessages,
         {
-          onInit: (convId) => onConversationId?.(convId),
+          onInit: (convId) => {
+            loadedConvRef.current = convId // Prevent loadHistory from overwriting stream
+            onConversationId?.(convId)
+          },
           onSessionClassified: (classification) => onSessionClassified?.(classification),
           onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
           onToolStart: (tool) => {
@@ -232,65 +233,33 @@ export default function ChatPanel({
       className="flex flex-col"
       style={{ height: '100%', minHeight: 0, background: 'var(--color-bg)' }}
     >
-      {/* Header with session kind badge + new chat button */}
-      {hasMessages && (
+      {/* Header with session kind badge */}
+      {hasMessages && sessionKind && (
         <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
             alignItems: 'center',
+            gap: 6,
             padding: '8px 16px 0',
             flexShrink: 0,
+            fontSize: 12.5,
+            fontWeight: 600,
+            color: 'var(--color-text)',
           }}
         >
-          {/* Session kind badge */}
-          {sessionKind ? (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                fontSize: 12.5,
-                fontWeight: 600,
-                color: 'var(--color-text)',
-              }}
-            >
-              <span>{KIND_LABELS[sessionKind.kind]?.icon}</span>
-              <span>{sessionKind.title}</span>
-              <span
-                style={{
-                  fontSize: 10,
-                  padding: '2px 6px',
-                  borderRadius: 6,
-                  background: 'var(--color-primary-soft)',
-                  color: 'var(--color-primary)',
-                }}
-              >
-                {KIND_LABELS[sessionKind.kind]?.label}
-              </span>
-            </div>
-          ) : (
-            <div />
-          )}
-
-          <button
-            onClick={handleNewChat}
-            disabled={isTyping}
+          <span>{KIND_LABELS[sessionKind.kind]?.icon}</span>
+          <span>{sessionKind.title}</span>
+          <span
             style={{
-              background: 'none',
-              border: '1px solid var(--color-border)',
-              color: 'var(--color-text-muted)',
-              fontSize: 12,
-              padding: '4px 10px',
-              borderRadius: 8,
-              cursor: isTyping ? 'default' : 'pointer',
-              opacity: isTyping ? 0.4 : 1,
-              transition: 'all 0.2s',
-              flexShrink: 0,
+              fontSize: 10,
+              padding: '2px 6px',
+              borderRadius: 6,
+              background: 'var(--color-primary-soft)',
+              color: 'var(--color-primary)',
             }}
           >
-            + ახალი საუბარი
-          </button>
+            {KIND_LABELS[sessionKind.kind]?.label}
+          </span>
         </div>
       )}
 

@@ -144,7 +144,6 @@ export default function WorkPage() {
               sessionKind={sessionKind}
               onConversationId={handleConversationId}
               onSessionClassified={handleSessionClassified}
-              onNewChat={handleNewSession}
               initialMessage={initialMessage}
               onInitialMessageSent={handleInitialMessageSent}
             />

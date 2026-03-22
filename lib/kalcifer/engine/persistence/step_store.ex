@@ -31,6 +31,13 @@ defmodule Kalcifer.Engine.Persistence.StepStore do
     |> Repo.update()
   end
 
+  def list_steps(instance_id) do
+    ExecutionStep
+    |> where([s], s.instance_id == ^instance_id)
+    |> order_by([s], asc: s.started_at)
+    |> Repo.all()
+  end
+
   def count_channel_steps_for_customer(customer_id, channel_types, since) do
     ExecutionStep
     |> join(:inner, [s], i in FlowInstance, on: s.instance_id == i.id)
