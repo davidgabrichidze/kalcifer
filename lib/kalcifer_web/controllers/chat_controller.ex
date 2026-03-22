@@ -2,6 +2,7 @@ defmodule KalciferWeb.ChatController do
   use KalciferWeb, :controller
 
   alias Kalcifer.AI.{Client, Context, Tools}
+  alias Kalcifer.Tenants
 
   @doc """
   POST /api/v1/chat
@@ -96,7 +97,9 @@ defmodule KalciferWeb.ChatController do
       Tools.execute(name, input, tenant_id, tool_ctx)
     end
 
+    # Build opts: system prompt + tenant-specific AI config (model, api_key)
     opts = if system_prompt, do: [system: system_prompt], else: []
+    opts = opts ++ tenant_ai_opts(tenant_id)
 
     case Client.chat_with_tools(
            api_messages,
@@ -195,6 +198,23 @@ defmodule KalciferWeb.ChatController do
           })
 
         tenant.id
+    end
+  end
+
+  # Read tenant's AI model/key preferences from settings.
+  # Returns keyword list to merge into Client opts.
+  defp tenant_ai_opts(tenant_id) do
+    case Tenants.get_tenant(tenant_id) do
+      nil ->
+        []
+
+      tenant ->
+        ai = Tenants.ai_config(tenant)
+
+        opts = []
+        opts = if ai.model, do: [{:model, ai.model} | opts], else: opts
+        opts = if ai.api_key, do: [{:api_key, ai.api_key} | opts], else: opts
+        opts
     end
   end
 

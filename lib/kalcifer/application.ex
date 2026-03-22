@@ -17,7 +17,16 @@ defmodule Kalcifer.Application do
     ]
 
     opts = [strategy: :one_for_one, name: Kalcifer.Supervisor]
-    Supervisor.start_link(children, opts)
+    result = Supervisor.start_link(children, opts)
+
+    # Attach logger handler to capture logs for Engine Room dashboard
+    :logger.add_handler(
+      :kalcifer_engine_log,
+      Kalcifer.Engine.LogHandler,
+      %{level: :info}
+    )
+
+    result
   end
 
   @impl true

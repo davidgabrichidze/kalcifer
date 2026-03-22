@@ -10,6 +10,7 @@ defmodule Kalcifer.Engine.Supervisor do
   @impl true
   def init(_opts) do
     children = [
+      Kalcifer.Engine.LogCollector,
       {Registry, keys: :unique, name: Kalcifer.Engine.ProcessRegistry},
       Kalcifer.Engine.NodeRegistry,
       Kalcifer.Channels.ProviderRegistry,

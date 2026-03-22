@@ -20,6 +20,12 @@ defmodule KalciferWeb.Router do
 
     post "/chat", ChatController, :create
 
+    get "/settings", SettingsController, :show
+    put "/settings", SettingsController, :update
+    get "/settings/stats", SettingsController, :stats
+
+    get "/engine", EngineController, :show
+
     get "/conversations", ConversationController, :index
     get "/conversations/:id", ConversationController, :show
     put "/conversations/:id", ConversationController, :update

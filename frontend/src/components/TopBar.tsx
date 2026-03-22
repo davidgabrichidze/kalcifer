@@ -10,6 +10,7 @@ interface TopBarProps {
 const NAV_ITEMS = [
   { to: '/', label: 'Work' },
   { to: '/browse', label: 'Browse' },
+  { to: '/engine', label: 'Engine Room' },
 ] as const
 
 export default function TopBar({ theme, onThemeChange }: TopBarProps) {

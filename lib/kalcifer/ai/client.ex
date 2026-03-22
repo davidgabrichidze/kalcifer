@@ -35,7 +35,7 @@ defmodule Kalcifer.AI.Client do
 
     case Req.post(@api_url,
            json: body,
-           headers: auth_headers(),
+           headers: auth_headers(opts),
            receive_timeout: 120_000
          ) do
       {:ok, %{status: 200, body: %{"content" => [%{"text" => text} | _]}}} ->
@@ -62,7 +62,7 @@ defmodule Kalcifer.AI.Client do
           {:ok, String.t()} | {:error, term()}
   def stream(messages, callback, opts \\ []) do
     body = base_body(messages, opts) |> Map.put(:stream, true)
-    do_stream(body, callback)
+    do_stream(body, callback, opts)
   end
 
   # ── Chat with tools (non-streaming tool rounds, streaming final) ──
@@ -98,7 +98,7 @@ defmodule Kalcifer.AI.Client do
 
     case Req.post(@api_url,
            json: body,
-           headers: auth_headers(),
+           headers: auth_headers(opts),
            receive_timeout: 120_000
          ) do
       {:ok, %{status: 200, body: %{"content" => content, "stop_reason" => stop_reason}}} ->
@@ -120,7 +120,7 @@ defmodule Kalcifer.AI.Client do
             |> Map.put(:tools, tools)
             |> Map.put(:stream, true)
 
-          do_stream(stream_body, callback)
+          do_stream(stream_body, callback, opts)
         end
 
       {:ok, %{status: status, body: resp_body}} ->
@@ -175,12 +175,13 @@ defmodule Kalcifer.AI.Client do
 
   # ── Finch streaming internals ─────────────────────────────────
 
-  defp do_stream(body, callback) do
+  defp do_stream(body, callback, opts \\ []) do
     json_body = Jason.encode!(body)
+    key = Keyword.get(opts, :api_key) || default_api_key()
 
     headers = [
       {"content-type", "application/json"},
-      {"x-api-key", api_key()},
+      {"x-api-key", key},
       {"anthropic-version", "2023-06-01"}
     ]
 
@@ -260,14 +261,16 @@ defmodule Kalcifer.AI.Client do
     }
   end
 
-  defp auth_headers do
+  defp auth_headers(opts \\ []) do
+    key = Keyword.get(opts, :api_key) || default_api_key()
+
     [
-      {"x-api-key", api_key()},
+      {"x-api-key", key},
       {"anthropic-version", "2023-06-01"}
     ]
   end
 
-  defp api_key do
+  defp default_api_key do
     Application.get_env(:kalcifer, __MODULE__, [])
     |> Keyword.get(:api_key, System.get_env("ANTHROPIC_API_KEY", ""))
   end
