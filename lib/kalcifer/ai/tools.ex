@@ -382,19 +382,70 @@ defmodule Kalcifer.AI.Tools do
   def execute(tool_name, input, tenant_id, ctx \\ %{}) do
     Logger.info("AI tool call: #{tool_name} input=#{inspect(input)}")
 
-    case do_execute(tool_name, input, tenant_id, ctx) do
-      {:ok, result} ->
-        {:ok, result}
+    # Validate UUID fields before executing
+    case validate_uuid_fields(tool_name, input) do
+      :ok ->
+        case do_execute(tool_name, input, tenant_id, ctx) do
+          {:ok, result} ->
+            {:ok, result}
+
+          {:error, reason} ->
+            Logger.warning("AI tool error: #{tool_name} reason=#{inspect(reason)}")
+            {:error, reason}
+        end
 
       {:error, reason} ->
-        Logger.warning("AI tool error: #{tool_name} reason=#{inspect(reason)}")
+        Logger.warning("AI tool validation: #{tool_name} reason=#{reason}")
         {:error, reason}
     end
   rescue
     e ->
       Logger.error("AI tool crash: #{tool_name} #{Exception.message(e)}")
-      {:error, "Internal error executing #{tool_name}"}
+      {:error, "Internal error executing #{tool_name}. Check that all IDs are real UUIDs, not placeholders."}
   end
+
+  # UUID fields that must be valid UUIDs (not placeholder strings)
+  @uuid_fields %{
+    "get_flow" => ["flow_id"],
+    "get_flow_graph" => ["flow_id"],
+    "add_node" => ["flow_id"],
+    "modify_node" => ["flow_id"],
+    "analyze_flow" => ["flow_id"],
+    "debug_instance" => ["instance_id"]
+  }
+
+  defp validate_uuid_fields(tool_name, input) do
+    fields = Map.get(@uuid_fields, tool_name, [])
+
+    invalid =
+      Enum.filter(fields, fn field ->
+        case Map.get(input, field) do
+          nil -> false
+          value -> not valid_uuid?(value)
+        end
+      end)
+
+    case invalid do
+      [] ->
+        :ok
+
+      fields ->
+        names = Enum.join(fields, ", ")
+
+        {:error,
+         "Invalid #{names}: must be a real UUID (e.g. \"a1b2c3d4-...\"), not a placeholder. " <>
+           "Use create_flow to create a flow first, then use the returned ID."}
+    end
+  end
+
+  defp valid_uuid?(value) when is_binary(value) do
+    case Ecto.UUID.cast(value) do
+      {:ok, _} -> true
+      :error -> false
+    end
+  end
+
+  defp valid_uuid?(_), do: false
 
   defp do_execute("classify_session", input, _tenant_id, ctx) do
     conversation_id = Map.get(ctx, :conversation_id)

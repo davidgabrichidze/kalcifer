@@ -212,6 +212,7 @@ defmodule KalciferWeb.ChatController do
         ai = Tenants.ai_config(tenant)
 
         opts = []
+        opts = if ai.provider, do: [{:provider, ai.provider} | opts], else: opts
         opts = if ai.model, do: [{:model, ai.model} | opts], else: opts
         opts = if ai.api_key, do: [{:api_key, ai.api_key} | opts], else: opts
         opts
