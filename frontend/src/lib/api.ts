@@ -2,6 +2,8 @@ const API_BASE = '/api/v1'
 
 export interface ChatStreamCallbacks {
   onDelta: (text: string) => void
+  onToolStart?: (tool: string, input: Record<string, unknown>) => void
+  onToolDone?: (tool: string, result: string) => void
   onDone: (fullText: string) => void
   onError: (message: string) => void
 }
@@ -72,6 +74,12 @@ async function readSSEStream(
         switch (currentEvent) {
           case 'delta':
             callbacks.onDelta(data.text)
+            break
+          case 'tool_start':
+            callbacks.onToolStart?.(data.tool, data.input)
+            break
+          case 'tool_done':
+            callbacks.onToolDone?.(data.tool, data.result)
             break
           case 'done':
             callbacks.onDone(data.text)

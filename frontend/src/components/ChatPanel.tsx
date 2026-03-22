@@ -1,7 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Markdown from 'react-markdown'
-import { type ChatMessage, createMessage } from '../lib/chat'
+import { type ChatMessage, type ToolActivity, createMessage } from '../lib/chat'
 import { streamChat, type ApiMessage } from '../lib/api'
+
+// Human-readable names for tools
+const TOOL_LABELS: Record<string, string> = {
+  list_flows: 'ფლოუების ჩამონათვალი',
+  get_flow: 'ფლოუს დეტალები',
+  create_flow: 'ფლოუს შექმნა',
+  list_node_types: 'Node ტიპების ჩამონათვალი',
+}
 
 interface ChatPanelProps {
   placeholder?: string
@@ -17,6 +25,7 @@ export default function ChatPanel({
   const msgsEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const activeAiIdRef = useRef<string | null>(null)
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -32,10 +41,26 @@ export default function ChatPanel({
     }
   }, [input])
 
-  // Append text to a streaming AI message
   const appendToMessage = useCallback((id: string, text: string) => {
     setMessages(prev =>
       prev.map(m => (m.id === id ? { ...m, content: m.content + text } : m)),
+    )
+  }, [])
+
+  const addToolToMessage = useCallback((id: string, tool: ToolActivity) => {
+    setMessages(prev =>
+      prev.map(m => {
+        if (m.id !== id) return m
+        const existing = m.tools ?? []
+        // Update if same tool already exists (running → done)
+        const idx = existing.findIndex(t => t.tool === tool.tool && t.status === 'running')
+        if (idx >= 0 && tool.status === 'done') {
+          const updated = [...existing]
+          updated[idx] = tool
+          return { ...m, tools: updated }
+        }
+        return { ...m, tools: [...existing, tool] }
+      }),
     )
   }, [])
 
@@ -45,12 +70,12 @@ export default function ChatPanel({
 
     const userMsg = createMessage('user', text)
     const aiMsg = createMessage('ai', '')
+    activeAiIdRef.current = aiMsg.id
     setMessages(prev => [...prev, userMsg, aiMsg])
     setInput('')
     setIsTyping(true)
     setStreamingId(aiMsg.id)
 
-    // Build API messages from history
     const apiMessages: ApiMessage[] = [
       ...messages.map(m => ({
         role: (m.role === 'ai' ? 'assistant' : 'user') as ApiMessage['role'],
@@ -61,14 +86,22 @@ export default function ChatPanel({
 
     abortRef.current = streamChat(apiMessages, {
       onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
+      onToolStart: (tool) => {
+        addToolToMessage(aiMsg.id, { tool, status: 'running' })
+      },
+      onToolDone: (tool, result) => {
+        addToolToMessage(aiMsg.id, { tool, status: 'done', result })
+      },
       onDone: () => {
         setIsTyping(false)
         setStreamingId(null)
+        activeAiIdRef.current = null
       },
       onError: (msg) => {
         appendToMessage(aiMsg.id, `\n\n⚠ ${msg}`)
         setIsTyping(false)
         setStreamingId(null)
+        activeAiIdRef.current = null
       },
     })
   }
@@ -124,6 +157,11 @@ export default function ChatPanel({
 
         {messages.map(msg => {
           const isUser = msg.role === 'user'
+          const hasContent = msg.content.length > 0
+          const hasTools = (msg.tools?.length ?? 0) > 0
+
+          // Hide empty AI messages (typing indicator handles the visual)
+          if (!isUser && !hasContent && !hasTools) return null
 
           return (
             <div
@@ -158,39 +196,81 @@ export default function ChatPanel({
               </div>
 
               {/* Body */}
-              <div
-                className="chat-md"
-                style={{
-                  padding: '12px 16px',
-                  borderRadius: 14,
-                  fontSize: 14.5,
-                  lineHeight: 1.65,
-                  maxWidth: '85%',
-                  ...(isUser
-                    ? {
-                        background: 'var(--color-primary-soft)',
-                        border: '1px solid var(--color-primary-muted)',
-                        color: 'var(--color-text)',
-                      }
-                    : {
-                        background: 'var(--color-surface)',
-                        border: '1px solid var(--color-border)',
-                        color: 'var(--color-text)',
-                      }),
-                }}
-              >
-                {isUser ? (
-                  msg.content
-                ) : (
-                  <Markdown>{msg.content}</Markdown>
+              <div style={{ maxWidth: '85%' }}>
+                {/* Tool activity indicators */}
+                {msg.tools && msg.tools.length > 0 && (
+                  <div style={{ marginBottom: 6 }}>
+                    {msg.tools.map((t, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '4px 10px',
+                          marginRight: 4,
+                          marginBottom: 4,
+                          borderRadius: 8,
+                          fontSize: 12,
+                          background: 'var(--color-info-soft)',
+                          color: 'var(--color-info)',
+                          border: '1px solid var(--color-info-soft)',
+                        }}
+                      >
+                        <span style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          background: t.status === 'running'
+                            ? 'var(--color-warn)'
+                            : 'var(--color-success)',
+                          animation: t.status === 'running'
+                            ? 'typingDot 1.2s infinite'
+                            : 'none',
+                        }} />
+                        {TOOL_LABELS[t.tool] ?? t.tool}
+                        {t.status === 'done' && ' ✓'}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Message bubble */}
+                {(msg.content || isUser) && (
+                  <div
+                    className="chat-md"
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: 14,
+                      fontSize: 14.5,
+                      lineHeight: 1.65,
+                      ...(isUser
+                        ? {
+                            background: 'var(--color-primary-soft)',
+                            border: '1px solid var(--color-primary-muted)',
+                            color: 'var(--color-text)',
+                          }
+                        : {
+                            background: 'var(--color-surface)',
+                            border: '1px solid var(--color-border)',
+                            color: 'var(--color-text)',
+                          }),
+                    }}
+                  >
+                    {isUser ? (
+                      msg.content
+                    ) : (
+                      <Markdown>{msg.content}</Markdown>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
           )
         })}
 
-        {/* Typing indicator */}
-        {isTyping && (
+        {/* Typing indicator — shown while waiting, hidden once content or tools arrive */}
+        {isTyping && !messages.some(m => m.id === activeAiIdRef.current && (m.content.length > 0 || (m.tools?.length ?? 0) > 0)) && (
           <div
             style={{
               display: 'flex',
@@ -201,14 +281,14 @@ export default function ChatPanel({
           >
             <div
               style={{
-                width: 26,
-                height: 26,
+                width: 30,
+                height: 30,
                 borderRadius: '50%',
                 flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: 600,
                 background: 'var(--color-primary)',
                 color: 'var(--color-text-on-primary)',

@@ -1,0 +1,233 @@
+defmodule Kalcifer.AI.Tools do
+  @moduledoc """
+  Tool definitions and executor for AI-assisted flow management.
+
+  Defines tools in Claude API format and executes them against
+  the Kalcifer.Flows context. Each tool maps to existing context
+  functions — no new business logic here.
+  """
+
+  alias Kalcifer.Flows
+  alias Kalcifer.Engine.NodeRegistry
+
+  require Logger
+
+  # ── Tool Definitions (Claude API format) ──────────────────────
+
+  @doc "Returns list of tool definitions for the Claude API."
+  @spec definitions() :: list(map())
+  def definitions do
+    [
+      list_flows_tool(),
+      get_flow_tool(),
+      create_flow_tool(),
+      list_node_types_tool()
+    ]
+  end
+
+  defp list_flows_tool do
+    %{
+      name: "list_flows",
+      description: """
+      List all flows for the current tenant. Optionally filter by status.
+      Returns flow id, name, status, and description.
+      """,
+      input_schema: %{
+        type: "object",
+        properties: %{
+          status: %{
+            type: "string",
+            enum: ["draft", "active", "paused", "archived"],
+            description: "Filter by status. Omit to list all."
+          }
+        },
+        required: []
+      }
+    }
+  end
+
+  defp get_flow_tool do
+    %{
+      name: "get_flow",
+      description: """
+      Get detailed information about a specific flow by ID.
+      Returns flow metadata, status, active version, and version count.
+      """,
+      input_schema: %{
+        type: "object",
+        properties: %{
+          flow_id: %{
+            type: "string",
+            description: "The UUID of the flow to retrieve."
+          }
+        },
+        required: ["flow_id"]
+      }
+    }
+  end
+
+  defp create_flow_tool do
+    %{
+      name: "create_flow",
+      description: """
+      Create a new draft flow. The flow starts in "draft" status.
+      After creation, a version with a graph must be added before activation.
+      """,
+      input_schema: %{
+        type: "object",
+        properties: %{
+          name: %{
+            type: "string",
+            description: "Human-readable name for the flow."
+          },
+          description: %{
+            type: "string",
+            description: "Optional description of what this flow does."
+          }
+        },
+        required: ["name"]
+      }
+    }
+  end
+
+  defp list_node_types_tool do
+    %{
+      name: "list_node_types",
+      description: """
+      List all available node types that can be used in flow graphs.
+      Returns the type key and category for each registered node.
+      """,
+      input_schema: %{
+        type: "object",
+        properties: %{},
+        required: []
+      }
+    }
+  end
+
+  # ── Tool Execution ────────────────────────────────────────────
+
+  @doc """
+  Executes a tool by name with the given input.
+  Returns `{:ok, result_string}` or `{:error, reason}`.
+
+  The `tenant_id` is injected by the caller (ChatController)
+  so tools never need to resolve auth themselves.
+  """
+  @spec execute(String.t(), map(), String.t()) :: {:ok, String.t()} | {:error, String.t()}
+  def execute(tool_name, input, tenant_id) do
+    Logger.info("AI tool call: #{tool_name} input=#{inspect(input)}")
+
+    case do_execute(tool_name, input, tenant_id) do
+      {:ok, result} ->
+        {:ok, result}
+
+      {:error, reason} ->
+        Logger.warning("AI tool error: #{tool_name} reason=#{inspect(reason)}")
+        {:error, reason}
+    end
+  rescue
+    e ->
+      Logger.error("AI tool crash: #{tool_name} #{Exception.message(e)}")
+      {:error, "Internal error executing #{tool_name}"}
+  end
+
+  defp do_execute("list_flows", input, tenant_id) do
+    opts =
+      case Map.get(input, "status") do
+        nil -> []
+        status -> [status: status]
+      end
+
+    flows = Flows.list_flows(tenant_id, opts)
+
+    result =
+      Enum.map(flows, fn f ->
+        %{
+          id: f.id,
+          name: f.name,
+          status: f.status,
+          description: f.description
+        }
+      end)
+
+    {:ok, Jason.encode!(result, pretty: true)}
+  end
+
+  defp do_execute("get_flow", %{"flow_id" => flow_id}, _tenant_id) do
+    case Flows.get_flow(flow_id) do
+      nil ->
+        {:error, "Flow not found: #{flow_id}"}
+
+      flow ->
+        flow = Kalcifer.Repo.preload(flow, :versions)
+
+        result = %{
+          id: flow.id,
+          name: flow.name,
+          status: flow.status,
+          description: flow.description,
+          active_version_id: flow.active_version_id,
+          version_count: length(flow.versions),
+          created_at: flow.inserted_at
+        }
+
+        {:ok, Jason.encode!(result, pretty: true)}
+    end
+  end
+
+  defp do_execute("create_flow", input, tenant_id) do
+    attrs = %{
+      name: Map.fetch!(input, "name"),
+      description: Map.get(input, "description", "")
+    }
+
+    case Flows.create_flow(tenant_id, attrs) do
+      {:ok, flow} ->
+        result = %{
+          id: flow.id,
+          name: flow.name,
+          status: flow.status,
+          message: "Flow created successfully"
+        }
+
+        {:ok, Jason.encode!(result, pretty: true)}
+
+      {:error, changeset} ->
+        errors = format_changeset_errors(changeset)
+        {:error, "Failed to create flow: #{errors}"}
+    end
+  end
+
+  defp do_execute("list_node_types", _input, _tenant_id) do
+    nodes =
+      NodeRegistry.list_all()
+      |> Enum.map(fn {type, module} ->
+        category =
+          if function_exported?(module, :category, 0) do
+            module.category() |> to_string()
+          else
+            "unknown"
+          end
+
+        %{type: type, category: category}
+      end)
+      |> Enum.sort_by(& &1.category)
+
+    {:ok, Jason.encode!(nodes, pretty: true)}
+  end
+
+  defp do_execute(unknown_tool, _input, _tenant_id) do
+    {:error, "Unknown tool: #{unknown_tool}"}
+  end
+
+  defp format_changeset_errors(%Ecto.Changeset{} = changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
+    |> Enum.map(fn {field, msgs} -> "#{field}: #{Enum.join(msgs, ", ")}" end)
+    |> Enum.join("; ")
+  end
+end
