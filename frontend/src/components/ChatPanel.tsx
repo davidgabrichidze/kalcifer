@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import Markdown from 'react-markdown'
 import { type ChatMessage, createMessage } from '../lib/chat'
+import { streamChat, type ApiMessage } from '../lib/api'
 
 interface ChatPanelProps {
   placeholder?: string
@@ -11,8 +13,10 @@ export default function ChatPanel({
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [_streamingId, setStreamingId] = useState<string | null>(null)
   const msgsEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -28,21 +32,45 @@ export default function ChatPanel({
     }
   }, [input])
 
+  // Append text to a streaming AI message
+  const appendToMessage = useCallback((id: string, text: string) => {
+    setMessages(prev =>
+      prev.map(m => (m.id === id ? { ...m, content: m.content + text } : m)),
+    )
+  }, [])
+
   function handleSend() {
     const text = input.trim()
-    if (!text) return
+    if (!text || isTyping) return
 
     const userMsg = createMessage('user', text)
-    setMessages(prev => [...prev, userMsg])
+    const aiMsg = createMessage('ai', '')
+    setMessages(prev => [...prev, userMsg, aiMsg])
     setInput('')
     setIsTyping(true)
+    setStreamingId(aiMsg.id)
 
-    // Stub AI response — will be replaced with real API
-    setTimeout(() => {
-      const aiMsg = createMessage('ai', 'მალე ცოცხალი ვიქნები. ჯერ UI ვაშენებთ.')
-      setMessages(prev => [...prev, aiMsg])
-      setIsTyping(false)
-    }, 800)
+    // Build API messages from history
+    const apiMessages: ApiMessage[] = [
+      ...messages.map(m => ({
+        role: (m.role === 'ai' ? 'assistant' : 'user') as ApiMessage['role'],
+        content: m.content,
+      })),
+      { role: 'user', content: text },
+    ]
+
+    abortRef.current = streamChat(apiMessages, {
+      onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
+      onDone: () => {
+        setIsTyping(false)
+        setStreamingId(null)
+      },
+      onError: (msg) => {
+        appendToMessage(aiMsg.id, `\n\n⚠ ${msg}`)
+        setIsTyping(false)
+        setStreamingId(null)
+      },
+    })
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -85,7 +113,7 @@ export default function ChatPanel({
             </div>
             <div
               style={{
-                fontSize: 12,
+                fontSize: 14,
                 color: 'var(--color-text-muted)',
               }}
             >
@@ -94,65 +122,72 @@ export default function ChatPanel({
           </div>
         )}
 
-        {messages.map(msg => (
-          <div
-            key={msg.id}
-            style={{
-              display: 'flex',
-              gap: 8,
-              marginBottom: 12,
-              alignItems: 'flex-start',
-            }}
-          >
-            {/* Avatar */}
-            <div
-              style={{
-                width: 26,
-                height: 26,
-                borderRadius: '50%',
-                flexShrink: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 10,
-                fontWeight: 600,
-                background:
-                  msg.role === 'ai'
-                    ? 'var(--color-primary)'
-                    : 'var(--color-accent)',
-                color:
-                  msg.role === 'ai'
-                    ? 'var(--color-text-on-primary)'
-                    : 'var(--color-text-on-primary)',
-              }}
-            >
-              {msg.role === 'ai' ? 'K' : 'DG'}
-            </div>
+        {messages.map(msg => {
+          const isUser = msg.role === 'user'
 
-            {/* Body */}
+          return (
             <div
+              key={msg.id}
               style={{
-                padding: '10px 14px',
-                borderRadius: 14,
-                fontSize: 12.5,
-                lineHeight: 1.6,
-                maxWidth: '92%',
-                ...(msg.role === 'ai'
-                  ? {
-                      background: 'var(--color-surface)',
-                      border: '1px solid var(--color-border)',
-                      color: 'var(--color-text)',
-                    }
-                  : {
-                      background: 'var(--color-primary)',
-                      color: 'var(--color-text-on-primary)',
-                    }),
+                display: 'flex',
+                gap: 8,
+                marginBottom: 12,
+                alignItems: 'flex-start',
+                flexDirection: isUser ? 'row-reverse' : 'row',
               }}
             >
-              {msg.content}
+              {/* Avatar */}
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: '50%',
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  background: isUser
+                    ? 'var(--color-accent)'
+                    : 'var(--color-primary)',
+                  color: 'var(--color-text-on-primary)',
+                }}
+              >
+                {isUser ? 'DG' : 'K'}
+              </div>
+
+              {/* Body */}
+              <div
+                className="chat-md"
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: 14,
+                  fontSize: 14.5,
+                  lineHeight: 1.65,
+                  maxWidth: '85%',
+                  ...(isUser
+                    ? {
+                        background: 'var(--color-primary-soft)',
+                        border: '1px solid var(--color-primary-muted)',
+                        color: 'var(--color-text)',
+                      }
+                    : {
+                        background: 'var(--color-surface)',
+                        border: '1px solid var(--color-border)',
+                        color: 'var(--color-text)',
+                      }),
+                }}
+              >
+                {isUser ? (
+                  msg.content
+                ) : (
+                  <Markdown>{msg.content}</Markdown>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
 
         {/* Typing indicator */}
         {isTyping && (
@@ -260,7 +295,7 @@ export default function ChatPanel({
               background: 'none',
               border: 'none',
               color: 'var(--color-text)',
-              fontSize: 13,
+              fontSize: 14.5,
               fontFamily: 'inherit',
               resize: 'none',
               outline: 'none',

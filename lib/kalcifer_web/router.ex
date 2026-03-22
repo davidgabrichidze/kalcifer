@@ -17,6 +17,8 @@ defmodule KalciferWeb.Router do
 
     post "/webhooks/sendgrid", WebhookController, :sendgrid
     post "/webhooks/twilio", WebhookController, :twilio
+
+    post "/chat", ChatController, :create
   end
 
   scope "/api/v1", KalciferWeb do

@@ -25,6 +25,8 @@ services:
       - build:/app/_build
     ports:
       - "4500:4500"
+    env_file:
+      - .env
     environment:
       MIX_ENV: dev
       DB_HOST: postgres

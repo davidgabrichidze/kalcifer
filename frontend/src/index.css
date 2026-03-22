@@ -350,6 +350,54 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* ─── Chat markdown ─── */
+.chat-md p { margin-bottom: 0.5em; }
+.chat-md p:last-child { margin-bottom: 0; }
+.chat-md strong { font-weight: 600; }
+.chat-md em { font-style: italic; }
+.chat-md ul, .chat-md ol { margin: 0.4em 0; padding-left: 1.4em; }
+.chat-md li { margin-bottom: 0.2em; }
+.chat-md code {
+  background: var(--color-surface-dim);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+.chat-md pre {
+  background: var(--color-surface-dim);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0.5em 0;
+  overflow-x: auto;
+}
+.chat-md pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+.chat-md a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+.chat-md blockquote {
+  border-left: 3px solid var(--color-primary-muted);
+  padding-left: 10px;
+  margin: 0.5em 0;
+  color: var(--color-text-sec);
+}
+.chat-md h1, .chat-md h2, .chat-md h3 {
+  font-weight: 600;
+  margin: 0.6em 0 0.3em;
+}
+.chat-md h1 { font-size: 1.2em; }
+.chat-md h2 { font-size: 1.1em; }
+.chat-md h3 { font-size: 1.0em; }
+
 /* ─── Animations ─── */
 @keyframes typingDot {
   0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }

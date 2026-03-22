@@ -7,6 +7,10 @@ end
 config :kalcifer, KalciferWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4500"))]
 
+# AI — reads from .env or system env
+config :kalcifer, Kalcifer.AI.Client,
+  api_key: System.get_env("ANTHROPIC_API_KEY", "")
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

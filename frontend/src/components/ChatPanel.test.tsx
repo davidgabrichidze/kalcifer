@@ -1,8 +1,25 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import ChatPanel from './ChatPanel'
 
+// Mock the API module
+vi.mock('../lib/api', () => ({
+  streamChat: vi.fn((_messages, callbacks) => {
+    // Simulate streaming with a small delay
+    setTimeout(() => {
+      callbacks.onDelta('მალე ')
+      callbacks.onDelta('ცოცხალი ვიქნები.')
+      callbacks.onDone('მალე ცოცხალი ვიქნები.')
+    }, 50)
+    return { abort: vi.fn() }
+  }),
+}))
+
 describe('ChatPanel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('renders welcome state with Kalcifer branding', () => {
     render(<ChatPanel />)
     expect(screen.getByText('Kalcifer')).toBeInTheDocument()
@@ -36,11 +53,9 @@ describe('ChatPanel', () => {
     expect(screen.getByText('გამარჯობა')).toBeInTheDocument()
     // Input cleared
     expect(textarea).toHaveValue('')
-    // Typing indicator appears
-    expect(screen.getByTestId('typing-indicator')).toBeInTheDocument()
   })
 
-  it('shows AI response after delay', async () => {
+  it('shows streamed AI response', async () => {
     render(<ChatPanel />)
     const textarea = screen.getByPlaceholderText('მიამბე რა გინდა გააკეთო...')
 
