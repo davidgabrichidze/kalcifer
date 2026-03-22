@@ -430,7 +430,8 @@ body {
   min-width: 0;
 }
 
-[data-stage="welcome"] .work-chat {
+[data-stage="welcome"] .work-chat,
+[data-stage="lobby"] .work-chat {
   flex: 1;
   max-width: 100%;
   align-items: center;

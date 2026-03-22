@@ -7,13 +7,23 @@ defmodule KalciferWeb.ConversationController do
   def index(conn, params) do
     tenant_id = resolve_dev_tenant()
     opts = []
-    opts = if params["status"], do: [status: params["status"]] ++ opts, else: opts
     opts = if params["kind"], do: [kind: params["kind"]] ++ opts, else: opts
 
+    # status=all returns both active and archived; default is "active"
+    status = params["status"]
+
     conversations =
-      tenant_id
-      |> Context.list_conversations(opts)
-      |> Enum.map(&serialize/1)
+      if status == "all" do
+        active = Context.list_conversations(tenant_id, [status: "active"] ++ opts)
+        archived = Context.list_conversations(tenant_id, [status: "archived"] ++ opts)
+        Enum.map(active ++ archived, &serialize/1)
+      else
+        opts = if status, do: [status: status] ++ opts, else: opts
+
+        tenant_id
+        |> Context.list_conversations(opts)
+        |> Enum.map(&serialize/1)
+      end
 
     json(conn, %{conversations: conversations})
   end
@@ -41,6 +51,28 @@ defmodule KalciferWeb.ConversationController do
     end
   end
 
+  @doc "PUT /api/v1/conversations/:id — rename a conversation."
+  def update(conn, %{"id" => id} = params) do
+    case Context.get_conversation(id) do
+      nil ->
+        conn |> put_status(404) |> json(%{error: "Conversation not found"})
+
+      conv ->
+        title = params["title"] || ""
+
+        case Context.rename_conversation(conv, title) do
+          {:ok, renamed} ->
+            json(conn, %{conversation: serialize(renamed)})
+
+          {:error, changeset} ->
+            errors =
+              Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
+
+            conn |> put_status(422) |> json(%{errors: errors})
+        end
+    end
+  end
+
   @doc "POST /api/v1/conversations/:id/archive"
   def archive(conn, %{"id" => id}) do
     case Context.get_conversation(id) do
@@ -50,6 +82,23 @@ defmodule KalciferWeb.ConversationController do
       conv ->
         {:ok, archived} = Context.archive_conversation(conv)
         json(conn, %{conversation: serialize(archived)})
+    end
+  end
+
+  @doc "DELETE /api/v1/conversations/:id — only unclassified conversations."
+  def delete(conn, %{"id" => id}) do
+    case Context.get_conversation(id) do
+      nil ->
+        conn |> put_status(404) |> json(%{error: "Conversation not found"})
+
+      %{kind: kind} when not is_nil(kind) ->
+        conn
+        |> put_status(422)
+        |> json(%{error: "Classified conversations cannot be deleted, archive instead"})
+
+      conv ->
+        {:ok, _} = Context.delete_conversation(conv)
+        conn |> put_status(200) |> json(%{ok: true})
     end
   end
 

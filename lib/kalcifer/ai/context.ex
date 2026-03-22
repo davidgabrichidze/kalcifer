@@ -44,10 +44,20 @@ defmodule Kalcifer.AI.Context do
     |> Repo.all()
   end
 
+  def rename_conversation(%Conversation{} = conv, title) do
+    conv
+    |> Conversation.rename_changeset(title)
+    |> Repo.update()
+  end
+
   def archive_conversation(%Conversation{} = conv) do
     conv
     |> Conversation.archive_changeset()
     |> Repo.update()
+  end
+
+  def delete_conversation(%Conversation{} = conv) do
+    Repo.delete(conv)
   end
 
   @doc "Classify a session — sets kind (campaign/flow/analysis/debug) and optional title."

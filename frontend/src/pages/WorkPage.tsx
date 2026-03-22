@@ -5,7 +5,13 @@ import Sidebar from '../components/Sidebar'
 import WelcomeScreen from '../components/WelcomeScreen'
 import { fetchConversations, type SessionClassification } from '../lib/api'
 
-type Stage = 'welcome' | 'chat'
+/**
+ * Stages:
+ * - welcome: no sidebar, centered welcome (first visit, zero conversations)
+ * - lobby:   sidebar visible, centered welcome (has conversations, nothing selected)
+ * - chat:    sidebar visible, chat active (conversation selected or just started)
+ */
+type Stage = 'welcome' | 'lobby' | 'chat'
 
 export default function WorkPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -16,7 +22,7 @@ export default function WorkPage() {
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0)
   const initializedRef = useRef(false)
 
-  // On mount: check URL for conversation ID, or load most recent
+  // On mount: check URL for conversation ID, or check if conversations exist
   useEffect(() => {
     if (initializedRef.current) return
     initializedRef.current = true
@@ -29,13 +35,10 @@ export default function WorkPage() {
       setStage('chat')
     } else {
       // No URL param — check if there are existing conversations
-      fetchConversations().then(convs => {
-        const active = convs.filter(c => c.status === 'active')
-        if (active.length > 0 && active[0]) {
-          // Has conversations — show most recent in chat stage
-          setConversationId(active[0].id)
-          setStage('chat')
-          setSearchParams({ c: active[0].id }, { replace: true })
+      fetchConversations({ status: 'all' }).then(convs => {
+        if (convs.length > 0) {
+          // Has conversations — show lobby (sidebar + welcome, no auto-open)
+          setStage('lobby')
         }
         // else: no conversations — stay in welcome
       }).catch(() => {
@@ -54,7 +57,7 @@ export default function WorkPage() {
     }
   }, [setSearchParams])
 
-  // Welcome → chat transition: user sends first message
+  // Welcome/lobby → chat transition: user sends first message
   const handleWelcomeSend = useCallback((text: string) => {
     setStage('chat')
     setInitialMessage(text)
@@ -69,9 +72,9 @@ export default function WorkPage() {
     syncUrl(id)
   }, [syncUrl])
 
-  // New session from sidebar or chat
+  // New session from sidebar or chat — go to lobby (sidebar stays visible)
   const handleNewSession = useCallback(() => {
-    setStage('welcome')
+    setStage('lobby')
     setConversationId(null)
     setSessionKind(null)
     setInitialMessage(null)
@@ -82,14 +85,12 @@ export default function WorkPage() {
   const handleConversationId = useCallback((id: string) => {
     setConversationId(id)
     syncUrl(id)
-    // Refresh sidebar to show new conversation
     setSidebarRefreshKey(k => k + 1)
   }, [syncUrl])
 
   // Chat panel: session classified
   const handleSessionClassified = useCallback((classification: SessionClassification) => {
     setSessionKind(classification)
-    // Refresh sidebar to show updated kind/title
     setSidebarRefreshKey(k => k + 1)
   }, [])
 
@@ -98,29 +99,45 @@ export default function WorkPage() {
     setInitialMessage(null)
   }, [])
 
+  // Sidebar removed a conversation — refresh + handle if it was active
+  const handleConversationRemoved = useCallback((removedId: string) => {
+    setSidebarRefreshKey(k => k + 1)
+    if (conversationId === removedId) {
+      setConversationId(null)
+      setSessionKind(null)
+      setStage('lobby')
+      syncUrl(null)
+    }
+  }, [conversationId, syncUrl])
+
+  const showSidebar = stage !== 'welcome'
+  const showWelcome = stage === 'welcome' || stage === 'lobby'
+  const showChat = stage === 'chat'
+
   return (
     <div
       className="work-stage"
       data-stage={stage}
       style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}
     >
-      {/* Sidebar — hidden in welcome, visible in chat */}
-      <Sidebar
-        activeConversationId={conversationId}
-        onSelectConversation={handleSelectConversation}
-        onNewSession={handleNewSession}
-        refreshKey={sidebarRefreshKey}
-      />
+      {/* Sidebar — visible in lobby and chat */}
+      {showSidebar && (
+        <Sidebar
+          activeConversationId={conversationId}
+          onSelectConversation={handleSelectConversation}
+          onNewSession={handleNewSession}
+          onConversationRemoved={handleConversationRemoved}
+          refreshKey={sidebarRefreshKey}
+        />
+      )}
 
       {/* Chat area */}
       <div className="work-chat">
-        {/* Welcome screen — only in welcome stage */}
-        {stage === 'welcome' && (
+        {showWelcome && (
           <WelcomeScreen onSend={handleWelcomeSend} />
         )}
 
-        {/* Chat column — only in chat stage */}
-        {stage === 'chat' && (
+        {showChat && (
           <div className="chat-col" style={{ display: 'flex' }}>
             <ChatPanel
               conversationId={conversationId}

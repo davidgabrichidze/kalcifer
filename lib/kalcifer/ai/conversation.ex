@@ -65,6 +65,13 @@ defmodule Kalcifer.AI.Conversation do
     |> validate_required([:entity_type, :entity_id])
   end
 
+  def rename_changeset(conversation, title) do
+    conversation
+    |> cast(%{title: title}, [:title])
+    |> validate_required([:title])
+    |> validate_length(:title, max: 200)
+  end
+
   def archive_changeset(conversation) do
     change(conversation, status: "archived")
   end

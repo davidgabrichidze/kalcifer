@@ -22,7 +22,9 @@ defmodule KalciferWeb.Router do
 
     get "/conversations", ConversationController, :index
     get "/conversations/:id", ConversationController, :show
+    put "/conversations/:id", ConversationController, :update
     post "/conversations/:id/archive", ConversationController, :archive
+    delete "/conversations/:id", ConversationController, :delete
   end
 
   scope "/api/v1", KalciferWeb do

@@ -122,6 +122,35 @@ defmodule Kalcifer.AI.ContextTest do
     end
   end
 
+  describe "rename_conversation/2" do
+    test "renames a conversation" do
+      tenant = insert(:tenant)
+      {:ok, conv} = Context.create_conversation(tenant.id, %{title: "Old"})
+
+      {:ok, renamed} = Context.rename_conversation(conv, "New Name")
+      assert renamed.title == "New Name"
+    end
+
+    test "rejects empty title" do
+      tenant = insert(:tenant)
+      {:ok, conv} = Context.create_conversation(tenant.id)
+
+      assert {:error, changeset} = Context.rename_conversation(conv, "")
+      assert errors_on(changeset).title
+    end
+  end
+
+  describe "delete_conversation/1" do
+    test "deletes a conversation and its messages" do
+      tenant = insert(:tenant)
+      {:ok, conv} = Context.create_conversation(tenant.id)
+      {:ok, _} = Context.add_message(conv.id, "user", "Hello")
+
+      {:ok, _} = Context.delete_conversation(conv)
+      assert Context.get_conversation(conv.id) == nil
+    end
+  end
+
   # ── Messages ───────────────────────────────────────────────
 
   describe "add_message/4" do
