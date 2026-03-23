@@ -4,6 +4,7 @@ import TopBar from './components/TopBar'
 import WorkPage from './pages/WorkPage'
 import EnginePage from './pages/EnginePage'
 import BrowsePage from './pages/BrowsePage'
+import FlowEditorPage from './pages/editor/FlowEditorPage'
 
 export default function App() {
   const { theme, setTheme } = useTheme()
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/" element={<WorkPage />} />
             <Route path="/engine" element={<EnginePage />} />
             <Route path="/browse" element={<BrowsePage />} />
+            <Route path="/editor" element={<FlowEditorPage />} />
           </Routes>
         </div>
       </div>

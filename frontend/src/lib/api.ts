@@ -362,3 +362,72 @@ async function readSSEStream(
     }
   }
 }
+
+// ── Flow Editor API ─────────────────────────────────────
+
+export interface FlowVersion {
+  id: string
+  version_number: number
+  graph: FlowGraph
+  status: 'draft' | 'published'
+  changelog: string | null
+  published_at: string | null
+  inserted_at: string
+  updated_at: string
+}
+
+export interface FlowGraph {
+  nodes: FlowGraphNode[]
+  edges: FlowGraphEdge[]
+}
+
+export interface FlowGraphNode {
+  id: string
+  type: string
+  config: Record<string, unknown>
+}
+
+export interface FlowGraphEdge {
+  source: string
+  target: string
+  branch?: string
+}
+
+export async function fetchFlow(id: string): Promise<Flow> {
+  const res = await fetch(`${API_BASE}/flows/${id}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
+export async function fetchFlowVersions(flowId: string): Promise<FlowVersion[]> {
+  const res = await fetch(`${API_BASE}/flows/${flowId}/versions`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
+export async function fetchFlowVersion(
+  flowId: string,
+  versionNumber: number,
+): Promise<FlowVersion> {
+  const res = await fetch(`${API_BASE}/flows/${flowId}/versions/${versionNumber}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
+export async function updateFlowVersion(
+  flowId: string,
+  versionNumber: number,
+  graph: FlowGraph,
+): Promise<FlowVersion> {
+  const res = await fetch(`${API_BASE}/flows/${flowId}/versions/${versionNumber}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ graph }),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}

@@ -201,12 +201,17 @@ function FlowRow({
   loading: boolean
   onAction: (id: string, action: 'activate' | 'pause' | 'archive') => void
 }) {
+  const navigate = useNavigate()
   const created = new Date(flow.inserted_at).toLocaleDateString('ka-GE')
   const updated = timeAgo(flow.updated_at)
 
   return (
     <tr>
-      <td style={{ fontWeight: 500, color: 'var(--color-text)' }}>{flow.name}</td>
+      <td
+        style={{ fontWeight: 500, color: 'var(--color-primary)', cursor: 'pointer' }}
+        onClick={() => navigate(`/editor?flow=${flow.id}`)}
+        title="ედიტორში გახსნა"
+      >{flow.name}</td>
       <td><StatusTag status={flow.status} /></td>
       <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {flow.description || '—'}
@@ -215,6 +220,7 @@ function FlowRow({
       <td>{updated}</td>
       <td>
         <div style={{ display: 'flex', gap: 4 }}>
+          <ActionBtn label="✎" title="ედიტორი" disabled={false} onClick={() => navigate(`/editor?flow=${flow.id}`)} />
           {flow.status === 'draft' && (
             <ActionBtn label="▶" title="გააქტიურება" disabled={loading} onClick={() => onAction(flow.id, 'activate')} />
           )}

@@ -1,0 +1,843 @@
+/* ════════════════════════════════════════════════════════════
+   Flow Editor Styles
+   Uses CSS variables from theme system
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── Layout ─── */
+.editor-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 48px 1fr 44px;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.editor-topbar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 100;
+  gap: 16px;
+}
+
+.editor-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.editor-logo {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.5px;
+}
+
+.editor-logo-sub {
+  font-weight: 400;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  margin-left: 2px;
+}
+
+.editor-flow-name-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 16px;
+  padding-left: 16px;
+  border-left: 1px solid var(--color-border);
+}
+
+.editor-flow-name-input {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  background: none;
+  border: 1px solid transparent;
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-body);
+  outline: none;
+  transition: all 0.2s;
+  max-width: 260px;
+}
+
+.editor-flow-name-input:hover {
+  border-color: var(--color-border);
+}
+
+.editor-flow-name-input:focus {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+}
+
+.editor-flow-status {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.editor-flow-version {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.editor-topbar-center {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editor-mode-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-dim);
+  color: var(--color-text-sec);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.editor-mode-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.editor-mode-btn.active {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-color: var(--color-primary);
+}
+
+.editor-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.editor-top-btn {
+  background: var(--color-surface-dim);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-sec);
+  height: 30px;
+  padding: 0 10px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  font-size: 11px;
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.editor-top-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.editor-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* ─── Main Content ─── */
+.editor-main {
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.editor-chat-panel {
+  width: 340px;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg);
+  transition: width 0.3s;
+  overflow: hidden;
+}
+
+.editor-chat-panel.collapsed {
+  width: 48px;
+  min-width: 48px;
+}
+
+.editor-chat-panel.collapsed .editor-chat-body {
+  display: none;
+}
+
+.editor-chat-header {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.editor-chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-chat-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.editor-chat-toggle {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  transition: all 0.2s;
+}
+
+.editor-chat-toggle:hover {
+  background: var(--color-surface-dim);
+  color: var(--color-text);
+}
+
+.editor-chat-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.editor-chat-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+/* ─── Canvas ─── */
+.editor-canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg);
+  background-image:
+    linear-gradient(var(--color-border-light) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-light) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 0;
+}
+
+.editor-canvas.pan-active {
+  cursor: grab;
+}
+
+.editor-canvas.pan-active.panning {
+  cursor: grabbing;
+}
+
+/* ─── React Flow Overrides ─── */
+.editor-canvas .react-flow__container {
+  background: transparent;
+}
+
+.editor-canvas .react-flow__background {
+  display: none;
+}
+
+.editor-canvas .react-flow__viewport {
+  background: transparent;
+}
+
+/* ─── Flow Node Styles ─── */
+.flow-node {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0;
+  cursor: grab;
+  user-select: none;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  min-width: 180px;
+  max-width: 260px;
+}
+
+.flow-node:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-primary);
+}
+
+.flow-node.selected {
+  box-shadow: 0 0 0 3px var(--color-primary-soft), 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-primary);
+}
+
+.flow-node.dragging {
+  cursor: grabbing;
+  opacity: 0.9;
+}
+
+.flow-node-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.flow-node-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.flow-node-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.flow-node-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flow-node-type {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.flow-node-body {
+  padding: 8px 12px 10px;
+}
+
+.flow-node-desc {
+  font-size: 11px;
+  color: var(--color-text-sec);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.flow-node-config {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  background: var(--color-surface-dim);
+  padding: 4px 6px;
+  border-radius: var(--radius-xs);
+  display: inline-block;
+  word-break: break-all;
+}
+
+/* ─── Node Palette ─── */
+.palette-panel {
+  width: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface);
+  transition: width 0.3s;
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+}
+
+.palette-panel.open {
+  width: 260px;
+}
+
+.palette-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.palette-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.palette-close {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  transition: all 0.2s;
+}
+
+.palette-close:hover {
+  color: var(--color-text);
+  background: var(--color-surface-dim);
+}
+
+.palette-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.palette-body::-webkit-scrollbar {
+  width: 3px;
+}
+
+.palette-body::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+.palette-section {
+  margin-bottom: 14px;
+}
+
+.palette-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+  padding: 0 4px;
+}
+
+.palette-node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  cursor: grab;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  margin-bottom: 3px;
+}
+
+.palette-node:hover {
+  background: var(--color-surface-dim);
+  border-color: var(--color-border);
+}
+
+.palette-node:active {
+  opacity: 0.7;
+}
+
+.palette-node-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.palette-node-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.palette-node-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.palette-node-desc {
+  font-size: 9px;
+  color: var(--color-text-muted);
+  margin-top: 1px;
+}
+
+/* ─── Config Panel ─── */
+.config-panel {
+  width: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface);
+  transition: width 0.3s;
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+}
+
+.config-panel.open {
+  width: 300px;
+}
+
+.config-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.config-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.config-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.config-body::-webkit-scrollbar {
+  width: 3px;
+}
+
+.config-body::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+.config-field {
+  margin-bottom: 14px;
+}
+
+.config-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.config-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-surface-dim);
+  outline: none;
+  transition: all 0.2s;
+}
+
+.config-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.config-select {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-surface-dim);
+  outline: none;
+  cursor: pointer;
+}
+
+.config-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.config-textarea {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--color-text);
+  background: var(--color-surface-dim);
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+  line-height: 1.5;
+}
+
+.config-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.config-actions {
+  padding: 10px 14px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.config-btn {
+  flex: 1;
+  padding: 7px;
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.config-btn-p {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border: none;
+}
+
+.config-btn-p:hover {
+  background: var(--color-primary-hover);
+}
+
+.config-btn-s {
+  background: var(--color-surface-dim);
+  color: var(--color-text-sec);
+  border: 1px solid var(--color-border);
+}
+
+.config-btn-s:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.config-btn-d {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border: 1px solid transparent;
+}
+
+.config-btn-d:hover {
+  background: var(--color-danger);
+  color: white;
+}
+
+/* ─── Bottom Bar ─── */
+.editor-bottombar {
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 100;
+}
+
+.editor-bottom-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.editor-bottom-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-stats-pill {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editor-stats-pill strong {
+  color: var(--color-text-sec);
+}
+
+.editor-stats-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.editor-sim-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.editor-sim-btn {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editor-sim-btn-run {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.editor-sim-btn-run:hover {
+  background: var(--color-success);
+  color: white;
+}
+
+.editor-sim-status {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  padding: 4px 8px;
+  background: var(--color-surface-dim);
+  border-radius: var(--radius-xs);
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Zoom Controls ─── */
+.editor-zoom-controls {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 20;
+}
+
+.editor-zoom-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-sec);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-family: var(--font-body);
+  transition: all 0.2s;
+}
+
+.editor-zoom-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.editor-zoom-label {
+  font-size: 9px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+/* ─── Minimap ─── */
+.editor-minimap {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  width: 160px;
+  height: 100px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.editor-minimap-viewport {
+  position: absolute;
+  border: 2px solid var(--color-primary);
+  border-radius: 2px;
+  opacity: 0.5;
+}
+
+/* ─── Drop Zone ─── */
+.editor-drop-zone {
+  position: absolute;
+  border: 2px dashed var(--color-primary);
+  border-radius: var(--radius);
+  background: var(--color-primary-soft);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 20;
+}
+
+.editor-drop-zone.visible {
+  opacity: 1;
+}
+
+/* ─── React Flow Handle Overrides ─── */
+.react-flow__handle {
+  width: 12px !important;
+  height: 12px !important;
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: 50% !important;
+  cursor: crosshair !important;
+  z-index: 15 !important;
+  transition: all 0.2s;
+}
+
+.react-flow__handle:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  transform: scale(1.3);
+}

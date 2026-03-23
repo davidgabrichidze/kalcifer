@@ -107,7 +107,7 @@ defmodule KalciferWeb.FlowController do
   # --- Private ---
 
   defp fetch_tenant_flow(conn, id) do
-    tenant = conn.assigns.current_tenant
+    tenant = resolve_tenant(conn)
 
     case Flows.get_flow(id) do
       %{tenant_id: tenant_id} = flow when tenant_id == tenant.id -> {:ok, flow}

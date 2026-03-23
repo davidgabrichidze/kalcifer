@@ -34,11 +34,19 @@ defmodule KalciferWeb.FlowVersionController do
   end
 
   defp fetch_tenant_flow(conn, flow_id) do
-    tenant = conn.assigns.current_tenant
+    tenant = resolve_tenant(conn)
 
     case Flows.get_flow(flow_id) do
       %{tenant_id: tenant_id} = flow when tenant_id == tenant.id -> {:ok, flow}
       _ -> {:error, :not_found}
+    end
+  end
+
+  # Dev fallback: if no auth header, use Demo Tenant (same pattern as FlowController)
+  defp resolve_tenant(conn) do
+    case conn.assigns[:current_tenant] do
+      nil -> Kalcifer.Repo.get_by!(Kalcifer.Tenants.Tenant, name: "Demo Tenant")
+      tenant -> tenant
     end
   end
 
