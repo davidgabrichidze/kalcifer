@@ -2,179 +2,15 @@ import {
   useCallback,
   useEffect,
   useState,
-  DragEvent as ReactDragEvent,
 } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import {
-  ReactFlow,
-  Background,
-  Controls,
-  MiniMap,
-  addEdge,
-  type Connection,
-  useNodesState,
-  useEdgesState,
-  type Node,
-  type Edge,
-  Panel,
-} from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
-import { fetchFlow, fetchFlowVersions, type FlowVersion, type FlowGraph, type FlowGraphNode } from '../../lib/api'
-import { FlowNode } from './FlowNode'
+import { type Node, type Edge } from '@xyflow/react'
+import { fetchFlow, fetchFlowVersions, type FlowVersion } from '../../lib/api'
+import FlowCanvas from '../../components/FlowCanvas'
 import { NodePalette } from './NodePalette'
 import { NodeConfigPanel } from './NodeConfigPanel'
-import { getNodeType } from './nodeTypes'
 import './editor.css'
 
-
-const nodeTypes = {
-  flowNode: FlowNode,
-}
-
-/**
- * Auto-layout algorithm: BFS from root nodes, assign positions in layers
- */
-function autoLayoutNodes(
-  graphNodes: Array<{ id: string; type: string }>,
-  graphEdges: Array<{ source: string; target: string }>,
-): Record<string, { x: number; y: number }> {
-  const positions: Record<string, { x: number; y: number }> = {}
-
-  if (graphNodes.length === 0) return positions
-
-  // Find root nodes (no incoming edges)
-  const hasIncoming = new Set(graphEdges.map(e => e.target))
-  const roots = graphNodes.filter(n => !hasIncoming.has(n.id))
-
-  if (roots.length === 0 && graphNodes.length > 0) {
-    // If no roots, start from first node
-    roots.push(graphNodes[0]!)
-  }
-
-  // BFS to assign layers
-  const layers: Map<string, number> = new Map()
-  const visited = new Set<string>()
-  const queue: Array<[string, number]> = roots.map(r => [r.id, 0])
-
-  while (queue.length > 0) {
-    const [nodeId, layer] = queue.shift()!
-    if (visited.has(nodeId)) continue
-
-    visited.add(nodeId)
-    layers.set(nodeId, layer)
-
-    // Find children
-    graphEdges.forEach(edge => {
-      if (edge.source === nodeId && !visited.has(edge.target)) {
-        queue.push([edge.target, layer + 1])
-      }
-    })
-  }
-
-  // Assign positions
-  const nodesByLayer = new Map<number, string[]>()
-  layers.forEach((layer, nodeId) => {
-    if (!nodesByLayer.has(layer)) nodesByLayer.set(layer, [])
-    nodesByLayer.get(layer)!.push(nodeId)
-  })
-
-  const LAYER_HEIGHT = 160
-  const H_SPACING = 240
-
-  nodesByLayer.forEach((nodeIds, layer) => {
-    const totalWidth = nodeIds.length * H_SPACING
-    const startX = -totalWidth / 2
-
-    nodeIds.forEach((nodeId, index) => {
-      positions[nodeId] = {
-        x: startX + index * H_SPACING,
-        y: layer * LAYER_HEIGHT,
-      }
-    })
-  })
-
-  return positions
-}
-
-/**
- * Extract a human-readable summary from a node's config.
- * Different node types store their key info in different config fields.
- */
-function summarizeNodeConfig(gn: FlowGraphNode): string {
-  const c = gn.config || {}
-  switch (gn.type) {
-    case 'send_email':
-      return (c.subject as string) || (c.template_id as string) || ''
-    case 'send_sms':
-    case 'send_whatsapp':
-      return (c.template_id as string) || (c.body as string) || ''
-    case 'send_push':
-      return (c.title as string) || ''
-    case 'condition':
-    case 'check_segment':
-      return (c.expression as string) || (c.field as string) || (c.segment_field as string) || ''
-    case 'wait':
-      return (c.duration as string) || ''
-    case 'wait_until':
-      return (c.datetime as string) || (c.time as string) || ''
-    case 'wait_for_event':
-      return (c.event_name as string) || ''
-    case 'ab_split':
-      return Array.isArray(c.variants)
-        ? (c.variants as Array<{ key?: string }>).map(v => v.key).filter(Boolean).join(' / ')
-        : ''
-    case 'call_webhook':
-      return (c.url as string) || ''
-    case 'add_tag':
-      return (c.tag as string) || ''
-    case 'segment_entry':
-    case 'event_entry':
-      return (c.event_name as string) || (c.segment as string) || ''
-    default:
-      return ''
-  }
-}
-
-/**
- * Convert backend FlowGraph to React Flow nodes/edges with auto-layout
- */
-function convertGraphToReactFlow(
-  flowGraph: FlowGraph,
-): { nodes: Node[]; edges: Edge[] } {
-  const positions = autoLayoutNodes(flowGraph.nodes, flowGraph.edges)
-
-  const nodes = flowGraph.nodes.map(gn => {
-    const pos = positions[gn.id] || { x: 0, y: 0 }
-    const nodeTypeMeta = getNodeType(gn.type)
-    return {
-      id: gn.id,
-      type: 'flowNode',
-      position: pos,
-      data: {
-        label: nodeTypeMeta?.label || gn.type,
-        type: gn.type,
-        description: summarizeNodeConfig(gn),
-        configDetail: '',
-      },
-    } as Node
-  })
-
-  const edges = flowGraph.edges.map(ge => ({
-    id: `${ge.source}-${ge.target}${ge.branch ? `-${ge.branch}` : ''}`,
-    source: ge.source,
-    target: ge.target,
-    // Connect to the correct handle on branching nodes
-    ...(ge.branch ? { sourceHandle: ge.branch } : {}),
-    label: ge.branch || '',
-    style: ge.branch === 'true'
-      ? { stroke: 'var(--color-success)' }
-      : ge.branch === 'false'
-        ? { stroke: 'var(--color-danger)' }
-        : {},
-  }))
-
-  return { nodes, edges }
-}
 
 export default function FlowEditorPage() {
   const [searchParams] = useSearchParams()
@@ -183,8 +19,8 @@ export default function FlowEditorPage() {
   // State
   const [flow, setFlow] = useState<any>(null)
   const [flowVersion, setFlowVersion] = useState<FlowVersion | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [_loading, setLoading] = useState(true)
+  const [_error, setError] = useState<string | null>(null)
 
   // UI state
   const [mode, setMode] = useState<'edit' | 'simulate' | 'live'>('edit')
@@ -198,9 +34,9 @@ export default function FlowEditorPage() {
     config: Record<string, unknown>
   } | null>(null)
 
-  // React Flow state
-  const [nodes, setNodes, onNodesChange] = useNodesState<any>([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState<any>([])
+  // Track node/edge counts from FlowCanvas
+  const [nodeCount, setNodeCount] = useState(0)
+  const [edgeCount, setEdgeCount] = useState(0)
 
   // Load flow data
   useEffect(() => {
@@ -214,11 +50,6 @@ export default function FlowEditorPage() {
         setFlow(flowData)
         if (versions && versions.length > 0) {
           setFlowVersion(versions[0] || null)
-          if (versions[0]) {
-            const { nodes: rfNodes, edges: rfEdges } = convertGraphToReactFlow(versions[0].graph)
-            setNodes(rfNodes)
-            setEdges(rfEdges)
-          }
         }
       })
       .catch(err => {
@@ -227,120 +58,48 @@ export default function FlowEditorPage() {
       .finally(() => {
         setLoading(false)
       })
-  }, [flowId, setNodes, setEdges])
+  }, [flowId])
 
-  // Handle node selection
-  const handleNodeClick = useCallback(
-    (_: any, node: Node) => {
-      setSelectedNodeId(node.id)
-      const data = node.data as Record<string, unknown>
-      setSelectedNodeData({
-        type: (data.type as string) || '',
-        label: (data.label as string) || '',
-        description: (data.description as string) || '',
-        config: {},
-      })
+  // Handle node selection from canvas
+  const handleNodeSelect = useCallback(
+    (nodeId: string, nodeData: { type: string; label: string; description: string; config: Record<string, unknown> }) => {
+      setSelectedNodeId(nodeId)
+      setSelectedNodeData(nodeData)
       setConfigOpen(true)
     },
     [],
   )
 
-  // Handle edge connection
-  const handleConnect = useCallback(
-    (connection: Connection) => {
-      setEdges(eds => addEdge(connection, eds))
-    },
-    [setEdges],
-  )
-
-  // Palette: add node
-  const handleAddNodeFromPalette = useCallback(
-    (nodeType: string) => {
-      const newNode: Node = {
-        id: `node-${Date.now()}`,
-        type: 'flowNode',
-        position: { x: 0, y: 0 },
-        data: {
-          label: nodeType,
-          type: nodeType,
-          description: '',
-        },
-      }
-      setNodes(nds => [...nds, newNode])
-      setPaletteOpen(false)
-    },
-    [setNodes],
-  )
-
-  // Canvas: drag over to show drop zone
-  const handleCanvasDragOver = useCallback((e: ReactDragEvent) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
+  // Track graph changes for bottom bar stats
+  const handleGraphChange = useCallback((nodes: Node[], edges: Edge[]) => {
+    setNodeCount(nodes.length)
+    setEdgeCount(edges.length)
   }, [])
 
-  // Canvas: drop to add node
-  const handleCanvasDrop = useCallback(
-    (e: ReactDragEvent) => {
-      e.preventDefault()
-      const data = e.dataTransfer.getData('application/json')
-      if (!data) return
-
-      try {
-        const { type } = JSON.parse(data)
-        const canvas = e.currentTarget as HTMLElement
-        const rect = canvas.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-
-        const newNode: Node = {
-          id: `node-${Date.now()}`,
-          type: 'flowNode',
-          position: { x, y },
-          data: {
-            label: type,
-            type,
-            description: '',
-          },
-        }
-        setNodes(nds => [...nds, newNode])
-      } catch {
-        // Invalid JSON
-      }
+  // Palette: add node (TODO: wire to FlowCanvas via ref or callback)
+  const handleAddNodeFromPalette = useCallback(
+    (_nodeType: string) => {
+      // For now, close palette — full wiring will come with FlowCanvas ref API
+      setPaletteOpen(false)
     },
-    [setNodes],
+    [],
   )
 
   // Config panel: save
   const handleConfigSave = useCallback(
-    (config: Record<string, unknown>) => {
-      if (!selectedNodeId) return
-      setNodes(nds =>
-        nds.map(n =>
-          n.id === selectedNodeId
-            ? {
-                ...n,
-                data: { ...n.data, ...config },
-              }
-            : n,
-        ),
-      )
+    (_config: Record<string, unknown>) => {
+      // TODO: wire to FlowCanvas for node updates
       setConfigOpen(false)
     },
-    [selectedNodeId, setNodes],
+    [],
   )
 
   // Config panel: delete
   const handleDeleteNode = useCallback(() => {
-    if (!selectedNodeId) return
-    setNodes(nds => nds.filter(n => n.id !== selectedNodeId))
-    setEdges(eds =>
-      eds.filter(
-        e => (e.source !== selectedNodeId && e.target !== selectedNodeId) || false,
-      ),
-    )
+    // TODO: wire to FlowCanvas for node deletion
     setSelectedNodeId(null)
     setConfigOpen(false)
-  }, [selectedNodeId, setNodes, setEdges])
+  }, [])
 
   const statusColor =
     flow?.status === 'draft'
@@ -445,33 +204,14 @@ export default function FlowEditorPage() {
         </div>
 
         {/* Canvas */}
-        <div
-          className="editor-canvas"
-          onDragOver={handleCanvasDragOver}
-          onDrop={handleCanvasDrop}
-        >
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={handleConnect}
-            onNodeClick={handleNodeClick}
-            nodeTypes={nodeTypes}
-            fitView
-          >
-            <Background />
-            <Controls />
-            <MiniMap />
-            <Panel position="top-left" style={{ pointerEvents: 'none' }}>
-              <div style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>
-                {!loading && flowId === '' && 'No flow selected'}
-                {loading && 'Loading flow...'}
-                {error && `Error: ${error}`}
-              </div>
-            </Panel>
-          </ReactFlow>
-        </div>
+        <FlowCanvas
+          flowGraph={flowVersion?.graph || null}
+          editable={mode === 'edit'}
+          onNodeSelect={handleNodeSelect}
+          onGraphChange={handleGraphChange}
+          showMiniMap={true}
+          showControls={true}
+        />
 
         {/* Node Palette */}
         <NodePalette
@@ -501,11 +241,11 @@ export default function FlowEditorPage() {
         <div className="editor-bottom-left">
           <div className="editor-stats-pill">
             <div className="editor-stats-dot" style={{ background: 'var(--color-success)' }}></div>
-            <strong>{nodes.length}</strong> nodes
+            <strong>{nodeCount}</strong> nodes
           </div>
           <div className="editor-stats-pill">
             <div className="editor-stats-dot" style={{ background: 'var(--color-info)' }}></div>
-            <strong>{edges.length}</strong> edges
+            <strong>{edgeCount}</strong> edges
           </div>
         </div>
 

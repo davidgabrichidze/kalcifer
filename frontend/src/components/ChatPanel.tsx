@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import Markdown from 'react-markdown'
 import { type ChatMessage, type ToolActivity, createMessage } from '../lib/chat'
 import { streamChat, fetchConversation, type ApiMessage, type SessionClassification } from '../lib/api'
+import { type ContextContent } from '../pages/WorkPage'
 
 // Human-readable names for tools
 const TOOL_LABELS: Record<string, string> = {
@@ -35,6 +36,8 @@ interface ChatPanelProps {
   /** If set, send this text immediately on mount (used by welcome screen) */
   initialMessage?: string | null
   onInitialMessageSent?: () => void
+  /** Called when a tool result contains content to display in the context area */
+  onContextContent?: (content: ContextContent) => void
 }
 
 export default function ChatPanel({
@@ -45,6 +48,7 @@ export default function ChatPanel({
   onSessionClassified,
   initialMessage,
   onInitialMessageSent,
+  onContextContent,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -122,6 +126,7 @@ export default function ChatPanel({
         },
         onToolDone: (tool, result) => {
           addToolToMessage(aiMsg.id, { tool, status: 'done', result })
+          detectFlowGraph(tool, result)
         },
         onDone: () => {
           setIsTyping(false)
@@ -137,6 +142,18 @@ export default function ChatPanel({
       },
       conversationId ?? undefined,
     )
+  }
+
+  // Detect flow graph in tool results and notify parent
+  const FLOW_TOOLS = ['create_flow', 'get_flow_graph', 'add_node', 'modify_node']
+  function detectFlowGraph(tool: string, result: string) {
+    if (!onContextContent || !FLOW_TOOLS.includes(tool)) return
+    try {
+      const parsed = JSON.parse(result)
+      if (parsed.graph?.nodes && parsed.graph?.edges) {
+        onContextContent({ type: 'flow-canvas', flowGraph: parsed.graph })
+      }
+    } catch { /* not graph JSON, ignore */ }
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -175,6 +192,7 @@ export default function ChatPanel({
           },
           onToolDone: (tool, result) => {
             addToolToMessage(aiMsg.id, { tool, status: 'done', result })
+            detectFlowGraph(tool, result)
           },
           onDone: () => {
             setIsTyping(false)
@@ -343,6 +361,34 @@ export default function ChatPanel({
                         }} />
                         {TOOL_LABELS[t.tool] ?? t.tool}
                         {t.status === 'done' && ' ✓'}
+                        {t.status === 'done' && FLOW_TOOLS.includes(t.tool) && t.result && (() => {
+                          try {
+                            const parsed = JSON.parse(t.result!)
+                            if (parsed.graph?.nodes && parsed.graph?.edges) {
+                              return (
+                                <button
+                                  onClick={() => onContextContent?.({ type: 'flow-canvas', flowGraph: parsed.graph })}
+                                  style={{
+                                    marginLeft: 4,
+                                    padding: '1px 6px',
+                                    borderRadius: 4,
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                    background: 'var(--color-primary-soft)',
+                                    color: 'var(--color-primary)',
+                                    border: '1px solid var(--color-primary-muted)',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                  }}
+                                  title="Canvas-ში გახსნა"
+                                >
+                                  ⤢ გახსნა
+                                </button>
+                              )
+                            }
+                          } catch { /* ignore */ }
+                          return null
+                        })()}
                       </div>
                     ))}
                   </div>

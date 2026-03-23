@@ -1,0 +1,147 @@
+/* ════════════════════════════════════════════════════════════
+   Flow Canvas — Shared styles for ReactFlow canvas
+   Used by FlowCanvas component (embedded in WorkPage & FlowEditorPage)
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── Canvas Container ─── */
+.flow-canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg);
+  background-image:
+    linear-gradient(var(--color-border-light) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-light) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 0;
+}
+
+.flow-canvas.pan-active {
+  cursor: grab;
+}
+
+.flow-canvas.pan-active.panning {
+  cursor: grabbing;
+}
+
+/* ─── React Flow Overrides ─── */
+.flow-canvas .react-flow__container {
+  background: transparent;
+}
+
+.flow-canvas .react-flow__background {
+  display: none;
+}
+
+.flow-canvas .react-flow__viewport {
+  background: transparent;
+}
+
+/* ─── Flow Node Styles ─── */
+.flow-node {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0;
+  cursor: grab;
+  user-select: none;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  min-width: 180px;
+  max-width: 260px;
+}
+
+.flow-node:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-primary);
+}
+
+.flow-node.selected {
+  box-shadow: 0 0 0 3px var(--color-primary-soft), 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-primary);
+}
+
+.flow-node.dragging {
+  cursor: grabbing;
+  opacity: 0.9;
+}
+
+.flow-node-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.flow-node-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.flow-node-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.flow-node-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flow-node-type {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.flow-node-body {
+  padding: 8px 12px 10px;
+}
+
+.flow-node-desc {
+  font-size: 11px;
+  color: var(--color-text-sec);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.flow-node-config {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  background: var(--color-surface-dim);
+  padding: 4px 6px;
+  border-radius: var(--radius-xs);
+  display: inline-block;
+  word-break: break-all;
+}
+
+/* ─── React Flow Handle Overrides ─── */
+.react-flow__handle {
+  width: 12px !important;
+  height: 12px !important;
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: 50% !important;
+  cursor: crosshair !important;
+  z-index: 15 !important;
+  transition: all 0.2s;
+}
+
+.react-flow__handle:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  transform: scale(1.3);
+}

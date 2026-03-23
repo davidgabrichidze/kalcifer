@@ -1,17 +1,29 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import ChatPanel from '../components/ChatPanel'
+import FlowCanvas from '../components/FlowCanvas'
 import Sidebar from '../components/Sidebar'
 import WelcomeScreen from '../components/WelcomeScreen'
-import { fetchConversations, type SessionClassification } from '../lib/api'
+import { fetchConversations, type SessionClassification, type FlowGraph } from '../lib/api'
+import './work-stages.css'
 
 /**
  * Stages:
  * - welcome: no sidebar, centered welcome (first visit, zero conversations)
  * - lobby:   sidebar visible, centered welcome (has conversations, nothing selected)
  * - chat:    sidebar visible, chat active (conversation selected or just started)
+ * - split:   chat + context side-by-side (context area visible, e.g. flow canvas)
+ * - context: compact chat + full context (context area dominant)
  */
-type Stage = 'welcome' | 'lobby' | 'chat'
+type Stage = 'welcome' | 'lobby' | 'chat' | 'split' | 'context'
+
+/**
+ * Context area content — discriminated union for different content types.
+ * Currently supports flow-canvas; future types (report, analytics) can be added.
+ */
+export type ContextContent =
+  | { type: 'flow-canvas'; flowGraph: FlowGraph }
+  | null
 
 export default function WorkPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -21,6 +33,10 @@ export default function WorkPage() {
   const [initialMessage, setInitialMessage] = useState<string | null>(null)
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0)
   const initializedRef = useRef(false)
+
+  // Context area state
+  const [contextContent, setContextContent] = useState<ContextContent>(null)
+  const [contextScrollable, setContextScrollable] = useState(false)
 
   // On mount: check URL for conversation ID, or check if conversations exist
   useEffect(() => {
@@ -72,6 +88,8 @@ export default function WorkPage() {
     setConversationId(id)
     setSessionKind(null)
     setInitialMessage(null)
+    // Close context when switching conversations
+    setContextContent(null)
     syncUrl(id)
   }, [syncUrl])
 
@@ -81,6 +99,7 @@ export default function WorkPage() {
     setConversationId(null)
     setSessionKind(null)
     setInitialMessage(null)
+    setContextContent(null)
     syncUrl(null)
   }, [syncUrl])
 
@@ -108,22 +127,43 @@ export default function WorkPage() {
     if (conversationId === removedId) {
       setConversationId(null)
       setSessionKind(null)
+      setContextContent(null)
       setStage('lobby')
       syncUrl(null)
     }
   }, [conversationId, syncUrl])
 
+  // Context area: receive content from ChatPanel (tool results)
+  const handleContextContent = useCallback((content: ContextContent) => {
+    setContextContent(content)
+    setContextScrollable(content?.type !== 'flow-canvas') // canvas = no scroll
+    if (stage === 'chat' || stage === 'lobby') {
+      setStage('split')
+    }
+  }, [stage])
+
+  // Context area: close → back to chat
+  const handleCloseContext = useCallback(() => {
+    setContextContent(null)
+    setStage('chat')
+  }, [])
+
+  // Context area: toggle split ↔ context
+  const handleToggleExpand = useCallback(() => {
+    setStage(s => s === 'split' ? 'context' : 'split')
+  }, [])
+
   const showSidebar = stage !== 'welcome'
   const showWelcome = stage === 'welcome' || stage === 'lobby'
-  const showChat = stage === 'chat'
+  const showChat = stage === 'chat' || stage === 'split' || stage === 'context'
+  const showContext = stage === 'split' || stage === 'context'
 
   return (
     <div
       className="work-stage"
       data-stage={stage}
-      style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}
     >
-      {/* Sidebar — visible in lobby and chat */}
+      {/* Sidebar — visible in lobby, chat, split, context */}
       {showSidebar && (
         <Sidebar
           activeConversationId={conversationId}
@@ -141,7 +181,7 @@ export default function WorkPage() {
         )}
 
         {showChat && (
-          <div className="chat-col" style={{ display: 'flex' }}>
+          <div className="chat-col" style={{ display: 'flex', flex: 1 }}>
             <ChatPanel
               conversationId={conversationId}
               sessionKind={sessionKind}
@@ -149,8 +189,47 @@ export default function WorkPage() {
               onSessionClassified={handleSessionClassified}
               initialMessage={initialMessage}
               onInitialMessageSent={handleInitialMessageSent}
+              onContextContent={handleContextContent}
             />
           </div>
+        )}
+      </div>
+
+      {/* Resize handle — visible only in split/context */}
+      {showContext && (
+        <div className="work-resize-handle" />
+      )}
+
+      {/* Context area */}
+      <div className={`work-context-area ${contextScrollable ? 'scrollable' : ''}`}>
+        {/* Context header with expand/close buttons */}
+        {showContext && (
+          <div className="work-context-header">
+            <button
+              className="work-context-btn"
+              onClick={handleToggleExpand}
+              title={stage === 'split' ? 'გადიდება' : 'შემცირება'}
+            >
+              {stage === 'split' ? '⤢' : '⤡'}
+            </button>
+            <button
+              className="work-context-btn"
+              onClick={handleCloseContext}
+              title="დახურვა"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Dynamic content rendering */}
+        {contextContent?.type === 'flow-canvas' && (
+          <FlowCanvas
+            flowGraph={contextContent.flowGraph}
+            editable={false}
+            showMiniMap={stage === 'context'}
+            showControls={true}
+          />
         )}
       </div>
     </div>

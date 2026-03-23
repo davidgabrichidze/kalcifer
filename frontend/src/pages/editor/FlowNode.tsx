@@ -1,6 +1,6 @@
 import { Handle, Position } from '@xyflow/react'
 import { getNodeType } from './nodeTypes'
-import './editor.css'
+import '../../components/flow-canvas.css'
 
 export interface FlowNodeData {
   label: string

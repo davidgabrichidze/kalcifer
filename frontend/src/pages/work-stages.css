@@ -1,0 +1,157 @@
+/* ════════════════════════════════════════════════════════════
+   Work Stage System — Layout transitions for WorkPage
+   Stages: welcome | lobby | chat | split | context
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── Base Container ─── */
+.work-stage {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ─── Chat Area ─── */
+.work-chat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  transition: flex 0.4s ease, max-width 0.4s ease, width 0.4s ease;
+}
+
+/* ─── Context Area (right panel) ─── */
+.work-context-area {
+  flex: 0;
+  overflow: hidden;
+  background: var(--color-bg);
+  transition: flex 0.4s ease, opacity 0.3s ease;
+  opacity: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.work-context-area.scrollable {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+}
+
+/* ─── Context Header ─── */
+.work-context-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 6px 8px;
+  gap: 4px;
+  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.work-context-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+  opacity: 0.7;
+}
+
+.work-context-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  opacity: 1;
+}
+
+/* ─── Resize Handle ─── */
+.work-resize-handle {
+  width: 5px;
+  cursor: col-resize;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 50;
+  transition: background 0.2s;
+}
+
+.work-resize-handle:hover {
+  background: var(--color-primary);
+}
+
+/* ════════════════════════════════════════════════════════════
+   Stage-specific layouts (data-stage attribute selectors)
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── Welcome: full-width centered, no sidebar, no context ─── */
+[data-stage="welcome"] .work-chat {
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-stage="welcome"] .work-context-area {
+  flex: 0;
+  opacity: 0;
+  width: 0;
+}
+
+/* ─── Lobby: sidebar visible, centered welcome ─── */
+[data-stage="lobby"] .work-chat {
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-stage="lobby"] .work-context-area {
+  flex: 0;
+  opacity: 0;
+  width: 0;
+}
+
+/* ─── Chat: sidebar + dominant chat, no context ─── */
+[data-stage="chat"] .work-chat {
+  flex: 3;
+}
+
+[data-stage="chat"] .work-context-area {
+  flex: 0;
+  opacity: 0;
+  width: 0;
+}
+
+/* ─── Split: chat + context side-by-side ─── */
+[data-stage="split"] .work-chat {
+  flex: 1;
+  max-width: 480px;
+  border-right: 1px solid var(--color-border);
+}
+
+[data-stage="split"] .work-context-area {
+  flex: 2;
+  opacity: 1;
+}
+
+/* ─── Context: compact chat + full context ─── */
+[data-stage="context"] .work-chat {
+  flex: 0;
+  width: 340px;
+  min-width: 340px;
+  max-width: 340px;
+  border-right: 1px solid var(--color-border);
+}
+
+[data-stage="context"] .work-context-area {
+  flex: 3;
+  opacity: 1;
+}
