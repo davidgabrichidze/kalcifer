@@ -23,9 +23,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Agent do
 
   use Kalcifer.Engine.NodeBehaviour
 
-  alias Kalcifer.AI.{Client, Tools}
+  alias Kalcifer.AI.Tools
   alias Kalcifer.Engine.EventBroadcaster
   alias Kalcifer.Engine.Nodes.Action.AI.Helpers
+
+  defp client, do: Application.get_env(:kalcifer, :ai_client, Kalcifer.AI.Client)
 
   @default_max_rounds 20
 
@@ -102,7 +104,7 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Agent do
     max_rounds = config["max_rounds"] || @default_max_rounds
     opts = [{:max_tool_rounds, max_rounds} | opts]
 
-    case Client.chat_with_tools(messages, tool_defs, tool_executor, callback, opts) do
+    case client().chat_with_tools(messages, tool_defs, tool_executor, callback, opts) do
       {:ok, full_text} ->
         calls = :ets.tab2list(tool_calls) |> Enum.sort_by(&elem(&1, 0)) |> Enum.map(&elem(&1, 1))
         :ets.delete(tool_calls)

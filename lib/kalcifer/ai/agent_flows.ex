@@ -72,7 +72,7 @@ defmodule Kalcifer.AI.AgentFlows do
     end)
   end
 
-  defp load_active_version(%Flow{active_version_id: nil} = flow) do
+  defp load_active_version(%Flow{active_version_id: nil} = _flow) do
     # Flow exists but has no active version — shouldn't happen, but handle gracefully
     {:error, :no_active_version}
   end
