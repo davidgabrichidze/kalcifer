@@ -142,6 +142,7 @@ defmodule KalciferWeb.ChatController do
       # Agent node: tool execution done
       %{type: "agent_tool_done", payload: payload} ->
         chunk_sse(conn, "tool_done", %{tool: payload.tool, result: payload.result})
+        maybe_emit_session_classified(conn, payload.tool, payload.result)
         listen_for_events(conn, state)
 
       # Agent node: full response ready
@@ -338,6 +339,22 @@ defmodule KalciferWeb.ChatController do
         opts
     end
   end
+
+  defp maybe_emit_session_classified(conn, "classify_session", result) do
+    case Jason.decode(result) do
+      {:ok, %{"classified" => true} = data} ->
+        chunk_sse(conn, "session_classified", %{
+          kind: data["kind"],
+          title: data["title"],
+          reason: data["reason"]
+        })
+
+      _ ->
+        :ok
+    end
+  end
+
+  defp maybe_emit_session_classified(_conn, _tool, _result), do: :ok
 
   defp humanize_error(:max_tool_rounds),
     do: "ძალიან ბევრი ნაბიჯი დამჭირდა — სცადე უფრო მოკლე დავალებით."
