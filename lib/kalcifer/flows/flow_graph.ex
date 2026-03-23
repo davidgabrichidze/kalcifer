@@ -10,17 +10,24 @@ defmodule Kalcifer.Flows.FlowGraph do
   A graph is a map with "nodes" (list of node maps) and "edges" (list of edge maps).
   Each node has "id" and "type". Each edge has "source" and "target", with optional "branch".
   """
-  def validate(graph) when is_map(graph) do
+  def validate(graph, opts \\ [])
+
+  def validate(graph, opts) when is_map(graph) do
+    allow_cycles = Keyword.get(opts, :allow_cycles, false)
+
     with :ok <- validate_has_entry(graph),
          :ok <- validate_edges_reference_valid_nodes(graph),
-         :ok <- validate_no_cycles(graph),
+         :ok <- maybe_validate_no_cycles(graph, allow_cycles),
          :ok <- validate_no_orphans(graph),
          :ok <- validate_branch_edges_complete(graph) do
       :ok
     end
   end
 
-  def validate(_), do: {:error, ["graph must be a map"]}
+  def validate(_, _opts), do: {:error, ["graph must be a map"]}
+
+  defp maybe_validate_no_cycles(_graph, true), do: :ok
+  defp maybe_validate_no_cycles(graph, false), do: validate_no_cycles(graph)
 
   @doc """
   Validates that all node types in the graph are registered in the given registry.
@@ -110,8 +117,8 @@ defmodule Kalcifer.Flows.FlowGraph do
   Returns `{:ok, %{warnings: [String.t()], context_deps: [String.t()]}}` or
   `{:error, [String.t()]}` for critical failures.
   """
-  def preflight(graph, registry) when is_map(graph) do
-    with :ok <- validate(graph),
+  def preflight(graph, registry, opts \\ []) when is_map(graph) do
+    with :ok <- validate(graph, opts),
          :ok <- validate_node_types(graph, registry) do
       config_warnings =
         case analyze_config_completeness(graph, registry) do

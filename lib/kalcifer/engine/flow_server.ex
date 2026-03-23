@@ -14,6 +14,8 @@ defmodule Kalcifer.Engine.FlowServer do
   alias Kalcifer.Engine.Persistence.StepStore
   alias Kalcifer.Versioning.NodeMapper
 
+  @max_node_executions 200
+
   defstruct [
     :instance_id,
     :flow_id,
@@ -24,7 +26,8 @@ defmodule Kalcifer.Engine.FlowServer do
     :current_nodes,
     :context,
     :status,
-    :waiting_node_id
+    :waiting_node_id,
+    node_execution_count: 0
   ]
 
   # --- Public API ---
@@ -176,20 +179,28 @@ defmodule Kalcifer.Engine.FlowServer do
   end
 
   defp execute_nodes(state, [node_id | rest]) do
-    node = GraphWalker.find_node(state.graph, node_id)
+    if state.node_execution_count >= @max_node_executions do
+      Logger.error("max node executions reached (#{@max_node_executions}), stopping flow")
+      state = %{state | status: :failed}
+      InstanceStore.fail_instance(get_instance(state), "max_node_executions_exceeded")
+      state
+    else
+      node = GraphWalker.find_node(state.graph, node_id)
+      state = %{state | node_execution_count: state.node_execution_count + 1}
 
-    case execute_single_node(state, node) do
-      {:continue, %{status: :completed} = state, _next_node_ids} ->
-        state
+      case execute_single_node(state, node) do
+        {:continue, %{status: :completed} = state, _next_node_ids} ->
+          state
 
-      {:continue, state, next_node_ids} ->
-        execute_nodes(state, rest ++ next_node_ids)
+        {:continue, state, next_node_ids} ->
+          execute_nodes(state, rest ++ next_node_ids)
 
-      {:waiting, state} ->
-        execute_nodes(state, rest)
+        {:waiting, state} ->
+          execute_nodes(state, rest)
 
-      {:failed, state} ->
-        state
+        {:failed, state} ->
+          state
+      end
     end
   end
 
