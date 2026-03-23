@@ -1,100 +1,107 @@
-# Kalcifer — Status & Plan (2026-03-23)
+# Kalcifer — Status & Plan (2026-03-24)
 
 ## 1. რა გაკეთდა (Completed)
 
-### Multi-Provider AI Client
-- `lib/kalcifer/ai/client.ex` — რეფაქტორინგი: Anthropic-only → multi-provider routing
-- ახალი adapter მოდულები: `providers/anthropic.ex`, `providers/openai.ex`, `providers/google.ex`
-- Provider auto-detection მოდელის სახელიდან (gpt→openai, gemini→google, claude→anthropic)
-- OpenAI tool_call format fix: `process_tool_calls` string-keyed maps, `Enum.flat_map` for tool results
-- Gemini streaming: `:streamGenerateContent?alt=sse` endpoint
+### Agent Activity Visibility — "კალციფერი რას აკეთებს?" (DONE)
 
-### UUID Validation (AI Tools)
-- `lib/kalcifer/ai/tools.ex` — `validate_uuid_fields/2` prevents Ecto crashes when AI hallucinates placeholder IDs
-- Error message guides AI back: "must be a real UUID, not a placeholder"
+**Engine-First Dogfooding:** ჩატის მესიჯის დამუშავება Flow Engine-ით ხდება.
 
-### Flow Editor — ფუნდამენტი + WorkPage ინტეგრაცია
-**ექსტრაქცია და რეუტილიზაცია:**
-- `frontend/src/pages/editor/flowGraphUtils.ts` — shared pure ფუნქციები: `autoLayoutNodes`, `summarizeNodeConfig`, `convertGraphToReactFlow`
-- `frontend/src/components/FlowCanvas.tsx` — reusable ReactFlow canvas კომპონენტი (`FlowCanvasProps`: flowGraph, editable, onGraphChange, onNodeSelect, showMiniMap, showControls)
-- `frontend/src/components/flow-canvas.css` — canvas + node + handle სტილები (editor.css-დან ექსტრაქცია)
+**Backend:**
+- `agent` node type (`lib/kalcifer/engine/nodes/action/ai/agent.ex`) — multi-round `chat_with_tools` as NodeBehaviour, PubSub broadcasts for real-time streaming
+- AI Helpers extracted (`lib/kalcifer/engine/nodes/action/ai/helpers.ex`) — `build_messages`, `interpolate`, `summarize_context` shared between ai_think/ai_decide/agent
+- `AgentFlows` (`lib/kalcifer/ai/agent_flows.ex`) — sentinel flow management per tenant
+  - `ensure_simple_flow/1`: [webhook_entry] → [agent] → [exit]
+  - `ensure_council_flow/1`: [entry] → [dreamer] → [realist] → [skeptic] → [synthesizer] → [executor] → [exit]
+- `EventBroadcaster` extended — `broadcast_agent_text_delta/tool_start/tool_done/done` for instance-level broadcasting
+- `ChatController` refactored — FlowServer-based execution with PubSub receive loop, direct chat fallback on engine failure
+- `classify_session` SSE event emitted on engine path
+- Sentinel flows filtered from `list_flows` tool
+- `ClientBehaviour` extended with `chat_with_tools` callback for mock testing
+- `NodeRegistry`: "agent" registered (now 24 built-in nodes)
 
-**Standalone editor (შენარჩუნებული `/editor` route):**
-- `frontend/src/pages/editor/FlowEditorPage.tsx` — ახლა FlowCanvas-ს იყენებს, topbar/chat/palette/config/bottombar შენარჩუნებული
-- `frontend/src/pages/editor/FlowNode.tsx` — custom node component, category-based colors, branching handles
-- `frontend/src/pages/editor/NodePalette.tsx` — drag-enabled node palette
-- `frontend/src/pages/editor/NodeConfigPanel.tsx` — type-specific config panel
-- `frontend/src/pages/editor/nodeTypes.ts` — 21 node type metadata
-- `frontend/src/pages/editor/editor.css` — editor chrome styles (topbar, bottombar, palette, config)
+**Frontend:**
+- `AgentActivity` / `AgentActivityStep` types with tool sub-list support
+- SSE events: `activity_start`, `activity_step`, `activity_done`
+- `ActivityIndicator` component — collapsed/expanded views, Georgian labels, tool chips per step
+- ChatPanel integration — activity wiring, replaces tool badges when activity present
 
-**WorkPage Stage System (5 stages):**
-- `frontend/src/pages/WorkPage.tsx` — stage: `welcome | lobby | chat | split | context`
-- `frontend/src/pages/work-stages.css` — data-stage CSS selectors:
-  - welcome: full-width centered, no sidebar, no context
-  - lobby: sidebar visible, centered welcome
-  - chat: sidebar + dominant chat, no context
-  - split: chat (flex:1, max 480px) + context (flex:2) side-by-side
-  - context: compact chat (340px fixed) + full context (flex:3)
-- Generic `ContextContent` discriminated union: `{ type: 'flow-canvas'; flowGraph } | null`
-  - მომავალში: `'report'`, `'analytics'` და სხვა ტიპები
-- Context area header: expand/collapse (⤢/⤡) + close (✕) ღილაკები
-- Stage transitions: chat→split ავტომატურად tool result-ით, split↔context toggle-ით
+**Tests:**
+- 14 tests for agent node (dry_run, tool tracking, PubSub broadcasts, system prompt, error handling)
+- 7 tests for AgentFlows (simple + council flow creation, idempotency, tenant isolation)
+- 10 tests for AI Helpers (interpolation, context summarization, message building)
 
-**ChatPanel → Context Area სიგნალი:**
-- `ChatPanel.tsx` — `onContextContent` prop, flow tool result-ებიდან graph-ის ავტო-დეტექცია
-- Tool badge-ზე "⤢ გახსნა" ღილაკი — მომხმარებელს ხელით შეუძლია context area-ში გახსნა
-- Flow tools: `create_flow`, `get_flow_graph`, `add_node`, `modify_node`
+### Simulation Mode (DONE)
 
-### Backend (Dev Frontend Support)
-- `lib/kalcifer_web/router.ex` — unauthenticated GET routes: `/flows`, `/flows/:id`, `/flows/:flow_id/versions`, `/flows/:flow_id/versions/:version_number`
-- `FlowController.fetch_tenant_flow` — `resolve_tenant(conn)` fallback (Demo Tenant for dev)
-- `FlowVersionController` — same resolve_tenant pattern
+**Backend:**
+- `POST /api/v1/flows/:flow_id/simulate` — SSE streaming simulation endpoint
+- `SimulationController` subscribes to PubSub, forwards engine events as `sim_start/sim_step/sim_done`
+- Supports draft flows (latest version) and active flows
+- Reuses existing dry_run infrastructure (all 23 nodes already handle `_dry_run` context)
 
-### Browse Page → Editor Navigation
-- `frontend/src/pages/BrowsePage.tsx` — flow name clickable → `/editor?flow=${id}`, ✎ edit button
+**Frontend:**
+- `simulateFlow()` API function with SSE parsing
+- FlowEditorPage: simulation controls (Dry Run / Stop / Reset / Re-run) in bottom bar
+- FlowCanvas: `simCompletedNodes` + `simActiveNode` props for node highlighting
+- FlowNode: simulation badges (checkmark/active indicator) and dynamic border coloring
+- CSS: `simPulse` animation, sim-active/sim-completed states
+
+### Graph Cycles + Council Flow (DONE)
+
+**Engine:**
+- `FlowGraph.validate/2` accepts `allow_cycles: true` option
+- `FlowServer`: `max_node_executions` (200) guard prevents infinite loops
+- `node_execution_count` field tracks total nodes executed per instance
+
+**Council Flow Template:**
+- 7-node deliberation flow: entry → dreamer → realist → skeptic → synthesizer → executor → exit
+- Each persona = ai_think node with role-specific prompts
+- Prompts use `{{accumulated.node_id.response}}` interpolation for context passing
+- Synthesizer integrates all perspectives, executor (agent node) acts on recommendation
+
+### Multi-Provider AI Client (previous sprint)
+- `lib/kalcifer/ai/client.ex` — Anthropic/OpenAI/Google routing
+- Provider adapters: `providers/anthropic.ex`, `providers/openai.ex`, `providers/google.ex`
+- OpenAI tool_call format fix, Gemini streaming
+
+### Flow Editor (previous sprint)
+- `FlowCanvas.tsx` reusable component, `FlowEditorPage.tsx` standalone editor
+- `NodePalette`, `NodeConfigPanel`, `FlowNode` components
+- WorkPage 5-stage layout system
+- ChatPanel → Context Area signal for flow visualization
 
 ---
 
-## 2. მიმდინარე / შემდეგი ნაბიჯები (Current Sprint)
+## 2. შემდეგი ნაბიჯები (Next Sprint)
 
-### 2.1 Agent Activity Visibility — "კალციფერი რას აკეთებს?" (პრიორიტეტი #1)
-
-**პრობლემა:** მომხმარებელს არ ესმის კალციფერი (როგორც agentic AI) ბეგრაუნდში რას ფიქრობს და რას აკეთებს. ჩატის typing indicator არ არის საკმარისი — საჭიროა AI-ის "სამუშაო პროცესის" ვიზუალიზაცია.
-
-**ეს არ ეხება ჩატს.** ჩათი (messaging) გასაგებია. ეს ეხება კალციფერის, როგორც აგენტის, სამუშაო ციკლს: tool calls, reasoning, multi-step operations.
-
-**მთავარი იდეა:** კალციფერის საკუთარი workflow engine-ის გამოყენება AI agent-ის სამუშაო პროცესის ვიზუალიზაციისთვის ("dogfooding"). AI-ის სამუშაო ციკლი (think → plan → tool_call → evaluate → respond) თავად არის flow, რომელიც Kalcifer-ის engine-ით შეიძლება იყოს ორკესტრირებული და მონიტორინგირებული.
+### 2.1 Council Flow Integration in Chat (Priority #1)
+**პრობლემა:** Council flow template არსებობს, მაგრამ ChatController ყოველთვის simple flow-ს იყენებს.
 
 **რა უნდა გაკეთდეს:**
-1. AI agent-ის სამუშაო ციკლის მოდელირება flow-ად (thinking, planning, tool execution, evaluation)
-2. Real-time activity feed / progress indicator UI — არა ჩატში, არამედ ცალკე ვიზუალი
-3. მომხმარებელმა უნდა ხედოს: "კალციფერი ახლა ფლოუს ქმნის... 3/5 ნოდი დამატებულია" ან "ანალიზს აკეთებს..."
-4. Workflow engine-ის integration: agent steps → FlowInstance → real-time tracking
+1. `intake` node: classify user request → simple vs council routing
+2. ChatController: dynamic flow selection based on request complexity
+3. ActivityIndicator: council nodes ჩვენება (dreamer/realist/skeptic/synthesizer steps)
+4. Testing: full council flow execution with mocked AI
 
-**საკვანძო კითხვები შემდეგი სესიისთვის:**
-- სად ჩანს activity indicator? (context area-ში? topbar-ში? floating panel?)
-- რამდენად დეტალური? (high-level status vs step-by-step)
-- Backend: SSE/WebSocket for real-time updates vs polling?
-- Engine integration: FlowServer-ის გამოყენება AI workflow tracking-ისთვის
-
-### 2.2 Simulation Mode (პრიორიტეტი #2)
-პროტოტიპში (`ui-prototype/flow-editor.html`) simulation აქვს: dry run, step-by-step, badges, log.
+### 2.2 Graph Save & Undo (Priority #2)
+**პრობლემა:** Editor-ში canvas ცვლილებები არ ინახება backend-ზე.
 
 **რა უნდა გაკეთდეს:**
-1. Simulation state machine: `idle → running → paused → completed → failed`
-2. Backend endpoint: `POST /api/v1/flows/:flow_id/simulate` — dry run execution without side effects
-3. Step-by-step UI: highlight current node, show execution path, display context at each step
-4. `.sim-badge` on nodes showing execution status (pending/active/completed/failed)
-5. Simulation log panel (bottom or side)
-6. Bottom bar buttons: Dry Run / Step / Stop
+1. Canvas → FlowGraph → `PUT /flows/:id/versions/:v`
+2. Undo/redo stack (Ctrl+Z, Ctrl+Y)
+3. Keyboard shortcuts (Delete node, Ctrl+S save)
+4. Validation overlay: preflight warnings on nodes
 
-**Backend needs:**
-- `FlowServer` dry-run mode — execute nodes but skip actual channel delivery
-- Simulation state tracking endpoint
-- WebSocket for real-time step updates (optional, SSE fallback)
+### 2.3 Live Mode (Priority #3)
+**პრობლემა:** Editor-ს "Live" mode ღილაკი აქვს, მაგრამ არ მუშაობს.
 
-### 2.3 Backend Recompilation
-ყველა Elixir ცვლილება (`client.ex`, `tools.ex`, `flow_controller.ex`, `flow_version_controller.ex`, `router.ex`) საჭიროებს:
+**რა უნდა გაკეთდეს:**
+1. WebSocket subscription to flow instance events
+2. Real-time node highlighting for running instances
+3. Instance timeline overlay
+4. Node-level analytics (conversion rates, avg time)
+
+### 2.4 Backend Recompilation
+ყველა Elixir ცვლილება საჭიროებს:
 ```bash
 docker compose -f docker-compose.dev.yml restart app
 ```
@@ -103,33 +110,40 @@ docker compose -f docker-compose.dev.yml restart app
 
 ## 3. სამომავლო დიდი თემები (Roadmap)
 
-### Theme A: Editor Full Features
+### Theme A: Cognitive Architecture Expansion
+- [ ] Parallel nodes: `parallel_group` node type (Task.async_stream in FlowServer)
+- [ ] Sub-flows: `sub_flow` node type (child FlowInstance)
+- [ ] Dynamic flow selection: intake ai_decide → simple vs complex flow
+- [ ] Memory integration: long-term memory as node input
+- [ ] Multi-model support: different models for different council personas
+
+### Theme B: Editor Full Features
 - [ ] Graph save: canvas → FlowGraph → `PUT /flows/:id/versions/:v` (undo/redo)
-- [ ] Validation overlay: preflight warnings ნოდებზე
+- [ ] Validation overlay: preflight warnings on nodes
 - [ ] Edge labels with branch conditions
 - [ ] Copy/paste nodes
 - [ ] Node groups / subflows
 - [ ] Keyboard shortcuts (Delete, Ctrl+Z, Ctrl+S)
 
-### Theme B: Debugging & Observability
-- [ ] Live mode: running instance-ების real-time tracking canvas-ზე
+### Theme C: Debugging & Observability
+- [ ] Live mode: running instance real-time tracking on canvas
 - [ ] Instance timeline overlay — execution path visualization
 - [ ] Node-level analytics (conversion rates, avg time)
 - [ ] Error highlighting on failed nodes
 
-### Theme C: AI-Assisted Flow Building
+### Theme D: AI-Assisted Flow Building
 - [ ] Chat → flow generation: "build me an onboarding flow" → auto-creates graph
 - [ ] Chat → node editing: "change the wait to 3 days" → updates specific node
 - [ ] AI suggestions: "this condition has no false branch"
 - [ ] Natural language condition builder
 
-### Theme D: Channel Integration
+### Theme E: Channel Integration
 - [ ] Provider configuration UI (SendGrid, Twilio, Firebase)
 - [ ] Email template editor (inline or linked)
 - [ ] SMS preview
 - [ ] Delivery status tracking
 
-### Theme E: Multi-tenancy & Production
+### Theme F: Multi-tenancy & Production
 - [ ] API key management UI
 - [ ] Tenant switching
 - [ ] Rate limiting
@@ -144,42 +158,59 @@ docker compose -f docker-compose.dev.yml restart app
 ## Backend (Elixir)
 lib/kalcifer/ai/
   client.ex                    # Multi-provider AI client
+  client_behaviour.ex          # Behaviour (chat + chat_with_tools)
   providers/{anthropic,openai,google}.ex  # Provider adapters
   tools.ex                     # AI tool definitions + UUID validation
+  agent_flows.ex               # Agent flow templates (simple, council)
+
+lib/kalcifer/engine/
+  flow_server.ex               # GenServer per instance (max_node_executions guard)
+  event_broadcaster.ex         # PubSub broadcasts (+ agent-specific events)
+  node_registry.ex             # 24 built-in nodes (includes "agent")
+  nodes/action/ai/
+    agent.ex                   # Multi-round chat_with_tools node
+    helpers.ex                 # Shared AI helpers (interpolate, build_messages)
+    think.ex                   # Single LLM call node
+    decide.ex                  # AI branching node
+    notify.ex                  # Operator notification node
 
 lib/kalcifer_web/
-  router.ex                    # Unauthenticated + authenticated routes
+  router.ex                    # Routes (+ /simulate endpoint)
   controllers/
-    flow_controller.ex         # Flow CRUD + resolve_tenant fallback
-    flow_version_controller.ex # Version CRUD + resolve_tenant fallback
+    chat_controller.ex         # FlowServer-based chat with PubSub receive loop
+    simulation_controller.ex   # Dry-run simulation SSE streaming
+    flow_controller.ex         # Flow CRUD
+    flow_version_controller.ex # Version CRUD
+
+lib/kalcifer/flows/
+  flow_graph.ex                # Graph validation (allow_cycles option)
 
 ## Frontend (React + TypeScript)
 frontend/src/
   App.tsx                      # Routes: /, /engine, /browse, /editor
+  lib/
+    api.ts                     # API client (+ simulation, activity SSE)
+    chat.ts                    # Types (ChatMessage, AgentActivity, AgentActivityStep)
   components/
-    FlowCanvas.tsx             # Reusable ReactFlow canvas (used in editor + WorkPage)
-    flow-canvas.css            # Canvas + node styles (shared)
-    ChatPanel.tsx              # Chat with onContextContent callback
-    Sidebar.tsx                # Conversation sidebar
-    WelcomeScreen.tsx          # Welcome/onboarding screen
+    FlowCanvas.tsx             # Reusable ReactFlow canvas (+ sim highlighting)
+    flow-canvas.css            # Canvas + node + simulation styles
+    ChatPanel.tsx              # Chat with activity wiring
+    ActivityIndicator.tsx      # Agent activity indicator (collapsed/expanded)
+    activity-indicator.css     # Activity styles
   pages/
-    WorkPage.tsx               # 5-stage work page (welcome/lobby/chat/split/context)
-    work-stages.css            # Stage layout CSS (data-stage selectors)
-    BrowsePage.tsx             # Flow listing with editor navigation
+    WorkPage.tsx               # 5-stage work page
     editor/
-      FlowEditorPage.tsx       # Standalone editor (composes FlowCanvas)
-      FlowNode.tsx             # Custom React Flow node component
+      FlowEditorPage.tsx       # Editor with simulation controls
+      FlowNode.tsx             # Node component (+ simulation badges)
       NodePalette.tsx          # Draggable node palette
       NodeConfigPanel.tsx      # Node configuration panel
       nodeTypes.ts             # 21 node types metadata
-      flowGraphUtils.ts        # Shared: autoLayout, summarize, convertGraph
-      editor.css               # Editor chrome styles (topbar, bottombar, palette, config)
-  lib/api.ts                   # API client (flow, version, conversation, settings)
+      flowGraphUtils.ts        # Shared graph utilities
 
-## Prototypes (reference only)
-ui-prototype/
-  main.html                    # Stage system: welcome/chat/split/context
-  flow-editor.html             # Editor prototype with simulation
-  engine-room.html             # Engine dashboard prototype
-  browse.html                  # Browse prototype
+## Tests
+test/kalcifer/engine/nodes/action/ai/
+  agent_test.exs               # 14 tests for agent node
+  helpers_test.exs             # 10 tests for AI helpers
+test/kalcifer/ai/
+  agent_flows_test.exs         # 7 tests for agent flow templates
 ```
