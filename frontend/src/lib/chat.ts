@@ -11,6 +11,8 @@ export interface AgentActivityStep {
   status: 'pending' | 'running' | 'completed' | 'failed'
   startedAt?: number
   completedAt?: number
+  /** Tool calls made during this step (for agent nodes) */
+  tools?: ToolActivity[]
 }
 
 export interface AgentActivity {

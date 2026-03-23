@@ -142,3 +142,42 @@
   font-size: 11px;
   flex-shrink: 0;
 }
+
+/* Tool chips inside steps */
+
+.step-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 2px 0 2px 14px;
+}
+
+.step-tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--color-surface-dim);
+  color: var(--color-text-muted);
+}
+
+.step-tool-chip.done {
+  color: var(--color-success);
+}
+
+.step-tool-chip.running {
+  color: var(--color-warn);
+}
+
+.step-tool-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.step-tool-chip.running .step-tool-dot {
+  animation: typingDot 1.2s infinite;
+}

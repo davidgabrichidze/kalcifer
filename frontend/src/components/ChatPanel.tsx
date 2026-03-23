@@ -108,6 +108,31 @@ export default function ChatPanel({
     )
   }, [])
 
+  // Add a tool event to the currently running activity step
+  const addToolToActivityStep = useCallback((msgId: string, tool: ToolActivity) => {
+    updateMessageActivity(msgId, activity => {
+      const runningIdx = activity.steps.findIndex(s => s.status === 'running')
+      if (runningIdx < 0) return activity
+
+      const step = activity.steps[runningIdx]!
+      const existingTools = step.tools ?? []
+
+      // Update existing running tool → done, or add new
+      const idx = existingTools.findIndex(t => t.tool === tool.tool && t.status === 'running')
+      let updatedTools: ToolActivity[]
+      if (idx >= 0 && tool.status === 'done') {
+        updatedTools = [...existingTools]
+        updatedTools[idx] = tool
+      } else {
+        updatedTools = [...existingTools, tool]
+      }
+
+      const updatedSteps = [...activity.steps]
+      updatedSteps[runningIdx] = { ...step, tools: updatedTools }
+      return { ...activity, steps: updatedSteps }
+    })
+  }, [updateMessageActivity])
+
   // Activity callbacks factory for streamChat
   function activityCallbacks(aiMsgId: string) {
     return {
@@ -178,9 +203,11 @@ export default function ChatPanel({
         onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
         onToolStart: (tool) => {
           addToolToMessage(aiMsg.id, { tool, status: 'running' })
+          addToolToActivityStep(aiMsg.id, { tool, status: 'running' })
         },
         onToolDone: (tool, result) => {
           addToolToMessage(aiMsg.id, { tool, status: 'done', result })
+          addToolToActivityStep(aiMsg.id, { tool, status: 'done', result })
           detectFlowGraph(tool, result)
         },
         ...activityCallbacks(aiMsg.id),
@@ -245,9 +272,11 @@ export default function ChatPanel({
           onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
           onToolStart: (tool) => {
             addToolToMessage(aiMsg.id, { tool, status: 'running' })
+            addToolToActivityStep(aiMsg.id, { tool, status: 'running' })
           },
           onToolDone: (tool, result) => {
             addToolToMessage(aiMsg.id, { tool, status: 'done', result })
+            addToolToActivityStep(aiMsg.id, { tool, status: 'done', result })
             detectFlowGraph(tool, result)
           },
           ...activityCallbacks(aiMsg.id),

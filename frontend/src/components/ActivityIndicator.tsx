@@ -1,4 +1,4 @@
-import { AgentActivity, AgentActivityStep } from '../lib/chat'
+import { AgentActivity, AgentActivityStep, ToolActivity } from '../lib/chat'
 import './activity-indicator.css'
 
 const NODE_LABELS: Record<string, string> = {
@@ -98,10 +98,44 @@ function StepRow({ step }: { step: AgentActivityStep }) {
       : null
 
   return (
-    <div className={`activity-step ${step.status}`}>
-      <span className="step-dot" />
-      <span className="step-label">{stepLabel(step)}</span>
-      {duration && <span className="step-duration">{duration}</span>}
+    <div className="activity-step-wrapper">
+      <div className={`activity-step ${step.status}`}>
+        <span className="step-dot" />
+        <span className="step-label">{stepLabel(step)}</span>
+        {duration && <span className="step-duration">{duration}</span>}
+      </div>
+      {step.tools && step.tools.length > 0 && (
+        <div className="step-tools">
+          {step.tools.map((t, i) => (
+            <ToolChip key={i} tool={t} />
+          ))}
+        </div>
+      )}
     </div>
+  )
+}
+
+const TOOL_LABELS: Record<string, string> = {
+  classify_session: 'კლასიფიკაცია',
+  list_flows: 'ფლოუების სია',
+  get_flow: 'ფლოუ',
+  get_flow_graph: 'გრაფი',
+  create_flow: 'შექმნა',
+  add_node: 'ნოდი+',
+  modify_node: 'ცვლილება',
+  list_node_types: 'ტიპები',
+  analyze_flow: 'ანალიზი',
+  debug_instance: 'დებაგი',
+  remember: 'დამახსოვრება',
+  recall: 'გახსენება',
+}
+
+function ToolChip({ tool }: { tool: ToolActivity }) {
+  return (
+    <span className={`step-tool-chip ${tool.status}`}>
+      <span className="step-tool-dot" />
+      {TOOL_LABELS[tool.tool] ?? tool.tool}
+      {tool.status === 'done' && ' ✓'}
+    </span>
   )
 }
