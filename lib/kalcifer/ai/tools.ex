@@ -7,7 +7,7 @@ defmodule Kalcifer.AI.Tools do
   functions — no new business logic here.
   """
 
-  alias Kalcifer.AI.Context
+  alias Kalcifer.AI.{AgentFlows, Context}
   alias Kalcifer.Engine.{GraphWalker, NodeRegistry}
   alias Kalcifer.Flows
   alias Kalcifer.Flows.FlowGraph
@@ -488,7 +488,9 @@ defmodule Kalcifer.AI.Tools do
         status -> [status: status]
       end
 
-    flows = Flows.list_flows(tenant_id, opts)
+    flows =
+      Flows.list_flows(tenant_id, opts)
+      |> Enum.reject(fn f -> AgentFlows.agent_flow?(f.name) end)
 
     result =
       Enum.map(flows, fn f ->

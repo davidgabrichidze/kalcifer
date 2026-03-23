@@ -1,7 +1,8 @@
 defmodule KalciferWeb.ChatController do
   use KalciferWeb, :controller
 
-  alias Kalcifer.AI.{Client, Context, Tools}
+  alias Kalcifer.AI.{AgentFlows, Client, Context, Tools}
+  alias Kalcifer.Engine.FlowServer
   alias Kalcifer.Tenants
 
   @doc """
@@ -14,12 +15,15 @@ defmodule KalciferWeb.ChatController do
   Streams the AI response back as Server-Sent Events.
 
   SSE events:
-    - `init`       — conversation_id (sent first, always)
-    - `delta`      — streaming text chunk
-    - `tool_start` — tool execution started
-    - `tool_done`  — tool execution finished
-    - `done`       — full text of final response
-    - `error`      — error message
+    - `init`            — conversation_id (sent first, always)
+    - `delta`           — streaming text chunk
+    - `tool_start`      — tool execution started
+    - `tool_done`       — tool execution finished
+    - `activity_start`  — agent flow instance started
+    - `activity_step`   — engine node completed
+    - `activity_done`   — agent flow completed
+    - `done`            — full text of final response
+    - `error`           — error message
   """
   def create(conn, %{"messages" => messages} = params) do
     conn =
@@ -56,6 +60,132 @@ defmodule KalciferWeb.ChatController do
     # Load operator memory into system prompt
     system_prompt = build_system_prompt(tenant_id)
 
+    # Try engine-based execution; fall back to direct chat on failure
+    case start_agent_flow(conn, tenant_id, conversation_id, api_messages, system_prompt) do
+      {:ok, conn} ->
+        conn
+
+      {:error, _reason} ->
+        # Fallback: direct chat_with_tools (no engine)
+        run_direct_chat(conn, tenant_id, conversation_id, api_messages, system_prompt)
+    end
+  end
+
+  def create(conn, _params) do
+    conn
+    |> put_status(400)
+    |> json(%{error: "messages parameter required"})
+  end
+
+  # ── Engine-based execution ─────────────────────────────────
+
+  defp start_agent_flow(conn, tenant_id, conversation_id, api_messages, system_prompt) do
+    case AgentFlows.ensure_simple_flow(tenant_id) do
+      {:ok, {flow, version}} ->
+        instance_id = Ecto.UUID.generate()
+
+        initial_context =
+          %{
+            "_initial_message" => extract_last_user_message(api_messages),
+            "_messages" => api_messages,
+            "_system_prompt" => system_prompt,
+            "_tenant_id" => tenant_id,
+            "_conversation_id" => conversation_id,
+            "_ai_opts" => tenant_ai_opts(tenant_id)
+          }
+
+        # Subscribe to instance events before starting
+        Phoenix.PubSub.subscribe(Kalcifer.PubSub, "instance:#{instance_id}")
+
+        chunk_sse(conn, "activity_start", %{instance_id: instance_id})
+
+        args = %{
+          instance_id: instance_id,
+          flow_id: flow.id,
+          customer_id: conversation_id,
+          tenant_id: tenant_id,
+          version_number: version.version_number,
+          graph: version.graph,
+          initial_context: initial_context
+        }
+
+        case DynamicSupervisor.start_child(
+               Kalcifer.Engine.FlowSupervisor,
+               {FlowServer, args}
+             ) do
+          {:ok, _pid} ->
+            conn = listen_for_events(conn, %{conversation_id: conversation_id, full_text: nil})
+            {:ok, conn}
+
+          {:error, reason} ->
+            Phoenix.PubSub.unsubscribe(Kalcifer.PubSub, "instance:#{instance_id}")
+            {:error, reason}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp listen_for_events(conn, state) do
+    receive do
+      # Agent node: streaming text delta
+      %{type: "agent_text_delta", payload: %{text: text}} ->
+        chunk_sse(conn, "delta", %{text: text})
+        listen_for_events(conn, state)
+
+      # Agent node: tool execution started
+      %{type: "agent_tool_start", payload: payload} ->
+        chunk_sse(conn, "tool_start", %{tool: payload.tool, input: payload.input})
+        listen_for_events(conn, state)
+
+      # Agent node: tool execution done
+      %{type: "agent_tool_done", payload: payload} ->
+        chunk_sse(conn, "tool_done", %{tool: payload.tool, result: payload.result})
+        listen_for_events(conn, state)
+
+      # Agent node: full response ready
+      %{type: "agent_done", payload: %{text: text}} ->
+        listen_for_events(conn, %{state | full_text: text})
+
+      # Engine: node execution completed (for activity indicator)
+      %{type: "node_executed", payload: payload} ->
+        chunk_sse(conn, "activity_step", %{
+          node_id: payload.node_id,
+          node_type: payload.node_type,
+          status: "completed"
+        })
+
+        listen_for_events(conn, state)
+
+      # Engine: flow completed
+      %{type: "instance_completed"} ->
+        full_text = state.full_text || ""
+
+        if full_text != "" do
+          Context.add_message(state.conversation_id, "assistant", full_text)
+        end
+
+        chunk_sse(conn, "done", %{text: full_text})
+        chunk_sse(conn, "activity_done", %{status: "completed"})
+        conn
+
+      # Engine: flow failed
+      %{type: "instance_failed"} ->
+        chunk_sse(conn, "error", %{message: humanize_error(:agent_flow_failed)})
+        chunk_sse(conn, "activity_done", %{status: "failed"})
+        conn
+    after
+      # 3 minute timeout
+      180_000 ->
+        chunk_sse(conn, "error", %{message: humanize_error(:timeout)})
+        conn
+    end
+  end
+
+  # ── Direct chat fallback (no engine) ───────────────────────
+
+  defp run_direct_chat(conn, tenant_id, conversation_id, api_messages, system_prompt) do
     callback = fn
       {:text_delta, text} ->
         chunk_sse(conn, "delta", %{text: text})
@@ -64,7 +194,6 @@ defmodule KalciferWeb.ChatController do
         chunk_sse(conn, "tool_start", %{tool: name, input: input})
 
       {:tool_result, "classify_session" = name, result} ->
-        # Send both tool_done and a special session_classified event
         chunk_sse(conn, "tool_done", %{tool: name, result: result})
 
         case Jason.decode(result) do
@@ -83,7 +212,6 @@ defmodule KalciferWeb.ChatController do
         chunk_sse(conn, "tool_done", %{tool: name, result: result})
 
       {:done, full_text} ->
-        # Save assistant response to DB
         Context.add_message(conversation_id, "assistant", full_text)
         chunk_sse(conn, "done", %{text: full_text})
 
@@ -97,7 +225,6 @@ defmodule KalciferWeb.ChatController do
       Tools.execute(name, input, tenant_id, tool_ctx)
     end
 
-    # Build opts: system prompt + tenant-specific AI config (model, api_key)
     opts = if system_prompt, do: [system: system_prompt], else: []
     opts = opts ++ tenant_ai_opts(tenant_id)
 
@@ -117,15 +244,8 @@ defmodule KalciferWeb.ChatController do
     end
   end
 
-  def create(conn, _params) do
-    conn
-    |> put_status(400)
-    |> json(%{error: "messages parameter required"})
-  end
-
   # ── Conversation resolution ──────────────────────────────────
 
-  # If conversation_id given, load its history; otherwise create new.
   defp resolve_conversation(tenant_id, nil) do
     {:ok, conv} = Context.create_conversation(tenant_id)
     {conv.id, []}
@@ -134,7 +254,6 @@ defmodule KalciferWeb.ChatController do
   defp resolve_conversation(tenant_id, conversation_id) do
     case Context.get_conversation_with_messages(conversation_id) do
       nil ->
-        # Conversation not found — create new
         resolve_conversation(tenant_id, nil)
 
       conv ->
@@ -149,13 +268,10 @@ defmodule KalciferWeb.ChatController do
 
   # ── System prompt with memory ────────────────────────────────
 
-  # Returns a memory block to append to the system prompt,
-  # or nil if no memories exist (Client will use its default prompt).
   defp build_system_prompt(tenant_id) do
     memories = Context.recall_all(tenant_id)
 
     if Enum.empty?(memories) do
-      # nil means Client.base_body will use its default_system_prompt
       nil
     else
       memory_block =
@@ -172,18 +288,24 @@ defmodule KalciferWeb.ChatController do
       უბრალოდ იცოდე და გაითვალისწინე.
       """
 
-      # Append to default prompt rather than replacing it
       Client.default_system_prompt() <> memory_block_text
     end
   end
 
-  # ── Dev tenant resolution ────────────────────────────────────
+  # ── Helpers ────────────────────────────────────────────────────
 
-  # In dev mode without auth, find or create a demo tenant.
-  # In production, this would come from the authenticated session.
+  defp extract_last_user_message(messages) do
+    messages
+    |> Enum.filter(fn msg -> msg.role == "user" or msg[:role] == "user" end)
+    |> List.last()
+    |> case do
+      %{content: content} -> content
+      _ -> ""
+    end
+  end
+
   defp resolve_dev_tenant do
     alias Kalcifer.Repo
-    alias Kalcifer.Tenants
     alias Kalcifer.Tenants.Tenant
 
     case Repo.get_by(Tenant, name: "Demo Tenant") do
@@ -201,8 +323,6 @@ defmodule KalciferWeb.ChatController do
     end
   end
 
-  # Read tenant's AI model/key preferences from settings.
-  # Returns keyword list to merge into Client opts.
   defp tenant_ai_opts(tenant_id) do
     case Tenants.get_tenant(tenant_id) do
       nil ->
@@ -224,6 +344,12 @@ defmodule KalciferWeb.ChatController do
 
   defp humanize_error({:api_error, status, _body}),
     do: "სერვისთან კავშირის პრობლემა (#{status}). სცადე თავიდან."
+
+  defp humanize_error(:agent_flow_failed),
+    do: "რაღაც შეცდომა მოხდა. სცადე თავიდან."
+
+  defp humanize_error(:timeout),
+    do: "დრო ამოიწურა. სცადე თავიდან."
 
   defp humanize_error(reason) when is_binary(reason), do: reason
 

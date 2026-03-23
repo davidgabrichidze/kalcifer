@@ -262,6 +262,9 @@ export interface ChatStreamCallbacks {
   onToolStart?: (tool: string, input: Record<string, unknown>) => void
   onToolDone?: (tool: string, result: string) => void
   onSessionClassified?: (classification: SessionClassification) => void
+  onActivityStart?: (instanceId: string) => void
+  onActivityStep?: (nodeId: string, nodeType: string, status: string) => void
+  onActivityDone?: (status: string) => void
   onDone: (fullText: string) => void
   onError: (message: string) => void
 }
@@ -350,6 +353,15 @@ async function readSSEStream(
             break
           case 'session_classified':
             callbacks.onSessionClassified?.(data)
+            break
+          case 'activity_start':
+            callbacks.onActivityStart?.(data.instance_id)
+            break
+          case 'activity_step':
+            callbacks.onActivityStep?.(data.node_id, data.node_type, data.status)
+            break
+          case 'activity_done':
+            callbacks.onActivityDone?.(data.status)
             break
           case 'done':
             callbacks.onDone(data.text)

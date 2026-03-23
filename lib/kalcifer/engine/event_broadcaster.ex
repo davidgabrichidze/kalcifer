@@ -55,6 +55,32 @@ defmodule Kalcifer.Engine.EventBroadcaster do
     })
   end
 
+  # --- Agent node events (broadcast by instance_id only) ---
+
+  def broadcast_agent_text_delta(instance_id, text) do
+    broadcast_to_instance(instance_id, "agent_text_delta", %{text: text})
+  end
+
+  def broadcast_agent_tool_start(instance_id, tool, input) do
+    broadcast_to_instance(instance_id, "agent_tool_start", %{tool: tool, input: input})
+  end
+
+  def broadcast_agent_tool_done(instance_id, tool, result) do
+    broadcast_to_instance(instance_id, "agent_tool_done", %{tool: tool, result: result})
+  end
+
+  def broadcast_agent_done(instance_id, full_text) do
+    broadcast_to_instance(instance_id, "agent_done", %{
+      instance_id: instance_id,
+      text: full_text
+    })
+  end
+
+  defp broadcast_to_instance(instance_id, event_type, payload) do
+    message = %{type: event_type, payload: payload, timestamp: DateTime.utc_now()}
+    Phoenix.PubSub.broadcast(@pubsub, "instance:#{instance_id}", message)
+  end
+
   defp broadcast(state, event_type, payload) do
     message = %{type: event_type, payload: payload, timestamp: DateTime.utc_now()}
 

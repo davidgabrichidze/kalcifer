@@ -19,6 +19,8 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Think do
 
   use Kalcifer.Engine.NodeBehaviour
 
+  alias Kalcifer.Engine.Nodes.Action.AI.Helpers
+
   defp client, do: Application.get_env(:kalcifer, :ai_client, Kalcifer.AI.Client)
 
   @impl true
@@ -34,7 +36,7 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Think do
       prompt = config["prompt"] || "Analyze the current context and provide insights."
 
       # Build messages with context if requested
-      messages = build_messages(prompt, config, context)
+      messages = Helpers.build_messages(prompt, config, context)
 
       opts =
         case config["system"] do
@@ -73,31 +75,4 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Think do
     end
   end
 
-  defp build_messages(prompt, config, context) do
-    include_ctx = Map.get(config, "include_context", true)
-
-    content =
-      if include_ctx do
-        ctx_summary = summarize_context(context)
-        "#{prompt}\n\nContext:\n#{ctx_summary}"
-      else
-        prompt
-      end
-
-    [%{role: "user", content: content}]
-  end
-
-  defp summarize_context(context) do
-    # Include accumulated results from previous nodes, skip system fields
-    context
-    |> Map.get("accumulated", %{})
-    |> Enum.map(fn {node_id, result} ->
-      "#{node_id}: #{inspect(result, limit: 200)}"
-    end)
-    |> Enum.join("\n")
-    |> case do
-      "" -> "(no previous results)"
-      summary -> summary
-    end
-  end
 end

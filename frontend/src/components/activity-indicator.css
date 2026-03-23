@@ -1,0 +1,144 @@
+.activity-indicator {
+  margin: 4px 0;
+  border-radius: 8px;
+  background: var(--color-info-soft);
+  border: 1px solid color-mix(in srgb, var(--color-info) 20%, transparent);
+  overflow: hidden;
+}
+
+.activity-indicator.done {
+  background: var(--color-success-soft);
+  border-color: color-mix(in srgb, var(--color-success) 20%, transparent);
+}
+
+.activity-indicator.failed {
+  background: var(--color-danger-soft);
+  border-color: color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
+
+.activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--color-text);
+  font-size: 12px;
+  text-align: left;
+}
+
+.activity-header:hover {
+  background: color-mix(in srgb, var(--color-text) 5%, transparent);
+}
+
+.activity-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-icon {
+  flex-shrink: 0;
+}
+
+.activity-icon.done {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.activity-icon.failed {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.activity-duration {
+  color: var(--color-text-muted);
+}
+
+.activity-toggle {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  margin-left: 8px;
+}
+
+/* Steps summary (collapsed) */
+
+.steps-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-sec);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.steps-completed {
+  color: var(--color-success);
+}
+
+.steps-running {
+  color: var(--color-warn);
+}
+
+/* Steps list (expanded) */
+
+.activity-steps {
+  padding: 0 10px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.activity-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-text-sec);
+  padding: 2px 0;
+}
+
+.step-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-text-muted);
+}
+
+.activity-step.completed .step-dot {
+  background: var(--color-success);
+}
+
+.activity-step.running .step-dot {
+  background: var(--color-warn);
+  animation: typingDot 1.2s infinite;
+}
+
+.activity-step.failed .step-dot {
+  background: var(--color-danger);
+}
+
+.activity-step.pending .step-dot {
+  background: var(--color-text-muted);
+  opacity: 0.4;
+}
+
+.step-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-duration {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  flex-shrink: 0;
+}

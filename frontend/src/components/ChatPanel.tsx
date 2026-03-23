@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Markdown from 'react-markdown'
-import { type ChatMessage, type ToolActivity, createMessage } from '../lib/chat'
+import { type ChatMessage, type ToolActivity, type AgentActivity, createMessage } from '../lib/chat'
 import { streamChat, fetchConversation, type ApiMessage, type SessionClassification } from '../lib/api'
 import { type ContextContent } from '../pages/WorkPage'
+import ActivityIndicator from './ActivityIndicator'
 
 // Human-readable names for tools
 const TOOL_LABELS: Record<string, string> = {
@@ -54,6 +55,7 @@ export default function ChatPanel({
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [_streamingId, setStreamingId] = useState<string | null>(null)
+  const [activityExpanded, setActivityExpanded] = useState(false)
   const msgsEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -97,6 +99,59 @@ export default function ChatPanel({
     )
   }, [])
 
+  const updateMessageActivity = useCallback((id: string, updater: (a: AgentActivity) => AgentActivity) => {
+    setMessages(prev =>
+      prev.map(m => {
+        if (m.id !== id || !m.activity) return m
+        return { ...m, activity: updater(m.activity) }
+      }),
+    )
+  }, [])
+
+  // Activity callbacks factory for streamChat
+  function activityCallbacks(aiMsgId: string) {
+    return {
+      onActivityStart: (instanceId: string) => {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === aiMsgId
+              ? { ...m, activity: { instanceId, status: 'working' as const, steps: [], startedAt: Date.now() } }
+              : m,
+          ),
+        )
+      },
+      onActivityStep: (nodeId: string, nodeType: string, status: string) => {
+        updateMessageActivity(aiMsgId, activity => {
+          const existing = activity.steps.find(s => s.nodeId === nodeId)
+          if (existing) {
+            return {
+              ...activity,
+              steps: activity.steps.map(s =>
+                s.nodeId === nodeId
+                  ? { ...s, status: status as 'completed' | 'failed', completedAt: Date.now() }
+                  : s,
+              ),
+            }
+          }
+          return {
+            ...activity,
+            steps: [
+              ...activity.steps,
+              { nodeId, nodeType, label: nodeType, status: 'running' as const, startedAt: Date.now() },
+            ],
+          }
+        })
+      },
+      onActivityDone: (status: string) => {
+        updateMessageActivity(aiMsgId, activity => ({
+          ...activity,
+          status: status === 'completed' ? 'done' as const : 'failed' as const,
+          durationMs: Date.now() - activity.startedAt,
+        }))
+      },
+    }
+  }
+
   function handleSend() {
     const text = input.trim()
     if (!text || isTyping) return
@@ -128,6 +183,7 @@ export default function ChatPanel({
           addToolToMessage(aiMsg.id, { tool, status: 'done', result })
           detectFlowGraph(tool, result)
         },
+        ...activityCallbacks(aiMsg.id),
         onDone: () => {
           setIsTyping(false)
           setStreamingId(null)
@@ -194,6 +250,7 @@ export default function ChatPanel({
             addToolToMessage(aiMsg.id, { tool, status: 'done', result })
             detectFlowGraph(tool, result)
           },
+          ...activityCallbacks(aiMsg.id),
           onDone: () => {
             setIsTyping(false)
             setStreamingId(null)
@@ -328,8 +385,19 @@ export default function ChatPanel({
 
               {/* Body */}
               <div style={{ maxWidth: '85%' }}>
-                {/* Tool activity indicators */}
-                {msg.tools && msg.tools.length > 0 && (
+                {/* Agent activity indicator */}
+                {msg.activity && (
+                  <div style={{ marginBottom: 6 }}>
+                    <ActivityIndicator
+                      activity={msg.activity}
+                      expanded={activityExpanded}
+                      onToggle={() => setActivityExpanded(e => !e)}
+                    />
+                  </div>
+                )}
+
+                {/* Tool activity indicators (fallback when no agent activity) */}
+                {!msg.activity && msg.tools && msg.tools.length > 0 && (
                   <div style={{ marginBottom: 6 }}>
                     {msg.tools.map((t, i) => (
                       <div
@@ -429,7 +497,7 @@ export default function ChatPanel({
         })}
 
         {/* Typing indicator — shown while waiting, hidden once content or tools arrive */}
-        {isTyping && !messages.some(m => m.id === activeAiIdRef.current && (m.content.length > 0 || (m.tools?.length ?? 0) > 0)) && (
+        {isTyping && !messages.some(m => m.id === activeAiIdRef.current && (m.content.length > 0 || (m.tools?.length ?? 0) > 0 || m.activity)) && (
           <div
             style={{
               display: 'flex',

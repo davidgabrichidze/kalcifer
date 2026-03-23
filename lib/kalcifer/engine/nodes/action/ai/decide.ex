@@ -20,6 +20,8 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Decide do
 
   use Kalcifer.Engine.NodeBehaviour
 
+  alias Kalcifer.Engine.Nodes.Action.AI.Helpers
+
   defp client, do: Application.get_env(:kalcifer, :ai_client, Kalcifer.AI.Client)
 
   @impl true
@@ -45,7 +47,7 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Decide do
       #{if criteria != "", do: "Criteria: #{criteria}", else: ""}
 
       Context from previous steps:
-      #{summarize_context(context)}
+      #{Helpers.summarize_context(context)}
 
       Reply with ONLY the chosen value, nothing else.
       """
@@ -105,19 +107,6 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Decide do
     Enum.find(branches, List.first(branches), fn branch ->
       String.downcase(branch) == cleaned
     end)
-  end
-
-  defp summarize_context(context) do
-    context
-    |> Map.get("accumulated", %{})
-    |> Enum.map(fn {node_id, result} ->
-      "#{node_id}: #{inspect(result, limit: 200)}"
-    end)
-    |> Enum.join("\n")
-    |> case do
-      "" -> "(no previous results)"
-      summary -> summary
-    end
   end
 
   defp maybe_add(errors, true, msg), do: [msg | errors]
