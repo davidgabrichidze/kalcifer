@@ -611,6 +611,23 @@
   color: white;
 }
 
+.editor-sim-btn.stop {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.editor-sim-btn.stop:hover {
+  background: var(--color-danger);
+  color: white;
+}
+
+.editor-sim-result {
+  font-size: 11px;
+  color: var(--color-text-sec);
+  font-weight: 500;
+}
+
 .editor-sim-status {
   font-size: 10px;
   color: var(--color-text-muted);

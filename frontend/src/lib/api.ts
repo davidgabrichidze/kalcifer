@@ -429,6 +429,93 @@ export async function fetchFlowVersion(
   return json.data
 }
 
+// ── Simulation API ──────────────────────────────────────
+
+export interface SimulationStep {
+  step: number
+  node_id: string
+  node_type: string
+  status: string
+  result?: Record<string, unknown>
+}
+
+export interface SimulationCallbacks {
+  onStart?: (data: { instance_id: string; flow_name: string; node_count: number }) => void
+  onStep: (step: SimulationStep) => void
+  onDone: (data: { status: string; step_count: number; duration_ms: number }) => void
+  onError: (message: string) => void
+}
+
+export function simulateFlow(
+  flowId: string,
+  callbacks: SimulationCallbacks,
+  opts?: { customer_id?: string; context?: Record<string, unknown> },
+): AbortController {
+  const controller = new AbortController()
+
+  const body: Record<string, unknown> = {}
+  if (opts?.customer_id) body.customer_id = opts.customer_id
+  if (opts?.context) body.context = opts.context
+
+  fetch(`${API_BASE}/flows/${flowId}/simulate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: controller.signal,
+  })
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      return readSimSSE(response, callbacks)
+    })
+    .catch(err => {
+      if (err.name !== 'AbortError') {
+        callbacks.onError(err.message)
+      }
+    })
+
+  return controller
+}
+
+async function readSimSSE(response: Response, callbacks: SimulationCallbacks): Promise<void> {
+  const reader = response.body?.getReader()
+  if (!reader) { callbacks.onError('No response body'); return }
+
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() ?? ''
+
+    let currentEvent = ''
+    for (const line of lines) {
+      if (line.startsWith('event: ')) {
+        currentEvent = line.slice(7)
+      } else if (line.startsWith('data: ')) {
+        const data = JSON.parse(line.slice(6))
+        switch (currentEvent) {
+          case 'sim_start':
+            callbacks.onStart?.(data)
+            break
+          case 'sim_step':
+            callbacks.onStep(data)
+            break
+          case 'sim_done':
+            callbacks.onDone(data)
+            break
+          case 'error':
+            callbacks.onError(data.message)
+            break
+        }
+      }
+    }
+  }
+}
+
 export async function updateFlowVersion(
   flowId: string,
   versionNumber: number,

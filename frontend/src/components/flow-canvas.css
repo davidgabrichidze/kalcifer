@@ -128,6 +128,44 @@
   word-break: break-all;
 }
 
+/* ─── Simulation State ─── */
+.flow-node.sim-active {
+  animation: simPulse 1.5s ease-in-out infinite;
+}
+
+.flow-node.sim-completed {
+  opacity: 0.85;
+}
+
+.flow-node-sim-badge {
+  font-size: 11px;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.flow-node-sim-badge.completed {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.flow-node-sim-badge.active {
+  background: var(--color-warn-soft);
+  color: var(--color-warn);
+  animation: typingDot 1.2s infinite;
+}
+
+@keyframes simPulse {
+  0%, 100% { box-shadow: 0 0 0 3px var(--color-warn-soft), 0 2px 8px rgba(0,0,0,0.1); }
+  50% { box-shadow: 0 0 0 6px var(--color-warn-soft), 0 2px 12px rgba(0,0,0,0.15); }
+}
+
 /* ─── React Flow Handle Overrides ─── */
 .react-flow__handle {
   width: 12px !important;

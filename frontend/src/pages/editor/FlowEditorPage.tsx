@@ -1,11 +1,12 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { type Node, type Edge } from '@xyflow/react'
-import { fetchFlow, fetchFlowVersions, type FlowVersion } from '../../lib/api'
+import { fetchFlow, fetchFlowVersions, simulateFlow, type FlowVersion, type SimulationStep } from '../../lib/api'
 import FlowCanvas from '../../components/FlowCanvas'
 import { NodePalette } from './NodePalette'
 import { NodeConfigPanel } from './NodeConfigPanel'
@@ -37,6 +38,14 @@ export default function FlowEditorPage() {
   // Track node/edge counts from FlowCanvas
   const [nodeCount, setNodeCount] = useState(0)
   const [edgeCount, setEdgeCount] = useState(0)
+
+  // Simulation state
+  const [simStatus, setSimStatus] = useState<'idle' | 'running' | 'done' | 'failed'>('idle')
+  const [simSteps, setSimSteps] = useState<SimulationStep[]>([])
+  const [simActiveNode, setSimActiveNode] = useState<string | null>(null)
+  const [simCompletedNodes, setSimCompletedNodes] = useState<Set<string>>(new Set())
+  const [simDuration, setSimDuration] = useState<number | null>(null)
+  const simAbortRef = useRef<AbortController | null>(null)
 
   // Load flow data
   useEffect(() => {
@@ -100,6 +109,59 @@ export default function FlowEditorPage() {
     setSelectedNodeId(null)
     setConfigOpen(false)
   }, [])
+
+  const startSimulation = useCallback(() => {
+    if (!flowId || simStatus === 'running') return
+
+    setSimStatus('running')
+    setSimSteps([])
+    setSimActiveNode(null)
+    setSimCompletedNodes(new Set())
+    setSimDuration(null)
+
+    simAbortRef.current = simulateFlow(flowId, {
+      onStart: () => {
+        // Simulation started
+      },
+      onStep: (step) => {
+        setSimSteps(prev => [...prev, step])
+        setSimCompletedNodes(prev => new Set([...prev, step.node_id]))
+        setSimActiveNode(step.node_id)
+      },
+      onDone: (data) => {
+        setSimStatus(data.status === 'completed' ? 'done' : 'failed')
+        setSimActiveNode(null)
+        setSimDuration(data.duration_ms)
+      },
+      onError: (msg) => {
+        setSimStatus('failed')
+        setSimActiveNode(null)
+        console.error('Simulation error:', msg)
+      },
+    })
+  }, [flowId, simStatus])
+
+  const stopSimulation = useCallback(() => {
+    simAbortRef.current?.abort()
+    setSimStatus('idle')
+    setSimActiveNode(null)
+  }, [])
+
+  const resetSimulation = useCallback(() => {
+    setSimStatus('idle')
+    setSimSteps([])
+    setSimActiveNode(null)
+    setSimCompletedNodes(new Set())
+    setSimDuration(null)
+  }, [])
+
+  // When switching to simulate mode, reset
+  useEffect(() => {
+    if (mode !== 'simulate') {
+      resetSimulation()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode])
 
   const statusColor =
     flow?.status === 'draft'
@@ -211,6 +273,8 @@ export default function FlowEditorPage() {
           onGraphChange={handleGraphChange}
           showMiniMap={true}
           showControls={true}
+          simCompletedNodes={mode === 'simulate' ? simCompletedNodes : undefined}
+          simActiveNode={mode === 'simulate' ? simActiveNode : undefined}
         />
 
         {/* Node Palette */}
@@ -250,7 +314,39 @@ export default function FlowEditorPage() {
         </div>
 
         <div className="editor-bottom-right">
-          <div className="editor-sim-status">Ready</div>
+          {mode === 'simulate' && (
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              {simStatus === 'idle' && (
+                <button className="editor-sim-btn" onClick={startSimulation}>
+                  ▶ Dry Run
+                </button>
+              )}
+              {simStatus === 'running' && (
+                <button className="editor-sim-btn stop" onClick={stopSimulation}>
+                  ■ Stop
+                </button>
+              )}
+              {(simStatus === 'done' || simStatus === 'failed') && (
+                <>
+                  <span className="editor-sim-result">
+                    {simStatus === 'done' ? '✓' : '✗'} {simSteps.length} steps
+                    {simDuration != null && ` (${simDuration}ms)`}
+                  </span>
+                  <button className="editor-sim-btn" onClick={resetSimulation}>
+                    ↺ Reset
+                  </button>
+                  <button className="editor-sim-btn" onClick={startSimulation}>
+                    ▶ Re-run
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+          <div className="editor-sim-status">
+            {mode === 'simulate'
+              ? simStatus === 'running' ? 'Simulating...' : simStatus === 'done' ? 'Done' : simStatus === 'failed' ? 'Failed' : 'Ready'
+              : 'Ready'}
+          </div>
         </div>
       </div>
     </div>

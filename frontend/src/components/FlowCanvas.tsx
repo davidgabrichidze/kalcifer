@@ -36,6 +36,10 @@ export interface FlowCanvasProps {
   showMiniMap?: boolean
   showControls?: boolean
   className?: string
+  /** Set of node IDs that have completed simulation */
+  simCompletedNodes?: Set<string>
+  /** Currently active simulation node ID */
+  simActiveNode?: string | null
 }
 
 function FlowCanvasInner({
@@ -46,6 +50,8 @@ function FlowCanvasInner({
   showMiniMap = true,
   showControls = true,
   className = '',
+  simCompletedNodes,
+  simActiveNode,
 }: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
@@ -61,6 +67,21 @@ function FlowCanvasInner({
     setNodes(rfNodes)
     setEdges(rfEdges)
   }, [flowGraph, setNodes, setEdges])
+
+  // Apply simulation state to node data
+  useEffect(() => {
+    if (!simCompletedNodes && !simActiveNode) return
+    setNodes(nds =>
+      nds.map(n => ({
+        ...n,
+        data: {
+          ...n.data,
+          simCompleted: simCompletedNodes?.has(n.id) ?? false,
+          simActive: simActiveNode === n.id,
+        },
+      })),
+    )
+  }, [simCompletedNodes, simActiveNode, setNodes])
 
   // Notify parent of graph changes
   useEffect(() => {

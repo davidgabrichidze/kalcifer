@@ -33,6 +33,8 @@ defmodule KalciferWeb.Router do
     get "/flows/:flow_id/versions/:version_number", FlowVersionController, :show
     get "/journeys", JourneyController, :index
 
+    post "/flows/:flow_id/simulate", SimulationController, :create
+
     get "/conversations", ConversationController, :index
     get "/conversations/:id", ConversationController, :show
     put "/conversations/:id", ConversationController, :update
