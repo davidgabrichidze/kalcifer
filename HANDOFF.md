@@ -115,7 +115,19 @@
 - Instance timeline overlay (select specific instance to track)
 - Node-level analytics (conversion rates, avg execution time)
 
-### 2.4 Backend Recompilation
+### 2.4 Flow Editor in Context Panel (DONE)
+- `classify_session` tool now accepts optional `flow_id` parameter
+- SSE `session_classified` event includes `flow_id` when provided
+- `FlowEditorInline` component — compact inline editor for WorkPage context panel
+  - Supports edit/simulate/live modes, save (Ctrl+S), validation, node palette
+  - Compact toolbar + status bar (no standalone topbar)
+  - "Open in full editor" button navigates to `/editor?flow=...`
+- WorkPage auto-opens editor when session classified as flow/campaign with flow_id
+- ChatPanel: tool results with flow_id open editor (not just read-only canvas)
+- ContextContent type extended: `flow-canvas` (read-only) | `flow-editor` (interactive)
+- 9 Vitest tests for FlowEditorInline, 2 Elixir tests for flow_id in classify_session
+
+### 2.5 Backend Recompilation
 ყველა Elixir ცვლილება საჭიროებს:
 ```bash
 docker compose -f docker-compose.dev.yml restart app
@@ -148,6 +160,7 @@ docker compose -f docker-compose.dev.yml restart app
 - [ ] Node-level analytics (conversion rates, avg time)
 
 ### Theme D: AI-Assisted Flow Building
+- [x] Flow editor in context panel: chat about a flow → editor appears alongside
 - [ ] Chat → flow generation: "build me an onboarding flow" → auto-creates graph
 - [ ] Chat → node editing: "change the wait to 3 days" → updates specific node
 - [ ] AI suggestions: "this condition has no false branch"
