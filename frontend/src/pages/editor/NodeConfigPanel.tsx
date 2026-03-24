@@ -148,16 +148,50 @@ export function NodeConfigPanel({
         )}
 
         {nodeType === 'condition' && (
-          <div className="config-field">
-            <label className="config-label">Expression</label>
-            <input
-              className="config-input"
-              type="text"
-              placeholder="e.g., user.age > 18"
-              defaultValue={(nodeConfig.expression as string) || ''}
-              onChange={e => handleConfigChange('expression', e.target.value)}
-            />
-          </div>
+          <>
+            <div className="config-field">
+              <label className="config-label">Field</label>
+              <input
+                className="config-input"
+                type="text"
+                placeholder="მაგ: age, plan, email"
+                defaultValue={(nodeConfig.field as string) || ''}
+                onChange={e => handleConfigChange('field', e.target.value)}
+              />
+            </div>
+            <div className="config-field">
+              <label className="config-label">Operator</label>
+              <select
+                className="config-select"
+                defaultValue={(nodeConfig.operator as string) || 'equals'}
+                onChange={e => handleConfigChange('operator', e.target.value)}
+              >
+                <option value="equals">= ტოლია</option>
+                <option value="not_equals">≠ არ არის ტოლი</option>
+                <option value="greater_than">&gt; მეტია</option>
+                <option value="less_than">&lt; ნაკლებია</option>
+                <option value="contains">შეიცავს</option>
+                <option value="not_contains">არ შეიცავს</option>
+                <option value="exists">არსებობს</option>
+                <option value="not_exists">არ არსებობს</option>
+                <option value="in">სიაში შედის</option>
+                <option value="matches">regex</option>
+              </select>
+            </div>
+            <div className="config-field">
+              <label className="config-label">Value</label>
+              <input
+                className="config-input"
+                type="text"
+                placeholder="მაგ: premium, 18, @gmail"
+                defaultValue={String(nodeConfig.value ?? '')}
+                onChange={e => handleConfigChange('value', e.target.value)}
+              />
+              <div style={{ fontSize: '9px', color: 'var(--color-text-muted)', marginTop: '3px' }}>
+                in: მძიმით გამოყოფილი (GE,AM,AZ)
+              </div>
+            </div>
+          </>
         )}
 
         {nodeType === 'send_email' && (
@@ -167,19 +201,52 @@ export function NodeConfigPanel({
               <input
                 className="config-input"
                 type="text"
-                placeholder="Email subject"
+                placeholder="მაგ: გამარჯობა {{name}}!"
                 defaultValue={(nodeConfig.subject as string) || ''}
                 onChange={e => handleConfigChange('subject', e.target.value)}
               />
             </div>
             <div className="config-field">
-              <label className="config-label">Template</label>
+              <label className="config-label">Body</label>
+              <textarea
+                className="config-textarea"
+                placeholder="ემაილის ტექსტი... {{variable}} სინტაქსით ინტერპოლაცია"
+                defaultValue={(nodeConfig.body as string) || ''}
+                onChange={e => handleConfigChange('body', e.target.value)}
+                style={{ minHeight: '120px' }}
+              />
+              <div style={{ fontSize: '9px', color: 'var(--color-text-muted)', marginTop: '3px' }}>
+                {'{{name}}, {{email}}, {{plan}} — context-ის ცვლადები'}
+              </div>
+            </div>
+            <div className="config-field">
+              <label className="config-label">From Name</label>
               <input
                 className="config-input"
                 type="text"
-                placeholder="Template ID or name"
-                defaultValue={(nodeConfig.template as string) || ''}
-                onChange={e => handleConfigChange('template', e.target.value)}
+                placeholder="Kalcifer"
+                defaultValue={(nodeConfig.from_name as string) || ''}
+                onChange={e => handleConfigChange('from_name', e.target.value)}
+              />
+            </div>
+            <div className="config-field">
+              <label className="config-label">Reply-To</label>
+              <input
+                className="config-input"
+                type="email"
+                placeholder="reply@example.com"
+                defaultValue={(nodeConfig.reply_to as string) || ''}
+                onChange={e => handleConfigChange('reply_to', e.target.value)}
+              />
+            </div>
+            <div className="config-field">
+              <label className="config-label">Template ID (ოპციონალი)</label>
+              <input
+                className="config-input"
+                type="text"
+                placeholder="SendGrid template ID"
+                defaultValue={(nodeConfig.template_id as string) || ''}
+                onChange={e => handleConfigChange('template_id', e.target.value)}
               />
             </div>
           </>
