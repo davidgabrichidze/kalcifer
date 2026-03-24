@@ -32,6 +32,10 @@ defmodule KalciferWeb.Router do
 
     get "/audit", AuditController, :index
 
+    get "/deliveries", DeliveryController, :index
+    get "/deliveries/stats", DeliveryController, :stats
+    post "/deliveries/:id/status", DeliveryController, :update_status
+
     get "/engine", EngineController, :show
 
     # Browse mode — read-only flow/journey/version listing (dev frontend)

@@ -219,6 +219,53 @@ export async function fetchStats(): Promise<Stats> {
   return res.json()
 }
 
+// ── Delivery types ───────────────────────────────────────
+
+export interface DeliveryEntry {
+  id: string
+  channel: string
+  status: 'pending' | 'sent' | 'delivered' | 'bounced' | 'failed'
+  recipient: Record<string, string | null>
+  provider: string | null
+  provider_message_id: string | null
+  error: string | null
+  sent_at: string | null
+  delivered_at: string | null
+  failed_at: string | null
+  inserted_at: string
+}
+
+export interface DeliveryStats {
+  pending: number
+  sent: number
+  delivered: number
+  bounced: number
+  failed: number
+}
+
+export async function fetchDeliveries(opts?: {
+  instance_id?: string
+  status?: string
+  limit?: number
+}): Promise<DeliveryEntry[]> {
+  const params = new URLSearchParams()
+  if (opts?.instance_id) params.set('instance_id', opts.instance_id)
+  if (opts?.status) params.set('status', opts.status)
+  if (opts?.limit) params.set('limit', String(opts.limit))
+  const qs = params.toString()
+  const res = await fetch(`${API_BASE}/deliveries${qs ? `?${qs}` : ''}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
+export async function fetchDeliveryStats(): Promise<DeliveryStats> {
+  const res = await fetch(`${API_BASE}/deliveries/stats`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
 // ── Engine types ─────────────────────────────────────────
 
 export interface EngineNode {
