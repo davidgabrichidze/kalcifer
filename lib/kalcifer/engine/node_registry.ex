@@ -33,7 +33,9 @@ defmodule Kalcifer.Engine.NodeRegistry do
     "ai_think" => Kalcifer.Engine.Nodes.Action.AI.Think,
     "ai_decide" => Kalcifer.Engine.Nodes.Action.AI.Decide,
     "ai_notify" => Kalcifer.Engine.Nodes.Action.AI.Notify,
-    "agent" => Kalcifer.Engine.Nodes.Action.AI.Agent
+    "agent" => Kalcifer.Engine.Nodes.Action.AI.Agent,
+    # Orchestration nodes
+    "parallel_group" => Kalcifer.Engine.Nodes.Action.ParallelGroup
   }
 
   # --- Public API ---
