@@ -208,7 +208,30 @@
 - Per-tenant limits: 500/min default, configurable per action
 - 429 response with retry-after header
 
-### 2.18 Backend Recompilation
+### 2.18 Google OAuth Authentication (DONE)
+- User schema: email, name, avatar_url, google_uid → tenant
+- `Accounts.find_or_create_from_google` — auto-creates tenant
+- `AuthController`: POST /auth/google (Google tokeninfo verification)
+- HMAC session tokens (30-day expiry, no external deps)
+- `UserAuth` plug for session token verification
+- Frontend: LoginButton (Google Identity Services), LoginPage, auth state
+- TopBar: user avatar + logout button
+- Auth-gated when VITE_GOOGLE_CLIENT_ID is set
+
+### 2.19 SMS Preview Simulator (DONE)
+- SendSms node: body with {{variable}} interpolation + sender_id
+- NodeConfigPanel: SMS form with 160-char counter
+- Phone mockup preview (dark bezel, notch, bubble, home indicator)
+- Dry run shows interpolated text + char count
+
+### 2.20 Delivery Status Tracking (DONE)
+- `Channels.list_deliveries` with instance/tenant/status filtering
+- `Channels.delivery_stats` per-status aggregation
+- `DeliveryController`: GET /deliveries, GET /deliveries/stats
+- POST /deliveries/:id/status for provider webhook callbacks
+- Frontend: `fetchDeliveries`, `fetchDeliveryStats` API functions
+
+### 2.21 Backend Recompilation
 ყველა Elixir ცვლილება საჭიროებს:
 ```bash
 docker compose -f docker-compose.dev.yml restart app
@@ -250,15 +273,16 @@ docker compose -f docker-compose.dev.yml restart app
 ### Theme E: Channel Integration
 - [x] Provider configuration UI (SendGrid, Twilio, Firebase)
 - [x] Email template editor: subject/body with {{variable}} interpolation
-- [ ] SMS preview
-- [ ] Delivery status tracking
+- [x] SMS preview: phone mockup simulator with char counter
+- [x] Delivery status tracking: API + webhook callbacks
 
 ### Theme F: Multi-tenancy & Production
 - [x] API key management UI with regeneration
 - [x] Export/import flows (JSON)
 - [x] Rate limiting: per-tenant ETS-based, wired to authenticated pipeline
 - [x] Audit log: schema + API + flow CRUD tracking
-- [ ] Tenant switching
+- [x] Google OAuth authentication (user accounts, session tokens)
+- [ ] Tenant switching UI
 
 ---
 
