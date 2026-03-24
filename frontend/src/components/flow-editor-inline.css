@@ -232,3 +232,78 @@
   background: var(--color-danger);
   color: white;
 }
+
+/* ─── Instance Timeline Picker ─── */
+.fei-instance-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.fei-instance-dropdown {
+  position: absolute;
+  bottom: 24px;
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  min-width: 200px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  padding: 4px;
+}
+
+.fei-instance-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 8px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--color-text);
+  transition: background 0.1s;
+  text-align: left;
+}
+
+.fei-instance-item:hover {
+  background: var(--color-surface-dim);
+}
+
+.fei-instance-item.active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.fei-instance-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.fei-dot-completed { background: var(--color-success); }
+.fei-dot-running { background: var(--color-primary); animation: typingDot 1.2s infinite; }
+.fei-dot-waiting { background: var(--color-warn); }
+.fei-dot-failed { background: var(--color-danger); }
+
+.fei-instance-id {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+
+.fei-instance-status {
+  font-size: 9px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}

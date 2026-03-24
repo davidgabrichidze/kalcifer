@@ -8,12 +8,16 @@ import { type Node, type Edge } from '@xyflow/react'
 import {
   fetchFlow,
   fetchFlowVersions,
+  fetchInstances,
+  fetchInstanceTimeline,
   simulateFlow,
   updateFlowVersion,
   preflightFlow,
   parseNodeWarnings,
   type FlowVersion,
   type SimulationStep,
+  type FlowInstanceSummary,
+  type ExecutionStepData,
 } from '../lib/api'
 import FlowCanvas from './FlowCanvas'
 import { useFlowSocket } from '../lib/useFlowSocket'
@@ -81,6 +85,14 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
   const [validating, setValidating] = useState(false)
   const [nodeWarnings, setNodeWarnings] = useState<Map<string, string[]> | undefined>(undefined)
   const [validationSummary, setValidationSummary] = useState<string[] | null>(null)
+
+  // Instance timeline overlay
+  const [instances, setInstances] = useState<FlowInstanceSummary[]>([])
+  const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null)
+  const [timeline, setTimeline] = useState<ExecutionStepData[]>([])
+  const [timelineCompletedNodes, setTimelineCompletedNodes] = useState<Set<string>>(new Set())
+  const [timelineFailedNodes, setTimelineFailedNodes] = useState<Set<string>>(new Set())
+  const [showInstancePicker, setShowInstancePicker] = useState(false)
 
   // Simulation
   const [simStatus, setSimStatus] = useState<'idle' | 'running' | 'done' | 'failed'>('idle')
@@ -259,6 +271,49 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode])
 
+  // Load instances list when entering live mode
+  useEffect(() => {
+    if (mode === 'live' && flowId) {
+      fetchInstances(flowId, { limit: 20 })
+        .then(setInstances)
+        .catch(() => setInstances([]))
+    } else {
+      setInstances([])
+      setSelectedInstanceId(null)
+      setTimeline([])
+      setTimelineCompletedNodes(new Set())
+      setTimelineFailedNodes(new Set())
+    }
+  }, [mode, flowId])
+
+  // Load timeline when instance selected
+  useEffect(() => {
+    if (!selectedInstanceId) {
+      setTimeline([])
+      setTimelineCompletedNodes(new Set())
+      setTimelineFailedNodes(new Set())
+      return
+    }
+
+    fetchInstanceTimeline(selectedInstanceId)
+      .then(steps => {
+        setTimeline(steps)
+        const completed = new Set<string>()
+        const failed = new Set<string>()
+        for (const step of steps) {
+          if (step.status === 'completed') completed.add(step.node_id)
+          else if (step.status === 'failed') failed.add(step.node_id)
+        }
+        setTimelineCompletedNodes(completed)
+        setTimelineFailedNodes(failed)
+      })
+      .catch(() => {
+        setTimeline([])
+        setTimelineCompletedNodes(new Set())
+        setTimelineFailedNodes(new Set())
+      })
+  }, [selectedInstanceId])
+
   // ── Render ─────────────────────────────────
 
   if (loading) {
@@ -375,17 +430,22 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
           showControls={true}
           simCompletedNodes={
             mode === 'simulate' ? simCompletedNodes
+            : mode === 'live' && selectedInstanceId ? timelineCompletedNodes
             : mode === 'live' ? mergeCompletedNodes(liveCompletedNodes)
             : undefined
           }
           simActiveNode={
             mode === 'simulate' ? simActiveNode
-            : mode === 'live' ? getFirstActiveNode(liveActiveNodes)
+            : mode === 'live' && !selectedInstanceId ? getFirstActiveNode(liveActiveNodes)
             : undefined
           }
           onUndoRedoChange={handleUndoRedoChange}
           nodeWarnings={nodeWarnings}
-          failedNodes={mode === 'live' ? liveFailedNodes : undefined}
+          failedNodes={
+            mode === 'live' && selectedInstanceId ? timelineFailedNodes
+            : mode === 'live' ? liveFailedNodes
+            : undefined
+          }
         />
 
         {/* Node Palette */}
@@ -449,6 +509,51 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
               )}
             </>
           )}
+
+          {/* Instance timeline picker (live mode) */}
+          {mode === 'live' && instances.length > 0 && (
+            <div className="fei-instance-picker">
+              <button
+                className="fei-sim-btn"
+                onClick={() => setShowInstancePicker(p => !p)}
+                title="ინსტანსის შერჩევა"
+              >
+                {selectedInstanceId
+                  ? `📋 ${timeline.length} steps`
+                  : `📋 ${instances.length}`}
+              </button>
+              {selectedInstanceId && (
+                <button
+                  className="fei-sim-btn"
+                  onClick={() => setSelectedInstanceId(null)}
+                  title="overlay-ის გათიშვა"
+                >
+                  ✕
+                </button>
+              )}
+              {showInstancePicker && (
+                <div className="fei-instance-dropdown">
+                  {instances.map(inst => (
+                    <button
+                      key={inst.id}
+                      className={`fei-instance-item ${inst.id === selectedInstanceId ? 'active' : ''}`}
+                      onClick={() => {
+                        setSelectedInstanceId(inst.id)
+                        setShowInstancePicker(false)
+                      }}
+                    >
+                      <span className={`fei-instance-dot fei-dot-${inst.status}`} />
+                      <span className="fei-instance-id">
+                        {inst.customer_id || inst.id.slice(0, 8)}
+                      </span>
+                      <span className="fei-instance-status">{inst.status}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <span className="fei-mode-label">
             {mode === 'simulate'
               ? simStatus === 'running' ? '...' : simStatus === 'done' ? '✓' : simStatus === 'failed' ? '✗' : '▶'
