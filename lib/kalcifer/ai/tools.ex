@@ -284,6 +284,19 @@ defmodule Kalcifer.AI.Tools do
       - "email-ის subject შეცვალე" → modify send_email node's subject
       - "condition-ში field შეცვალე" → modify condition node's field
 
+      Condition node config supports operators:
+      - equals, not_equals, greater_than, less_than
+      - contains, not_contains (string search)
+      - exists, not_exists (nil check)
+      - in (value is a list), matches (regex)
+
+      Natural language → condition config examples:
+      - "თუ ასაკი 18-ზე მეტია" → {"field": "age", "operator": "greater_than", "value": 18}
+      - "თუ გეგმა premium-ია" → {"field": "plan", "operator": "equals", "value": "premium"}
+      - "თუ ემაილი @gmail-ს შეიცავს" → {"field": "email", "operator": "contains", "value": "@gmail"}
+      - "თუ ტელეფონი მითითებულია" → {"field": "phone", "operator": "exists"}
+      - "თუ ქვეყანა საქართველო ან სომხეთია" → {"field": "country", "operator": "in", "value": ["GE", "AM"]}
+
       First use get_flow_graph to see the current graph and find the node_id.
       """,
       input_schema: %{
