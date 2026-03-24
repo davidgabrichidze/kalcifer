@@ -7,6 +7,7 @@ defmodule KalciferWeb.Router do
 
   pipeline :authenticated do
     plug KalciferWeb.Plugs.ApiKeyAuth
+    plug KalciferWeb.Plugs.RateLimiter, action: :default
   end
 
   scope "/api/v1", KalciferWeb do
