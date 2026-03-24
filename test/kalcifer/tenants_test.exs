@@ -14,7 +14,9 @@ defmodule Kalcifer.TenantsTest do
     end
 
     test "returns configured model and key" do
-      tenant = insert(:tenant, settings: %{"ai_model" => "claude-sonnet-4-6", "ai_api_key" => "sk-test"})
+      tenant =
+        insert(:tenant, settings: %{"ai_model" => "claude-sonnet-4-6", "ai_api_key" => "sk-test"})
+
       config = Tenants.ai_config(tenant)
       assert config.model == "claude-sonnet-4-6"
       assert config.api_key == "sk-test"
@@ -45,7 +47,7 @@ defmodule Kalcifer.TenantsTest do
     test "accepts all valid models" do
       tenant = insert(:tenant)
 
-      for model <- Kalcifer.Tenants.Tenant.valid_ai_models() do
+      for model <- Kalcifer.Tenants.Tenant.all_model_ids() do
         {:ok, updated} = Tenants.update_settings(tenant, %{"ai_model" => model})
         assert updated.settings["ai_model"] == model
       end

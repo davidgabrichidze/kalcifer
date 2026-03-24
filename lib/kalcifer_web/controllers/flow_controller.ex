@@ -142,16 +142,5 @@ defmodule KalciferWeb.FlowController do
     |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
   end
 
-  # Dev fallback: use current_tenant from auth plug, or find the demo tenant
-  defp resolve_tenant(conn) do
-    case conn.assigns[:current_tenant] do
-      nil ->
-        alias Kalcifer.Repo
-        alias Kalcifer.Tenants.Tenant
-        Repo.get_by!(Tenant, name: "Demo Tenant")
-
-      tenant ->
-        tenant
-    end
-  end
+  defp resolve_tenant(conn), do: KalciferWeb.TenantResolver.resolve(conn)
 end

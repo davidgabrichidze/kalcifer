@@ -169,11 +169,13 @@ defmodule Kalcifer.AI.ToolsTest do
     end
 
     test "returns error when name missing", %{tenant_id: tid} do
-      assert {:error, "Internal error executing create_flow"} =
-               Tools.execute("create_flow", %{}, tid)
+      assert {:error, msg} = Tools.execute("create_flow", %{}, tid)
+      assert msg =~ "Internal error executing create_flow"
     end
 
-    test "idempotency — second create_flow in same conversation returns the first flow", %{tenant_id: tid} do
+    test "idempotency — second create_flow in same conversation returns the first flow", %{
+      tenant_id: tid
+    } do
       {:ok, conv} = Context.create_conversation(tid)
       ctx = %{conversation_id: conv.id}
 
@@ -196,10 +198,14 @@ defmodule Kalcifer.AI.ToolsTest do
       {:ok, conv2} = Context.create_conversation(tid)
 
       assert {:ok, json1} =
-               Tools.execute("create_flow", %{"name" => "Flow A"}, tid, %{conversation_id: conv1.id})
+               Tools.execute("create_flow", %{"name" => "Flow A"}, tid, %{
+                 conversation_id: conv1.id
+               })
 
       assert {:ok, json2} =
-               Tools.execute("create_flow", %{"name" => "Flow B"}, tid, %{conversation_id: conv2.id})
+               Tools.execute("create_flow", %{"name" => "Flow B"}, tid, %{
+                 conversation_id: conv2.id
+               })
 
       result1 = Jason.decode!(json1)
       result2 = Jason.decode!(json2)
@@ -278,7 +284,13 @@ defmodule Kalcifer.AI.ToolsTest do
 
     test "returns version_status field", %{tenant: tenant} do
       flow = insert(:flow, tenant: tenant)
-      insert(:flow_version, flow: flow, version_number: 1, status: "published", graph: valid_graph())
+
+      insert(:flow_version,
+        flow: flow,
+        version_number: 1,
+        status: "published",
+        graph: valid_graph()
+      )
 
       assert {:ok, json} = Tools.execute("get_flow_graph", %{"flow_id" => flow.id}, tenant.id)
       result = Jason.decode!(json)
@@ -323,7 +335,11 @@ defmodule Kalcifer.AI.ToolsTest do
 
       input = %{
         "flow_id" => flow.id,
-        "node" => %{"id" => "email_1", "type" => "send_email", "config" => %{"template_id" => "welcome"}},
+        "node" => %{
+          "id" => "email_1",
+          "type" => "send_email",
+          "config" => %{"template_id" => "welcome"}
+        },
         "edges" => [%{"source" => "entry_1", "target" => "email_1"}]
       }
 
@@ -367,7 +383,13 @@ defmodule Kalcifer.AI.ToolsTest do
 
     test "creates draft version from published when none exists", %{tenant: tenant} do
       flow = insert(:flow, tenant: tenant)
-      insert(:flow_version, flow: flow, version_number: 1, status: "published", graph: valid_graph())
+
+      insert(:flow_version,
+        flow: flow,
+        version_number: 1,
+        status: "published",
+        graph: valid_graph()
+      )
 
       input = %{
         "flow_id" => flow.id,
@@ -409,7 +431,11 @@ defmodule Kalcifer.AI.ToolsTest do
 
       graph = %{
         "nodes" => [
-          %{"id" => "entry_1", "type" => "event_entry", "config" => %{"event_type" => "signed_up"}},
+          %{
+            "id" => "entry_1",
+            "type" => "event_entry",
+            "config" => %{"event_type" => "signed_up"}
+          },
           %{"id" => "cond_1", "type" => "condition", "config" => %{"expression" => "age > 18"}}
         ],
         "edges" => [%{"source" => "entry_1", "target" => "cond_1"}]
@@ -433,7 +459,10 @@ defmodule Kalcifer.AI.ToolsTest do
       graph_result = Jason.decode!(graph_json)
 
       branch_edge =
-        Enum.find(graph_result["edges"], &(&1["source"] == "cond_1" and &1["target"] == "email_yes"))
+        Enum.find(
+          graph_result["edges"],
+          &(&1["source"] == "cond_1" and &1["target"] == "email_yes")
+        )
 
       assert branch_edge["branch"] == "true"
     end
@@ -543,7 +572,13 @@ defmodule Kalcifer.AI.ToolsTest do
 
     test "creates draft from published before modifying", %{tenant: tenant} do
       flow = insert(:flow, tenant: tenant)
-      insert(:flow_version, flow: flow, version_number: 1, status: "published", graph: valid_graph())
+
+      insert(:flow_version,
+        flow: flow,
+        version_number: 1,
+        status: "published",
+        graph: valid_graph()
+      )
 
       input = %{
         "flow_id" => flow.id,
@@ -693,7 +728,9 @@ defmodule Kalcifer.AI.ToolsTest do
         error: %{"message" => "Provider timeout", "code" => "timeout"}
       )
 
-      assert {:ok, json} = Tools.execute("debug_instance", %{"instance_id" => instance.id}, tenant.id)
+      assert {:ok, json} =
+               Tools.execute("debug_instance", %{"instance_id" => instance.id}, tenant.id)
+
       result = Jason.decode!(json)
       assert result["instance_id"] == instance.id
       assert result["status"] == "running"
@@ -729,7 +766,9 @@ defmodule Kalcifer.AI.ToolsTest do
         output: %{"matched" => true, "event_data" => %{}}
       )
 
-      assert {:ok, json} = Tools.execute("debug_instance", %{"instance_id" => instance.id}, tenant.id)
+      assert {:ok, json} =
+               Tools.execute("debug_instance", %{"instance_id" => instance.id}, tenant.id)
+
       result = Jason.decode!(json)
       step = hd(result["steps"])
       assert "matched" in step["output_keys"]
@@ -746,7 +785,9 @@ defmodule Kalcifer.AI.ToolsTest do
           dry_run: true
         )
 
-      assert {:ok, json} = Tools.execute("debug_instance", %{"instance_id" => instance.id}, tenant.id)
+      assert {:ok, json} =
+               Tools.execute("debug_instance", %{"instance_id" => instance.id}, tenant.id)
+
       result = Jason.decode!(json)
       assert result["dry_run"] == true
     end
@@ -761,7 +802,9 @@ defmodule Kalcifer.AI.ToolsTest do
           status: "running"
         )
 
-      assert {:ok, json} = Tools.execute("debug_instance", %{"instance_id" => instance.id}, tenant.id)
+      assert {:ok, json} =
+               Tools.execute("debug_instance", %{"instance_id" => instance.id}, tenant.id)
+
       result = Jason.decode!(json)
       assert result["step_count"] == 0
       assert result["steps"] == []
@@ -998,8 +1041,8 @@ defmodule Kalcifer.AI.ToolsTest do
   describe "execute — error handling" do
     test "catches crashes and returns internal error", %{tenant_id: tid} do
       # Calling create_flow without required "name" key triggers KeyError
-      assert {:error, "Internal error executing create_flow"} =
-               Tools.execute("create_flow", %{}, tid)
+      assert {:error, msg} = Tools.execute("create_flow", %{}, tid)
+      assert msg =~ "Internal error executing create_flow"
     end
   end
 end

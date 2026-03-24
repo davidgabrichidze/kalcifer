@@ -42,13 +42,7 @@ defmodule KalciferWeb.FlowVersionController do
     end
   end
 
-  # Dev fallback: if no auth header, use Demo Tenant (same pattern as FlowController)
-  defp resolve_tenant(conn) do
-    case conn.assigns[:current_tenant] do
-      nil -> Kalcifer.Repo.get_by!(Kalcifer.Tenants.Tenant, name: "Demo Tenant")
-      tenant -> tenant
-    end
-  end
+  defp resolve_tenant(conn), do: KalciferWeb.TenantResolver.resolve(conn)
 
   defp version_params(params) do
     %{

@@ -38,13 +38,19 @@ defmodule KalciferWeb.SettingsControllerTest do
       assert result["ai_api_key_set"] == true
     end
 
-    test "available_models have id and name fields", %{conn: conn} do
+    test "available_models are grouped by provider with models", %{conn: conn} do
       conn = get(conn, "/api/v1/settings")
       result = json_response(conn, 200)
 
-      for model <- result["available_models"] do
-        assert Map.has_key?(model, "id")
-        assert Map.has_key?(model, "name")
+      for provider_group <- result["available_models"] do
+        assert Map.has_key?(provider_group, "provider")
+        assert Map.has_key?(provider_group, "display_name")
+        assert is_list(provider_group["models"])
+
+        for model <- provider_group["models"] do
+          assert Map.has_key?(model, "id")
+          assert Map.has_key?(model, "name")
+        end
       end
     end
   end

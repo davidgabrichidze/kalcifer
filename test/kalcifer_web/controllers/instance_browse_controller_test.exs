@@ -6,13 +6,20 @@ defmodule KalciferWeb.InstanceBrowseControllerTest do
   alias Kalcifer.Flows
   alias Kalcifer.Engine.Persistence.{InstanceStore, StepStore}
 
+  @raw_api_key "test_key_for_instance_browse"
+
   setup %{conn: conn} do
-    tenant = insert(:tenant)
+    hash = Kalcifer.Tenants.hash_api_key(@raw_api_key)
+    tenant = insert(:tenant, api_key_hash: hash)
     flow = insert(:flow, tenant: tenant)
     version = insert(:flow_version, flow: flow, graph: valid_graph())
     {:ok, _flow} = Flows.activate_flow(flow)
 
-    conn = put_req_header(conn, "content-type", "application/json")
+    conn =
+      conn
+      |> put_req_header("authorization", "Bearer #{@raw_api_key}")
+      |> put_req_header("content-type", "application/json")
+
     {:ok, conn: conn, tenant: tenant, flow: Flows.get_flow(flow.id), version: version}
   end
 

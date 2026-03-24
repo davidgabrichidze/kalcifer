@@ -8,7 +8,7 @@ defmodule KalciferWeb.JourneyController do
   # --- CRUD ---
 
   def index(conn, params) do
-    tenant = conn.assigns.current_tenant
+    tenant = resolve_tenant(conn)
     opts = if params["status"], do: [status: params["status"]], else: []
     journeys = Marketing.list_journeys(tenant.id, opts)
     json(conn, %{data: Enum.map(journeys, &serialize_journey/1)})
@@ -70,7 +70,7 @@ defmodule KalciferWeb.JourneyController do
   # --- Private ---
 
   defp fetch_tenant_journey(conn, id) do
-    tenant = conn.assigns.current_tenant
+    tenant = resolve_tenant(conn)
 
     case Marketing.get_journey(id) do
       %{tenant_id: tenant_id} = journey when tenant_id == tenant.id -> {:ok, journey}
@@ -93,6 +93,8 @@ defmodule KalciferWeb.JourneyController do
       updated_at: journey.updated_at
     }
   end
+
+  defp resolve_tenant(conn), do: KalciferWeb.TenantResolver.resolve(conn)
 
   defp atomize_journey_params(params) do
     params

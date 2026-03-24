@@ -5,7 +5,7 @@ defmodule KalciferWeb.ConversationController do
 
   @doc "GET /api/v1/conversations — list conversations for the dev tenant."
   def index(conn, params) do
-    tenant_id = resolve_dev_tenant()
+    tenant_id = resolve_dev_tenant(conn)
     opts = []
     opts = if params["kind"], do: [kind: params["kind"]] ++ opts, else: opts
 
@@ -115,14 +115,5 @@ defmodule KalciferWeb.ConversationController do
     }
   end
 
-  # Same pattern as ChatController — in production would use auth
-  defp resolve_dev_tenant do
-    alias Kalcifer.Repo
-    alias Kalcifer.Tenants.Tenant
-
-    case Repo.get_by(Tenant, name: "Demo Tenant") do
-      %Tenant{id: id} -> id
-      nil -> raise "Demo Tenant not found — start a chat first"
-    end
-  end
+  defp resolve_dev_tenant(conn), do: KalciferWeb.TenantResolver.resolve_id(conn)
 end

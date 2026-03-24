@@ -11,7 +11,7 @@ defmodule KalciferWeb.SettingsController do
   Sensitive fields (like API key) are masked.
   """
   def show(conn, _params) do
-    tenant_id = resolve_dev_tenant()
+    tenant_id = resolve_dev_tenant(conn)
 
     case Tenants.get_tenant(tenant_id) do
       nil ->
@@ -32,7 +32,7 @@ defmodule KalciferWeb.SettingsController do
     - `remove_provider_key`: "anthropic" (removes that provider's key)
   """
   def update(conn, params) do
-    tenant_id = resolve_dev_tenant()
+    tenant_id = resolve_dev_tenant(conn)
 
     case Tenants.get_tenant(tenant_id) do
       nil ->
@@ -106,7 +106,7 @@ defmodule KalciferWeb.SettingsController do
   Basic monitoring: conversation count, tool usage, flow count.
   """
   def stats(conn, _params) do
-    tenant_id = resolve_dev_tenant()
+    tenant_id = resolve_dev_tenant(conn)
 
     alias Kalcifer.Repo
     import Ecto.Query
@@ -191,20 +191,5 @@ defmodule KalciferWeb.SettingsController do
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)
 
-  # Same dev tenant resolution as ChatController
-  defp resolve_dev_tenant do
-    alias Kalcifer.Repo
-
-    case Repo.get_by(Tenant, name: "Demo Tenant") do
-      %Tenant{id: id} -> id
-      nil ->
-        {:ok, tenant} =
-          Tenants.create_tenant(%{
-            name: "Demo Tenant",
-            api_key_hash: Tenants.hash_api_key("demo-dev-key")
-          })
-
-        tenant.id
-    end
-  end
+  defp resolve_dev_tenant(conn), do: KalciferWeb.TenantResolver.resolve_id(conn)
 end

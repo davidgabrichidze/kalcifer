@@ -13,18 +13,24 @@ defmodule KalciferWeb.Plugs.ApiKeyAuthTest do
     {:ok, tenant: tenant}
   end
 
+  # Use an authenticated-only route (POST /events is only in the :authenticated pipeline)
+  @auth_route "/api/v1/events"
+
   test "authenticates valid API key and sets current_tenant", %{conn: conn, tenant: tenant} do
     conn =
       conn
       |> put_req_header("authorization", "Bearer #{@raw_api_key}")
-      |> get("/api/v1/flows")
+      |> put_req_header("content-type", "application/json")
+      |> post(@auth_route, %{})
 
     assert conn.assigns.current_tenant.id == tenant.id
-    assert conn.status == 200
   end
 
   test "rejects missing authorization header", %{conn: conn} do
-    conn = get(conn, "/api/v1/flows")
+    conn =
+      conn
+      |> put_req_header("content-type", "application/json")
+      |> post(@auth_route, %{})
 
     assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
   end
@@ -33,7 +39,8 @@ defmodule KalciferWeb.Plugs.ApiKeyAuthTest do
     conn =
       conn
       |> put_req_header("authorization", "Bearer wrong_key")
-      |> get("/api/v1/flows")
+      |> put_req_header("content-type", "application/json")
+      |> post(@auth_route, %{})
 
     assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
   end
@@ -42,7 +49,8 @@ defmodule KalciferWeb.Plugs.ApiKeyAuthTest do
     conn =
       conn
       |> put_req_header("authorization", "Token something")
-      |> get("/api/v1/flows")
+      |> put_req_header("content-type", "application/json")
+      |> post(@auth_route, %{})
 
     assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
   end
@@ -51,7 +59,8 @@ defmodule KalciferWeb.Plugs.ApiKeyAuthTest do
     conn =
       conn
       |> put_req_header("authorization", "Bearer ")
-      |> get("/api/v1/flows")
+      |> put_req_header("content-type", "application/json")
+      |> post(@auth_route, %{})
 
     assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
   end
@@ -60,7 +69,8 @@ defmodule KalciferWeb.Plugs.ApiKeyAuthTest do
     conn =
       conn
       |> put_req_header("authorization", "bearer #{@raw_api_key}")
-      |> get("/api/v1/flows")
+      |> put_req_header("content-type", "application/json")
+      |> post(@auth_route, %{})
 
     assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
   end

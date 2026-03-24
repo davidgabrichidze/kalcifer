@@ -17,7 +17,6 @@ defmodule Kalcifer.AI.Client do
 
   alias Kalcifer.AI.Providers.{Anthropic, Google, OpenAI}
 
-  @max_tokens 4096
   @max_tool_rounds 50
 
   @type message :: %{role: String.t(), content: String.t() | list()}
@@ -50,7 +49,10 @@ defmodule Kalcifer.AI.Client do
         provider.extract_text(resp_body)
 
       {:ok, %{status: status, body: resp_body}} ->
-        Logger.error("AI API error (#{provider_name(opts)}): status=#{status} body=#{inspect(resp_body)}")
+        Logger.error(
+          "AI API error (#{provider_name(opts)}): status=#{status} body=#{inspect(resp_body)}"
+        )
+
         {:error, {:api_error, status, resp_body}}
 
       {:error, reason} ->
@@ -191,9 +193,7 @@ defmodule Kalcifer.AI.Client do
     req = Finch.build(:post, url, headers, json_body)
     handler = fn chunk, acc -> stream_handler(provider, callback, chunk, acc) end
 
-    case Finch.stream(req, Kalcifer.Finch, initial_acc, handler,
-           receive_timeout: 120_000
-         ) do
+    case Finch.stream(req, Kalcifer.Finch, initial_acc, handler, receive_timeout: 120_000) do
       {:ok, {200, _buffer, chunks}} ->
         full_text = chunks |> Enum.reverse() |> IO.iodata_to_binary()
         callback.({:done, full_text})
@@ -302,8 +302,12 @@ defmodule Kalcifer.AI.Client do
   defp add_stream_flag(body, Google, _opts), do: body
 
   defp add_tools_to_body(body, tools, Anthropic), do: Map.put(body, :tools, tools)
-  defp add_tools_to_body(body, tools, OpenAI), do: Map.put(body, :tools, OpenAI.convert_tools(tools))
-  defp add_tools_to_body(body, tools, Google), do: Map.put(body, :tools, Google.convert_tools(tools))
+
+  defp add_tools_to_body(body, tools, OpenAI),
+    do: Map.put(body, :tools, OpenAI.convert_tools(tools))
+
+  defp add_tools_to_body(body, tools, Google),
+    do: Map.put(body, :tools, Google.convert_tools(tools))
 
   defp ensure_system(opts) do
     if Keyword.has_key?(opts, :system) do

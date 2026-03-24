@@ -33,7 +33,7 @@ defmodule KalciferWeb.ChatController do
       |> put_resp_header("x-accel-buffering", "no")
       |> send_chunked(200)
 
-    tenant_id = resolve_dev_tenant()
+    tenant_id = resolve_dev_tenant(conn)
 
     # Resolve or create conversation
     {conversation_id, history} =
@@ -325,24 +325,7 @@ defmodule KalciferWeb.ChatController do
     end
   end
 
-  defp resolve_dev_tenant do
-    alias Kalcifer.Repo
-    alias Kalcifer.Tenants.Tenant
-
-    case Repo.get_by(Tenant, name: "Demo Tenant") do
-      %Tenant{id: id} ->
-        id
-
-      nil ->
-        {:ok, tenant} =
-          Tenants.create_tenant(%{
-            name: "Demo Tenant",
-            api_key_hash: Tenants.hash_api_key("demo-dev-key")
-          })
-
-        tenant.id
-    end
-  end
+  defp resolve_dev_tenant(conn), do: KalciferWeb.TenantResolver.resolve_id(conn)
 
   defp tenant_ai_opts(tenant_id) do
     case Tenants.get_tenant(tenant_id) do

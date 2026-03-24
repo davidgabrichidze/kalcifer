@@ -23,8 +23,13 @@ defmodule KalciferWeb.InstanceBrowseController do
   end
 
   def show(conn, %{"id" => id}) do
+    tenant = KalciferWeb.TenantResolver.resolve(conn)
+
     case Repo.get(FlowInstance, id) do
       nil ->
+        conn |> put_status(404) |> json(%{error: "not_found"})
+
+      %{tenant_id: tid} when tid != tenant.id ->
         conn |> put_status(404) |> json(%{error: "not_found"})
 
       instance ->
