@@ -194,6 +194,10 @@ export default function ChatPanel({
     setIsTyping(true)
     setStreamingId(aiMsg.id)
 
+    // Capture the message ID so stale callbacks from aborted streams are ignored
+    const msgId = aiMsg.id
+    const isStale = () => activeAiIdRef.current !== msgId
+
     // Only send the new user message — backend loads history from conversation
     const apiMessages: ApiMessage[] = [{ role: 'user', content: text }]
 
@@ -201,28 +205,39 @@ export default function ChatPanel({
       apiMessages,
       {
         onInit: (convId) => {
-          loadedConvRef.current = convId // Prevent loadHistory from overwriting stream
+          if (isStale()) return
+          loadedConvRef.current = convId
           onConversationId?.(convId)
         },
-        onSessionClassified: (classification) => onSessionClassified?.(classification),
-        onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
+        onSessionClassified: (classification) => {
+          if (isStale()) return
+          onSessionClassified?.(classification)
+        },
+        onDelta: (chunk) => {
+          if (isStale()) return
+          appendToMessage(msgId, chunk)
+        },
         onToolStart: (tool) => {
-          addToolToMessage(aiMsg.id, { tool, status: 'running' })
-          addToolToActivityStep(aiMsg.id, { tool, status: 'running' })
+          if (isStale()) return
+          addToolToMessage(msgId, { tool, status: 'running' })
+          addToolToActivityStep(msgId, { tool, status: 'running' })
         },
         onToolDone: (tool, result) => {
-          addToolToMessage(aiMsg.id, { tool, status: 'done', result })
-          addToolToActivityStep(aiMsg.id, { tool, status: 'done', result })
+          if (isStale()) return
+          addToolToMessage(msgId, { tool, status: 'done', result })
+          addToolToActivityStep(msgId, { tool, status: 'done', result })
           detectFlowGraph(tool, result)
         },
-        ...activityCallbacks(aiMsg.id),
+        ...activityCallbacks(msgId),
         onDone: () => {
+          if (isStale()) return
           setIsTyping(false)
           setStreamingId(null)
           activeAiIdRef.current = null
         },
         onError: (msg) => {
-          appendToMessage(aiMsg.id, `\n\n⚠ ${msg}`)
+          if (isStale()) return
+          appendToMessage(msgId, `\n\n⚠ ${msg}`)
           setIsTyping(false)
           setStreamingId(null)
           activeAiIdRef.current = null
@@ -317,37 +332,50 @@ export default function ChatPanel({
 
       const userMsg = createMessage('user', text)
       const aiMsg = createMessage('ai', '')
-      activeAiIdRef.current = aiMsg.id
+      const msgId = aiMsg.id
+      activeAiIdRef.current = msgId
       setMessages([userMsg, aiMsg])
       setIsTyping(true)
-      setStreamingId(aiMsg.id)
+      setStreamingId(msgId)
 
+      const isStale = () => activeAiIdRef.current !== msgId
       const apiMessages: ApiMessage[] = [{ role: 'user', content: text }]
       abortRef.current = streamChat(
         apiMessages,
         {
           onInit: (convId) => {
-            loadedConvRef.current = convId // Prevent loadHistory from overwriting stream
+            if (isStale()) return
+            loadedConvRef.current = convId
             onConversationId?.(convId)
           },
-          onSessionClassified: (classification) => onSessionClassified?.(classification),
-          onDelta: (chunk) => appendToMessage(aiMsg.id, chunk),
+          onSessionClassified: (classification) => {
+            if (isStale()) return
+            onSessionClassified?.(classification)
+          },
+          onDelta: (chunk) => {
+            if (isStale()) return
+            appendToMessage(msgId, chunk)
+          },
           onToolStart: (tool) => {
-            addToolToMessage(aiMsg.id, { tool, status: 'running' })
-            addToolToActivityStep(aiMsg.id, { tool, status: 'running' })
+            if (isStale()) return
+            addToolToMessage(msgId, { tool, status: 'running' })
+            addToolToActivityStep(msgId, { tool, status: 'running' })
           },
           onToolDone: (tool, result) => {
-            addToolToMessage(aiMsg.id, { tool, status: 'done', result })
-            addToolToActivityStep(aiMsg.id, { tool, status: 'done', result })
+            if (isStale()) return
+            addToolToMessage(msgId, { tool, status: 'done', result })
+            addToolToActivityStep(msgId, { tool, status: 'done', result })
             detectFlowGraph(tool, result)
           },
-          ...activityCallbacks(aiMsg.id),
+          ...activityCallbacks(msgId),
           onDone: () => {
+            if (isStale()) return
             setIsTyping(false)
             setStreamingId(null)
             activeAiIdRef.current = null
           },
           onError: (msg) => {
+            if (isStale()) return
             appendToMessage(aiMsg.id, `\n\n⚠ ${msg}`)
             setIsTyping(false)
             setStreamingId(null)
@@ -382,8 +410,20 @@ export default function ChatPanel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId])
 
-  // Reset state when conversation is cleared (but not during initial message send)
+  // Full cleanup when conversation changes or is cleared
   useEffect(() => {
+    // Abort any in-flight stream from previous conversation
+    if (abortRef.current) {
+      abortRef.current.abort()
+      abortRef.current = null
+    }
+
+    // Reset all streaming/typing state
+    setIsTyping(false)
+    setStreamingId(null)
+    activeAiIdRef.current = null
+    setActivityExpanded(false)
+
     if (!conversationId && !initialMessage) {
       loadedConvRef.current = null
       initialMessageSentRef.current = false
