@@ -58,6 +58,23 @@
 - Prompts use `{{accumulated.node_id.response}}` interpolation for context passing
 - Synthesizer integrates all perspectives, executor (agent node) acts on recommendation
 
+### Browse Page — Instances Panel (DONE)
+- `InstanceBrowseController` — unauthenticated instance endpoints for dev frontend
+- BrowsePage Instances panel: flow selector, instance table with status badges
+- Timeline viewer: numbered steps, node type, duration, expandable output JSON
+- Instance API functions: `fetchInstances`, `fetchInstance`, `fetchInstanceTimeline`
+
+### Council Flow in Chat (DONE)
+- ChatController selects between simple and council flows based on keywords
+- Keywords: "საბჭო", "დაფიქრდი", "council", "ანალიზი" → council flow
+- ActivityIndicator shows Georgian persona labels (ოცნებისმყრელი, რეალისტი, სკეპტიკოსი, სინთეზატორი)
+
+### Graph Save in Editor (DONE)
+- `convertReactFlowToGraph` — reverse conversion ReactFlow → backend FlowGraph
+- Save button in topbar + Ctrl+S keyboard shortcut
+- `hasChanges` tracking, save button highlights when unsaved changes exist
+- Uses `PUT /flows/:id/versions/:v` endpoint
+
 ### Multi-Provider AI Client (previous sprint)
 - `lib/kalcifer/ai/client.ex` — Anthropic/OpenAI/Google routing
 - Provider adapters: `providers/anthropic.ex`, `providers/openai.ex`, `providers/google.ex`
@@ -73,25 +90,15 @@
 
 ## 2. შემდეგი ნაბიჯები (Next Sprint)
 
-### 2.1 Council Flow Integration in Chat (Priority #1)
-**პრობლემა:** Council flow template არსებობს, მაგრამ ChatController ყოველთვის simple flow-ს იყენებს.
+### 2.1 Undo/Redo + Editor Keyboard Shortcuts (Priority #1)
+**პრობლემა:** Graph save მუშაობს, მაგრამ undo/redo არ არის.
 
 **რა უნდა გაკეთდეს:**
-1. `intake` node: classify user request → simple vs council routing
-2. ChatController: dynamic flow selection based on request complexity
-3. ActivityIndicator: council nodes ჩვენება (dreamer/realist/skeptic/synthesizer steps)
-4. Testing: full council flow execution with mocked AI
+1. Undo/redo stack (Ctrl+Z, Ctrl+Y) — graph snapshot history
+2. Delete node shortcut (Delete/Backspace key)
+3. Validation overlay: preflight warnings on nodes
 
-### 2.2 Graph Save & Undo (Priority #2)
-**პრობლემა:** Editor-ში canvas ცვლილებები არ ინახება backend-ზე.
-
-**რა უნდა გაკეთდეს:**
-1. Canvas → FlowGraph → `PUT /flows/:id/versions/:v`
-2. Undo/redo stack (Ctrl+Z, Ctrl+Y)
-3. Keyboard shortcuts (Delete node, Ctrl+S save)
-4. Validation overlay: preflight warnings on nodes
-
-### 2.3 Live Mode (Priority #3)
+### 2.2 Live Mode (Priority #2)
 **პრობლემა:** Editor-ს "Live" mode ღილაკი აქვს, მაგრამ არ მუშაობს.
 
 **რა უნდა გაკეთდეს:**
@@ -179,6 +186,7 @@ lib/kalcifer_web/
   controllers/
     chat_controller.ex         # FlowServer-based chat with PubSub receive loop
     simulation_controller.ex   # Dry-run simulation SSE streaming
+    instance_browse_controller.ex # Unauthenticated instance browsing
     flow_controller.ex         # Flow CRUD
     flow_version_controller.ex # Version CRUD
 
@@ -189,7 +197,7 @@ lib/kalcifer/flows/
 frontend/src/
   App.tsx                      # Routes: /, /engine, /browse, /editor
   lib/
-    api.ts                     # API client (+ simulation, activity SSE)
+    api.ts                     # API client (+ simulation, activity, instance SSE)
     chat.ts                    # Types (ChatMessage, AgentActivity, AgentActivityStep)
   components/
     FlowCanvas.tsx             # Reusable ReactFlow canvas (+ sim highlighting)
@@ -199,13 +207,14 @@ frontend/src/
     activity-indicator.css     # Activity styles
   pages/
     WorkPage.tsx               # 5-stage work page
+    BrowsePage.tsx             # Flows + Instances panels with timeline
     editor/
-      FlowEditorPage.tsx       # Editor with simulation controls
+      FlowEditorPage.tsx       # Editor with simulation controls + graph save
       FlowNode.tsx             # Node component (+ simulation badges)
       NodePalette.tsx          # Draggable node palette
       NodeConfigPanel.tsx      # Node configuration panel
       nodeTypes.ts             # 21 node types metadata
-      flowGraphUtils.ts        # Shared graph utilities
+      flowGraphUtils.ts        # Shared graph utilities (+ convertReactFlowToGraph)
 
 ## Tests
 test/kalcifer/engine/nodes/action/ai/
