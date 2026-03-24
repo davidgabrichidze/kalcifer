@@ -180,7 +180,35 @@
 - Export (↓) button in inline editor toolbar
 - `exportFlow` / `importFlow` frontend API functions
 
-### 2.13 Backend Recompilation
+### 2.13 Node Avg Execution Time (DONE)
+- `Analytics.node_avg_durations/1` — avg milliseconds from execution_steps
+- Merged into /analytics/nodes API response
+- FlowNode analytics badge: human-readable duration (ms/s/m)
+
+### 2.14 Natural Language Condition Builder (DONE)
+- Condition node: 10 operators (equals, not_equals, greater_than, less_than, contains, not_contains, exists, not_exists, in, matches)
+- modify_node tool: Georgian NL→config examples for AI
+- NodeConfigPanel: field/operator/value form for condition nodes
+- 16 new tests
+
+### 2.15 Email Template Editor (DONE)
+- SendEmail node: subject + body with {{variable}} interpolation
+- from_name, reply_to fields
+- Dry run shows interpolated preview
+- NodeConfigPanel: rich email form
+
+### 2.16 Audit Log (DONE)
+- audit_log table + Entry schema + Audit module
+- GET /audit endpoint with filtering
+- Flow CRUD records audit entries
+- 6 tests
+
+### 2.17 Rate Limiting (DONE)
+- RateLimiter plug wired to authenticated pipeline
+- Per-tenant limits: 500/min default, configurable per action
+- 429 response with retry-after header
+
+### 2.18 Backend Recompilation
 ყველა Elixir ცვლილება საჭიროებს:
 ```bash
 docker compose -f docker-compose.dev.yml restart app
@@ -210,27 +238,27 @@ docker compose -f docker-compose.dev.yml restart app
 - [x] Live mode: running instance real-time tracking on canvas
 - [x] Error highlighting on failed nodes (red border + ✗ badge)
 - [x] Instance timeline overlay — select instance, see execution path on canvas
-- [ ] Node-level analytics (conversion rates, avg time)
+- [x] Node-level analytics (conversion rates, avg time, success %)
 
 ### Theme D: AI-Assisted Flow Building
 - [x] Flow editor in context panel: chat about a flow → editor appears alongside
 - [x] Chat → flow generation: create_flow with full graph in one call
 - [x] Chat → node editing: modify_node + remove_node with natural language guidance
-- [ ] AI suggestions: "this condition has no false branch"
-- [ ] Natural language condition builder
+- [x] AI suggestions: FlowGraph.suggestions/1 with preflight integration
+- [x] Natural language condition builder: 10 operators + NL→config examples
 
 ### Theme E: Channel Integration
 - [x] Provider configuration UI (SendGrid, Twilio, Firebase)
-- [ ] Email template editor (inline or linked)
+- [x] Email template editor: subject/body with {{variable}} interpolation
 - [ ] SMS preview
 - [ ] Delivery status tracking
 
 ### Theme F: Multi-tenancy & Production
 - [x] API key management UI with regeneration
 - [x] Export/import flows (JSON)
+- [x] Rate limiting: per-tenant ETS-based, wired to authenticated pipeline
+- [x] Audit log: schema + API + flow CRUD tracking
 - [ ] Tenant switching
-- [ ] Rate limiting
-- [ ] Audit log
 
 ---
 
