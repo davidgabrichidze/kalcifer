@@ -136,12 +136,27 @@ export function convertGraphToReactFlow(
     target: ge.target,
     // Connect to the correct handle on branching nodes
     ...(ge.branch ? { sourceHandle: ge.branch } : {}),
-    label: ge.branch || '',
+    label: ge.branch === 'true' ? '✓ yes'
+      : ge.branch === 'false' ? '✗ no'
+        : '',
+    labelStyle: ge.branch
+      ? {
+          fontSize: 10,
+          fontWeight: 600,
+          fill: ge.branch === 'true' ? 'var(--color-success)' : 'var(--color-danger)',
+        }
+      : {},
+    labelBgStyle: ge.branch
+      ? { fill: 'var(--color-surface)', fillOpacity: 0.9 }
+      : {},
+    labelBgPadding: ge.branch ? [4, 2] as [number, number] : undefined,
+    labelBgBorderRadius: 4,
     style: ge.branch === 'true'
-      ? { stroke: 'var(--color-success)' }
+      ? { stroke: 'var(--color-success)', strokeWidth: 2 }
       : ge.branch === 'false'
-        ? { stroke: 'var(--color-danger)' }
+        ? { stroke: 'var(--color-danger)', strokeWidth: 2 }
         : {},
+    animated: ge.branch === 'true',
   }))
 
   return { nodes, edges }
