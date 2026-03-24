@@ -131,12 +131,21 @@ defmodule Kalcifer.AI.Tools do
     %{
       name: "create_flow",
       description: """
-      Create a new draft flow. The flow starts in "draft" status.
-      After creation, add nodes with add_node before activation.
+      Create a new draft flow with an optional complete graph.
+
+      PREFERRED: Pass a full graph (nodes + edges) to create the flow in one step.
+      This is faster than calling add_node repeatedly and opens the editor immediately.
+
+      Each node needs: id (unique string), type (from list_node_types), config (object).
+      Each edge needs: source (node id), target (node id), optional branch ("yes"/"no").
+
+      Node types for graph: webhook_entry, event_entry, scheduled_entry,
+      send_email, send_sms, send_push, condition, ab_split, wait, wait_for_event,
+      frequency_cap, set_attribute, add_to_segment, remove_from_segment,
+      fire_event, api_call, rate_limit, ai_think, ai_decide, agent, end.
 
       IMPORTANT: Each session creates ONE flow. If a flow was already created
-      in this session, this tool returns the existing one. To create a different
-      flow, the user should start a new session.
+      in this session, this tool returns the existing one.
       """,
       input_schema: %{
         type: "object",
@@ -148,6 +157,39 @@ defmodule Kalcifer.AI.Tools do
           description: %{
             type: "string",
             description: "Optional description of what this flow does."
+          },
+          graph: %{
+            type: "object",
+            description:
+              "Optional complete graph with nodes and edges. " <>
+                "If provided, creates version 1 with this graph.",
+            properties: %{
+              nodes: %{
+                type: "array",
+                items: %{
+                  type: "object",
+                  properties: %{
+                    id: %{type: "string"},
+                    type: %{type: "string"},
+                    config: %{type: "object"}
+                  },
+                  required: ["id", "type"]
+                }
+              },
+              edges: %{
+                type: "array",
+                items: %{
+                  type: "object",
+                  properties: %{
+                    source: %{type: "string"},
+                    target: %{type: "string"},
+                    branch: %{type: "string"}
+                  },
+                  required: ["source", "target"]
+                }
+              }
+            },
+            required: ["nodes", "edges"]
           }
         },
         required: ["name"]
@@ -547,6 +589,7 @@ defmodule Kalcifer.AI.Tools do
   defp do_execute("create_flow", input, tenant_id, ctx) do
     name = Map.fetch!(input, "name")
     description = Map.get(input, "description", "")
+    graph_input = Map.get(input, "graph")
     conversation_id = Map.get(ctx, :conversation_id)
 
     # Idempotency: one conversation → one flow.
@@ -554,12 +597,16 @@ defmodule Kalcifer.AI.Tools do
     existing = conversation_linked_flow(conversation_id)
 
     if existing do
+      # Fetch the version graph for the editor
+      existing_graph = fetch_latest_graph(existing)
+
       result = %{
         id: existing.id,
         name: existing.name,
         status: existing.status,
         message: "This session already has a flow — use it or start a new session",
-        already_existed: true
+        already_existed: true,
+        graph: existing_graph
       }
 
       {:ok, Jason.encode!(result, pretty: true)}
@@ -571,12 +618,18 @@ defmodule Kalcifer.AI.Tools do
             link_flow_to_conversation(conversation_id, flow.id)
           end
 
+          # If a graph was provided, create version 1 with it
+          {version_graph, warnings} = create_initial_version(flow, graph_input)
+
           result = %{
             id: flow.id,
             name: flow.name,
             status: flow.status,
             message: "Flow created successfully"
           }
+
+          result = if version_graph, do: Map.put(result, :graph, version_graph), else: result
+          result = if warnings != [], do: Map.put(result, :validation_warnings, warnings), else: result
 
           {:ok, Jason.encode!(result, pretty: true)}
 
@@ -667,6 +720,7 @@ defmodule Kalcifer.AI.Tools do
           |> Enum.map(fn n -> %{id: n["id"], type: n["type"]} end)
 
         result = %{
+          flow_id: flow_id,
           added_node: node_map["id"],
           added_edges: length(edge_maps),
           total_nodes: length(nodes) + 1,
@@ -710,6 +764,7 @@ defmodule Kalcifer.AI.Tools do
             |> Kalcifer.Repo.update()
 
           result = %{
+            flow_id: flow_id,
             modified_node: node_id,
             node_type: old_node["type"],
             version_number: version.version_number
@@ -916,6 +971,69 @@ defmodule Kalcifer.AI.Tools do
   end
 
   # ── Helpers ─────────────────────────────────────────────────
+
+  # Create version 1 with the provided graph (or empty graph if nil)
+  defp create_initial_version(flow, nil) do
+    # No graph provided — create version 1 with empty graph
+    graph = %{"nodes" => [], "edges" => []}
+
+    case Flows.create_version(flow, %{
+           version_number: 1,
+           graph: graph,
+           changelog: "Created by AI tool"
+         }) do
+      {:ok, _version} -> {graph, []}
+      {:error, _} -> {nil, []}
+    end
+  end
+
+  defp create_initial_version(flow, graph_input) do
+    # Normalize the graph: ensure nodes have config, edges have proper structure
+    nodes =
+      Enum.map(Map.get(graph_input, "nodes", []), fn n ->
+        %{
+          "id" => n["id"],
+          "type" => n["type"],
+          "config" => Map.get(n, "config", %{})
+        }
+      end)
+
+    edges =
+      Enum.map(Map.get(graph_input, "edges", []), fn e ->
+        edge = %{"source" => e["source"], "target" => e["target"]}
+        if e["branch"], do: Map.put(edge, "branch", e["branch"]), else: edge
+      end)
+
+    graph = %{"nodes" => nodes, "edges" => edges}
+
+    # Validate
+    warnings =
+      case FlowGraph.validate(graph) do
+        :ok -> []
+        {:error, errors} -> errors
+      end
+
+    case Flows.create_version(flow, %{
+           version_number: 1,
+           graph: graph,
+           changelog: "Created by AI tool with #{length(nodes)} nodes"
+         }) do
+      {:ok, _version} -> {graph, warnings}
+      {:error, _} -> {nil, warnings}
+    end
+  end
+
+  # Fetch the latest version's graph for a flow
+  defp fetch_latest_graph(flow) do
+    flow = Kalcifer.Repo.preload(flow, :versions)
+
+    case flow.versions
+         |> Enum.sort_by(& &1.version_number, :desc)
+         |> List.first() do
+      nil -> nil
+      version -> version.graph
+    end
+  end
 
   defp resolve_version(flow, nil) do
     # Latest version

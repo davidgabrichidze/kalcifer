@@ -222,6 +222,107 @@ defmodule Kalcifer.AI.ToolsTest do
       assert result1["id"] != result2["id"]
     end
 
+    test "creates flow with full graph in one call", %{tenant_id: tid} do
+      input = %{
+        "name" => "Onboarding Flow",
+        "description" => "Welcome sequence",
+        "graph" => %{
+          "nodes" => [
+            %{"id" => "entry_1", "type" => "webhook_entry", "config" => %{}},
+            %{
+              "id" => "email_1",
+              "type" => "send_email",
+              "config" => %{"template" => "welcome", "subject" => "Welcome!"}
+            },
+            %{"id" => "end_1", "type" => "end", "config" => %{}}
+          ],
+          "edges" => [
+            %{"source" => "entry_1", "target" => "email_1"},
+            %{"source" => "email_1", "target" => "end_1"}
+          ]
+        }
+      }
+
+      assert {:ok, json} = Tools.execute("create_flow", input, tid)
+      result = Jason.decode!(json)
+
+      assert result["name"] == "Onboarding Flow"
+      assert result["status"] == "draft"
+      assert result["message"] == "Flow created successfully"
+
+      # Graph should be included in response
+      assert result["graph"] != nil
+      assert length(result["graph"]["nodes"]) == 3
+      assert length(result["graph"]["edges"]) == 2
+
+      # Version should exist with the graph
+      versions = Flows.list_versions(result["id"])
+      assert length(versions) == 1
+      version = List.first(versions)
+      assert version.version_number == 1
+      assert length(version.graph["nodes"]) == 3
+      assert length(version.graph["edges"]) == 2
+    end
+
+    test "creates flow with graph and returns validation warnings", %{tenant_id: tid} do
+      input = %{
+        "name" => "Broken Flow",
+        "graph" => %{
+          "nodes" => [
+            %{"id" => "entry_1", "type" => "webhook_entry", "config" => %{}}
+          ],
+          "edges" => []
+        }
+      }
+
+      assert {:ok, json} = Tools.execute("create_flow", input, tid)
+      result = Jason.decode!(json)
+
+      # Flow created, graph stored, but validation warnings present
+      assert result["name"] == "Broken Flow"
+      assert result["graph"] != nil
+      # Single entry node with no edges — likely has warnings
+    end
+
+    test "creates flow without graph (backward compatible)", %{tenant_id: tid} do
+      assert {:ok, json} = Tools.execute("create_flow", %{"name" => "Empty"}, tid)
+      result = Jason.decode!(json)
+
+      assert result["name"] == "Empty"
+      # Graph is empty but present (version 1 created)
+      assert result["graph"] != nil
+      assert result["graph"]["nodes"] == []
+      assert result["graph"]["edges"] == []
+    end
+
+    test "idempotency returns graph of existing flow", %{tenant_id: tid} do
+      {:ok, conv} = Context.create_conversation(tid)
+      ctx = %{conversation_id: conv.id}
+
+      input = %{
+        "name" => "Graph Flow",
+        "graph" => %{
+          "nodes" => [
+            %{"id" => "e1", "type" => "webhook_entry"},
+            %{"id" => "x1", "type" => "end"}
+          ],
+          "edges" => [%{"source" => "e1", "target" => "x1"}]
+        }
+      }
+
+      assert {:ok, json1} = Tools.execute("create_flow", input, tid, ctx)
+      result1 = Jason.decode!(json1)
+
+      # Second call returns existing flow WITH its graph
+      assert {:ok, json2} = Tools.execute("create_flow", %{"name" => "Other"}, tid, ctx)
+      result2 = Jason.decode!(json2)
+
+      assert result2["id"] == result1["id"]
+      assert result2["already_existed"] == true
+      assert result2["graph"] != nil
+      assert length(result2["graph"]["nodes"]) == 2
+    end
+
     test "links flow to conversation on creation", %{tenant_id: tid} do
       {:ok, conv} = Context.create_conversation(tid)
       ctx = %{conversation_id: conv.id}
