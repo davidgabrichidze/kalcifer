@@ -10,8 +10,19 @@ const NODE_LABELS: Record<string, string> = {
   exit: 'დასრულება',
 }
 
+// Council flow node IDs → Georgian labels
+const NODE_ID_LABELS: Record<string, string> = {
+  dreamer: '💭 ოცნებისმყრელი',
+  realist: '🔧 რეალისტი',
+  skeptic: '🔍 სკეპტიკოსი',
+  synthesizer: '⚖️ სინთეზატორი',
+  executor: '🔥 შემსრულებელი',
+  assistant: '🔥 ასისტენტი',
+}
+
 function stepLabel(step: AgentActivityStep): string {
-  return step.label || NODE_LABELS[step.nodeType] || step.nodeType
+  // Prefer node ID label (for council flow personas), then type label
+  return NODE_ID_LABELS[step.nodeId] || step.label || NODE_LABELS[step.nodeType] || step.nodeType
 }
 
 function formatDuration(ms: number): string {

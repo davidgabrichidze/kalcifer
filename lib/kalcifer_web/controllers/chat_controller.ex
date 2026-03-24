@@ -80,13 +80,16 @@ defmodule KalciferWeb.ChatController do
   # ── Engine-based execution ─────────────────────────────────
 
   defp start_agent_flow(conn, tenant_id, conversation_id, api_messages, system_prompt) do
-    case AgentFlows.ensure_simple_flow(tenant_id) do
+    last_message = extract_last_user_message(api_messages)
+    flow_result = select_agent_flow(tenant_id, last_message)
+
+    case flow_result do
       {:ok, {flow, version}} ->
         instance_id = Ecto.UUID.generate()
 
         initial_context =
           %{
-            "_initial_message" => extract_last_user_message(api_messages),
+            "_initial_message" => last_message,
             "_messages" => api_messages,
             "_system_prompt" => system_prompt,
             "_tenant_id" => tenant_id,
@@ -294,6 +297,23 @@ defmodule KalciferWeb.ChatController do
   end
 
   # ── Helpers ────────────────────────────────────────────────────
+
+  @council_keywords ~w(council საბჭო დაფიქრდი ანალიზი deliberate think_deep)
+
+  defp select_agent_flow(tenant_id, message) do
+    if council_request?(message) do
+      AgentFlows.ensure_council_flow(tenant_id)
+    else
+      AgentFlows.ensure_simple_flow(tenant_id)
+    end
+  end
+
+  defp council_request?(message) when is_binary(message) do
+    lower = String.downcase(message)
+    Enum.any?(@council_keywords, &String.contains?(lower, &1))
+  end
+
+  defp council_request?(_), do: false
 
   defp extract_last_user_message(messages) do
     messages
