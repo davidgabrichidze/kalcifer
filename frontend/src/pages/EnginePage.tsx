@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  fetchSettings, updateSettings, fetchStats, fetchEngine,
+  fetchSettings, updateSettings, fetchStats, fetchEngine, regenerateApiKey,
   type Settings, type Stats, type EngineData, type LogEntry,
 } from '../lib/api'
 
@@ -434,7 +434,102 @@ function ProviderModal({
           </button>
         </div>
       </div>
+      {/* API Key Management */}
+      <ApiKeySection />
     </div>
+  )
+}
+
+// ── API Key Section ──────────────────────────────────────
+
+function ApiKeySection() {
+  const [newKey, setNewKey] = useState<string | null>(null)
+  const [regenerating, setRegenerating] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleRegenerate = async () => {
+    if (!confirm('ახალი API key-ის გენერაცია ძველს გააუქმებს. გავაგრძელოთ?')) return
+    setRegenerating(true)
+    try {
+      const result = await regenerateApiKey()
+      setNewKey(result.api_key)
+    } catch (e: any) {
+      alert('შეცდომა: ' + e.message)
+    } finally {
+      setRegenerating(false)
+    }
+  }
+
+  const handleCopy = () => {
+    if (newKey) {
+      navigator.clipboard.writeText(newKey)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  return (
+    <Section title="🔑 API Key" action={null}>
+      <div style={{ padding: '12px 16px' }}>
+        <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 12 }}>
+          API key გამოიყენება ავტორიზაციისთვის: <code style={{ fontSize: 10 }}>Authorization: Bearer kal_...</code>
+        </p>
+
+        {newKey && (
+          <div
+            style={{
+              padding: '10px 14px',
+              background: 'var(--color-success-soft)',
+              border: '1px solid var(--color-success)',
+              borderRadius: 8,
+              marginBottom: 12,
+              fontSize: 11,
+            }}
+          >
+            <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--color-success)' }}>
+              ახალი API Key (შეინახეთ ახლავე!)
+            </div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, wordBreak: 'break-all' }}>
+              {newKey}
+            </div>
+            <button
+              onClick={handleCopy}
+              style={{
+                marginTop: 6,
+                padding: '3px 10px',
+                borderRadius: 4,
+                border: '1px solid var(--color-success)',
+                background: copied ? 'var(--color-success)' : 'transparent',
+                color: copied ? 'white' : 'var(--color-success)',
+                fontSize: 10,
+                fontFamily: 'inherit',
+                cursor: 'pointer',
+              }}
+            >
+              {copied ? '✓ დაკოპირდა' : '📋 კოპირება'}
+            </button>
+          </div>
+        )}
+
+        <button
+          onClick={handleRegenerate}
+          disabled={regenerating}
+          style={{
+            padding: '7px 14px',
+            borderRadius: 6,
+            border: '1px solid var(--color-danger)',
+            background: 'var(--color-danger-soft)',
+            color: 'var(--color-danger)',
+            fontSize: 11,
+            fontFamily: 'inherit',
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          {regenerating ? '...' : '🔄 ახალი Key-ის გენერაცია'}
+        </button>
+      </div>
+    </Section>
   )
 }
 

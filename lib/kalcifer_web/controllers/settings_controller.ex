@@ -158,6 +158,32 @@ defmodule KalciferWeb.SettingsController do
   end
 
   @doc """
+  POST /api/v1/settings/regenerate-api-key
+
+  Generates a new API key for the tenant. Returns the raw key ONCE.
+  """
+  def regenerate_api_key(conn, _params) do
+    tenant_id = resolve_dev_tenant(conn)
+
+    case Tenants.get_tenant(tenant_id) do
+      nil ->
+        conn |> put_status(404) |> json(%{error: "Tenant not found"})
+
+      tenant ->
+        case Tenants.regenerate_api_key(tenant) do
+          {:ok, raw_key, _updated} ->
+            json(conn, %{
+              api_key: raw_key,
+              message: "ახალი API key შეიქმნა. შეინახეთ — ეს ერთადერთხელ ჩანს!"
+            })
+
+          {:error, _changeset} ->
+            conn |> put_status(422) |> json(%{error: "Failed to regenerate key"})
+        end
+    end
+  end
+
+  @doc """
   GET /api/v1/settings/stats
 
   Basic monitoring: conversation count, tool usage, flow count.

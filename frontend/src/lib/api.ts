@@ -135,6 +135,12 @@ export async function updateSettings(params: {
   return res.json()
 }
 
+export async function regenerateApiKey(): Promise<{ api_key: string; message: string }> {
+  const res = await fetch(`${API_BASE}/settings/regenerate-api-key`, { method: 'POST' })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
 export async function fetchStats(): Promise<Stats> {
   const res = await fetch(`${API_BASE}/settings/stats`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)

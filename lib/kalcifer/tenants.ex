@@ -20,6 +20,24 @@ defmodule Kalcifer.Tenants do
     :crypto.hash(:sha256, raw_key) |> Base.encode16(case: :lower)
   end
 
+  @doc "Generate a new API key for a tenant. Returns {:ok, raw_key, updated_tenant}."
+  def regenerate_api_key(%Tenant{} = tenant) do
+    raw_key = generate_api_key()
+    hash = hash_api_key(raw_key)
+
+    case tenant
+         |> Tenant.changeset(%{api_key_hash: hash})
+         |> Repo.update() do
+      {:ok, updated} -> {:ok, raw_key, updated}
+      {:error, changeset} -> {:error, changeset}
+    end
+  end
+
+  @doc "Generate a random API key string."
+  def generate_api_key do
+    "kal_" <> (:crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false))
+  end
+
   # ── Settings ──────────────────────────────────────────────────
 
   @doc "Update tenant settings (partial merge — only overwrites keys you pass)."

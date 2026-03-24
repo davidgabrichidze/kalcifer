@@ -23,6 +23,7 @@ defmodule KalciferWeb.Router do
     get "/settings", SettingsController, :show
     put "/settings", SettingsController, :update
     get "/settings/stats", SettingsController, :stats
+    post "/settings/regenerate-api-key", SettingsController, :regenerate_api_key
 
     get "/engine", EngineController, :show
 
