@@ -66,7 +66,7 @@ defmodule KalciferWeb.FlowController do
   end
 
   def preflight(conn, %{"id" => id}) do
-    tenant = conn.assigns.current_tenant
+    tenant = resolve_tenant(conn)
 
     with {:ok, flow} <- fetch_tenant_flow(conn, id),
          version when not is_nil(version) <- get_latest_version(flow),

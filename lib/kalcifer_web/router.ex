@@ -34,6 +34,7 @@ defmodule KalciferWeb.Router do
     get "/journeys", JourneyController, :index
 
     post "/flows/:flow_id/simulate", SimulationController, :create
+    post "/flows/:id/preflight", FlowController, :preflight
 
     # Instance browsing (dev frontend, uses resolve_tenant fallback)
     get "/flows/:flow_id/instances", InstanceBrowseController, :index

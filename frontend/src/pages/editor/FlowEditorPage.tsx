@@ -6,7 +6,7 @@ import {
 } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { type Node, type Edge } from '@xyflow/react'
-import { fetchFlow, fetchFlowVersions, simulateFlow, updateFlowVersion, type FlowVersion, type SimulationStep } from '../../lib/api'
+import { fetchFlow, fetchFlowVersions, simulateFlow, updateFlowVersion, preflightFlow, parseNodeWarnings, type FlowVersion, type SimulationStep } from '../../lib/api'
 import FlowCanvas from '../../components/FlowCanvas'
 import { NodePalette } from './NodePalette'
 import { NodeConfigPanel } from './NodeConfigPanel'
@@ -49,6 +49,11 @@ export default function FlowEditorPage() {
   // Undo/redo state
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
+
+  // Validation state
+  const [validating, setValidating] = useState(false)
+  const [nodeWarnings, setNodeWarnings] = useState<Map<string, string[]> | undefined>(undefined)
+  const [validationSummary, setValidationSummary] = useState<string[] | null>(null)
 
   // Simulation state
   const [simStatus, setSimStatus] = useState<'idle' | 'running' | 'done' | 'failed'>('idle')
@@ -98,6 +103,31 @@ export default function FlowEditorPage() {
     latestEdgesRef.current = edges
     setHasChanges(true)
   }, [])
+
+  // Run preflight validation
+  const runValidation = useCallback(async () => {
+    if (!flowId || validating) return
+    setValidating(true)
+    try {
+      const result = await preflightFlow(flowId)
+      const warnings = parseNodeWarnings(result.warnings)
+      setNodeWarnings(warnings.size > 0 ? warnings : undefined)
+      setValidationSummary(result.warnings.length > 0 ? result.warnings : null)
+    } catch (err) {
+      console.error('Preflight failed:', err)
+      setValidationSummary(['Validation failed — check console'])
+    } finally {
+      setValidating(false)
+    }
+  }, [flowId, validating])
+
+  // Clear validation when graph changes
+  useEffect(() => {
+    if (hasChanges) {
+      setNodeWarnings(undefined)
+      setValidationSummary(null)
+    }
+  }, [hasChanges])
 
   // Undo/redo state updates from FlowCanvas
   const handleUndoRedoChange = useCallback((undo: boolean, redo: boolean) => {
@@ -287,6 +317,14 @@ export default function FlowEditorPage() {
             + Node
           </button>
           <button
+            className="editor-top-btn"
+            onClick={runValidation}
+            disabled={validating}
+            title="Validate flow (preflight check)"
+          >
+            {validating ? '...' : validationSummary === null && nodeWarnings === undefined ? 'Validate' : nodeWarnings && nodeWarnings.size > 0 ? `⚠ ${nodeWarnings.size}` : '✓ Valid'}
+          </button>
+          <button
             className={`editor-top-btn ${hasChanges ? 'has-changes' : ''}`}
             onClick={saveGraph}
             disabled={saving || !hasChanges}
@@ -334,6 +372,7 @@ export default function FlowEditorPage() {
           simCompletedNodes={mode === 'simulate' ? simCompletedNodes : undefined}
           simActiveNode={mode === 'simulate' ? simActiveNode : undefined}
           onUndoRedoChange={handleUndoRedoChange}
+          nodeWarnings={nodeWarnings}
         />
 
         {/* Node Palette */}
@@ -373,6 +412,11 @@ export default function FlowEditorPage() {
           {mode === 'edit' && (canUndo || canRedo) && (
             <div className="editor-stats-pill" style={{ opacity: 0.7, fontSize: '10px' }}>
               {canUndo ? '↶' : ''} {canRedo ? '↷' : ''}
+            </div>
+          )}
+          {validationSummary && validationSummary.length > 0 && (
+            <div className="editor-stats-pill" style={{ color: 'var(--color-warn)', fontSize: '10px' }}>
+              ⚠ {validationSummary.length} warning{validationSummary.length > 1 ? 's' : ''}
             </div>
           )}
         </div>

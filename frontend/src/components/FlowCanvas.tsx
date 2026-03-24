@@ -44,6 +44,8 @@ export interface FlowCanvasProps {
   simActiveNode?: string | null
   /** Callback to expose undo/redo controls to parent */
   onUndoRedoChange?: (canUndo: boolean, canRedo: boolean) => void
+  /** Map of node ID → warning messages for validation overlay */
+  nodeWarnings?: Map<string, string[]>
 }
 
 function FlowCanvasInner({
@@ -57,6 +59,7 @@ function FlowCanvasInner({
   simCompletedNodes,
   simActiveNode,
   onUndoRedoChange,
+  nodeWarnings,
 }: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
@@ -77,9 +80,9 @@ function FlowCanvasInner({
     clear()
   }, [flowGraph, setNodes, setEdges, clear])
 
-  // Apply simulation state to node data
+  // Apply simulation state and validation warnings to node data
   useEffect(() => {
-    if (!simCompletedNodes && !simActiveNode) return
+    if (!simCompletedNodes && !simActiveNode && !nodeWarnings) return
     isRestoringRef.current = true
     setNodes(nds =>
       nds.map(n => ({
@@ -88,12 +91,13 @@ function FlowCanvasInner({
           ...n.data,
           simCompleted: simCompletedNodes?.has(n.id) ?? false,
           simActive: simActiveNode === n.id,
+          warnings: nodeWarnings?.get(n.id) ?? null,
         },
       })),
     )
     // Reset flag after React processes the update
     requestAnimationFrame(() => { isRestoringRef.current = false })
-  }, [simCompletedNodes, simActiveNode, setNodes])
+  }, [simCompletedNodes, simActiveNode, nodeWarnings, setNodes])
 
   // Notify parent of graph changes
   useEffect(() => {

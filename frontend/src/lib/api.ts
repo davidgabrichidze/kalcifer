@@ -248,6 +248,39 @@ export async function archiveFlow(id: string): Promise<Flow> {
   return json.data
 }
 
+// ── Preflight / Validation ──────────────────────────────
+
+export interface PreflightResult {
+  warnings: string[]
+  context_deps: string[]
+  field_coverage?: Record<string, number>
+}
+
+export async function preflightFlow(flowId: string): Promise<PreflightResult> {
+  const res = await fetch(`${API_BASE}/flows/${flowId}/preflight`, { method: 'POST' })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
+/**
+ * Parse preflight warnings to extract per-node warnings.
+ * Warning format: "node <node_id> (<node_type>): <message>"
+ */
+export function parseNodeWarnings(warnings: string[]): Map<string, string[]> {
+  const map = new Map<string, string[]>()
+  for (const w of warnings) {
+    const match = w.match(/^node (\S+) \([^)]+\): (.+)$/)
+    if (match) {
+      const [, nodeId, message] = match
+      const existing = map.get(nodeId!) || []
+      existing.push(message!)
+      map.set(nodeId!, existing)
+    }
+  }
+  return map
+}
+
 // ── Chat types ──────────────────────────────────────────
 
 export interface SessionClassification {

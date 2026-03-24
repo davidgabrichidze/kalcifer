@@ -37,7 +37,7 @@ const categoryColorMap: Record<string, { bg: string; text: string; border: strin
   },
 }
 
-export function FlowNode({ data, selected }: { data: FlowNodeData & { simCompleted?: boolean; simActive?: boolean }; selected: boolean }) {
+export function FlowNode({ data, selected }: { data: FlowNodeData & { simCompleted?: boolean; simActive?: boolean; warnings?: string[] | null }; selected: boolean }) {
   const nodeTypeInfo = getNodeType(data.type)
   const category = nodeTypeInfo?.category || 'action'
   const colors = categoryColorMap[category]
@@ -98,6 +98,14 @@ export function FlowNode({ data, selected }: { data: FlowNodeData & { simComplet
         </div>
         {data.simCompleted && <span className="flow-node-sim-badge completed">✓</span>}
         {data.simActive && <span className="flow-node-sim-badge active">▸</span>}
+        {data.warnings && data.warnings.length > 0 && (
+          <span
+            className="flow-node-warning-badge"
+            title={data.warnings.join('\n')}
+          >
+            ⚠ {data.warnings.length}
+          </span>
+        )}
       </div>
 
       {/* Node body */}

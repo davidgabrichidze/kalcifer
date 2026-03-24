@@ -21,7 +21,7 @@ function makeEdges(pairs: [string, string][]): Edge[] {
 }
 
 describe('useUndoRedo', () => {
-  let hook: ReturnType<typeof renderHook<ReturnType<typeof useUndoRedo>>>
+  let hook: { result: { current: ReturnType<typeof useUndoRedo> } }
 
   beforeEach(() => {
     hook = renderHook(() => useUndoRedo())
@@ -49,8 +49,8 @@ describe('useUndoRedo', () => {
     })
 
     expect(result!).not.toBeNull()
-    expect(result!.nodes.map(n => n.id)).toEqual(['a', 'b'])
-    expect(result!.edges.map(e => e.id)).toEqual(['a-b'])
+    expect(result!.nodes.map((n: Node) => n.id)).toEqual(['a', 'b'])
+    expect(result!.edges.map((e: Edge) => e.id)).toEqual(['a-b'])
   })
 
   it('can redo after undo', () => {
@@ -73,7 +73,7 @@ describe('useUndoRedo', () => {
     })
 
     expect(result!).not.toBeNull()
-    expect(result!.nodes.map(n => n.id)).toEqual(['a', 'b'])
+    expect(result!.nodes.map((n: Node) => n.id)).toEqual(['a', 'b'])
   })
 
   it('clears redo stack when new snapshot is taken', () => {

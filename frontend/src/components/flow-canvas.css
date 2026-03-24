@@ -161,6 +161,19 @@
   animation: typingDot 1.2s infinite;
 }
 
+.flow-node-warning-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: var(--color-warn-soft);
+  color: var(--color-warn);
+  flex-shrink: 0;
+  margin-left: auto;
+  cursor: help;
+  line-height: 1.4;
+}
+
 @keyframes simPulse {
   0%, 100% { box-shadow: 0 0 0 3px var(--color-warn-soft), 0 2px 8px rgba(0,0,0,0.1); }
   50% { box-shadow: 0 0 0 6px var(--color-warn-soft), 0 2px 12px rgba(0,0,0,0.15); }
