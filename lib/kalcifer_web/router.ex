@@ -35,6 +35,11 @@ defmodule KalciferWeb.Router do
 
     post "/flows/:flow_id/simulate", SimulationController, :create
 
+    # Instance browsing (dev frontend, uses resolve_tenant fallback)
+    get "/flows/:flow_id/instances", InstanceBrowseController, :index
+    get "/instances/:id", InstanceBrowseController, :show
+    get "/instances/:id/timeline", InstanceBrowseController, :timeline
+
     get "/conversations", ConversationController, :index
     get "/conversations/:id", ConversationController, :show
     put "/conversations/:id", ConversationController, :update

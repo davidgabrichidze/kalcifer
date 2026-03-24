@@ -516,6 +516,66 @@ async function readSimSSE(response: Response, callbacks: SimulationCallbacks): P
   }
 }
 
+// ── Instance API ────────────────────────────────────────
+
+export interface FlowInstanceSummary {
+  id: string
+  flow_id: string
+  customer_id: string
+  status: string
+  version_number: number
+  current_nodes: string[]
+  dry_run: boolean
+  entered_at: string
+  completed_at: string | null
+  exited_at: string | null
+  exit_reason: string | null
+}
+
+export interface ExecutionStepData {
+  id: string
+  node_id: string
+  node_type: string
+  status: string
+  started_at: string
+  completed_at: string | null
+  output: Record<string, unknown> | null
+  error: Record<string, unknown> | null
+}
+
+export async function fetchInstances(
+  flowId: string,
+  opts?: { status?: string; dry_run?: boolean; limit?: number },
+): Promise<FlowInstanceSummary[]> {
+  const params = new URLSearchParams()
+  if (opts?.status) params.set('status', opts.status)
+  if (opts?.dry_run !== undefined) params.set('dry_run', String(opts.dry_run))
+  if (opts?.limit) params.set('limit', String(opts.limit))
+  const qs = params.toString()
+  const res = await fetch(`${API_BASE}/flows/${flowId}/instances${qs ? `?${qs}` : ''}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
+export async function fetchInstance(id: string): Promise<{
+  data: FlowInstanceSummary
+  steps: ExecutionStepData[]
+}> {
+  const res = await fetch(`${API_BASE}/instances/${id}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+export async function fetchInstanceTimeline(id: string): Promise<ExecutionStepData[]> {
+  const res = await fetch(`${API_BASE}/instances/${id}/timeline`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
+// ── Flow Version API ────────────────────────────────────
+
 export async function updateFlowVersion(
   flowId: string,
   versionNumber: number,
