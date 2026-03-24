@@ -254,6 +254,7 @@ export interface PreflightResult {
   warnings: string[]
   context_deps: string[]
   field_coverage?: Record<string, number>
+  suggestions?: string[]
 }
 
 export async function preflightFlow(flowId: string): Promise<PreflightResult> {

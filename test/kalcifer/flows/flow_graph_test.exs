@@ -738,4 +738,86 @@ defmodule Kalcifer.Flows.FlowGraphTest do
       assert Enum.any?(errors, &String.contains?(&1, "missing branch"))
     end
   end
+
+  # ── suggestions/1 ──────────────────────────────────────────
+
+  describe "suggestions/1" do
+    test "returns empty list for valid minimal graph" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "webhook_entry"},
+          %{"id" => "exit_1", "type" => "end"}
+        ],
+        "edges" => [
+          %{"source" => "entry_1", "target" => "exit_1"}
+        ]
+      }
+
+      assert FlowGraph.suggestions(graph) == []
+    end
+
+    test "suggests adding end node when missing" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "webhook_entry"},
+          %{"id" => "email_1", "type" => "send_email"}
+        ],
+        "edges" => [
+          %{"source" => "entry_1", "target" => "email_1"}
+        ]
+      }
+
+      suggestions = FlowGraph.suggestions(graph)
+      assert Enum.any?(suggestions, &String.contains?(&1, "დასასრული"))
+    end
+
+    test "suggests connecting orphan nodes" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "webhook_entry"},
+          %{"id" => "orphan_1", "type" => "send_email"},
+          %{"id" => "exit_1", "type" => "end"}
+        ],
+        "edges" => [
+          %{"source" => "entry_1", "target" => "exit_1"}
+        ]
+      }
+
+      suggestions = FlowGraph.suggestions(graph)
+      assert Enum.any?(suggestions, &String.contains?(&1, "იზოლირებული"))
+      assert Enum.any?(suggestions, &String.contains?(&1, "orphan_1"))
+    end
+
+    test "suggests completing branches for condition nodes" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "webhook_entry"},
+          %{"id" => "cond_1", "type" => "condition"},
+          %{"id" => "exit_1", "type" => "end"}
+        ],
+        "edges" => [
+          %{"source" => "entry_1", "target" => "cond_1"},
+          %{"source" => "cond_1", "target" => "exit_1"}
+        ]
+      }
+
+      suggestions = FlowGraph.suggestions(graph)
+      assert Enum.any?(suggestions, &String.contains?(&1, "branch"))
+    end
+
+    test "suggests adding more logic for single-node flow" do
+      graph = %{
+        "nodes" => [%{"id" => "entry_1", "type" => "webhook_entry"}],
+        "edges" => []
+      }
+
+      suggestions = FlowGraph.suggestions(graph)
+      assert Enum.any?(suggestions, &String.contains?(&1, "ერთი ნაბიჯი"))
+    end
+
+    test "returns empty list for nil/invalid input" do
+      assert FlowGraph.suggestions(nil) == []
+      assert FlowGraph.suggestions("invalid") == []
+    end
+  end
 end

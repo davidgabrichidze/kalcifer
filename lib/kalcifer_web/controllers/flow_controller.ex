@@ -77,11 +77,14 @@ defmodule KalciferWeb.FlowController do
           deps -> Customers.field_coverage(tenant.id, deps)
         end
 
+      suggestions = FlowGraph.suggestions(version.graph)
+
       json(conn, %{
         data: %{
           warnings: result.warnings,
           context_deps: result.context_deps,
-          field_coverage: field_coverage
+          field_coverage: field_coverage,
+          suggestions: suggestions
         }
       })
     else

@@ -904,6 +904,9 @@ defmodule Kalcifer.AI.Tools do
         |> Enum.filter(&(&1["type"] in ~w(exit goal_reached)))
         |> Enum.map(& &1["id"])
 
+      # Smart suggestions
+      suggestions = FlowGraph.suggestions(graph)
+
       result = %{
         flow_name: flow.name,
         flow_status: flow.status,
@@ -914,7 +917,8 @@ defmodule Kalcifer.AI.Tools do
         categories: category_counts,
         entry_nodes: entry_nodes,
         end_nodes: end_nodes,
-        preflight: preflight
+        preflight: preflight,
+        suggestions: suggestions
       }
 
       {:ok, Jason.encode!(result, pretty: true)}
@@ -1102,6 +1106,7 @@ defmodule Kalcifer.AI.Tools do
   end
 
   # Fetch the latest version's graph for a flow
+
   defp fetch_latest_graph(flow) do
     flow = Kalcifer.Repo.preload(flow, :versions)
 

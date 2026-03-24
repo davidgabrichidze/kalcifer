@@ -337,4 +337,88 @@ defmodule Kalcifer.Flows.FlowGraph do
   defp required_branches(%{"type" => "ai_decide"}), do: []
 
   defp required_branches(_), do: []
+
+  # ── Suggestions ─────────────────────────────────────────────
+
+  @doc """
+  Generates improvement suggestions for a flow graph.
+  Returns a list of human-readable suggestion strings (Georgian).
+  """
+  @spec suggestions(map()) :: [String.t()]
+  def suggestions(graph) when is_map(graph) do
+    nodes = Map.get(graph, "nodes", [])
+    edges = Map.get(graph, "edges", [])
+
+    []
+    |> suggest_missing_end(nodes, edges)
+    |> suggest_missing_entry(nodes)
+    |> suggest_orphan_nodes(nodes, edges)
+    |> suggest_incomplete_branches(nodes, edges)
+    |> suggest_single_node(nodes)
+    |> Enum.reverse()
+  end
+
+  def suggestions(_), do: []
+
+  defp suggest_missing_end(acc, nodes, _edges) do
+    end_types = ~w(end exit goal_reached)
+    has_end = Enum.any?(nodes, &(&1["type"] in end_types))
+
+    if not has_end and length(nodes) > 1 do
+      ["ფლოუს არ აქვს დასასრული (end) — დაამატე რომ სწორად დასრულდეს" | acc]
+    else
+      acc
+    end
+  end
+
+  defp suggest_missing_entry(acc, nodes) do
+    has_entry = Enum.any?(nodes, &(&1["type"] in @entry_types))
+
+    if not has_entry and length(nodes) > 0 do
+      ["ფლოუს არ აქვს შესასვლელი (entry) — დაამატე trigger node" | acc]
+    else
+      acc
+    end
+  end
+
+  defp suggest_orphan_nodes(acc, nodes, edges) do
+    connected =
+      MapSet.new(Enum.flat_map(edges, fn e -> [e["source"], e["target"]] end))
+
+    orphans =
+      nodes
+      |> Enum.reject(&(&1["id"] |> then(fn id -> MapSet.member?(connected, id) end)))
+      |> Enum.map(& &1["id"])
+
+    if length(orphans) > 0 and length(nodes) > 1 do
+      ids = Enum.join(orphans, ", ")
+      ["იზოლირებული ნაბიჯები: #{ids} — შეაერთე სხვა ნაბიჯებთან" | acc]
+    else
+      acc
+    end
+  end
+
+  defp suggest_incomplete_branches(acc, nodes, edges) do
+    Enum.reduce(nodes, acc, fn node, suggestions ->
+      if node["type"] in @branching_types do
+        outgoing = Enum.filter(edges, &(&1["source"] == node["id"]))
+
+        if length(outgoing) < 2 do
+          ["#{node["id"]} (#{node["type"]}) — ორივე branch უნდა იყოს დაკავშირებული" | suggestions]
+        else
+          suggestions
+        end
+      else
+        suggestions
+      end
+    end)
+  end
+
+  defp suggest_single_node(acc, nodes) do
+    if length(nodes) == 1 do
+      ["ფლოუში მხოლოდ ერთი ნაბიჯია — დაამატე მეტი ლოგიკა" | acc]
+    else
+      acc
+    end
+  end
 end

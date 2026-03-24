@@ -152,6 +152,9 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
     setHasChanges(true)
   }, [])
 
+  // Suggestions
+  const [suggestions, setSuggestions] = useState<string[]>([])
+
   // Validation
   const runValidation = useCallback(async () => {
     if (!flowId || validating) return
@@ -161,6 +164,7 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
       const warnings = parseNodeWarnings(result.warnings)
       setNodeWarnings(warnings.size > 0 ? warnings : undefined)
       setValidationSummary(result.warnings.length > 0 ? result.warnings : null)
+      setSuggestions(result.suggestions || [])
     } catch (err) {
       console.error('Preflight failed:', err)
       setValidationSummary(['Validation failed — check console'])
@@ -521,6 +525,14 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
           {validationSummary && validationSummary.length > 0 && (
             <span className="fei-stat fei-stat-warn">
               ⚠ {validationSummary.length}
+            </span>
+          )}
+          {suggestions.length > 0 && (
+            <span
+              className="fei-stat fei-stat-suggestion"
+              title={suggestions.join('\n')}
+            >
+              💡 {suggestions.length}
             </span>
           )}
         </div>

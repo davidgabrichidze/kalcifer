@@ -193,6 +193,11 @@
   color: var(--color-warn);
 }
 
+.fei-stat-suggestion {
+  color: var(--color-primary);
+  cursor: help;
+}
+
 .fei-mode-label {
   font-size: 9px;
   color: var(--color-text-muted);
