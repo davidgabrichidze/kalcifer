@@ -1,4 +1,4 @@
-import { useCallback, useEffect, DragEvent as ReactDragEvent } from 'react'
+import { useCallback, useEffect, useRef, DragEvent as ReactDragEvent } from 'react'
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -12,11 +12,13 @@ import {
   type Node,
   type Edge,
   Panel,
+  useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { type FlowGraph } from '../lib/api'
 import { FlowNode } from '../pages/editor/FlowNode'
 import { convertGraphToReactFlow } from '../pages/editor/flowGraphUtils'
+import { useUndoRedo } from '../pages/editor/useUndoRedo'
 import './flow-canvas.css'
 
 const nodeTypes = {
@@ -40,6 +42,8 @@ export interface FlowCanvasProps {
   simCompletedNodes?: Set<string>
   /** Currently active simulation node ID */
   simActiveNode?: string | null
+  /** Callback to expose undo/redo controls to parent */
+  onUndoRedoChange?: (canUndo: boolean, canRedo: boolean) => void
 }
 
 function FlowCanvasInner({
@@ -52,9 +56,13 @@ function FlowCanvasInner({
   className = '',
   simCompletedNodes,
   simActiveNode,
+  onUndoRedoChange,
 }: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
+  const { getNodes, getEdges } = useReactFlow()
+  const { takeSnapshot, undo, redo, canUndo, canRedo, clear } = useUndoRedo()
+  const isRestoringRef = useRef(false)
 
   // Convert flowGraph prop → React Flow nodes/edges
   useEffect(() => {
@@ -66,11 +74,13 @@ function FlowCanvasInner({
     const { nodes: rfNodes, edges: rfEdges } = convertGraphToReactFlow(flowGraph)
     setNodes(rfNodes)
     setEdges(rfEdges)
-  }, [flowGraph, setNodes, setEdges])
+    clear()
+  }, [flowGraph, setNodes, setEdges, clear])
 
   // Apply simulation state to node data
   useEffect(() => {
     if (!simCompletedNodes && !simActiveNode) return
+    isRestoringRef.current = true
     setNodes(nds =>
       nds.map(n => ({
         ...n,
@@ -81,12 +91,49 @@ function FlowCanvasInner({
         },
       })),
     )
+    // Reset flag after React processes the update
+    requestAnimationFrame(() => { isRestoringRef.current = false })
   }, [simCompletedNodes, simActiveNode, setNodes])
 
   // Notify parent of graph changes
   useEffect(() => {
     onGraphChange?.(nodes, edges)
   }, [nodes, edges, onGraphChange])
+
+  // Notify parent of undo/redo availability
+  useEffect(() => {
+    onUndoRedoChange?.(canUndo(), canRedo())
+  })
+
+  // Wrap onNodesChange to snapshot before structural changes (add/remove)
+  const handleNodesChange = useCallback(
+    (changes: Parameters<typeof onNodesChange>[0]) => {
+      if (!editable) return
+      const hasStructuralChange = changes.some(
+        c => c.type === 'remove' || c.type === 'add',
+      )
+      if (hasStructuralChange && !isRestoringRef.current) {
+        takeSnapshot(getNodes(), getEdges())
+      }
+      onNodesChange(changes)
+    },
+    [editable, onNodesChange, takeSnapshot, getNodes, getEdges],
+  )
+
+  // Wrap onEdgesChange to snapshot before structural changes
+  const handleEdgesChange = useCallback(
+    (changes: Parameters<typeof onEdgesChange>[0]) => {
+      if (!editable) return
+      const hasStructuralChange = changes.some(
+        c => c.type === 'remove' || c.type === 'add',
+      )
+      if (hasStructuralChange && !isRestoringRef.current) {
+        takeSnapshot(getNodes(), getEdges())
+      }
+      onEdgesChange(changes)
+    },
+    [editable, onEdgesChange, takeSnapshot, getNodes, getEdges],
+  )
 
   const handleNodeClick = useCallback(
     (_: any, node: Node) => {
@@ -104,9 +151,10 @@ function FlowCanvasInner({
   const handleConnect = useCallback(
     (connection: Connection) => {
       if (!editable) return
+      takeSnapshot(getNodes(), getEdges())
       setEdges(eds => addEdge(connection, eds))
     },
-    [editable, setEdges],
+    [editable, setEdges, takeSnapshot, getNodes, getEdges],
   )
 
   const handleDragOver = useCallback(
@@ -132,6 +180,8 @@ function FlowCanvasInner({
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
 
+        takeSnapshot(getNodes(), getEdges())
+
         const newNode: Node = {
           id: `node-${Date.now()}`,
           type: 'flowNode',
@@ -147,8 +197,53 @@ function FlowCanvasInner({
         // Invalid JSON
       }
     },
-    [editable, setNodes],
+    [editable, setNodes, takeSnapshot, getNodes, getEdges],
   )
+
+  // Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Y/Ctrl+Shift+Z (redo), Delete/Backspace (delete)
+  useEffect(() => {
+    if (!editable) return
+
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey
+      const target = e.target as HTMLElement
+      // Don't intercept keyboard events from input fields
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+
+      if (mod && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        const snapshot = undo(getNodes(), getEdges())
+        if (snapshot) {
+          isRestoringRef.current = true
+          setNodes(snapshot.nodes)
+          setEdges(snapshot.edges)
+          requestAnimationFrame(() => { isRestoringRef.current = false })
+        }
+      } else if (mod && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault()
+        const snapshot = redo(getNodes(), getEdges())
+        if (snapshot) {
+          isRestoringRef.current = true
+          setNodes(snapshot.nodes)
+          setEdges(snapshot.edges)
+          requestAnimationFrame(() => { isRestoringRef.current = false })
+        }
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        const selected = getNodes().filter(n => n.selected)
+        if (selected.length === 0) return
+        e.preventDefault()
+        takeSnapshot(getNodes(), getEdges())
+        const selectedIds = new Set(selected.map(n => n.id))
+        setNodes(nds => nds.filter(n => !selectedIds.has(n.id)))
+        setEdges(eds =>
+          eds.filter(e => !selectedIds.has(e.source) && !selectedIds.has(e.target)),
+        )
+      }
+    }
+
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [editable, undo, redo, takeSnapshot, getNodes, getEdges, setNodes, setEdges])
 
   const isEmpty = !flowGraph || flowGraph.nodes.length === 0
 
@@ -161,8 +256,8 @@ function FlowCanvasInner({
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={editable ? onNodesChange : undefined}
-        onEdgesChange={editable ? onEdgesChange : undefined}
+        onNodesChange={editable ? handleNodesChange : undefined}
+        onEdgesChange={editable ? handleEdgesChange : undefined}
         onConnect={handleConnect}
         onNodeClick={handleNodeClick}
         nodeTypes={nodeTypes}

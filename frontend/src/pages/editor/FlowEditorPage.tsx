@@ -46,6 +46,10 @@ export default function FlowEditorPage() {
   const latestNodesRef = useRef<Node[]>([])
   const latestEdgesRef = useRef<Edge[]>([])
 
+  // Undo/redo state
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
+
   // Simulation state
   const [simStatus, setSimStatus] = useState<'idle' | 'running' | 'done' | 'failed'>('idle')
   const [simSteps, setSimSteps] = useState<SimulationStep[]>([])
@@ -93,6 +97,12 @@ export default function FlowEditorPage() {
     latestNodesRef.current = nodes
     latestEdgesRef.current = edges
     setHasChanges(true)
+  }, [])
+
+  // Undo/redo state updates from FlowCanvas
+  const handleUndoRedoChange = useCallback((undo: boolean, redo: boolean) => {
+    setCanUndo(undo)
+    setCanRedo(redo)
   }, [])
 
   // Palette: add node (TODO: wire to FlowCanvas via ref or callback)
@@ -323,6 +333,7 @@ export default function FlowEditorPage() {
           showControls={true}
           simCompletedNodes={mode === 'simulate' ? simCompletedNodes : undefined}
           simActiveNode={mode === 'simulate' ? simActiveNode : undefined}
+          onUndoRedoChange={handleUndoRedoChange}
         />
 
         {/* Node Palette */}
@@ -359,6 +370,11 @@ export default function FlowEditorPage() {
             <div className="editor-stats-dot" style={{ background: 'var(--color-info)' }}></div>
             <strong>{edgeCount}</strong> edges
           </div>
+          {mode === 'edit' && (canUndo || canRedo) && (
+            <div className="editor-stats-pill" style={{ opacity: 0.7, fontSize: '10px' }}>
+              {canUndo ? '↶' : ''} {canRedo ? '↷' : ''}
+            </div>
+          )}
         </div>
 
         <div className="editor-bottom-right">
