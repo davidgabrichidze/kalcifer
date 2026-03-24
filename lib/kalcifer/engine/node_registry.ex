@@ -36,7 +36,8 @@ defmodule Kalcifer.Engine.NodeRegistry do
     "agent" => Kalcifer.Engine.Nodes.Action.AI.Agent,
     # Orchestration nodes
     "parallel_group" => Kalcifer.Engine.Nodes.Action.ParallelGroup,
-    "sub_flow" => Kalcifer.Engine.Nodes.Action.SubFlow
+    "sub_flow" => Kalcifer.Engine.Nodes.Action.SubFlow,
+    "flow_router" => Kalcifer.Engine.Nodes.Action.AI.FlowRouter
   }
 
   # --- Public API ---
