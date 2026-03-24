@@ -11,6 +11,7 @@ import {
   fetchInstances,
   fetchInstanceTimeline,
   fetchNodeAnalytics,
+  exportFlow,
   simulateFlow,
   updateFlowVersion,
   preflightFlow,
@@ -446,6 +447,26 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
             title="შენახვა (Ctrl+S)"
           >
             {saving ? '...' : '💾'}
+          </button>
+          <button
+            className="fei-btn"
+            onClick={async () => {
+              try {
+                const data = await exportFlow(flowId)
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `${flow?.name || 'flow'}.json`
+                a.click()
+                URL.revokeObjectURL(url)
+              } catch (e) {
+                console.error('Export failed:', e)
+              }
+            }}
+            title="ექსპორტი (JSON)"
+          >
+            ↓
           </button>
           {onOpenFullEditor && (
             <button

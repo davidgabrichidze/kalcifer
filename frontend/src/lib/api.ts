@@ -243,6 +243,28 @@ export async function fetchFlows(status?: FlowStatus): Promise<Flow[]> {
   return json.data
 }
 
+export async function exportFlow(id: string): Promise<Record<string, unknown>> {
+  const res = await fetch(`${API_BASE}/flows/${id}/export`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+export async function importFlow(data: {
+  name?: string
+  description?: string
+  graph?: FlowGraph
+  flow?: { name?: string; description?: string }
+}): Promise<Flow> {
+  const res = await fetch(`${API_BASE}/flows/import`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
 export async function activateFlow(id: string): Promise<Flow> {
   const res = await fetch(`${API_BASE}/flows/${id}/activate`, { method: 'POST' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
