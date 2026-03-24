@@ -81,16 +81,25 @@
 
 **შენიშვნა**: `simulate` tool Increment 20-ში გადავიდა (Flow Editor + dry run UI)
 
-### ნაბიჯი 5: AI Nodes Tests ← შემდეგი
+### ნაბიჯი 5: AI Nodes Tests ✅
 ```
-5.1  ai_think tests — mock Claude API, verify context injection
-5.2  ai_decide tests — branch selection, fallback behavior
-5.3  ai_notify tests — PubSub broadcast, template interpolation
+5.1  ai_think tests — 11 tests (mock API, context, dry run, validation) ✅
+5.2  ai_decide tests — 12 tests (branch selection, fallback, case-insensitive) ✅
+5.3  ai_notify tests — 10 tests (PubSub, interpolation, summarize, defaults) ✅
+5.4  ai_agent tests — 14 tests (tool tracking, PubSub broadcasts, context) ✅
+5.5  helpers tests — 10 tests (interpolate, summarize_context, build_messages) ✅
 ```
 
-**ფაილები**: `test/kalcifer/engine/nodes/action/ai/`
+**ფაილები**: `test/kalcifer/engine/nodes/action/ai/` (57 tests total)
 
-### ნაბიჯი 6: End-to-End Verification
+### ნაბიჯი 5.5: Test Suite Health Fix ✅
+```
+5.5.1  TenantResolver extraction — shared auth header + Demo Tenant fallback ✅
+5.5.2  Route shadowing fix — unauthenticated/authenticated scope conflicts ✅
+5.5.3  25 test failures fixed across controllers and tools ✅
+```
+
+### ნაბიჯი 6: End-to-End Verification ← შემდეგი
 ```
 6.1  Docker-ში ყველაფრის გაშვება ✅
 6.2  ჩათში tool use flow-ის ცდა (create_flow, add_node, remember/recall)
@@ -110,10 +119,10 @@
 | Tools (12 tools + classify) | 31 | ✅ passing |
 | ChatController (SSE, persistence) | 5 | ✅ passing |
 | ConversationController (API) | 12 | ✅ passing |
-| Client (API key check) | 1 | ⚠️ needs Mox (passes with real key) |
-| AI Nodes (think, decide, notify) | 0 | ❌ not written |
+| Client (API key check) | 1 | ✅ passing (Mox) |
+| AI Nodes (think, decide, notify, agent, helpers) | 57 | ✅ passing |
 | Frontend (Vitest) | 26 | ✅ passing |
-| **სულ backend** | **71/72** | |
+| **სულ backend** | **780** | ✅ **0 failures** |
 
 ---
 
@@ -124,8 +133,8 @@
 ნაბიჯი 2 (Classification + API) ✅ დასრულდა
 ნაბიჯი 3 (Frontend History)     ✅ დასრულდა
 ნაბიჯი 4 (More Tools)           ✅ დასრულდა
+ნაბიჯი 5 (AI Node Tests)        ✅ დასრულდა (57 tests)
+ნაბიჯი 5.5 (Test Suite Fix)     ✅ დასრულდა (780 tests, 0 failures)
     ↓
-ნაბიჯი 5 (AI Node Tests)       ← შემდეგი
-    ↓
-ნაბიჯი 6 (E2E)                 ← ვერიფიკაცია
+ნაბიჯი 6 (E2E)                 ← შემდეგი
 ```
