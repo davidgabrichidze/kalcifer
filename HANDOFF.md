@@ -90,15 +90,21 @@
 
 ## 2. შემდეგი ნაბიჯები (Next Sprint)
 
-### 2.1 Undo/Redo + Editor Keyboard Shortcuts (Priority #1)
-**პრობლემა:** Graph save მუშაობს, მაგრამ undo/redo არ არის.
+### 2.1 Undo/Redo + Editor Keyboard Shortcuts (DONE)
+- Undo/redo stack via `useUndoRedo` hook (max 50 snapshots)
+- Ctrl+Z undo, Ctrl+Y / Ctrl+Shift+Z redo
+- Delete/Backspace removes selected nodes + connected edges
+- Snapshots before structural changes (add/remove/connect)
+- 8 tests for useUndoRedo hook
 
-**რა უნდა გაკეთდეს:**
-1. Undo/redo stack (Ctrl+Z, Ctrl+Y) — graph snapshot history
-2. Delete node shortcut (Delete/Backspace key)
-3. Validation overlay: preflight warnings on nodes
+### 2.2 Validation Overlay (DONE)
+- `preflightFlow` API call + `parseNodeWarnings` utility
+- Warning badge (⚠ N) on nodes with tooltip showing issues
+- "Validate" button in editor topbar
+- Warnings auto-clear on graph changes
+- 3 tests for parseNodeWarnings
 
-### 2.2 Live Mode (Priority #2)
+### 2.3 Live Mode (Priority #1)
 **პრობლემა:** Editor-ს "Live" mode ღილაკი აქვს, მაგრამ არ მუშაობს.
 
 **რა უნდა გაკეთდეს:**
@@ -125,12 +131,13 @@ docker compose -f docker-compose.dev.yml restart app
 - [ ] Multi-model support: different models for different council personas
 
 ### Theme B: Editor Full Features
-- [ ] Graph save: canvas → FlowGraph → `PUT /flows/:id/versions/:v` (undo/redo)
-- [ ] Validation overlay: preflight warnings on nodes
+- [x] Graph save: canvas → FlowGraph → `PUT /flows/:id/versions/:v`
+- [x] Undo/redo: Ctrl+Z / Ctrl+Y (snapshot-based)
+- [x] Delete shortcut: Delete/Backspace
+- [x] Validation overlay: preflight warnings on nodes
 - [ ] Edge labels with branch conditions
 - [ ] Copy/paste nodes
 - [ ] Node groups / subflows
-- [ ] Keyboard shortcuts (Delete, Ctrl+Z, Ctrl+S)
 
 ### Theme C: Debugging & Observability
 - [ ] Live mode: running instance real-time tracking on canvas
