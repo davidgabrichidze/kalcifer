@@ -69,6 +69,7 @@ function FlowCanvasInner({
   const { getNodes, getEdges } = useReactFlow()
   const { takeSnapshot, undo, redo, canUndo, canRedo, clear } = useUndoRedo()
   const isRestoringRef = useRef(false)
+  const clipboardRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null)
 
   // Convert flowGraph prop → React Flow nodes/edges
   useEffect(() => {
@@ -236,6 +237,60 @@ function FlowCanvasInner({
           setEdges(snapshot.edges)
           requestAnimationFrame(() => { isRestoringRef.current = false })
         }
+      } else if (mod && e.key === 'c') {
+        // Copy selected nodes + internal edges
+        const selected = getNodes().filter(n => n.selected)
+        if (selected.length === 0) return
+        e.preventDefault()
+        const selectedIds = new Set(selected.map(n => n.id))
+        const internalEdges = getEdges().filter(
+          edge => selectedIds.has(edge.source) && selectedIds.has(edge.target),
+        )
+        clipboardRef.current = {
+          nodes: selected.map(n => ({ ...n })),
+          edges: internalEdges.map(edge => ({ ...edge })),
+        }
+      } else if (mod && e.key === 'v') {
+        // Paste from clipboard with new IDs + offset
+        if (!clipboardRef.current || clipboardRef.current.nodes.length === 0) return
+        e.preventDefault()
+        takeSnapshot(getNodes(), getEdges())
+
+        const OFFSET = 40
+        const idMap = new Map<string, string>()
+        const now = Date.now()
+
+        const newNodes = clipboardRef.current.nodes.map((n, i) => {
+          const newId = `${n.id}-copy-${now}-${i}`
+          idMap.set(n.id, newId)
+          return {
+            ...n,
+            id: newId,
+            position: { x: n.position.x + OFFSET, y: n.position.y + OFFSET },
+            selected: true,
+          }
+        })
+
+        const newEdges = clipboardRef.current.edges
+          .map(edge => {
+            const newSource = idMap.get(edge.source)
+            const newTarget = idMap.get(edge.target)
+            if (!newSource || !newTarget) return null
+            return {
+              ...edge,
+              id: `${edge.id}-copy-${now}`,
+              source: newSource,
+              target: newTarget,
+            }
+          })
+          .filter((e): e is Edge => e !== null)
+
+        // Deselect existing nodes, add new ones
+        setNodes(nds => [
+          ...nds.map(n => ({ ...n, selected: false })),
+          ...newNodes,
+        ])
+        setEdges(eds => [...eds, ...newEdges])
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
         const selected = getNodes().filter(n => n.selected)
         if (selected.length === 0) return
