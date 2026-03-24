@@ -17,15 +17,11 @@ describe('TopBar', () => {
     expect(screen.getByText('Kalcifer')).toBeInTheDocument()
   })
 
-  it('renders Work and Browse nav links', () => {
+  it('renders Work, Browse, and Engine Room nav links', () => {
     renderTopBar()
     expect(screen.getByText('Work')).toBeInTheDocument()
     expect(screen.getByText('Browse')).toBeInTheDocument()
-  })
-
-  it('does not render Engine Room in TopBar', () => {
-    renderTopBar()
-    expect(screen.queryByText('Engine Room')).not.toBeInTheDocument()
+    expect(screen.getByText('Engine Room')).toBeInTheDocument()
   })
 
   it('renders ThemeSwitcher trigger', () => {
