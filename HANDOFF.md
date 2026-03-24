@@ -127,7 +127,28 @@
 - ContextContent type extended: `flow-canvas` (read-only) | `flow-editor` (interactive)
 - 9 Vitest tests for FlowEditorInline, 2 Elixir tests for flow_id in classify_session
 
-### 2.5 Backend Recompilation
+### 2.5 Chat → Flow Generation (DONE)
+- `create_flow` tool accepts optional `graph` parameter (nodes + edges) for one-step creation
+- AI can now create complete flows in a single tool call (vs. multiple add_node calls)
+- `create_flow` response includes graph for immediate editor auto-open
+- `add_node` and `modify_node` responses include `flow_id` for editor integration
+- System prompt updated: prefer graph-based creation, entry/exit guidance
+- 4 new tests for graph-in-create_flow
+
+### 2.6 Chat → Node Editing (DONE)
+- `modify_node` description enhanced with natural language examples
+- New `remove_node` tool: removes node + connected edges from graph
+- Georgian tool label: "ნაბიჯის წაშლა"
+- 3 new tests for remove_node (25 built-in nodes → 13 tool definitions)
+
+### 2.7 Instance Timeline Overlay (DONE)
+- Live mode: instance picker dropdown in status bar
+- Selecting an instance loads execution timeline via `fetchInstanceTimeline`
+- Canvas highlights completed (green) and failed (red) nodes for selected instance
+- Deselecting returns to real-time live view
+- Instance list shows customer_id, status with color-coded dots
+
+### 2.8 Backend Recompilation
 ყველა Elixir ცვლილება საჭიროებს:
 ```bash
 docker compose -f docker-compose.dev.yml restart app
@@ -156,13 +177,13 @@ docker compose -f docker-compose.dev.yml restart app
 ### Theme C: Debugging & Observability
 - [x] Live mode: running instance real-time tracking on canvas
 - [x] Error highlighting on failed nodes (red border + ✗ badge)
-- [ ] Instance timeline overlay — execution path visualization
+- [x] Instance timeline overlay — select instance, see execution path on canvas
 - [ ] Node-level analytics (conversion rates, avg time)
 
 ### Theme D: AI-Assisted Flow Building
 - [x] Flow editor in context panel: chat about a flow → editor appears alongside
-- [ ] Chat → flow generation: "build me an onboarding flow" → auto-creates graph
-- [ ] Chat → node editing: "change the wait to 3 days" → updates specific node
+- [x] Chat → flow generation: create_flow with full graph in one call
+- [x] Chat → node editing: modify_node + remove_node with natural language guidance
 - [ ] AI suggestions: "this condition has no false branch"
 - [ ] Natural language condition builder
 
