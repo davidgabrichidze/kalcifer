@@ -1,0 +1,123 @@
+/* ════════════════════════════════════════════════════════════
+   Artifact Panel — right sidebar showing chat-generated artifacts
+   ════════════════════════════════════════════════════════════ */
+
+.artifact-panel {
+  width: 200px;
+  min-width: 200px;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.artifact-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.artifact-header-icon {
+  font-size: 13px;
+}
+
+.artifact-header-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1;
+}
+
+.artifact-header-count {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.artifact-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.artifact-list::-webkit-scrollbar {
+  width: 3px;
+}
+
+.artifact-list::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+.artifact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: all 0.15s;
+  margin-bottom: 3px;
+}
+
+.artifact-item:hover {
+  background: var(--color-surface-dim);
+  border-color: var(--color-border);
+}
+
+.artifact-item:active {
+  transform: scale(0.98);
+}
+
+.artifact-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+}
+
+.artifact-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.artifact-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artifact-subtitle {
+  font-size: 9px;
+  color: var(--color-text-muted);
+  margin-top: 1px;
+}
+
+.artifact-action {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.artifact-item:hover .artifact-action {
+  opacity: 1;
+  color: var(--color-primary);
+}

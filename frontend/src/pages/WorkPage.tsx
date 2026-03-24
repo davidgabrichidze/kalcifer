@@ -5,6 +5,7 @@ import FlowCanvas from '../components/FlowCanvas'
 import FlowEditorInline from '../components/FlowEditorInline'
 import Sidebar from '../components/Sidebar'
 import WelcomeScreen from '../components/WelcomeScreen'
+import ArtifactPanel, { type Artifact } from '../components/ArtifactPanel'
 import { fetchConversations, type SessionClassification, type FlowGraph } from '../lib/api'
 import './work-stages.css'
 
@@ -41,6 +42,9 @@ export default function WorkPage() {
   // Context area state
   const [contextContent, setContextContent] = useState<ContextContent>(null)
   const [contextScrollable, setContextScrollable] = useState(false)
+
+  // Artifacts — collected from tool results during conversation
+  const [artifacts, setArtifacts] = useState<Artifact[]>([])
 
   // On mount: check URL for conversation ID, or check if conversations exist
   useEffect(() => {
@@ -92,8 +96,9 @@ export default function WorkPage() {
     setConversationId(id)
     setSessionKind(null)
     setInitialMessage(null)
-    // Close context when switching conversations
+    // Close context and clear artifacts when switching conversations
     setContextContent(null)
+    setArtifacts([])
     syncUrl(id)
   }, [syncUrl])
 
@@ -164,6 +169,46 @@ export default function WorkPage() {
     setStage(s => s === 'split' ? 'context' : 'split')
   }, [])
 
+  // Artifact: add new (deduplicate by id)
+  const handleArtifact = useCallback((artifact: Artifact) => {
+    setArtifacts(prev => {
+      const exists = prev.findIndex(a => a.id === artifact.id)
+      if (exists >= 0) {
+        // Update existing
+        const updated = [...prev]
+        updated[exists] = artifact
+        return updated
+      }
+      return [...prev, artifact]
+    })
+  }, [])
+
+  // Artifact clicked — open corresponding content
+  const handleArtifactClick = useCallback((artifact: Artifact) => {
+    switch (artifact.type) {
+      case 'flow':
+        if (artifact.resourceId) {
+          setContextContent({ type: 'flow-editor', flowId: artifact.resourceId })
+          setContextScrollable(false)
+          if (stage === 'chat' || stage === 'lobby') setStage('split')
+        }
+        break
+      case 'graph':
+        if (artifact.data?.graph) {
+          setContextContent({ type: 'flow-canvas', flowGraph: artifact.data.graph as FlowGraph })
+          setContextScrollable(false)
+          if (stage === 'chat' || stage === 'lobby') setStage('split')
+        }
+        break
+      case 'analysis':
+      case 'debug':
+      case 'memory':
+        // For non-visual artifacts, could show detail panel in future
+        // For now, just log
+        break
+    }
+  }, [stage])
+
   // Open full editor page for a flow
   const handleOpenFullEditor = useCallback((flowId: string) => {
     navigate(`/editor?flow=${flowId}`)
@@ -206,8 +251,17 @@ export default function WorkPage() {
               initialMessage={initialMessage}
               onInitialMessageSent={handleInitialMessageSent}
               onContextContent={handleContextContent}
+              onArtifact={handleArtifact}
             />
           </div>
+        )}
+
+        {/* Artifact panel — right sidebar with collected artifacts */}
+        {showChat && artifacts.length > 0 && (
+          <ArtifactPanel
+            artifacts={artifacts}
+            onArtifactClick={handleArtifactClick}
+          />
         )}
       </div>
 

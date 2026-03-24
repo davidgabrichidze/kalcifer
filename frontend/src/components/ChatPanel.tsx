@@ -3,6 +3,7 @@ import Markdown from 'react-markdown'
 import { type ChatMessage, type ToolActivity, type AgentActivity, createMessage } from '../lib/chat'
 import { streamChat, fetchConversation, type ApiMessage, type SessionClassification } from '../lib/api'
 import { type ContextContent } from '../pages/WorkPage'
+import { type Artifact } from './ArtifactPanel'
 import ActivityIndicator from './ActivityIndicator'
 
 // Human-readable names for tools
@@ -40,6 +41,8 @@ interface ChatPanelProps {
   onInitialMessageSent?: () => void
   /** Called when a tool result contains content to display in the context area */
   onContextContent?: (content: ContextContent) => void
+  /** Called when a new artifact is produced (flow created, analysis done, etc.) */
+  onArtifact?: (artifact: Artifact) => void
 }
 
 export default function ChatPanel({
@@ -51,6 +54,7 @@ export default function ChatPanel({
   initialMessage,
   onInitialMessageSent,
   onContextContent,
+  onArtifact,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -231,19 +235,70 @@ export default function ChatPanel({
   // Detect flow graph/flow_id in tool results and notify parent
   const FLOW_TOOLS = ['create_flow', 'get_flow_graph', 'add_node', 'modify_node', 'remove_node', 'get_flow']
   function detectFlowGraph(tool: string, result: string) {
-    if (!onContextContent || !FLOW_TOOLS.includes(tool)) return
     try {
       const parsed = JSON.parse(result)
-      // If result contains a flow_id, open the interactive editor
+
+      // Emit artifacts for the panel
+      if (tool === 'create_flow' && parsed.id) {
+        onArtifact?.({
+          id: `flow-${parsed.id}`,
+          type: 'flow',
+          title: parsed.name || 'ახალი ფლოუ',
+          subtitle: `${parsed.graph?.nodes?.length || 0} ნაბიჯი`,
+          resourceId: parsed.id,
+          data: parsed,
+          timestamp: Date.now(),
+        })
+      } else if (tool === 'get_flow' && parsed.id) {
+        onArtifact?.({
+          id: `flow-${parsed.id}`,
+          type: 'flow',
+          title: parsed.name || 'ფლოუ',
+          resourceId: parsed.id,
+          data: parsed,
+          timestamp: Date.now(),
+        })
+      } else if (tool === 'analyze_flow') {
+        onArtifact?.({
+          id: `analysis-${Date.now()}`,
+          type: 'analysis',
+          title: parsed.flow_name || 'ანალიზი',
+          subtitle: parsed.preflight?.valid ? '✓ ვალიდური' : '⚠ პრობლემები',
+          data: parsed,
+          timestamp: Date.now(),
+        })
+      } else if (tool === 'debug_instance' && parsed.instance_id) {
+        onArtifact?.({
+          id: `debug-${parsed.instance_id}`,
+          type: 'debug',
+          title: `Instance ${parsed.instance_id.slice(0, 8)}`,
+          subtitle: parsed.status,
+          resourceId: parsed.instance_id,
+          data: parsed,
+          timestamp: Date.now(),
+        })
+      } else if (tool === 'remember') {
+        onArtifact?.({
+          id: `memory-${Date.now()}`,
+          type: 'memory',
+          title: parsed.key || 'მეხსიერება',
+          subtitle: 'დამახსოვრებულია',
+          data: parsed,
+          timestamp: Date.now(),
+        })
+      }
+
+      // Also open context panel
+      if (!onContextContent || !FLOW_TOOLS.includes(tool)) return
+
       if (parsed.id && parsed.graph) {
         onContextContent({ type: 'flow-editor', flowId: parsed.id })
       } else if (parsed.flow_id) {
         onContextContent({ type: 'flow-editor', flowId: parsed.flow_id })
       } else if (parsed.graph?.nodes && parsed.graph?.edges) {
-        // Fallback: show read-only canvas if we only have the graph (no flow_id)
         onContextContent({ type: 'flow-canvas', flowGraph: parsed.graph })
       }
-    } catch { /* not graph JSON, ignore */ }
+    } catch { /* not JSON, ignore */ }
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
