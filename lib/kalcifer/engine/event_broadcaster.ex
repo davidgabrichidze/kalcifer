@@ -29,12 +29,15 @@ defmodule Kalcifer.Engine.EventBroadcaster do
   end
 
   def broadcast_node_executed(state, node, result) do
+    {status, serialized_result} = classify_result(result)
+
     broadcast(state, "node_executed", %{
       instance_id: state.instance_id,
       flow_id: state.flow_id,
       node_id: node["id"],
       node_type: node["type"],
-      result: result
+      status: status,
+      result: serialized_result
     })
   end
 
@@ -80,6 +83,12 @@ defmodule Kalcifer.Engine.EventBroadcaster do
     message = %{type: event_type, payload: payload, timestamp: DateTime.utc_now()}
     Phoenix.PubSub.broadcast(@pubsub, "instance:#{instance_id}", message)
   end
+
+  defp classify_result({:completed, data}), do: {"completed", data}
+  defp classify_result({:branched, branch, data}), do: {"branched", Map.put(data, :branch, branch)}
+  defp classify_result({:waiting, config}), do: {"waiting", config}
+  defp classify_result({:failed, reason}), do: {"failed", %{reason: inspect(reason)}}
+  defp classify_result(other), do: {"completed", other}
 
   defp broadcast(state, event_type, payload) do
     message = %{type: event_type, payload: payload, timestamp: DateTime.utc_now()}

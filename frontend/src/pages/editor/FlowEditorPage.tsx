@@ -57,6 +57,7 @@ export default function FlowEditorPage() {
     activeInstances: liveActiveInstances,
     completedNodes: liveCompletedNodes,
     activeNodes: liveActiveNodes,
+    failedNodes: liveFailedNodes,
   } = useFlowSocket({
     flowId: flowId || null,
     enabled: mode === 'live',
@@ -393,6 +394,7 @@ export default function FlowEditorPage() {
           }
           onUndoRedoChange={handleUndoRedoChange}
           nodeWarnings={nodeWarnings}
+          failedNodes={mode === 'live' ? liveFailedNodes : undefined}
         />
 
         {/* Node Palette */}

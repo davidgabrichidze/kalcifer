@@ -37,7 +37,7 @@ const categoryColorMap: Record<string, { bg: string; text: string; border: strin
   },
 }
 
-export function FlowNode({ data, selected }: { data: FlowNodeData & { simCompleted?: boolean; simActive?: boolean; warnings?: string[] | null }; selected: boolean }) {
+export function FlowNode({ data, selected }: { data: FlowNodeData & { simCompleted?: boolean; simActive?: boolean; warnings?: string[] | null; failed?: boolean }; selected: boolean }) {
   const nodeTypeInfo = getNodeType(data.type)
   const category = nodeTypeInfo?.category || 'action'
   const colors = categoryColorMap[category]
@@ -47,25 +47,29 @@ export function FlowNode({ data, selected }: { data: FlowNodeData & { simComplet
     'wait_for_event', 'preference_gate', 'ai_decide',
   ].includes(data.type)
 
-  const simClass = data.simActive ? 'sim-active' : data.simCompleted ? 'sim-completed' : ''
+  const simClass = data.failed ? 'sim-failed' : data.simActive ? 'sim-active' : data.simCompleted ? 'sim-completed' : ''
 
   return (
     <div
       className={`flow-node ${selected ? 'selected' : ''} ${simClass}`}
       style={{
         backgroundColor: 'var(--color-surface)',
-        borderColor: data.simActive
-          ? 'var(--color-warn)'
-          : data.simCompleted
-            ? 'var(--color-success)'
-            : selected ? 'var(--color-primary)' : 'var(--color-border)',
-        boxShadow: data.simActive
-          ? '0 0 0 3px var(--color-warn-soft), 0 2px 8px rgba(0,0,0,0.1)'
-          : data.simCompleted
-            ? '0 0 0 2px var(--color-success-soft)'
-            : selected
-              ? '0 0 0 3px var(--color-primary-soft), 0 2px 8px rgba(0,0,0,0.06)'
-              : '0 2px 8px rgba(0,0,0,0.06)',
+        borderColor: data.failed
+          ? 'var(--color-danger)'
+          : data.simActive
+            ? 'var(--color-warn)'
+            : data.simCompleted
+              ? 'var(--color-success)'
+              : selected ? 'var(--color-primary)' : 'var(--color-border)',
+        boxShadow: data.failed
+          ? '0 0 0 3px var(--color-danger-soft, rgba(220,50,50,0.2)), 0 2px 8px rgba(0,0,0,0.1)'
+          : data.simActive
+            ? '0 0 0 3px var(--color-warn-soft), 0 2px 8px rgba(0,0,0,0.1)'
+            : data.simCompleted
+              ? '0 0 0 2px var(--color-success-soft)'
+              : selected
+                ? '0 0 0 3px var(--color-primary-soft), 0 2px 8px rgba(0,0,0,0.06)'
+                : '0 2px 8px rgba(0,0,0,0.06)',
       }}
     >
       {/* Input handle (no triggers) */}
@@ -96,8 +100,9 @@ export function FlowNode({ data, selected }: { data: FlowNodeData & { simComplet
           <div className="flow-node-title">{data.label}</div>
           <div className="flow-node-type">{data.type}</div>
         </div>
-        {data.simCompleted && <span className="flow-node-sim-badge completed">✓</span>}
-        {data.simActive && <span className="flow-node-sim-badge active">▸</span>}
+        {data.failed && <span className="flow-node-sim-badge failed">✗</span>}
+        {data.simCompleted && !data.failed && <span className="flow-node-sim-badge completed">✓</span>}
+        {data.simActive && !data.failed && <span className="flow-node-sim-badge active">▸</span>}
         {data.warnings && data.warnings.length > 0 && (
           <span
             className="flow-node-warning-badge"

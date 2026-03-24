@@ -31,6 +31,7 @@ export function useFlowSocket({ flowId, enabled = true, onEvent }: UseFlowSocket
   const [activeInstances, setActiveInstances] = useState<Set<string>>(new Set())
   const [completedNodes, setCompletedNodes] = useState<Map<string, Set<string>>>(new Map())
   const [activeNodes, setActiveNodes] = useState<Map<string, string | null>>(new Map())
+  const [failedNodes, setFailedNodes] = useState<Set<string>>(new Set())
 
   const onEventRef = useRef(onEvent)
   onEventRef.current = onEvent
@@ -50,13 +51,20 @@ export function useFlowSocket({ flowId, enabled = true, onEvent }: UseFlowSocket
 
       case 'node_executed':
         if (instanceId && msg.payload.node_id) {
-          setCompletedNodes(prev => {
-            const next = new Map(prev)
-            const nodes = new Set(next.get(instanceId) || [])
-            nodes.add(msg.payload.node_id as string)
-            next.set(instanceId, nodes)
-            return next
-          })
+          const nodeId = msg.payload.node_id as string
+          const status = msg.payload.status as string | undefined
+
+          if (status === 'failed') {
+            setFailedNodes(prev => new Set([...prev, nodeId]))
+          } else {
+            setCompletedNodes(prev => {
+              const next = new Map(prev)
+              const nodes = new Set(next.get(instanceId) || [])
+              nodes.add(nodeId)
+              next.set(instanceId, nodes)
+              return next
+            })
+          }
           setActiveNodes(prev => {
             const next = new Map(prev)
             next.set(instanceId, null)
@@ -149,6 +157,7 @@ export function useFlowSocket({ flowId, enabled = true, onEvent }: UseFlowSocket
     setActiveInstances(new Set())
     setCompletedNodes(new Map())
     setActiveNodes(new Map())
+    setFailedNodes(new Set())
   }, [])
 
   return {
@@ -156,6 +165,7 @@ export function useFlowSocket({ flowId, enabled = true, onEvent }: UseFlowSocket
     activeInstances,
     completedNodes,
     activeNodes,
+    failedNodes,
     clearState,
   }
 }

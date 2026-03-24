@@ -161,6 +161,11 @@
   animation: typingDot 1.2s infinite;
 }
 
+.flow-node-sim-badge.failed {
+  background: var(--color-danger-soft, rgba(220, 50, 50, 0.15));
+  color: var(--color-danger);
+}
+
 .flow-node-warning-badge {
   font-size: 10px;
   font-weight: 700;
