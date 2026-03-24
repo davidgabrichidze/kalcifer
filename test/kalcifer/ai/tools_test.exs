@@ -14,9 +14,9 @@ defmodule Kalcifer.AI.ToolsTest do
   # ── Definitions ──────────────────────────────────────────────
 
   describe "definitions/0" do
-    test "returns 12 tool definitions" do
+    test "returns 13 tool definitions" do
       defs = Tools.definitions()
-      assert length(defs) == 12
+      assert length(defs) == 13
 
       names = Enum.map(defs, & &1.name)
       assert "classify_session" in names
@@ -26,6 +26,7 @@ defmodule Kalcifer.AI.ToolsTest do
       assert "create_flow" in names
       assert "add_node" in names
       assert "modify_node" in names
+      assert "remove_node" in names
       assert "list_node_types" in names
       assert "analyze_flow" in names
       assert "debug_instance" in names
@@ -733,6 +734,49 @@ defmodule Kalcifer.AI.ToolsTest do
       node = Enum.find(graph["nodes"], &(&1["id"] == "entry_1"))
       assert node["type"] == "event_entry"
       assert node["id"] == "entry_1"
+    end
+  end
+
+  # ── remove_node ────────────────────────────────────────────
+
+  describe "execute — remove_node" do
+    test "removes a node and its connected edges", %{tenant: tenant} do
+      flow = insert(:flow, tenant: tenant)
+      insert(:flow_version, flow: flow, version_number: 1, graph: valid_graph())
+
+      assert {:ok, json} =
+               Tools.execute(
+                 "remove_node",
+                 %{"flow_id" => flow.id, "node_id" => "exit_1"},
+                 tenant.id
+               )
+
+      result = Jason.decode!(json)
+      assert result["removed_node"] == "exit_1"
+      assert result["removed_edges"] == 1
+      assert result["total_nodes"] == 1
+      assert result["flow_id"] == flow.id
+    end
+
+    test "returns error for nonexistent node", %{tenant: tenant} do
+      flow = insert(:flow, tenant: tenant)
+      insert(:flow_version, flow: flow, version_number: 1, graph: valid_graph())
+
+      assert {:error, "Node 'nonexistent' not found in graph"} =
+               Tools.execute(
+                 "remove_node",
+                 %{"flow_id" => flow.id, "node_id" => "nonexistent"},
+                 tenant.id
+               )
+    end
+
+    test "returns error for nonexistent flow", %{tenant_id: tid} do
+      assert {:error, "Flow not found: " <> _} =
+               Tools.execute(
+                 "remove_node",
+                 %{"flow_id" => Ecto.UUID.generate(), "node_id" => "entry_1"},
+                 tid
+               )
     end
   end
 

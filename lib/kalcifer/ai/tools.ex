@@ -27,6 +27,7 @@ defmodule Kalcifer.AI.Tools do
       create_flow_tool(),
       add_node_tool(),
       modify_node_tool(),
+      remove_node_tool(),
       list_node_types_tool(),
       analyze_flow_tool(),
       debug_instance_tool(),
@@ -277,6 +278,13 @@ defmodule Kalcifer.AI.Tools do
       Modify an existing node's configuration in a flow's draft version.
       Creates a new draft version if needed. Only updates the config —
       cannot change node type or ID.
+
+      Use this when the user says things like:
+      - "wait-ი 3 დღეზე შეცვალე" → modify wait node's duration to "3d"
+      - "email-ის subject შეცვალე" → modify send_email node's subject
+      - "condition-ში field შეცვალე" → modify condition node's field
+
+      First use get_flow_graph to see the current graph and find the node_id.
       """,
       input_schema: %{
         type: "object",
@@ -291,10 +299,36 @@ defmodule Kalcifer.AI.Tools do
           },
           config: %{
             type: "object",
-            description: "New config (merged with existing). Pass full config to replace."
+            description: "New config to replace the existing config entirely."
           }
         },
         required: ["flow_id", "node_id", "config"]
+      }
+    }
+  end
+
+  defp remove_node_tool do
+    %{
+      name: "remove_node",
+      description: """
+      Remove a node and its connected edges from a flow's draft version.
+      Creates a new draft version if needed.
+
+      Use when the user says "ეს ნაბიჯი წაშალე" or "remove the wait step".
+      """,
+      input_schema: %{
+        type: "object",
+        properties: %{
+          flow_id: %{
+            type: "string",
+            description: "The UUID of the flow."
+          },
+          node_id: %{
+            type: "string",
+            description: "The ID of the node to remove."
+          }
+        },
+        required: ["flow_id", "node_id"]
       }
     }
   end
@@ -771,6 +805,50 @@ defmodule Kalcifer.AI.Tools do
           }
 
           {:ok, Jason.encode!(result, pretty: true)}
+      end
+    else
+      {:flow, nil} -> {:error, "Flow not found: #{flow_id}"}
+      {:version, nil} -> {:error, "No draft version available"}
+    end
+  end
+
+  defp do_execute("remove_node", input, _tenant_id, _ctx) do
+    flow_id = Map.fetch!(input, "flow_id")
+    node_id = Map.fetch!(input, "node_id")
+
+    with {:flow, flow} when not is_nil(flow) <- {:flow, Flows.get_flow(flow_id)},
+         {:version, version} when not is_nil(version) <-
+           {:version, get_or_create_draft_version(flow)} do
+      graph = version.graph || %{"nodes" => [], "edges" => []}
+      nodes = Map.get(graph, "nodes", [])
+      edges = Map.get(graph, "edges", [])
+
+      if Enum.any?(nodes, &(&1["id"] == node_id)) do
+        updated_nodes = Enum.reject(nodes, &(&1["id"] == node_id))
+
+        updated_edges =
+          Enum.reject(edges, fn e ->
+            e["source"] == node_id || e["target"] == node_id
+          end)
+
+        updated_graph = %{"nodes" => updated_nodes, "edges" => updated_edges}
+
+        {:ok, _} =
+          version
+          |> Ecto.Changeset.change(graph: updated_graph)
+          |> Kalcifer.Repo.update()
+
+        result = %{
+          flow_id: flow_id,
+          removed_node: node_id,
+          removed_edges: length(edges) - length(updated_edges),
+          total_nodes: length(updated_nodes),
+          version_number: version.version_number
+        }
+
+        {:ok, Jason.encode!(result, pretty: true)}
+      else
+        {:error, "Node '#{node_id}' not found in graph"}
       end
     else
       {:flow, nil} -> {:error, "Flow not found: #{flow_id}"}

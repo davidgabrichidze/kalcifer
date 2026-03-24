@@ -14,6 +14,7 @@ const TOOL_LABELS: Record<string, string> = {
   create_flow: 'ფლოუს შექმნა',
   add_node: 'ნაბიჯის დამატება',
   modify_node: 'ნაბიჯის შეცვლა',
+  remove_node: 'ნაბიჯის წაშლა',
   list_node_types: 'ნაბიჯების ტიპები',
   analyze_flow: 'ფლოუს ანალიზი',
   debug_instance: 'ინსტანსის დიაგნოსტიკა',
@@ -228,7 +229,7 @@ export default function ChatPanel({
   }
 
   // Detect flow graph/flow_id in tool results and notify parent
-  const FLOW_TOOLS = ['create_flow', 'get_flow_graph', 'add_node', 'modify_node', 'get_flow']
+  const FLOW_TOOLS = ['create_flow', 'get_flow_graph', 'add_node', 'modify_node', 'remove_node', 'get_flow']
   function detectFlowGraph(tool: string, result: string) {
     if (!onContextContent || !FLOW_TOOLS.includes(tool)) return
     try {
