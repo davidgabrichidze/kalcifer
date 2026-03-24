@@ -10,7 +10,9 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.HelpersTest do
 
     test "replaces dot-notation paths" do
       context = %{"accumulated" => %{"planner" => %{"response" => "Build it"}}}
-      assert "Plan: Build it" == Helpers.interpolate("Plan: {{accumulated.planner.response}}", context)
+
+      assert "Plan: Build it" ==
+               Helpers.interpolate("Plan: {{accumulated.planner.response}}", context)
     end
 
     test "leaves unresolved placeholders as-is" do

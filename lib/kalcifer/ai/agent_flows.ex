@@ -147,26 +147,55 @@ defmodule Kalcifer.AI.AgentFlows do
     %{
       "nodes" => [
         %{"id" => "entry", "type" => "webhook_entry", "config" => %{}},
-        %{"id" => "dreamer", "type" => "ai_think", "config" => %{
-          "prompt" => "You are the Dreamer — an optimistic, creative thinker.\n\nUser request: {{_initial_message}}\n\nGenerate bold, ambitious ideas. Think big. What would be the ideal outcome? What creative approaches could work? Don't worry about constraints yet.",
-          "system" => "You are the Dreamer persona in a council deliberation. Be creative, optimistic, and visionary. Output your ideas clearly."
-        }},
-        %{"id" => "realist", "type" => "ai_think", "config" => %{
-          "prompt" => "You are the Realist — a practical, grounded thinker.\n\nUser request: {{_initial_message}}\n\nThe Dreamer proposed:\n{{accumulated.dreamer.response}}\n\nEvaluate these ideas practically. What's feasible? What resources are needed? Create a realistic plan from the Dreamer's vision.",
-          "system" => "You are the Realist persona in a council deliberation. Be practical and constructive. Build on the Dreamer's ideas with concrete steps."
-        }},
-        %{"id" => "skeptic", "type" => "ai_think", "config" => %{
-          "prompt" => "You are the Skeptic — a critical, risk-aware thinker.\n\nUser request: {{_initial_message}}\n\nThe Dreamer proposed:\n{{accumulated.dreamer.response}}\n\nThe Realist's plan:\n{{accumulated.realist.response}}\n\nChallenge both perspectives. What could go wrong? What are the risks? What assumptions are being made? Be constructive but thorough.",
-          "system" => "You are the Skeptic persona in a council deliberation. Identify risks and weak points constructively. Don't just criticize — suggest mitigations."
-        }},
-        %{"id" => "synthesizer", "type" => "ai_think", "config" => %{
-          "prompt" => "You are the Synthesizer — you integrate all perspectives into a final recommendation.\n\nUser request: {{_initial_message}}\n\nDreamer's vision:\n{{accumulated.dreamer.response}}\n\nRealist's plan:\n{{accumulated.realist.response}}\n\nSkeptic's concerns:\n{{accumulated.skeptic.response}}\n\nCreate a balanced, actionable synthesis that takes the best from each perspective and addresses the concerns raised.",
-          "system" => "You are the Synthesizer. Create a clear, balanced recommendation that integrates all perspectives. Be decisive."
-        }},
-        %{"id" => "executor", "type" => "agent", "config" => %{
-          "prompt" => "Based on the council's deliberation, execute the recommended plan.\n\nFinal recommendation:\n{{accumulated.synthesizer.response}}\n\nOriginal request: {{_initial_message}}",
-          "include_context" => false
-        }},
+        %{
+          "id" => "dreamer",
+          "type" => "ai_think",
+          "config" => %{
+            "prompt" =>
+              "You are the Dreamer — an optimistic, creative thinker.\n\nUser request: {{_initial_message}}\n\nGenerate bold, ambitious ideas. Think big. What would be the ideal outcome? What creative approaches could work? Don't worry about constraints yet.",
+            "system" =>
+              "You are the Dreamer persona in a council deliberation. Be creative, optimistic, and visionary. Output your ideas clearly."
+          }
+        },
+        %{
+          "id" => "realist",
+          "type" => "ai_think",
+          "config" => %{
+            "prompt" =>
+              "You are the Realist — a practical, grounded thinker.\n\nUser request: {{_initial_message}}\n\nThe Dreamer proposed:\n{{accumulated.dreamer.response}}\n\nEvaluate these ideas practically. What's feasible? What resources are needed? Create a realistic plan from the Dreamer's vision.",
+            "system" =>
+              "You are the Realist persona in a council deliberation. Be practical and constructive. Build on the Dreamer's ideas with concrete steps."
+          }
+        },
+        %{
+          "id" => "skeptic",
+          "type" => "ai_think",
+          "config" => %{
+            "prompt" =>
+              "You are the Skeptic — a critical, risk-aware thinker.\n\nUser request: {{_initial_message}}\n\nThe Dreamer proposed:\n{{accumulated.dreamer.response}}\n\nThe Realist's plan:\n{{accumulated.realist.response}}\n\nChallenge both perspectives. What could go wrong? What are the risks? What assumptions are being made? Be constructive but thorough.",
+            "system" =>
+              "You are the Skeptic persona in a council deliberation. Identify risks and weak points constructively. Don't just criticize — suggest mitigations."
+          }
+        },
+        %{
+          "id" => "synthesizer",
+          "type" => "ai_think",
+          "config" => %{
+            "prompt" =>
+              "You are the Synthesizer — you integrate all perspectives into a final recommendation.\n\nUser request: {{_initial_message}}\n\nDreamer's vision:\n{{accumulated.dreamer.response}}\n\nRealist's plan:\n{{accumulated.realist.response}}\n\nSkeptic's concerns:\n{{accumulated.skeptic.response}}\n\nCreate a balanced, actionable synthesis that takes the best from each perspective and addresses the concerns raised.",
+            "system" =>
+              "You are the Synthesizer. Create a clear, balanced recommendation that integrates all perspectives. Be decisive."
+          }
+        },
+        %{
+          "id" => "executor",
+          "type" => "agent",
+          "config" => %{
+            "prompt" =>
+              "Based on the council's deliberation, execute the recommended plan.\n\nFinal recommendation:\n{{accumulated.synthesizer.response}}\n\nOriginal request: {{_initial_message}}",
+            "include_context" => false
+          }
+        },
         %{"id" => "done", "type" => "exit", "config" => %{}}
       ],
       "edges" => [

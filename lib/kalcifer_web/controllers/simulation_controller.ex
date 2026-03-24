@@ -151,7 +151,9 @@ defmodule KalciferWeb.SimulationController do
       flow ->
         # For active/paused flows, use active version
         case flow.active_version_id do
-          nil -> {:error, :no_active_version}
+          nil ->
+            {:error, :no_active_version}
+
           vid ->
             version = Kalcifer.Repo.get(Kalcifer.Flows.FlowVersion, vid)
             if version, do: {:ok, flow, version}, else: {:error, :no_active_version}

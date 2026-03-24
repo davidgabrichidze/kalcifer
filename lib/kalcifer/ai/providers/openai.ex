@@ -109,7 +109,8 @@ defmodule Kalcifer.AI.Providers.OpenAI do
 
   defp convert_message(msg), do: msg
 
-  def extract_text(%{"choices" => [%{"message" => %{"content" => text}} | _]}) when is_binary(text) do
+  def extract_text(%{"choices" => [%{"message" => %{"content" => text}} | _]})
+      when is_binary(text) do
     {:ok, text}
   end
 

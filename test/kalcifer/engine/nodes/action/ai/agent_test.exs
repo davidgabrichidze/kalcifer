@@ -58,7 +58,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.AgentTest do
 
   describe "execute/2 — real call" do
     test "runs chat_with_tools and returns response" do
-      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn messages, _tools, _executor, callback, _opts ->
+      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn messages,
+                                                          _tools,
+                                                          _executor,
+                                                          callback,
+                                                          _opts ->
         # Simulate streaming
         callback.({:text_delta, "Hello "})
         callback.({:text_delta, "there!"})
@@ -81,7 +85,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.AgentTest do
     end
 
     test "tracks tool calls in result" do
-      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages, _tools, _executor, callback, _opts ->
+      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages,
+                                                          _tools,
+                                                          _executor,
+                                                          callback,
+                                                          _opts ->
         # Simulate tool call
         callback.({:tool_use, "t1", "create_flow", %{"name" => "Test"}})
         callback.({:tool_result, "create_flow", "{\"id\": \"abc\"}"})
@@ -105,7 +113,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.AgentTest do
     end
 
     test "returns failure on API error" do
-      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages, _tools, _executor, _callback, _opts ->
+      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages,
+                                                          _tools,
+                                                          _executor,
+                                                          _callback,
+                                                          _opts ->
         {:error, {:api_error, 500, "Internal Server Error"}}
       end)
 
@@ -122,7 +134,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.AgentTest do
     end
 
     test "uses messages from context when available" do
-      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn messages, _tools, _executor, callback, _opts ->
+      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn messages,
+                                                          _tools,
+                                                          _executor,
+                                                          callback,
+                                                          _opts ->
         # Verify messages from context are used
         assert length(messages) == 2
         assert hd(messages).role == "user"
@@ -147,7 +163,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.AgentTest do
     end
 
     test "uses system prompt from context as fallback" do
-      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages, _tools, _executor, callback, opts ->
+      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages,
+                                                          _tools,
+                                                          _executor,
+                                                          callback,
+                                                          opts ->
         assert Keyword.get(opts, :system) == "You are a helpful assistant"
         callback.({:done, "OK"})
         {:ok, "OK"}
@@ -166,7 +186,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.AgentTest do
     end
 
     test "config system prompt overrides context" do
-      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages, _tools, _executor, callback, opts ->
+      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages,
+                                                          _tools,
+                                                          _executor,
+                                                          callback,
+                                                          opts ->
         assert Keyword.get(opts, :system) == "I am Kalcifer"
         callback.({:done, "OK"})
         {:ok, "OK"}
@@ -187,7 +211,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.AgentTest do
     test "broadcasts text deltas via PubSub" do
       Phoenix.PubSub.subscribe(Kalcifer.PubSub, "instance:pubsub-test-instance")
 
-      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages, _tools, _executor, callback, _opts ->
+      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages,
+                                                          _tools,
+                                                          _executor,
+                                                          callback,
+                                                          _opts ->
         callback.({:text_delta, "Hello"})
         callback.({:done, "Hello"})
         {:ok, "Hello"}
@@ -210,7 +238,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.AgentTest do
     test "broadcasts tool events via PubSub" do
       Phoenix.PubSub.subscribe(Kalcifer.PubSub, "instance:pubsub-tool-test")
 
-      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages, _tools, _executor, callback, _opts ->
+      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages,
+                                                          _tools,
+                                                          _executor,
+                                                          callback,
+                                                          _opts ->
         callback.({:tool_use, "t1", "list_flows", %{}})
         callback.({:tool_result, "list_flows", "[]"})
         callback.({:done, "No flows"})

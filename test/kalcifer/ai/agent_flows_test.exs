@@ -54,7 +54,16 @@ defmodule Kalcifer.AI.AgentFlowsTest do
       assert length(graph["edges"]) == 6
 
       types = Enum.map(graph["nodes"], & &1["type"]) |> Enum.sort()
-      assert types == ["agent", "ai_think", "ai_think", "ai_think", "ai_think", "exit", "webhook_entry"]
+
+      assert types == [
+               "agent",
+               "ai_think",
+               "ai_think",
+               "ai_think",
+               "ai_think",
+               "exit",
+               "webhook_entry"
+             ]
 
       ids = Enum.map(graph["nodes"], & &1["id"]) |> Enum.sort()
       assert "dreamer" in ids

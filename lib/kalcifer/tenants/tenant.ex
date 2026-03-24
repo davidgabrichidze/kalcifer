@@ -59,7 +59,9 @@ defmodule Kalcifer.Tenants.Tenant do
 
       settings ->
         case Map.get(settings, "ai_model") do
-          nil -> changeset
+          nil ->
+            changeset
+
           model ->
             if model in all_model_ids() do
               changeset

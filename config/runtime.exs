@@ -7,9 +7,11 @@ end
 config :kalcifer, KalciferWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4500"))]
 
+# Auth session token signing
+config :kalcifer, :auth_session_secret, System.get_env("AUTH_SESSION_SECRET")
+
 # AI — reads from .env or system env
-config :kalcifer, Kalcifer.AI.Client,
-  api_key: System.get_env("ANTHROPIC_API_KEY", "")
+config :kalcifer, Kalcifer.AI.Client, api_key: System.get_env("ANTHROPIC_API_KEY", "")
 
 if config_env() == :prod do
   database_url =

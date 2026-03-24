@@ -22,6 +22,7 @@ defmodule Kalcifer.Repo.Migrations.CreateConversationsAndMemory do
       add :role, :string, null: false
       add :content, :text, null: false
       add :tool_calls, :map
+
       add :conversation_id,
           references(:conversations, type: :binary_id, on_delete: :delete_all),
           null: false

@@ -183,10 +183,11 @@ defmodule Kalcifer.AI.ContextTest do
       {:ok, _} = Context.add_message(conv.id, "assistant", "Hello!")
 
       api_msgs = Context.get_api_messages(conv.id)
+
       assert api_msgs == [
-        %{role: "user", content: "Hi"},
-        %{role: "assistant", content: "Hello!"}
-      ]
+               %{role: "user", content: "Hi"},
+               %{role: "assistant", content: "Hello!"}
+             ]
     end
   end
 

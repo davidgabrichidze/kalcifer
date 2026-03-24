@@ -166,7 +166,9 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Agent do
     |> Enum.filter(fn tool -> tool.name in whitelist end)
   end
 
-  defp maybe_add_model(opts, %{"model" => model}) when is_binary(model), do: [{:model, model} | opts]
+  defp maybe_add_model(opts, %{"model" => model}) when is_binary(model),
+    do: [{:model, model} | opts]
+
   defp maybe_add_model(opts, _config), do: opts
 
   defp merge_tenant_opts(opts, context) do
