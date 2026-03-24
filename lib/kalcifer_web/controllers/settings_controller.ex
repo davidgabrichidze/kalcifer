@@ -84,20 +84,77 @@ defmodule KalciferWeb.SettingsController do
           settings
       end
 
+    # Channel provider config: {"channel" => "email", "provider" => "sendgrid", "config" => {...}}
+    settings =
+      case params["channel_provider"] do
+        %{"channel" => channel, "provider" => provider} = cp when is_binary(channel) ->
+          existing = Map.get(tenant.settings || %{}, "channel_providers", %{})
+          config = Map.get(cp, "config", %{})
+
+          updated =
+            Map.put(existing, channel, %{
+              "provider" => provider,
+              "config" => config,
+              "enabled" => Map.get(cp, "enabled", true)
+            })
+
+          Map.put(settings, "channel_providers", updated)
+
+        _ ->
+          settings
+      end
+
+    # Remove channel provider: "email"
+    settings =
+      case params["remove_channel_provider"] do
+        channel when is_binary(channel) ->
+          existing = Map.get(tenant.settings || %{}, "channel_providers", %{})
+          updated = Map.delete(existing, channel)
+          Map.put(settings, "channel_providers", updated)
+
+        _ ->
+          settings
+      end
+
     settings
   end
 
   defp settings_response(tenant) do
     ai = Tenants.ai_config(tenant)
     provider_keys = Tenants.provider_keys(tenant)
+    channel_providers = channel_providers_response(tenant)
 
     %{
       ai_model: ai.model || default_model(),
       ai_provider: ai.provider,
       ai_api_key_set: ai.api_key != nil and ai.api_key != "",
       provider_keys: provider_keys,
-      available_models: available_models()
+      available_models: available_models(),
+      channel_providers: channel_providers
     }
+  end
+
+  defp channel_providers_response(tenant) do
+    providers = Map.get(tenant.settings || %{}, "channel_providers", %{})
+
+    default_channels = %{
+      "email" => %{"provider" => "log", "enabled" => true},
+      "sms" => %{"provider" => "log", "enabled" => true},
+      "push" => %{"provider" => "log", "enabled" => true},
+      "whatsapp" => %{"provider" => "log", "enabled" => true},
+      "webhook" => %{"provider" => "log", "enabled" => true}
+    }
+
+    Map.merge(default_channels, providers)
+    |> Enum.map(fn {channel, config} ->
+      %{
+        channel: channel,
+        provider: config["provider"] || "log",
+        enabled: Map.get(config, "enabled", true),
+        configured: config["provider"] != nil and config["provider"] != "log"
+      }
+    end)
+    |> Enum.sort_by(& &1.channel)
   end
 
   @doc """

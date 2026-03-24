@@ -84,12 +84,20 @@ export interface ProviderGroup {
   models: ModelOption[]
 }
 
+export interface ChannelProvider {
+  channel: string
+  provider: string
+  enabled: boolean
+  configured: boolean
+}
+
 export interface Settings {
   ai_model: string
   ai_provider: string
   ai_api_key_set: boolean
   provider_keys: Record<string, boolean>
   available_models: ProviderGroup[]
+  channel_providers?: ChannelProvider[]
 }
 
 export interface Stats {
@@ -112,6 +120,8 @@ export async function updateSettings(params: {
   ai_api_key?: string
   provider_key?: { provider: string; key: string }
   remove_provider_key?: string
+  channel_provider?: { channel: string; provider: string; config?: Record<string, unknown>; enabled?: boolean }
+  remove_channel_provider?: string
 }): Promise<Settings> {
   const res = await fetch(`${API_BASE}/settings`, {
     method: 'PUT',

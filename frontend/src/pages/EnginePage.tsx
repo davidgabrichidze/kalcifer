@@ -7,13 +7,14 @@ import {
 
 // ── Nav items ───────────────────────────────────────────
 
-type PanelId = 'ai' | 'registry' | 'oban' | 'health'
+type PanelId = 'ai' | 'channels' | 'registry' | 'oban' | 'health'
 
 const NAV_SECTIONS = [
   {
     label: 'Configuration',
     items: [
       { id: 'ai' as PanelId, icon: '🤖', text: 'AI Config', badge: null },
+      { id: 'channels' as PanelId, icon: '📡', text: 'Channels', badge: null },
     ],
   },
   {
@@ -28,7 +29,7 @@ const NAV_SECTIONS = [
 
 // ── Category color mapping ──────────────────────────────
 
-const VALID_PANELS: PanelId[] = ['ai', 'registry', 'oban', 'health']
+const VALID_PANELS: PanelId[] = ['ai', 'channels', 'registry', 'oban', 'health']
 
 function panelFromHash(hash: string): PanelId {
   const id = hash.replace('#', '') as PanelId
@@ -168,6 +169,26 @@ export default function EnginePage() {
             onModelChange={handleModelChange}
             onSaveProviderKey={handleSaveProviderKey}
             onRemoveProviderKey={handleRemoveProviderKey}
+          />
+        )}
+        {panel === 'channels' && (
+          <ChannelsPanel
+            providers={settings?.channel_providers || []}
+            saving={saving}
+            onUpdate={async (channel: string, provider: string) => {
+              setSaving(true)
+              try {
+                const updated = await updateSettings({
+                  channel_provider: { channel, provider }
+                })
+                setSettings(updated)
+                setMessage({ text: `${channel} → ${provider}`, type: 'ok' })
+              } catch (e: any) {
+                setMessage({ text: e.message, type: 'err' })
+              } finally {
+                setSaving(false)
+              }
+            }}
           />
         )}
         {panel === 'registry' && <NodeRegistryPanel engine={engine} />}
@@ -891,6 +912,99 @@ function ProviderLogo({ provider, size = 22 }: { provider: string; size?: number
     default:
       return <span style={{ fontSize: size, lineHeight: 1 }}>⚪</span>
   }
+}
+
+// ── Channels Panel ──────────────────────────────────────
+
+const CHANNEL_ICONS: Record<string, string> = {
+  email: '📧',
+  sms: '💬',
+  push: '🔔',
+  whatsapp: '💚',
+  webhook: '🔗',
+}
+
+const AVAILABLE_PROVIDERS: Record<string, string[]> = {
+  email: ['log', 'sendgrid', 'ses', 'mailgun', 'postmark'],
+  sms: ['log', 'twilio', 'vonage', 'messagebird'],
+  push: ['log', 'firebase', 'onesignal', 'expo'],
+  whatsapp: ['log', 'twilio', 'messagebird'],
+  webhook: ['log', 'webhook'],
+}
+
+function ChannelsPanel({
+  providers,
+  saving,
+  onUpdate,
+}: {
+  providers: { channel: string; provider: string; enabled: boolean; configured: boolean }[]
+  saving: boolean
+  onUpdate: (channel: string, provider: string) => void
+}) {
+  return (
+    <div style={{ padding: 20 }}>
+      <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: 'var(--color-text)' }}>
+        📡 Channel Providers
+      </h2>
+      <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 16 }}>
+        თითოეული არხისთვის აირჩიეთ პროვაიდერი. &quot;log&quot; სატესტოა — ყველაფერს კონსოლში წერს.
+      </p>
+      <div style={{ display: 'grid', gap: 10 }}>
+        {providers.map(p => (
+          <div
+            key={p.channel}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '12px 16px',
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 10,
+            }}
+          >
+            <span style={{ fontSize: 20 }}>{CHANNEL_ICONS[p.channel] || '📡'}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
+                {p.channel}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+                {p.configured ? 'კონფიგურირებული' : 'ლოგ-რეჟიმი (ტესტი)'}
+              </div>
+            </div>
+            <select
+              value={p.provider}
+              onChange={e => onUpdate(p.channel, e.target.value)}
+              disabled={saving}
+              style={{
+                padding: '5px 10px',
+                borderRadius: 6,
+                border: '1px solid var(--color-border)',
+                background: 'var(--color-surface-dim)',
+                color: 'var(--color-text)',
+                fontSize: 11,
+                fontFamily: 'inherit',
+                cursor: 'pointer',
+              }}
+            >
+              {(AVAILABLE_PROVIDERS[p.channel] || ['log']).map(prov => (
+                <option key={prov} value={prov}>{prov}</option>
+              ))}
+            </select>
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: p.configured ? 'var(--color-success)' : 'var(--color-text-muted)',
+              }}
+              title={p.configured ? 'Active' : 'Log mode'}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function queueIcon(name: string): string {
