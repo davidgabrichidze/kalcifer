@@ -6,7 +6,7 @@ import WorkPage from './pages/WorkPage'
 import EnginePage from './pages/EnginePage'
 import BrowsePage from './pages/BrowsePage'
 import FlowEditorPage from './pages/editor/FlowEditorPage'
-import LoginPage from './pages/LoginPage'
+import LandingPage from './pages/LandingPage'
 import { getAuthToken, logout, type AuthUser, type AuthResponse } from './lib/api'
 
 export default function App() {
@@ -51,7 +51,22 @@ export default function App() {
   }
 
   if (requireAuth && !user) {
-    return <LoginPage onLogin={handleLogin} />
+    return <LandingPage onLogin={handleLogin} />
+  }
+
+  // Dev mode (no Google client ID) — show landing if no user
+  if (!requireAuth && !user) {
+    return (
+      <LandingPage
+        onLogin={handleLogin}
+        onSkip={() => {
+          // In dev mode, skip auth and enter directly
+          const devUser = { id: 'dev', email: 'dev@kalcifer.io', name: 'Developer', avatar_url: null }
+          setUser(devUser)
+          localStorage.setItem('kalcifer_user', JSON.stringify(devUser))
+        }}
+      />
+    )
   }
 
   return (
