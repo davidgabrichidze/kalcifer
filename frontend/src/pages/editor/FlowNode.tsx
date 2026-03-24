@@ -41,6 +41,7 @@ interface AnalyticsData {
   executed: number
   completed: number
   failed: number
+  avg_duration_ms?: number | null
 }
 
 export function FlowNode({ data, selected }: { data: FlowNodeData & { simCompleted?: boolean; simActive?: boolean; warnings?: string[] | null; failed?: boolean; analytics?: AnalyticsData | null }; selected: boolean }) {
@@ -138,6 +139,11 @@ export function FlowNode({ data, selected }: { data: FlowNodeData & { simComplet
               <span className="flow-node-analytics-label">✗</span>
             </span>
           )}
+          {data.analytics.avg_duration_ms != null && (
+            <span className="flow-node-analytics-stat" title="საშუალო დრო" style={{ color: 'var(--color-info)' }}>
+              {formatDuration(data.analytics.avg_duration_ms)}
+            </span>
+          )}
           <span className="flow-node-analytics-rate" title="წარმატების %">
             {Math.round((data.analytics.completed / data.analytics.executed) * 100)}%
           </span>
@@ -190,4 +196,10 @@ export function FlowNode({ data, selected }: { data: FlowNodeData & { simComplet
       )}
     </div>
   )
+}
+
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${Math.round(ms)}ms`
+  if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`
+  return `${(ms / 60_000).toFixed(1)}m`
 }

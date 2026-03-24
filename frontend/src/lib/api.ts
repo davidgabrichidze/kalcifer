@@ -654,6 +654,7 @@ export interface NodeAnalytics {
   executed: number
   completed: number
   failed: number
+  avg_duration_ms?: number | null
 }
 
 export interface FlowSummaryStats {

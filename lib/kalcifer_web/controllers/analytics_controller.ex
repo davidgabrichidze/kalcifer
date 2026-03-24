@@ -24,8 +24,15 @@ defmodule KalciferWeb.AnalyticsController do
     range = parse_date_range(params)
     version = parse_version(params)
     breakdown = Analytics.node_breakdown(flow_id, version, range)
+    durations = Analytics.node_avg_durations(flow_id)
 
-    json(conn, %{data: breakdown})
+    # Merge avg_duration_ms into breakdown
+    enriched =
+      Enum.map(breakdown, fn node ->
+        Map.put(node, :avg_duration_ms, Map.get(durations, node.node_id))
+      end)
+
+    json(conn, %{data: enriched})
   end
 
   def funnel(conn, %{"flow_id" => flow_id} = params) do

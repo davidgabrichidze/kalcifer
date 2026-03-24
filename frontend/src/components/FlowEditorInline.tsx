@@ -292,12 +292,13 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
     const version = flowVersion?.version_number || 1
     fetchNodeAnalytics(flowId, { version })
       .then((data: NodeAnalytics[]) => {
-        const map = new Map<string, { executed: number; completed: number; failed: number }>()
+        const map = new Map<string, { executed: number; completed: number; failed: number; avg_duration_ms?: number | null }>()
         for (const item of data) {
           map.set(item.node_id, {
             executed: item.executed,
             completed: item.completed,
             failed: item.failed,
+            avg_duration_ms: item.avg_duration_ms,
           })
         }
         setAnalyticsMap(map.size > 0 ? map : undefined)

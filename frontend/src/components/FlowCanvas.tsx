@@ -49,7 +49,7 @@ export interface FlowCanvasProps {
   /** Set of node IDs that failed execution */
   failedNodes?: Set<string>
   /** Map of node ID → analytics data for overlay badges */
-  nodeAnalytics?: Map<string, { executed: number; completed: number; failed: number }>
+  nodeAnalytics?: Map<string, { executed: number; completed: number; failed: number; avg_duration_ms?: number | null }>
 }
 
 function FlowCanvasInner({

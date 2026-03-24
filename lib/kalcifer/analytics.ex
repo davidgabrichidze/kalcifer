@@ -117,6 +117,34 @@ defmodule Kalcifer.Analytics do
     |> Repo.all()
   end
 
+  @doc """
+  Computes average execution duration per node from execution_steps.
+  Returns a map of %{node_id => avg_duration_ms}.
+  """
+  def node_avg_durations(flow_id) do
+    alias Kalcifer.Flows.{ExecutionStep, FlowInstance}
+
+    from(s in ExecutionStep,
+      join: i in FlowInstance,
+      on: s.instance_id == i.id,
+      where: i.flow_id == ^flow_id,
+      where: s.status == "completed",
+      where: not is_nil(s.started_at),
+      where: not is_nil(s.completed_at),
+      group_by: s.node_id,
+      select: {
+        s.node_id,
+        fragment(
+          "ROUND(AVG(EXTRACT(EPOCH FROM (? - ?)) * 1000))",
+          s.completed_at,
+          s.started_at
+        )
+      }
+    )
+    |> Repo.all()
+    |> Map.new()
+  end
+
   def ab_test_results(flow_id, node_id, date_range) do
     from(s in NodeStats,
       where: s.flow_id == ^flow_id,
