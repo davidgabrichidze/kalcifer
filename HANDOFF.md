@@ -148,7 +148,39 @@
 - Deselecting returns to real-time live view
 - Instance list shows customer_id, status with color-coded dots
 
-### 2.8 Backend Recompilation
+### 2.8 Node-Level Analytics Overlay (DONE)
+- `fetchNodeAnalytics` API — per-node executed/completed/failed counts
+- FlowCanvas `nodeAnalytics` prop for overlay badges
+- FlowNode shows completion count, failure count, and success rate %
+- 📊 toggle button in inline editor toolbar
+- Analytics routes added to browse pipeline
+
+### 2.9 AI Suggestions (DONE)
+- `FlowGraph.suggestions/1` — structural analysis with Georgian suggestions
+- Detects: missing end/entry nodes, orphans, incomplete branches, single-node
+- Integrated into preflight API response + analyze_flow tool
+- 💡 suggestion count in editor status bar with tooltip
+- 6 new tests for suggestions
+
+### 2.10 Channel Provider Configuration (DONE)
+- Settings API extended with `channel_provider` CRUD
+- Per-channel provider selection stored in tenant settings
+- New 📡 Channels panel in Engine Room
+- Provider dropdowns for email, SMS, push, WhatsApp, webhook
+- Log/configured status indicators
+
+### 2.11 API Key Management (DONE)
+- `Tenants.regenerate_api_key/1` — generates kal_* prefixed keys
+- POST `/settings/regenerate-api-key` endpoint
+- 🔑 API Key section in Engine Room with one-time display + copy
+
+### 2.12 Flow Export/Import (DONE)
+- GET `/flows/:id/export` — full flow + graph as JSON
+- POST `/flows/import` — creates flow from JSON
+- Export (↓) button in inline editor toolbar
+- `exportFlow` / `importFlow` frontend API functions
+
+### 2.13 Backend Recompilation
 ყველა Elixir ცვლილება საჭიროებს:
 ```bash
 docker compose -f docker-compose.dev.yml restart app
@@ -188,17 +220,17 @@ docker compose -f docker-compose.dev.yml restart app
 - [ ] Natural language condition builder
 
 ### Theme E: Channel Integration
-- [ ] Provider configuration UI (SendGrid, Twilio, Firebase)
+- [x] Provider configuration UI (SendGrid, Twilio, Firebase)
 - [ ] Email template editor (inline or linked)
 - [ ] SMS preview
 - [ ] Delivery status tracking
 
 ### Theme F: Multi-tenancy & Production
-- [ ] API key management UI
+- [x] API key management UI with regeneration
+- [x] Export/import flows (JSON)
 - [ ] Tenant switching
 - [ ] Rate limiting
 - [ ] Audit log
-- [ ] Export/import flows
 
 ---
 
