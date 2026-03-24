@@ -1,6 +1,7 @@
 defmodule KalciferWeb.FlowController do
   use KalciferWeb, :controller
 
+  alias Kalcifer.Audit
   alias Kalcifer.Customers
   alias Kalcifer.Engine.NodeRegistry
   alias Kalcifer.Flows
@@ -21,6 +22,14 @@ defmodule KalciferWeb.FlowController do
     tenant = conn.assigns.current_tenant
 
     with {:ok, flow} <- Flows.create_flow(tenant.id, atomize_flow_params(params)) do
+      Audit.log(tenant.id, %{
+        actor: "api",
+        action: "create",
+        resource_type: "flow",
+        resource_id: flow.id,
+        details: %{name: flow.name}
+      })
+
       conn
       |> put_status(:created)
       |> json(%{data: serialize_flow(flow)})

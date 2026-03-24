@@ -25,6 +25,8 @@ defmodule KalciferWeb.Router do
     get "/settings/stats", SettingsController, :stats
     post "/settings/regenerate-api-key", SettingsController, :regenerate_api_key
 
+    get "/audit", AuditController, :index
+
     get "/engine", EngineController, :show
 
     # Browse mode — read-only flow/journey/version listing (dev frontend)
