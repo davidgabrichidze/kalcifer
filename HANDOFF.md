@@ -104,14 +104,16 @@
 - Warnings auto-clear on graph changes
 - 3 tests for parseNodeWarnings
 
-### 2.3 Live Mode (Priority #1)
-**პრობლემა:** Editor-ს "Live" mode ღილაკი აქვს, მაგრამ არ მუშაობს.
+### 2.3 Live Mode (DONE — basic)
+- FlowChannel subscribes to PubSub, pushes engine events to WebSocket clients
+- `useFlowSocket` hook: Phoenix WebSocket client for `flow:*` topic
+- Tracks active instances, completed/active nodes per instance
+- Canvas highlights nodes in real-time during flow execution
+- Bottom bar: connection status + active instance count
 
-**რა უნდა გაკეთდეს:**
-1. WebSocket subscription to flow instance events
-2. Real-time node highlighting for running instances
-3. Instance timeline overlay
-4. Node-level analytics (conversion rates, avg time)
+**TODO (enhancement):**
+- Instance timeline overlay (select specific instance to track)
+- Node-level analytics (conversion rates, avg execution time)
 
 ### 2.4 Backend Recompilation
 ყველა Elixir ცვლილება საჭიროებს:
@@ -140,7 +142,7 @@ docker compose -f docker-compose.dev.yml restart app
 - [ ] Node groups / subflows
 
 ### Theme C: Debugging & Observability
-- [ ] Live mode: running instance real-time tracking on canvas
+- [x] Live mode: running instance real-time tracking on canvas
 - [ ] Instance timeline overlay — execution path visualization
 - [ ] Node-level analytics (conversion rates, avg time)
 - [ ] Error highlighting on failed nodes
