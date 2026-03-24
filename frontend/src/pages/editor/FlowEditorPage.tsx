@@ -8,6 +8,7 @@ import { useSearchParams } from 'react-router-dom'
 import { type Node, type Edge } from '@xyflow/react'
 import { fetchFlow, fetchFlowVersions, simulateFlow, updateFlowVersion, preflightFlow, parseNodeWarnings, type FlowVersion, type SimulationStep } from '../../lib/api'
 import FlowCanvas from '../../components/FlowCanvas'
+import { useFlowSocket } from '../../lib/useFlowSocket'
 import { NodePalette } from './NodePalette'
 import { NodeConfigPanel } from './NodeConfigPanel'
 import { convertReactFlowToGraph } from './flowGraphUtils'
@@ -49,6 +50,17 @@ export default function FlowEditorPage() {
   // Undo/redo state
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
+
+  // Live mode — WebSocket connection
+  const {
+    connected: liveConnected,
+    activeInstances: liveActiveInstances,
+    completedNodes: liveCompletedNodes,
+    activeNodes: liveActiveNodes,
+  } = useFlowSocket({
+    flowId: flowId || null,
+    enabled: mode === 'live',
+  })
 
   // Validation state
   const [validating, setValidating] = useState(false)
@@ -369,8 +381,16 @@ export default function FlowEditorPage() {
           onGraphChange={handleGraphChange}
           showMiniMap={true}
           showControls={true}
-          simCompletedNodes={mode === 'simulate' ? simCompletedNodes : undefined}
-          simActiveNode={mode === 'simulate' ? simActiveNode : undefined}
+          simCompletedNodes={
+            mode === 'simulate' ? simCompletedNodes
+            : mode === 'live' ? mergeCompletedNodes(liveCompletedNodes)
+            : undefined
+          }
+          simActiveNode={
+            mode === 'simulate' ? simActiveNode
+            : mode === 'live' ? getFirstActiveNode(liveActiveNodes)
+            : undefined
+          }
           onUndoRedoChange={handleUndoRedoChange}
           nodeWarnings={nodeWarnings}
         />
@@ -453,10 +473,31 @@ export default function FlowEditorPage() {
           <div className="editor-sim-status">
             {mode === 'simulate'
               ? simStatus === 'running' ? 'Simulating...' : simStatus === 'done' ? 'Done' : simStatus === 'failed' ? 'Failed' : 'Ready'
-              : 'Ready'}
+              : mode === 'live'
+                ? liveConnected
+                  ? `Live ${liveActiveInstances.size > 0 ? `(${liveActiveInstances.size} active)` : '(idle)'}`
+                  : 'Connecting...'
+                : 'Ready'}
           </div>
         </div>
       </div>
     </div>
   )
+}
+
+/** Merge all per-instance completed nodes into a single Set for canvas highlighting */
+function mergeCompletedNodes(map: Map<string, Set<string>>): Set<string> {
+  const merged = new Set<string>()
+  for (const nodes of map.values()) {
+    for (const nodeId of nodes) merged.add(nodeId)
+  }
+  return merged
+}
+
+/** Get the first active node across all active instances */
+function getFirstActiveNode(map: Map<string, string | null>): string | null {
+  for (const nodeId of map.values()) {
+    if (nodeId) return nodeId
+  }
+  return null
 }
