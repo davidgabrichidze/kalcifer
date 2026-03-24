@@ -242,11 +242,11 @@ docker compose -f docker-compose.dev.yml restart app
 ## 3. სამომავლო დიდი თემები (Roadmap)
 
 ### Theme A: Cognitive Architecture Expansion
-- [ ] Parallel nodes: `parallel_group` node type (Task.async_stream in FlowServer)
-- [ ] Sub-flows: `sub_flow` node type (child FlowInstance)
-- [ ] Dynamic flow selection: intake ai_decide → simple vs complex flow
-- [ ] Memory integration: long-term memory as node input
-- [ ] Multi-model support: different models for different council personas
+- [x] Parallel nodes: `parallel_group` node (Task.async_stream, timeout, on_error)
+- [x] Sub-flows: `sub_flow` node (child FlowInstance via FlowTrigger, wait/async)
+- [x] Dynamic flow selection: `flow_router` node (AI picks route → sub-flow)
+- [x] Memory integration: `memory_recall` node (recall operator memories into context)
+- [x] Multi-model support: per-node `model` config on think/decide/flow_router/agent
 
 ### Theme B: Editor Full Features
 - [x] Graph save: canvas → FlowGraph → `PUT /flows/:id/versions/:v`
