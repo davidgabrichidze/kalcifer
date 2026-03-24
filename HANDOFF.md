@@ -143,9 +143,9 @@ docker compose -f docker-compose.dev.yml restart app
 
 ### Theme C: Debugging & Observability
 - [x] Live mode: running instance real-time tracking on canvas
+- [x] Error highlighting on failed nodes (red border + ✗ badge)
 - [ ] Instance timeline overlay — execution path visualization
 - [ ] Node-level analytics (conversion rates, avg time)
-- [ ] Error highlighting on failed nodes
 
 ### Theme D: AI-Assisted Flow Building
 - [ ] Chat → flow generation: "build me an onboarding flow" → auto-creates graph
