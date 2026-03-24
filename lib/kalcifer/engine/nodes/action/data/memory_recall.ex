@@ -13,6 +13,7 @@ defmodule Kalcifer.Engine.Nodes.Action.Data.MemoryRecall do
   use Kalcifer.Engine.NodeBehaviour
 
   alias Kalcifer.AI.Context
+  # Uses Context.recall_all/2 for memory retrieval
 
   @impl true
   def execute(config, context) do
@@ -57,7 +58,7 @@ defmodule Kalcifer.Engine.Nodes.Action.Data.MemoryRecall do
   def category, do: :action
 
   defp recall_memories(config, tenant_id) do
-    memories = Context.list_memories(tenant_id)
+    memories = Context.recall_all(tenant_id)
 
     # Filter by category
     memories =

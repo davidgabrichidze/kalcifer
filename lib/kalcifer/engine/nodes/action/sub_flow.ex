@@ -17,7 +17,7 @@ defmodule Kalcifer.Engine.Nodes.Action.SubFlow do
 
   use Kalcifer.Engine.NodeBehaviour
 
-  alias Kalcifer.Engine.FlowServer
+  alias Kalcifer.Engine.FlowTrigger
   alias Kalcifer.Flows
 
   @default_timeout 60_000
@@ -111,15 +111,15 @@ defmodule Kalcifer.Engine.Nodes.Action.SubFlow do
     child_context = build_child_context(parent_context, context_mapping)
 
     customer_id = parent_context["_customer_id"] || "sub_flow"
-    tenant_id = parent_context["_tenant_id"]
+    _tenant_id = parent_context["_tenant_id"]
 
     case Flows.get_flow(flow_id) do
       nil ->
         {:failed, %{reason: "Sub-flow not found: #{flow_id}"}}
 
       flow ->
-        case FlowServer.start_instance(flow, customer_id, child_context, tenant_id) do
-          {:ok, instance_id} ->
+        case FlowTrigger.trigger(flow.id, customer_id, child_context) do
+          {:ok, instance_id, _pid} ->
             if wait do
               wait_for_completion(instance_id, timeout)
             else

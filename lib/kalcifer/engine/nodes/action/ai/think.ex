@@ -44,6 +44,9 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Think do
           sys -> [system: sys]
         end
 
+      # Per-node model override
+      opts = if config["model"], do: [{:model, config["model"]} | opts], else: opts
+
       case client().chat(messages, opts) do
         {:ok, response} ->
           {:completed, %{response: response, prompt: prompt}}
@@ -59,7 +62,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Think do
     %{
       "prompt" => %{"type" => "string", "required" => true},
       "system" => %{"type" => "string"},
-      "include_context" => %{"type" => "boolean", "default" => true}
+      "include_context" => %{"type" => "boolean", "default" => true},
+      "model" => %{
+        "type" => "string",
+        "description" => "Override AI model for this node (e.g. 'gpt-4o', 'claude-sonnet-4-5-20250514')"
+      }
     }
   end
 
@@ -74,5 +81,4 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Think do
       {:error, ["prompt is required and must be a non-empty string"]}
     end
   end
-
 end

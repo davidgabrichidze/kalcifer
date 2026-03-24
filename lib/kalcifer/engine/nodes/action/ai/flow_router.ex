@@ -116,7 +116,9 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.FlowRouter do
     Reply with ONLY the chosen route name, nothing else.
     """
 
-    case client().chat([%{role: "user", content: prompt}], []) do
+    opts = if config["model"], do: [model: config["model"]], else: []
+
+    case client().chat([%{role: "user", content: prompt}], opts) do
       {:ok, response} ->
         chosen = parse_route(response, route_names)
         flow_id = routes[chosen]

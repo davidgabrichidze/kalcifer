@@ -52,7 +52,9 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Decide do
       Reply with ONLY the chosen value, nothing else.
       """
 
-      case client().chat([%{role: "user", content: prompt}], []) do
+      opts = if config["model"], do: [model: config["model"]], else: []
+
+      case client().chat([%{role: "user", content: prompt}], opts) do
         {:ok, response} ->
           chosen = parse_branch(response, branches)
 
@@ -75,7 +77,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Decide do
     %{
       "question" => %{"type" => "string", "required" => true},
       "branches" => %{"type" => "array", "items" => %{"type" => "string"}, "required" => true},
-      "criteria" => %{"type" => "string"}
+      "criteria" => %{"type" => "string"},
+      "model" => %{
+        "type" => "string",
+        "description" => "Override AI model for this node"
+      }
     }
   end
 
