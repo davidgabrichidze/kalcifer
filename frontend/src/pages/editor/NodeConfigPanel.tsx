@@ -252,6 +252,92 @@ export function NodeConfigPanel({
           </>
         )}
 
+        {nodeType === 'send_sms' && (
+          <>
+            <div className="config-field">
+              <label className="config-label">SMS ტექსტი</label>
+              <textarea
+                className="config-textarea"
+                placeholder="გამარჯობა {{name}}! თქვენი შეკვეთა მზადაა."
+                defaultValue={(nodeConfig.body as string) || ''}
+                onChange={e => handleConfigChange('body', e.target.value)}
+                style={{ minHeight: '80px' }}
+                maxLength={320}
+              />
+              <div style={{ fontSize: '9px', color: 'var(--color-text-muted)', marginTop: '3px', display: 'flex', justifyContent: 'space-between' }}>
+                <span>{'{{name}}, {{phone}} — ცვლადები'}</span>
+                <span style={{ color: ((nodeConfig.body as string) || '').length > 160 ? 'var(--color-danger)' : 'var(--color-text-muted)' }}>
+                  {((nodeConfig.body as string) || '').length}/160
+                </span>
+              </div>
+            </div>
+            <div className="config-field">
+              <label className="config-label">Sender ID</label>
+              <input
+                className="config-input"
+                type="text"
+                placeholder="Kalcifer"
+                defaultValue={(nodeConfig.sender_id as string) || ''}
+                onChange={e => handleConfigChange('sender_id', e.target.value)}
+              />
+            </div>
+
+            {/* Phone mockup preview */}
+            <div className="config-field">
+              <label className="config-label">Preview</label>
+              <div style={{
+                width: '100%',
+                maxWidth: 220,
+                margin: '0 auto',
+                background: '#1a1a1a',
+                borderRadius: 20,
+                padding: '28px 12px 20px',
+                position: 'relative',
+              }}>
+                {/* Notch */}
+                <div style={{
+                  width: 60,
+                  height: 4,
+                  background: '#333',
+                  borderRadius: 4,
+                  margin: '-16px auto 12px',
+                }} />
+                {/* Screen */}
+                <div style={{
+                  background: '#f0f0f0',
+                  borderRadius: 12,
+                  padding: 10,
+                  minHeight: 100,
+                }}>
+                  <div style={{ fontSize: 8, color: '#999', textAlign: 'center', marginBottom: 6 }}>
+                    {(nodeConfig.sender_id as string) || 'Kalcifer'}
+                  </div>
+                  <div style={{
+                    background: '#e5e5ea',
+                    borderRadius: 12,
+                    padding: '8px 10px',
+                    fontSize: 10,
+                    color: '#000',
+                    lineHeight: 1.4,
+                    maxWidth: '85%',
+                    wordBreak: 'break-word',
+                  }}>
+                    {(nodeConfig.body as string) || 'შეტყობინების ტექსტი...'}
+                  </div>
+                </div>
+                {/* Home indicator */}
+                <div style={{
+                  width: 40,
+                  height: 3,
+                  background: '#555',
+                  borderRadius: 3,
+                  margin: '10px auto 0',
+                }} />
+              </div>
+            </div>
+          </>
+        )}
+
         {nodeType === 'call_webhook' && (
           <>
             <div className="config-field">
