@@ -1,5 +1,77 @@
 const API_BASE = '/api/v1'
 
+// ── Auth types ─────────────────────────────────────────
+
+export interface AuthUser {
+  id: string
+  email: string
+  name: string
+  avatar_url: string | null
+}
+
+export interface AuthResponse {
+  user: AuthUser
+  token: string
+  tenant_id: string
+}
+
+let _authToken: string | null = localStorage.getItem('kalcifer_token')
+
+export function setAuthToken(token: string | null) {
+  _authToken = token
+  if (token) {
+    localStorage.setItem('kalcifer_token', token)
+  } else {
+    localStorage.removeItem('kalcifer_token')
+  }
+}
+
+export function getAuthToken(): string | null {
+  return _authToken
+}
+
+/** Inject auth token into fetch requests */
+function authHeaders(): Record<string, string> {
+  if (_authToken) {
+    return { Authorization: `Bearer ${_authToken}` }
+  }
+  return {}
+}
+
+export async function googleLogin(idToken: string): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE}/auth/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_token: idToken }),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || `HTTP ${res.status}`)
+  }
+  const data: AuthResponse = await res.json()
+  setAuthToken(data.token)
+  return data
+}
+
+export async function fetchMe(): Promise<AuthUser | null> {
+  if (!_authToken) return null
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, {
+      headers: authHeaders(),
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.user
+  } catch {
+    return null
+  }
+}
+
+export function logout() {
+  setAuthToken(null)
+  localStorage.removeItem('kalcifer_user')
+}
+
 // ── Conversation types ──────────────────────────────────
 
 export interface Conversation {

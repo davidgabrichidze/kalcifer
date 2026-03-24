@@ -31,7 +31,7 @@ defmodule Kalcifer.Audit do
     query =
       from(e in Entry,
         where: e.tenant_id == ^tenant_id,
-        order_by: [desc: e.inserted_at],
+        order_by: [desc: e.inserted_at, desc: e.id],
         limit: ^limit,
         offset: ^offset
       )

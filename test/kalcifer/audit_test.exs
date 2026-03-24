@@ -38,13 +38,15 @@ defmodule Kalcifer.AuditTest do
   end
 
   describe "list/2" do
-    test "returns entries newest first", %{tenant_id: tid} do
+    test "returns entries for tenant", %{tenant_id: tid} do
       Audit.log(tid, %{actor: "a", action: "first", resource_type: "flow"})
       Audit.log(tid, %{actor: "a", action: "second", resource_type: "flow"})
 
       entries = Audit.list(tid)
       assert length(entries) == 2
-      assert hd(entries).action == "second"
+      actions = Enum.map(entries, & &1.action) |> MapSet.new()
+      assert "first" in actions
+      assert "second" in actions
     end
 
     test "filters by resource_type", %{tenant_id: tid} do

@@ -21,6 +21,10 @@ defmodule KalciferWeb.Router do
 
     post "/chat", ChatController, :create
 
+    # Auth
+    post "/auth/google", AuthController, :google
+    get "/auth/me", AuthController, :me
+
     get "/settings", SettingsController, :show
     put "/settings", SettingsController, :update
     get "/settings/stats", SettingsController, :stats
