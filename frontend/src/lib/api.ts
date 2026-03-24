@@ -608,6 +608,43 @@ export async function fetchInstanceTimeline(id: string): Promise<ExecutionStepDa
   return json.data
 }
 
+// ── Analytics API ───────────────────────────────────────
+
+export interface NodeAnalytics {
+  node_id: string
+  executed: number
+  completed: number
+  failed: number
+}
+
+export interface FlowSummaryStats {
+  entered: number
+  completed: number
+  failed: number
+  exited: number
+  conversions: number
+}
+
+export async function fetchNodeAnalytics(
+  flowId: string,
+  opts?: { version?: number },
+): Promise<NodeAnalytics[]> {
+  const params = new URLSearchParams()
+  if (opts?.version) params.set('version', String(opts.version))
+  const qs = params.toString()
+  const res = await fetch(`${API_BASE}/flows/${flowId}/analytics/nodes${qs ? `?${qs}` : ''}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
+export async function fetchFlowSummary(flowId: string): Promise<FlowSummaryStats> {
+  const res = await fetch(`${API_BASE}/flows/${flowId}/analytics/summary`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json = await res.json()
+  return json.data
+}
+
 // ── Flow Version API ────────────────────────────────────
 
 export async function updateFlowVersion(

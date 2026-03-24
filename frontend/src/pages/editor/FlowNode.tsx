@@ -37,7 +37,13 @@ const categoryColorMap: Record<string, { bg: string; text: string; border: strin
   },
 }
 
-export function FlowNode({ data, selected }: { data: FlowNodeData & { simCompleted?: boolean; simActive?: boolean; warnings?: string[] | null; failed?: boolean }; selected: boolean }) {
+interface AnalyticsData {
+  executed: number
+  completed: number
+  failed: number
+}
+
+export function FlowNode({ data, selected }: { data: FlowNodeData & { simCompleted?: boolean; simActive?: boolean; warnings?: string[] | null; failed?: boolean; analytics?: AnalyticsData | null }; selected: boolean }) {
   const nodeTypeInfo = getNodeType(data.type)
   const category = nodeTypeInfo?.category || 'action'
   const colors = categoryColorMap[category]
@@ -118,6 +124,25 @@ export function FlowNode({ data, selected }: { data: FlowNodeData & { simComplet
         {data.description && <div className="flow-node-desc">{data.description}</div>}
         {data.configDetail && <div className="flow-node-config">{data.configDetail}</div>}
       </div>
+
+      {/* Analytics overlay */}
+      {data.analytics && data.analytics.executed > 0 && (
+        <div className="flow-node-analytics">
+          <span className="flow-node-analytics-stat" title="შესრულებული">
+            {data.analytics.completed}
+            <span className="flow-node-analytics-label">✓</span>
+          </span>
+          {data.analytics.failed > 0 && (
+            <span className="flow-node-analytics-stat failed" title="წარუმატებელი">
+              {data.analytics.failed}
+              <span className="flow-node-analytics-label">✗</span>
+            </span>
+          )}
+          <span className="flow-node-analytics-rate" title="წარმატების %">
+            {Math.round((data.analytics.completed / data.analytics.executed) * 100)}%
+          </span>
+        </div>
+      )}
 
       {/* Output handles */}
       {category !== 'end' && (

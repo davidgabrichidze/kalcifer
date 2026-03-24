@@ -10,6 +10,7 @@ import {
   fetchFlowVersions,
   fetchInstances,
   fetchInstanceTimeline,
+  fetchNodeAnalytics,
   simulateFlow,
   updateFlowVersion,
   preflightFlow,
@@ -18,6 +19,7 @@ import {
   type SimulationStep,
   type FlowInstanceSummary,
   type ExecutionStepData,
+  type NodeAnalytics,
 } from '../lib/api'
 import FlowCanvas from './FlowCanvas'
 import { useFlowSocket } from '../lib/useFlowSocket'
@@ -93,6 +95,10 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
   const [timelineCompletedNodes, setTimelineCompletedNodes] = useState<Set<string>>(new Set())
   const [timelineFailedNodes, setTimelineFailedNodes] = useState<Set<string>>(new Set())
   const [showInstancePicker, setShowInstancePicker] = useState(false)
+
+  // Node-level analytics
+  const [analyticsMap, setAnalyticsMap] = useState<Map<string, { executed: number; completed: number; failed: number }> | undefined>(undefined)
+  const [showAnalytics, setShowAnalytics] = useState(false)
 
   // Simulation
   const [simStatus, setSimStatus] = useState<'idle' | 'running' | 'done' | 'failed'>('idle')
@@ -271,6 +277,29 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode])
 
+  // Load node analytics when toggled on
+  useEffect(() => {
+    if (!showAnalytics || !flowId) {
+      setAnalyticsMap(undefined)
+      return
+    }
+
+    const version = flowVersion?.version_number || 1
+    fetchNodeAnalytics(flowId, { version })
+      .then((data: NodeAnalytics[]) => {
+        const map = new Map<string, { executed: number; completed: number; failed: number }>()
+        for (const item of data) {
+          map.set(item.node_id, {
+            executed: item.executed,
+            completed: item.completed,
+            failed: item.failed,
+          })
+        }
+        setAnalyticsMap(map.size > 0 ? map : undefined)
+      })
+      .catch(() => setAnalyticsMap(undefined))
+  }, [showAnalytics, flowId, flowVersion?.version_number])
+
   // Load instances list when entering live mode
   useEffect(() => {
     if (mode === 'live' && flowId) {
@@ -400,6 +429,13 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
             {validating ? '...' : nodeWarnings && nodeWarnings.size > 0 ? `⚠${nodeWarnings.size}` : '✓'}
           </button>
           <button
+            className={`fei-btn ${showAnalytics ? 'has-changes' : ''}`}
+            onClick={() => setShowAnalytics(a => !a)}
+            title="ანალიტიკა"
+          >
+            📊
+          </button>
+          <button
             className={`fei-btn ${hasChanges ? 'has-changes' : ''}`}
             onClick={saveGraph}
             disabled={saving || !hasChanges}
@@ -446,6 +482,7 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
             : mode === 'live' ? liveFailedNodes
             : undefined
           }
+          nodeAnalytics={showAnalytics ? analyticsMap : undefined}
         />
 
         {/* Node Palette */}

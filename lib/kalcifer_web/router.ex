@@ -41,6 +41,11 @@ defmodule KalciferWeb.Router do
     get "/instances/:id", InstanceBrowseController, :show
     get "/instances/:id/timeline", InstanceBrowseController, :timeline
 
+    # Analytics (dev frontend, unauthenticated)
+    get "/flows/:flow_id/analytics/summary", AnalyticsController, :summary
+    get "/flows/:flow_id/analytics/nodes", AnalyticsController, :nodes
+    get "/flows/:flow_id/analytics/funnel", AnalyticsController, :funnel
+
     get "/conversations", ConversationController, :index
     get "/conversations/:id", ConversationController, :show
     put "/conversations/:id", ConversationController, :update
