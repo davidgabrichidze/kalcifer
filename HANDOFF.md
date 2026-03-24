@@ -138,7 +138,7 @@ docker compose -f docker-compose.dev.yml restart app
 - [x] Delete shortcut: Delete/Backspace
 - [x] Validation overlay: preflight warnings on nodes
 - [x] Edge labels with branch conditions ("✓ yes" / "✗ no")
-- [ ] Copy/paste nodes
+- [x] Copy/paste nodes (Ctrl+C/Ctrl+V)
 - [ ] Node groups / subflows
 
 ### Theme C: Debugging & Observability
