@@ -611,6 +611,12 @@
   color: white;
 }
 
+.editor-top-btn.has-changes {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-color: var(--color-primary);
+}
+
 .editor-sim-btn.stop {
   background: var(--color-danger-soft);
   color: var(--color-danger);

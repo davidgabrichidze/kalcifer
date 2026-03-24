@@ -146,3 +146,39 @@ export function convertGraphToReactFlow(
 
   return { nodes, edges }
 }
+
+/**
+ * Convert React Flow nodes/edges back to backend FlowGraph format.
+ * Preserves node configs from the original graph.
+ */
+export function convertReactFlowToGraph(
+  rfNodes: Node[],
+  rfEdges: Edge[],
+  originalGraph?: FlowGraph | null,
+): FlowGraph {
+  // Build config lookup from original graph
+  const configMap = new Map<string, Record<string, unknown>>()
+  if (originalGraph) {
+    for (const n of originalGraph.nodes) {
+      configMap.set(n.id, n.config)
+    }
+  }
+
+  const nodes: FlowGraphNode[] = rfNodes.map(n => ({
+    id: n.id,
+    type: (n.data as Record<string, unknown>).type as string || 'unknown',
+    config: configMap.get(n.id) || {},
+  }))
+
+  const edges = rfEdges.map(e => {
+    const edge: { id: string; source: string; target: string; branch?: string } = {
+      id: e.id,
+      source: e.source,
+      target: e.target,
+    }
+    if (e.sourceHandle) edge.branch = e.sourceHandle
+    return edge
+  })
+
+  return { nodes, edges }
+}

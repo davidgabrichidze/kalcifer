@@ -6,10 +6,11 @@ import {
 } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { type Node, type Edge } from '@xyflow/react'
-import { fetchFlow, fetchFlowVersions, simulateFlow, type FlowVersion, type SimulationStep } from '../../lib/api'
+import { fetchFlow, fetchFlowVersions, simulateFlow, updateFlowVersion, type FlowVersion, type SimulationStep } from '../../lib/api'
 import FlowCanvas from '../../components/FlowCanvas'
 import { NodePalette } from './NodePalette'
 import { NodeConfigPanel } from './NodeConfigPanel'
+import { convertReactFlowToGraph } from './flowGraphUtils'
 import './editor.css'
 
 
@@ -38,6 +39,12 @@ export default function FlowEditorPage() {
   // Track node/edge counts from FlowCanvas
   const [nodeCount, setNodeCount] = useState(0)
   const [edgeCount, setEdgeCount] = useState(0)
+
+  // Save state
+  const [saving, setSaving] = useState(false)
+  const [hasChanges, setHasChanges] = useState(false)
+  const latestNodesRef = useRef<Node[]>([])
+  const latestEdgesRef = useRef<Edge[]>([])
 
   // Simulation state
   const [simStatus, setSimStatus] = useState<'idle' | 'running' | 'done' | 'failed'>('idle')
@@ -79,10 +86,13 @@ export default function FlowEditorPage() {
     [],
   )
 
-  // Track graph changes for bottom bar stats
+  // Track graph changes for bottom bar stats + save
   const handleGraphChange = useCallback((nodes: Node[], edges: Edge[]) => {
     setNodeCount(nodes.length)
     setEdgeCount(edges.length)
+    latestNodesRef.current = nodes
+    latestEdgesRef.current = edges
+    setHasChanges(true)
   }, [])
 
   // Palette: add node (TODO: wire to FlowCanvas via ref or callback)
@@ -109,6 +119,36 @@ export default function FlowEditorPage() {
     setSelectedNodeId(null)
     setConfigOpen(false)
   }, [])
+
+  const saveGraph = useCallback(async () => {
+    if (!flowId || !flowVersion || saving) return
+    setSaving(true)
+    try {
+      const graph = convertReactFlowToGraph(
+        latestNodesRef.current,
+        latestEdgesRef.current,
+        flowVersion.graph,
+      )
+      await updateFlowVersion(flowId, flowVersion.version_number, graph)
+      setHasChanges(false)
+    } catch (err) {
+      console.error('Save failed:', err)
+    } finally {
+      setSaving(false)
+    }
+  }, [flowId, flowVersion, saving])
+
+  // Keyboard shortcut: Ctrl+S
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault()
+        saveGraph()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [saveGraph])
 
   const startSimulation = useCallback(() => {
     if (!flowId || simStatus === 'running') return
@@ -235,6 +275,14 @@ export default function FlowEditorPage() {
             title="Toggle node palette"
           >
             + Node
+          </button>
+          <button
+            className={`editor-top-btn ${hasChanges ? 'has-changes' : ''}`}
+            onClick={saveGraph}
+            disabled={saving || !hasChanges}
+            title="Save (Ctrl+S)"
+          >
+            {saving ? '...' : '💾 Save'}
           </button>
           <div className="editor-avatar">DG</div>
         </div>
