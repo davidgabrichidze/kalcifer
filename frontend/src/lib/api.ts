@@ -287,6 +287,7 @@ export interface SessionClassification {
   kind: 'campaign' | 'flow' | 'analysis' | 'debug'
   title: string
   reason?: string
+  flow_id?: string
 }
 
 export interface ChatStreamCallbacks {

@@ -1,0 +1,234 @@
+/* ════════════════════════════════════════════════════════════
+   Flow Editor Inline — compact editor for WorkPage context panel
+   ════════════════════════════════════════════════════════════ */
+
+.fei-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ─── Loading / Error ─── */
+.fei-loading,
+.fei-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  gap: 8px;
+}
+
+.fei-loading-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  animation: typingDot 1.2s infinite;
+}
+
+.fei-error {
+  color: var(--color-danger);
+}
+
+/* ─── Compact Toolbar ─── */
+.fei-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  height: 38px;
+  min-height: 38px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.fei-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.fei-flow-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.fei-flow-status {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.fei-flow-version {
+  font-size: 9px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+.fei-toolbar-center {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.fei-mode-btn {
+  width: 28px;
+  height: 26px;
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-dim);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fei-mode-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.fei-mode-btn.active {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-color: var(--color-primary);
+}
+
+.fei-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.fei-btn {
+  width: 28px;
+  height: 26px;
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-dim);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.fei-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.fei-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.fei-btn.has-changes {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-color: var(--color-primary);
+}
+
+/* ─── Canvas Area ─── */
+.fei-canvas-area {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ─── Status Bar ─── */
+.fei-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  height: 28px;
+  min-height: 28px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.fei-status-left,
+.fei-status-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fei-stat {
+  font-size: 9px;
+  color: var(--color-text-muted);
+}
+
+.fei-stat-warn {
+  color: var(--color-warn);
+}
+
+.fei-mode-label {
+  font-size: 9px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  padding: 2px 6px;
+  background: var(--color-surface-dim);
+  border-radius: var(--radius-xs);
+}
+
+.fei-sim-btn {
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--radius-xs);
+  font-size: 10px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-dim);
+  color: var(--color-text-sec);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.fei-sim-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.fei-sim-stop {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.fei-sim-stop:hover {
+  background: var(--color-danger);
+  color: white;
+}

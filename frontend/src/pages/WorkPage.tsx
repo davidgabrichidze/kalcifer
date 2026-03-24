@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import ChatPanel from '../components/ChatPanel'
 import FlowCanvas from '../components/FlowCanvas'
+import FlowEditorInline from '../components/FlowEditorInline'
 import Sidebar from '../components/Sidebar'
 import WelcomeScreen from '../components/WelcomeScreen'
 import { fetchConversations, type SessionClassification, type FlowGraph } from '../lib/api'
@@ -19,14 +20,17 @@ type Stage = 'welcome' | 'lobby' | 'chat' | 'split' | 'context'
 
 /**
  * Context area content — discriminated union for different content types.
- * Currently supports flow-canvas; future types (report, analytics) can be added.
+ * - flow-canvas: read-only flow graph preview (from tool results)
+ * - flow-editor: interactive flow editor (when chat is about a specific flow)
  */
 export type ContextContent =
   | { type: 'flow-canvas'; flowGraph: FlowGraph }
+  | { type: 'flow-editor'; flowId: string }
   | null
 
 export default function WorkPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [stage, setStage] = useState<Stage>('welcome')
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [sessionKind, setSessionKind] = useState<SessionClassification | null>(null)
@@ -110,10 +114,17 @@ export default function WorkPage() {
     setSidebarRefreshKey(k => k + 1)
   }, [syncUrl])
 
-  // Chat panel: session classified
+  // Chat panel: session classified — if flow kind with flow_id, open editor
   const handleSessionClassified = useCallback((classification: SessionClassification) => {
     setSessionKind(classification)
     setSidebarRefreshKey(k => k + 1)
+
+    // Auto-open flow editor when session is about a specific flow
+    if (classification.flow_id && (classification.kind === 'flow' || classification.kind === 'campaign')) {
+      setContextContent({ type: 'flow-editor', flowId: classification.flow_id })
+      setContextScrollable(false)
+      setStage(prev => (prev === 'chat' || prev === 'lobby') ? 'split' : prev)
+    }
   }, [])
 
   // Clear initial message after it's been consumed
@@ -136,7 +147,7 @@ export default function WorkPage() {
   // Context area: receive content from ChatPanel (tool results)
   const handleContextContent = useCallback((content: ContextContent) => {
     setContextContent(content)
-    setContextScrollable(content?.type !== 'flow-canvas') // canvas = no scroll
+    setContextScrollable(content?.type !== 'flow-canvas' && content?.type !== 'flow-editor')
     if (stage === 'chat' || stage === 'lobby') {
       setStage('split')
     }
@@ -152,6 +163,11 @@ export default function WorkPage() {
   const handleToggleExpand = useCallback(() => {
     setStage(s => s === 'split' ? 'context' : 'split')
   }, [])
+
+  // Open full editor page for a flow
+  const handleOpenFullEditor = useCallback((flowId: string) => {
+    navigate(`/editor?flow=${flowId}`)
+  }, [navigate])
 
   const showSidebar = stage !== 'welcome'
   const showWelcome = stage === 'welcome' || stage === 'lobby'
@@ -229,6 +245,13 @@ export default function WorkPage() {
             editable={false}
             showMiniMap={stage === 'context'}
             showControls={true}
+          />
+        )}
+
+        {contextContent?.type === 'flow-editor' && (
+          <FlowEditorInline
+            flowId={contextContent.flowId}
+            onOpenFullEditor={handleOpenFullEditor}
           />
         )}
       </div>

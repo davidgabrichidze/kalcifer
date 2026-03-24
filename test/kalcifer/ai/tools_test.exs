@@ -941,6 +941,40 @@ defmodule Kalcifer.AI.ToolsTest do
                  %{conversation_id: Ecto.UUID.generate()}
                )
     end
+
+    test "includes flow_id in result when provided", %{tenant_id: tid} do
+      {:ok, conv} = Context.create_conversation(tid)
+      flow_id = Ecto.UUID.generate()
+
+      assert {:ok, json} =
+               Tools.execute(
+                 "classify_session",
+                 %{"kind" => "flow", "title" => "Edit Flow", "flow_id" => flow_id},
+                 tid,
+                 %{conversation_id: conv.id}
+               )
+
+      result = Jason.decode!(json)
+      assert result["classified"] == true
+      assert result["kind"] == "flow"
+      assert result["flow_id"] == flow_id
+    end
+
+    test "omits flow_id from result when not provided", %{tenant_id: tid} do
+      {:ok, conv} = Context.create_conversation(tid)
+
+      assert {:ok, json} =
+               Tools.execute(
+                 "classify_session",
+                 %{"kind" => "flow", "title" => "New Flow"},
+                 tid,
+                 %{conversation_id: conv.id}
+               )
+
+      result = Jason.decode!(json)
+      assert result["classified"] == true
+      refute Map.has_key?(result, "flow_id")
+    end
   end
 
   # ── remember & recall ────────────────────────────────────────

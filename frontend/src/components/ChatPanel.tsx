@@ -227,13 +227,19 @@ export default function ChatPanel({
     )
   }
 
-  // Detect flow graph in tool results and notify parent
-  const FLOW_TOOLS = ['create_flow', 'get_flow_graph', 'add_node', 'modify_node']
+  // Detect flow graph/flow_id in tool results and notify parent
+  const FLOW_TOOLS = ['create_flow', 'get_flow_graph', 'add_node', 'modify_node', 'get_flow']
   function detectFlowGraph(tool: string, result: string) {
     if (!onContextContent || !FLOW_TOOLS.includes(tool)) return
     try {
       const parsed = JSON.parse(result)
-      if (parsed.graph?.nodes && parsed.graph?.edges) {
+      // If result contains a flow_id, open the interactive editor
+      if (parsed.id && parsed.graph) {
+        onContextContent({ type: 'flow-editor', flowId: parsed.id })
+      } else if (parsed.flow_id) {
+        onContextContent({ type: 'flow-editor', flowId: parsed.flow_id })
+      } else if (parsed.graph?.nodes && parsed.graph?.edges) {
+        // Fallback: show read-only canvas if we only have the graph (no flow_id)
         onContextContent({ type: 'flow-canvas', flowGraph: parsed.graph })
       }
     } catch { /* not graph JSON, ignore */ }
@@ -461,6 +467,30 @@ export default function ChatPanel({
                         {t.status === 'done' && FLOW_TOOLS.includes(t.tool) && t.result && (() => {
                           try {
                             const parsed = JSON.parse(t.result!)
+                            // Prefer opening interactive editor if we have flow_id
+                            const flowId = parsed.id || parsed.flow_id
+                            if (flowId) {
+                              return (
+                                <button
+                                  onClick={() => onContextContent?.({ type: 'flow-editor', flowId })}
+                                  style={{
+                                    marginLeft: 4,
+                                    padding: '1px 6px',
+                                    borderRadius: 4,
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                    background: 'var(--color-primary-soft)',
+                                    color: 'var(--color-primary)',
+                                    border: '1px solid var(--color-primary-muted)',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                  }}
+                                  title="ედიტორში გახსნა"
+                                >
+                                  ⤢ ედიტორი
+                                </button>
+                              )
+                            }
                             if (parsed.graph?.nodes && parsed.graph?.edges) {
                               return (
                                 <button

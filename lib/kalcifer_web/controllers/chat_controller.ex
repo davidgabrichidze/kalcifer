@@ -202,11 +202,16 @@ defmodule KalciferWeb.ChatController do
 
         case Jason.decode(result) do
           {:ok, %{"classified" => true} = data} ->
-            chunk_sse(conn, "session_classified", %{
+            event = %{
               kind: data["kind"],
               title: data["title"],
               reason: data["reason"]
-            })
+            }
+
+            event =
+              if data["flow_id"], do: Map.put(event, :flow_id, data["flow_id"]), else: event
+
+            chunk_sse(conn, "session_classified", event)
 
           _ ->
             :ok
@@ -346,11 +351,16 @@ defmodule KalciferWeb.ChatController do
   defp maybe_emit_session_classified(conn, "classify_session", result) do
     case Jason.decode(result) do
       {:ok, %{"classified" => true} = data} ->
-        chunk_sse(conn, "session_classified", %{
+        event = %{
           kind: data["kind"],
           title: data["title"],
           reason: data["reason"]
-        })
+        }
+
+        event =
+          if data["flow_id"], do: Map.put(event, :flow_id, data["flow_id"]), else: event
+
+        chunk_sse(conn, "session_classified", event)
 
       _ ->
         :ok

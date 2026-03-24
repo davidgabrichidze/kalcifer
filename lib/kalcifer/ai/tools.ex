@@ -51,6 +51,10 @@ defmodule Kalcifer.AI.Tools do
 
       Call this ONCE per session, when the purpose becomes clear.
       Include a suggested title for the session.
+
+      If the session is about a specific existing flow, include its flow_id so the
+      editor can be shown alongside the chat. If creating a new flow, omit flow_id
+      (it will be set when create_flow is called).
       """,
       input_schema: %{
         type: "object",
@@ -62,11 +66,19 @@ defmodule Kalcifer.AI.Tools do
           },
           title: %{
             type: "string",
-            description: "A short, human-readable title for this session (e.g. 'Welcome კამპანია', 'Onboarding ფლოუ')"
+            description:
+              "A short, human-readable title for this session (e.g. 'Welcome კამპანია', 'Onboarding ფლოუ')"
           },
           reason: %{
             type: "string",
-            description: "Brief explanation of why you think this is the right type (shown to user)"
+            description:
+              "Brief explanation of why you think this is the right type (shown to user)"
+          },
+          flow_id: %{
+            type: "string",
+            description:
+              "UUID of the flow this session is about, if working with an existing flow. " <>
+                "Omit when creating a new flow or when no specific flow is involved."
           }
         },
         required: ["kind", "title"]
@@ -401,7 +413,9 @@ defmodule Kalcifer.AI.Tools do
   rescue
     e ->
       Logger.error("AI tool crash: #{tool_name} #{Exception.message(e)}")
-      {:error, "Internal error executing #{tool_name}. Check that all IDs are real UUIDs, not placeholders."}
+
+      {:error,
+       "Internal error executing #{tool_name}. Check that all IDs are real UUIDs, not placeholders."}
   end
 
   # UUID fields that must be valid UUIDs (not placeholder strings)
@@ -456,6 +470,7 @@ defmodule Kalcifer.AI.Tools do
       kind = Map.fetch!(input, "kind")
       title = Map.get(input, "title")
       reason = Map.get(input, "reason", "")
+      flow_id = Map.get(input, "flow_id")
 
       case Context.get_conversation(conversation_id) do
         nil ->
@@ -471,6 +486,8 @@ defmodule Kalcifer.AI.Tools do
                 reason: reason,
                 needs_confirmation: true
               }
+
+              result = if flow_id, do: Map.put(result, :flow_id, flow_id), else: result
 
               {:ok, Jason.encode!(result, pretty: true)}
 
@@ -575,7 +592,8 @@ defmodule Kalcifer.AI.Tools do
     version_number = Map.get(input, "version_number")
 
     with {:flow, flow} when not is_nil(flow) <- {:flow, Flows.get_flow(flow_id)},
-         {:version, version} when not is_nil(version) <- {:version, resolve_version(flow, version_number)} do
+         {:version, version} when not is_nil(version) <-
+           {:version, resolve_version(flow, version_number)} do
       graph = version.graph || %{"nodes" => [], "edges" => []}
 
       result = %{
@@ -601,7 +619,8 @@ defmodule Kalcifer.AI.Tools do
     new_edges = Map.get(input, "edges", [])
 
     with {:flow, flow} when not is_nil(flow) <- {:flow, Flows.get_flow(flow_id)},
-         {:version, version} when not is_nil(version) <- {:version, get_or_create_draft_version(flow)} do
+         {:version, version} when not is_nil(version) <-
+           {:version, get_or_create_draft_version(flow)} do
       graph = version.graph || %{"nodes" => [], "edges" => []}
       nodes = Map.get(graph, "nodes", [])
       edges = Map.get(graph, "edges", [])
@@ -670,7 +689,8 @@ defmodule Kalcifer.AI.Tools do
     new_config = Map.fetch!(input, "config")
 
     with {:flow, flow} when not is_nil(flow) <- {:flow, Flows.get_flow(flow_id)},
-         {:version, version} when not is_nil(version) <- {:version, get_or_create_draft_version(flow)} do
+         {:version, version} when not is_nil(version) <-
+           {:version, get_or_create_draft_version(flow)} do
       graph = version.graph || %{"nodes" => [], "edges" => []}
       nodes = Map.get(graph, "nodes", [])
 
@@ -714,8 +734,15 @@ defmodule Kalcifer.AI.Tools do
       # Preflight
       preflight =
         case FlowGraph.preflight(graph, NodeRegistry) do
-          {:ok, info} -> %{valid: true, warnings: Map.get(info, :warnings, []), context_deps: Map.get(info, :context_deps, [])}
-          {:error, errors} -> %{valid: false, errors: errors}
+          {:ok, info} ->
+            %{
+              valid: true,
+              warnings: Map.get(info, :warnings, []),
+              context_deps: Map.get(info, :context_deps, [])
+            }
+
+          {:error, errors} ->
+            %{valid: false, errors: errors}
         end
 
       # Node stats by category
@@ -724,7 +751,10 @@ defmodule Kalcifer.AI.Tools do
           category =
             case NodeRegistry.lookup(node["type"]) do
               {:ok, mod} ->
-                if function_exported?(mod, :category, 0), do: to_string(mod.category()), else: "unknown"
+                if function_exported?(mod, :category, 0),
+                  do: to_string(mod.category()),
+                  else: "unknown"
+
               :error ->
                 "unknown"
             end
@@ -849,10 +879,11 @@ defmodule Kalcifer.AI.Tools do
     case Map.get(input, "key") do
       nil ->
         # Recall all memories
-        opts = case Map.get(input, "category") do
-          nil -> []
-          cat -> [category: cat]
-        end
+        opts =
+          case Map.get(input, "category") do
+            nil -> []
+            cat -> [category: cat]
+          end
 
         memories = Context.recall_all(tenant_id, opts)
 
@@ -869,7 +900,13 @@ defmodule Kalcifer.AI.Tools do
             {:ok, Jason.encode!(%{found: false, key: key})}
 
           memory ->
-            {:ok, Jason.encode!(%{found: true, key: memory.key, value: memory.value, category: memory.category})}
+            {:ok,
+             Jason.encode!(%{
+               found: true,
+               key: memory.key,
+               value: memory.value,
+               category: memory.category
+             })}
         end
     end
   end
