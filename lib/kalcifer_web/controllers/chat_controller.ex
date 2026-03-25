@@ -162,15 +162,17 @@ defmodule KalciferWeb.ChatController do
 
         listen_for_events(conn, state)
 
-      # Engine: flow completed
-      %{type: "instance_completed"} ->
-        full_text = state.full_text || ""
-
-        if full_text != "" do
-          Context.add_message(state.conversation_id, "assistant", full_text)
+      # Agent node finished — save full text immediately (even if client disconnects)
+      %{type: "agent_done", payload: %{text: text}} ->
+        if text && text != "" do
+          Context.add_message(state.conversation_id, "assistant", text)
         end
 
-        chunk_sse(conn, "done", %{text: full_text})
+        listen_for_events(conn, %{state | full_text: text})
+
+      # Engine: flow completed
+      %{type: "instance_completed"} ->
+        chunk_sse(conn, "done", %{text: state.full_text || ""})
         chunk_sse(conn, "activity_done", %{status: "completed"})
         conn
 
