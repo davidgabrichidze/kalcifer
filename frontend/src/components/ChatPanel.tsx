@@ -388,16 +388,45 @@ export default function ChatPanel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMessage])
 
-  // Load conversation history when switching via sidebar
+  // Load conversation history + cleanup — single effect to avoid race conditions
   const loadedConvRef = useRef<string | null>(null)
   useEffect(() => {
-    if (!conversationId || conversationId === loadedConvRef.current) return
+    // 1. Abort any in-flight stream from previous conversation
+    if (abortRef.current) {
+      abortRef.current.abort()
+      abortRef.current = null
+    }
+
+    // 2. Reset streaming state
+    setIsTyping(false)
+    setStreamingId(null)
+    activeAiIdRef.current = null
+    setActivityExpanded(false)
+
+    // 3. Handle no conversation (cleared)
+    if (!conversationId) {
+      if (!initialMessage) {
+        loadedConvRef.current = null
+        initialMessageSentRef.current = false
+        setMessages([])
+      }
+      return
+    }
+
+    // 4. Skip reload if same conversation AND not a fresh switch
+    //    (loadedConvRef prevents re-fetching on re-renders, but allows
+    //     reload when explicitly switching back to same conversation)
+    if (conversationId === loadedConvRef.current) return
     if (initialMessage) return // Skip if we're sending initial message
+
     loadedConvRef.current = conversationId
 
+    // 5. Load history from backend
     async function loadHistory() {
       try {
         const detail = await fetchConversation(conversationId!)
+        // Guard: don't set messages if user already switched away
+        if (loadedConvRef.current !== conversationId) return
         const loaded: ChatMessage[] = detail.messages.map(m =>
           createMessage(m.role === 'user' ? 'user' : 'ai', m.content),
         )
@@ -407,28 +436,6 @@ export default function ChatPanel({
       }
     }
     loadHistory()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationId])
-
-  // Full cleanup when conversation changes or is cleared
-  useEffect(() => {
-    // Abort any in-flight stream from previous conversation
-    if (abortRef.current) {
-      abortRef.current.abort()
-      abortRef.current = null
-    }
-
-    // Reset all streaming/typing state
-    setIsTyping(false)
-    setStreamingId(null)
-    activeAiIdRef.current = null
-    setActivityExpanded(false)
-
-    if (!conversationId && !initialMessage) {
-      loadedConvRef.current = null
-      initialMessageSentRef.current = false
-      setMessages([])
-    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId])
 

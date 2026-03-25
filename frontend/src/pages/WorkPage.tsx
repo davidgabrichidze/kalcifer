@@ -46,6 +46,9 @@ export default function WorkPage() {
   // Artifacts — collected from tool results during conversation
   const [artifacts, setArtifacts] = useState<Artifact[]>([])
 
+  // Unread tracking: lastSeenMap records when user last viewed each conversation
+  const [lastSeenMap, setLastSeenMap] = useState<Map<string, string>>(new Map())
+
   // On mount: check URL for conversation ID, or check if conversations exist
   useEffect(() => {
     if (initializedRef.current) return
@@ -53,9 +56,11 @@ export default function WorkPage() {
 
     const urlConvId = searchParams.get('c')
 
+    const now = new Date().toISOString()
     if (urlConvId) {
       // URL has a conversation — go directly to chat
       setConversationId(urlConvId)
+      setLastSeenMap(new Map([[urlConvId, now]]))
       setStage('chat')
     } else {
       // No URL param — check if there are existing conversations
@@ -64,6 +69,7 @@ export default function WorkPage() {
           // Has conversations — open the most recent one
           const latest = convs[0]!
           setConversationId(latest.id)
+          setLastSeenMap(new Map([[latest.id, now]]))
           setSearchParams({ c: latest.id }, { replace: true })
           setStage('chat')
         }
@@ -74,6 +80,15 @@ export default function WorkPage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Periodic sidebar refresh (detect background AI completions)
+  useEffect(() => {
+    if (stage === 'welcome') return
+    const interval = setInterval(() => {
+      setSidebarRefreshKey(k => k + 1)
+    }, 10_000)
+    return () => clearInterval(interval)
+  }, [stage])
 
   // Sync conversationId → URL
   const syncUrl = useCallback((id: string | null) => {
@@ -90,10 +105,20 @@ export default function WorkPage() {
     setInitialMessage(text)
   }, [])
 
+  // Mark current conversation as seen
+  const markSeen = useCallback((id: string) => {
+    setLastSeenMap(prev => {
+      const next = new Map(prev)
+      next.set(id, new Date().toISOString())
+      return next
+    })
+  }, [])
+
   // Sidebar: select existing conversation
   const handleSelectConversation = useCallback((id: string) => {
     setStage('chat')
     setConversationId(id)
+    markSeen(id)
     setSessionKind(null)
     setInitialMessage(null)
     // Close context and clear artifacts when switching conversations
@@ -115,9 +140,10 @@ export default function WorkPage() {
   // Chat panel: got a conversation ID from backend
   const handleConversationId = useCallback((id: string) => {
     setConversationId(id)
+    markSeen(id)
     syncUrl(id)
     setSidebarRefreshKey(k => k + 1)
-  }, [syncUrl])
+  }, [syncUrl, markSeen])
 
   // Chat panel: session classified — if flow kind with flow_id, open editor
   const handleSessionClassified = useCallback((classification: SessionClassification) => {
@@ -232,6 +258,7 @@ export default function WorkPage() {
           onNewSession={handleNewSession}
           onConversationRemoved={handleConversationRemoved}
           refreshKey={sidebarRefreshKey}
+          lastSeenMap={lastSeenMap}
         />
       )}
 

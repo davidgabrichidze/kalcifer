@@ -20,6 +20,8 @@ interface SidebarProps {
   onNewSession: () => void
   onConversationRemoved?: (id: string) => void
   refreshKey?: number
+  /** Map of conversationId → last time user viewed it (ISO string) */
+  lastSeenMap?: Map<string, string>
 }
 
 export default function Sidebar({
@@ -28,6 +30,7 @@ export default function Sidebar({
   onNewSession,
   onConversationRemoved,
   refreshKey = 0,
+  lastSeenMap,
 }: SidebarProps) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(false)
@@ -137,6 +140,8 @@ export default function Sidebar({
   function renderItem(c: Conversation, muted = false) {
     const isActive = c.id === activeConversationId
     const isEditing = c.id === editingId
+    const lastSeen = lastSeenMap?.get(c.id)
+    const hasUnread = !isActive && lastSeen && c.updated_at > lastSeen
 
     return (
       <div
@@ -146,7 +151,20 @@ export default function Sidebar({
         onContextMenu={e => handleContextMenu(e, c)}
         onDoubleClick={() => handleRename(c)}
       >
-        <div className={`flow-dot ${getDotClass(c)}`} />
+        <div className={`flow-dot ${getDotClass(c)}`}>
+          {hasUnread && (
+            <span style={{
+              position: 'absolute',
+              top: -2,
+              right: -2,
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: 'var(--color-primary)',
+              border: '1.5px solid var(--color-surface)',
+            }} />
+          )}
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           {isEditing ? (
             <input
