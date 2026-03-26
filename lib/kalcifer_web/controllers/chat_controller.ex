@@ -148,8 +148,12 @@ defmodule KalciferWeb.ChatController do
         maybe_emit_session_classified(conn, payload.tool, payload.result)
         listen_for_events(conn, state)
 
-      # Agent node: full response ready
+      # Agent node: full response ready — save to DB immediately
       %{type: "agent_done", payload: %{text: text}} ->
+        if text && text != "" do
+          Context.add_message(state.conversation_id, "assistant", text)
+        end
+
         listen_for_events(conn, %{state | full_text: text})
 
       # Engine: node execution completed (for activity indicator)
@@ -161,14 +165,6 @@ defmodule KalciferWeb.ChatController do
         })
 
         listen_for_events(conn, state)
-
-      # Agent node finished — save full text immediately (even if client disconnects)
-      %{type: "agent_done", payload: %{text: text}} ->
-        if text && text != "" do
-          Context.add_message(state.conversation_id, "assistant", text)
-        end
-
-        listen_for_events(conn, %{state | full_text: text})
 
       # Engine: flow completed
       %{type: "instance_completed"} ->
