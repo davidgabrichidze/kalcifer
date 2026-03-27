@@ -120,6 +120,8 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Agent do
 
       {:error, reason} ->
         :ets.delete(tool_calls)
+        # Broadcast done (with empty text) so UI transitions out of streaming state
+        EventBroadcaster.broadcast_agent_done(instance_id, "")
         {:failed, %{reason: :agent_error, details: inspect(reason)}}
     end
   end

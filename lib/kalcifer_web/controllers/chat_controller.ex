@@ -150,9 +150,9 @@ defmodule KalciferWeb.ChatController do
 
       # Agent node: full response ready — save to DB immediately
       %{type: "agent_done", payload: %{text: text}} ->
-        if text && text != "" do
-          Context.add_message(state.conversation_id, "assistant", text)
-        end
+        # Save even empty responses — ensures conversation history is complete
+        content = if text && text != "", do: text, else: "(ხელსაწყოების გამოყენება)"
+        Context.add_message(state.conversation_id, "assistant", content)
 
         listen_for_events(conn, %{state | full_text: text})
 
@@ -177,6 +177,12 @@ defmodule KalciferWeb.ChatController do
         chunk_sse(conn, "error", %{message: humanize_error(:agent_flow_failed)})
         chunk_sse(conn, "activity_done", %{status: "failed"})
         conn
+
+      # Catch-all: log and continue (prevents stuck loop on unexpected messages)
+      unexpected ->
+        require Logger
+        Logger.debug("listen_for_events: ignoring unexpected message: #{inspect(unexpected)}")
+        listen_for_events(conn, state)
     after
       # 3 minute timeout
       180_000 ->
@@ -197,23 +203,7 @@ defmodule KalciferWeb.ChatController do
 
       {:tool_result, "classify_session" = name, result} ->
         chunk_sse(conn, "tool_done", %{tool: name, result: result})
-
-        case Jason.decode(result) do
-          {:ok, %{"classified" => true} = data} ->
-            event = %{
-              kind: data["kind"],
-              title: data["title"],
-              reason: data["reason"]
-            }
-
-            event =
-              if data["flow_id"], do: Map.put(event, :flow_id, data["flow_id"]), else: event
-
-            chunk_sse(conn, "session_classified", event)
-
-          _ ->
-            :ok
-        end
+        maybe_emit_session_classified(conn, name, result)
 
       {:tool_result, name, result} ->
         chunk_sse(conn, "tool_done", %{tool: name, result: result})
@@ -263,13 +253,17 @@ defmodule KalciferWeb.ChatController do
       nil ->
         resolve_conversation(tenant_id, nil)
 
-      conv ->
+      %{tenant_id: ^tenant_id} = conv ->
         history =
           Enum.map(conv.messages, fn msg ->
             %{role: msg.role, content: msg.content}
           end)
 
         {conv.id, history}
+
+      _wrong_tenant ->
+        # Conversation belongs to different tenant — create new
+        resolve_conversation(tenant_id, nil)
     end
   end
 

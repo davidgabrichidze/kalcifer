@@ -529,7 +529,13 @@ async function readSSEStream(
       if (line.startsWith('event: ')) {
         currentEvent = line.slice(7)
       } else if (line.startsWith('data: ')) {
-        const data = JSON.parse(line.slice(6))
+        let data: any
+        try {
+          data = JSON.parse(line.slice(6))
+        } catch {
+          console.warn('SSE: malformed JSON line, skipping:', line.slice(6, 100))
+          continue
+        }
         switch (currentEvent) {
           case 'init':
             callbacks.onInit?.(data.conversation_id)
