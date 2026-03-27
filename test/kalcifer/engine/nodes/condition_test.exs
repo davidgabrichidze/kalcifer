@@ -99,6 +99,36 @@ defmodule Kalcifer.Engine.Nodes.Condition.ConditionTest do
     end
   end
 
+  describe "execute/2 — nested field access" do
+    test "does not resolve dotted paths (flat access only)" do
+      config = %{"field" => "customer.properties.vip", "operator" => "equals", "value" => true}
+      context = %{"customer" => %{"properties" => %{"vip" => true}}}
+
+      # Flat access: context["customer.properties.vip"] is nil
+      assert {:branched, "false", _} = Condition.execute(config, context)
+    end
+  end
+
+  describe "execute/2 — nil field value" do
+    test "nil field value with equals returns false" do
+      config = %{"field" => "plan", "operator" => "equals", "value" => "premium"}
+      context = %{"plan" => nil}
+      assert {:branched, "false", _} = Condition.execute(config, context)
+    end
+
+    test "nil field value with contains returns false without crash" do
+      config = %{"field" => "name", "operator" => "contains", "value" => "test"}
+      context = %{"name" => nil}
+      assert {:branched, "false", _} = Condition.execute(config, context)
+    end
+
+    test "missing field with equals returns false" do
+      config = %{"field" => "nonexistent", "operator" => "equals", "value" => "anything"}
+      context = %{}
+      assert {:branched, "false", _} = Condition.execute(config, context)
+    end
+  end
+
   describe "config_schema/0" do
     test "includes field, operator, and value" do
       schema = Condition.config_schema()
