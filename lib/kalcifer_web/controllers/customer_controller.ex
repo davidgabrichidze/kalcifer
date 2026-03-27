@@ -39,20 +39,23 @@ defmodule KalciferWeb.CustomerController do
 
   def update(conn, %{"id" => id} = params) do
     tenant = conn.assigns.current_tenant
+    tenant_id = tenant.id
 
-    with %{tenant_id: tid} = customer when tid == tenant.id <- Customers.get_customer(id),
+    with %{tenant_id: ^tenant_id} = customer <- Customers.get_customer(id),
          {:ok, updated} <- Customers.update_customer(customer, params) do
       json(conn, %{data: serialize(updated)})
     else
       nil -> {:error, :not_found}
+      %{} -> {:error, :not_found}
       {:error, changeset} -> {:error, changeset}
     end
   end
 
   def add_tags(conn, %{"customer_id" => id, "tags" => tags}) when is_list(tags) do
     tenant = conn.assigns.current_tenant
+    tenant_id = tenant.id
 
-    with %{tenant_id: tid} = customer when tid == tenant.id <- Customers.get_customer(id) do
+    with %{tenant_id: ^tenant_id} = customer <- Customers.get_customer(id) do
       customer =
         Enum.reduce(tags, customer, fn tag, acc ->
           {:ok, updated} = Customers.add_tag(acc, tag)
@@ -62,18 +65,21 @@ defmodule KalciferWeb.CustomerController do
       json(conn, %{data: serialize(customer)})
     else
       nil -> {:error, :not_found}
+      %{} -> {:error, :not_found}
     end
   end
 
   def update_preferences(conn, %{"customer_id" => id, "preferences" => prefs})
       when is_map(prefs) do
     tenant = conn.assigns.current_tenant
+    tenant_id = tenant.id
 
-    with %{tenant_id: tid} = customer when tid == tenant.id <- Customers.get_customer(id),
+    with %{tenant_id: ^tenant_id} = customer <- Customers.get_customer(id),
          {:ok, updated} <- Customers.update_preferences(customer, prefs) do
       json(conn, %{data: serialize(updated)})
     else
       nil -> {:error, :not_found}
+      %{} -> {:error, :not_found}
       {:error, changeset} -> {:error, changeset}
     end
   end
