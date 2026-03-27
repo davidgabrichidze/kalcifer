@@ -53,6 +53,12 @@ defmodule Kalcifer.Engine.DurationTest do
     end
   end
 
+  describe "compound durations" do
+    test "compound duration like 1d12h is not yet supported" do
+      assert {:error, :invalid_duration} = Duration.to_seconds("1d12h")
+    end
+  end
+
   describe "boundary values" do
     test "parses zero duration" do
       assert {:ok, 0} = Duration.to_seconds("0s")
