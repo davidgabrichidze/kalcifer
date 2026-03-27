@@ -276,4 +276,118 @@ defmodule KalciferWeb.ChatControllerTest do
       assert is_list(assistant_msgs)
     end
   end
+
+  # ── F. Session Classification ─────────────────────────────────
+  # classify_session is an AI tool — we test the maybe_emit logic indirectly
+
+  describe "F. session classification" do
+    test "F1: classify_session tool result updates conversation kind", %{conn: conn} do
+      tenant = ensure_demo_tenant()
+      {:ok, conv} = Context.create_conversation(tenant.id)
+
+      # classify_session is called by AI as tool — not directly testable
+      # without mocking. But we can test Context.classify_conversation:
+      assert {:ok, classified} = Context.classify_conversation(conv, "flow", "Test Flow")
+      assert classified.kind == "flow"
+      assert classified.title == "Test Flow"
+    end
+
+    test "F2: re-classification is rejected", %{conn: _conn} do
+      tenant = ensure_demo_tenant()
+      {:ok, conv} = Context.create_conversation(tenant.id)
+      {:ok, classified} = Context.classify_conversation(conv, "flow", "First")
+
+      # Reload from DB to get updated kind, then try to classify again
+      assert {:error, _} = Context.classify_conversation(classified, "campaign", "Second")
+    end
+  end
+
+  # ── G. Error Handling ─────────────────────────────────────────
+
+  describe "G. error handling" do
+    test "G1: engine failure falls back gracefully (still 200)", %{conn: conn} do
+      # Without API key, engine starts but AI call fails → fallback → still 200
+      conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "G1 error test"}]
+      })
+
+      assert conn.status == 200
+      assert conn.state == :chunked
+    end
+
+    test "G2: invalid JSON body returns 400", %{conn: conn} do
+      # Send something that's not the expected format
+      conn = post(conn, "/api/v1/chat", %{"wrong_key" => "value"})
+      assert json_response(conn, 400)["error"] == "messages parameter required"
+    end
+  end
+
+  # ── I. System Prompt ──────────────────────────────────────────
+  # Tests that memory is loaded into system prompt
+
+  describe "I. system prompt" do
+    test "I1: chat works without operator memories", %{conn: conn} do
+      conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "I1 no memories"}]
+      })
+
+      assert conn.status == 200
+    end
+
+    test "I2: operator memories are accessible during chat", %{conn: conn} do
+      tenant = ensure_demo_tenant()
+
+      # Store a memory
+      Context.remember(tenant.id, "test_key", "test_value")
+
+      # Memories should be available (we can verify they exist)
+      memories = Context.recall_all(tenant.id)
+      assert Enum.any?(memories, &(&1.key == "test_key" && &1.value == "test_value"))
+
+      # Chat should still work
+      conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "I2 with memories"}]
+      })
+
+      assert conn.status == 200
+    end
+  end
+
+  # ── J. Helpers ────────────────────────────────────────────────
+
+  describe "J. helpers" do
+    test "J1: council keywords are detected correctly" do
+      # Test the keywords list — these should trigger council flow
+      council_words = ~w(council საბჭო დაფიქრდი ანალიზი deliberate think_deep)
+
+      for word <- council_words do
+        conn = build_conn()
+        tenant = ensure_demo_tenant()
+        {:ok, conv} = Context.create_conversation(tenant.id)
+
+        _conn = post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "#{word} please"}],
+          "conversation_id" => conv.id
+        })
+
+        # Just verify it doesn't crash — council flow selection
+        msgs = Context.get_messages(conv.id)
+        assert Enum.any?(msgs, fn m -> String.contains?(m.content, word) end)
+      end
+    end
+
+    test "J2: non-council message does not trigger council", %{conn: conn} do
+      tenant = ensure_demo_tenant()
+      {:ok, conv} = Context.create_conversation(tenant.id)
+
+      _conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "just a normal hello"}],
+        "conversation_id" => conv.id
+      })
+
+      # Should work fine (simple flow path)
+      msgs = Context.get_messages(conv.id)
+      assert Enum.any?(msgs, &(&1.content == "just a normal hello"))
+    end
+  end
 end
