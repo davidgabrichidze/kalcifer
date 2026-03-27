@@ -128,4 +128,60 @@ defmodule KalciferWeb.ChatControllerTest do
       assert "new question" in contents
     end
   end
+
+  # ── C. User Message Persistence ───────────────────────────────
+
+  describe "C. user message persistence" do
+    test "C1: single user message saved to DB", %{conn: conn} do
+      tenant = ensure_demo_tenant()
+      {:ok, conv} = Context.create_conversation(tenant.id)
+
+      _conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "C1 test message"}],
+        "conversation_id" => conv.id
+      })
+
+      messages = Context.get_messages(conv.id)
+      user_msgs = Enum.filter(messages, &(&1.role == "user"))
+      assert Enum.any?(user_msgs, &(&1.content == "C1 test message"))
+    end
+
+    test "C2: multiple user messages in one request all saved", %{conn: conn} do
+      tenant = ensure_demo_tenant()
+      {:ok, conv} = Context.create_conversation(tenant.id)
+
+      _conn = post(conn, "/api/v1/chat", %{
+        "messages" => [
+          %{"role" => "user", "content" => "first C2"},
+          %{"role" => "user", "content" => "second C2"}
+        ],
+        "conversation_id" => conv.id
+      })
+
+      messages = Context.get_messages(conv.id)
+      user_contents = messages |> Enum.filter(&(&1.role == "user")) |> Enum.map(& &1.content)
+      assert "first C2" in user_contents
+      assert "second C2" in user_contents
+    end
+
+    test "C3: only user role messages are saved (assistant filtered out)", %{conn: conn} do
+      tenant = ensure_demo_tenant()
+      {:ok, conv} = Context.create_conversation(tenant.id)
+
+      _conn = post(conn, "/api/v1/chat", %{
+        "messages" => [
+          %{"role" => "assistant", "content" => "should not save"},
+          %{"role" => "user", "content" => "C3 real message"}
+        ],
+        "conversation_id" => conv.id
+      })
+
+      messages = Context.get_messages(conv.id)
+      contents = Enum.map(messages, & &1.content)
+      # User message saved
+      assert "C3 real message" in contents
+      # Assistant message NOT saved by ChatController (only user messages are saved on input)
+      refute "should not save" in contents
+    end
+  end
 end
