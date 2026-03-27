@@ -210,6 +210,28 @@ defmodule Kalcifer.Engine.EventRouterTest do
     end
   end
 
+  describe "cross-tenant isolation" do
+    test "event from tenant_a does not route to tenant_b instances" do
+      flow_a = insert(:flow)
+      flow_b = insert(:flow)
+
+      {pid, _ref, _args} =
+        start_server(wait_for_event_graph(), customer_id: "shared_cust", flow: flow_b)
+
+      wait_for_waiting(pid)
+
+      # Route event with tenant_a's ID — should NOT match tenant_b's instance
+      result = EventRouter.route_event(flow_a.tenant_id, "shared_cust", "email_opened", %{})
+      assert result == []
+
+      # Instance should still be waiting
+      state = GenServer.call(pid, :get_state)
+      assert state.status == :waiting
+
+      GenServer.stop(pid, :normal)
+    end
+  end
+
   describe "idempotent resume" do
     test "stale timeout is ignored after event resume" do
       {pid, ref, args} = start_server(wait_for_event_graph(), customer_id: "cust_5")
