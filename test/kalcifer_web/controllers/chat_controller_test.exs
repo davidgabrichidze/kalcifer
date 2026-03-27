@@ -184,4 +184,42 @@ defmodule KalciferWeb.ChatControllerTest do
       refute "should not save" in contents
     end
   end
+
+  # ── D. SSE Event Format ───────────────────────────────────────
+
+  describe "D. SSE event format" do
+    test "D1: response has text/event-stream content type", %{conn: conn} do
+      conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "D1"}]
+      })
+
+      assert conn.status == 200
+      assert {"content-type", ct} = List.keyfind(conn.resp_headers, "content-type", 0)
+      assert String.contains?(ct, "text/event-stream")
+    end
+
+    test "D2: response has no-cache header", %{conn: conn} do
+      conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "D2"}]
+      })
+
+      assert {"cache-control", "no-cache"} = List.keyfind(conn.resp_headers, "cache-control", 0)
+    end
+
+    test "D3: response has x-accel-buffering no header", %{conn: conn} do
+      conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "D3"}]
+      })
+
+      assert {"x-accel-buffering", "no"} = List.keyfind(conn.resp_headers, "x-accel-buffering", 0)
+    end
+
+    test "D4: response state is chunked", %{conn: conn} do
+      conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "D4"}]
+      })
+
+      assert conn.state == :chunked
+    end
+  end
 end
