@@ -2,8 +2,24 @@ defmodule KalciferWeb.ChatControllerTest do
   use KalciferWeb.ConnCase, async: true
 
   alias Kalcifer.AI.Context
+  alias Kalcifer.Tenants
 
   import Kalcifer.Factory
+
+  # ── Helpers ─────────────────────────────────────────────────
+
+  # Get the demo tenant (auto-created by TenantResolver)
+  defp ensure_demo_tenant do
+    case Kalcifer.Repo.get_by(Kalcifer.Tenants.Tenant, name: "Demo Tenant") do
+      %{} = t -> t
+      nil ->
+        {:ok, t} = Tenants.create_tenant(%{
+          name: "Demo Tenant",
+          api_key_hash: Tenants.hash_api_key("demo-dev-key")
+        })
+        t
+    end
+  end
 
   # ── A. Request Validation ─────────────────────────────────────
 
@@ -14,18 +30,102 @@ defmodule KalciferWeb.ChatControllerTest do
     end
 
     test "A2: accepts empty messages array as valid request", %{conn: conn} do
-      conn =
-        post(conn, "/api/v1/chat", %{
-          "messages" => []
-        })
-
-      # Should still set up SSE connection (200) and emit init event
+      conn = post(conn, "/api/v1/chat", %{"messages" => []})
       assert conn.status == 200
+      assert {"content-type", ct} = List.keyfind(conn.resp_headers, "content-type", 0)
+      assert String.contains?(ct, "text/event-stream")
+    end
+  end
 
-      assert {"content-type", content_type} =
-               List.keyfind(conn.resp_headers, "content-type", 0)
+  # ── B. Conversation Resolution ────────────────────────────────
 
-      assert String.contains?(content_type, "text/event-stream")
+  describe "B. conversation resolution" do
+    test "B1: creates new conversation when none provided", %{conn: conn} do
+      _conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "hello B1"}]
+      })
+
+      tenant = ensure_demo_tenant()
+      convs = Context.list_conversations(tenant.id)
+      assert Enum.any?(convs, fn c ->
+        msgs = Context.get_messages(c.id)
+        Enum.any?(msgs, &(&1.content == "hello B1"))
+      end)
+    end
+
+    test "B2: reuses existing conversation when valid id provided", %{conn: conn} do
+      tenant = ensure_demo_tenant()
+      {:ok, conv} = Context.create_conversation(tenant.id, %{title: "Existing"})
+
+      _conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "hello B2"}],
+        "conversation_id" => conv.id
+      })
+
+      # Message should be in the SAME conversation
+      messages = Context.get_messages(conv.id)
+      assert Enum.any?(messages, &(&1.content == "hello B2"))
+    end
+
+    test "B3: creates new conversation for nonexistent id", %{conn: conn} do
+      fake_id = Ecto.UUID.generate()
+
+      _conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "hello B3"}],
+        "conversation_id" => fake_id
+      })
+
+      # Message should NOT be in fake conversation (it doesn't exist)
+      assert Context.get_messages(fake_id) == []
+
+      # But should exist in SOME conversation
+      tenant = ensure_demo_tenant()
+      convs = Context.list_conversations(tenant.id)
+      assert Enum.any?(convs, fn c ->
+        msgs = Context.get_messages(c.id)
+        Enum.any?(msgs, &(&1.content == "hello B3"))
+      end)
+    end
+
+    test "B4: rejects other tenant's conversation (security)", %{conn: conn} do
+      other_tenant = insert(:tenant)
+      {:ok, other_conv} = Context.create_conversation(other_tenant.id, %{title: "Secret"})
+      {:ok, _} = Context.add_message(other_conv.id, "user", "private data")
+
+      _conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "hello B4"}],
+        "conversation_id" => other_conv.id
+      })
+
+      # B4 message should NOT be in other tenant's conversation
+      other_msgs = Context.get_messages(other_conv.id)
+      refute Enum.any?(other_msgs, &(&1.content == "hello B4"))
+
+      # Should be in a NEW conversation under demo tenant
+      tenant = ensure_demo_tenant()
+      convs = Context.list_conversations(tenant.id)
+      assert Enum.any?(convs, fn c ->
+        msgs = Context.get_messages(c.id)
+        Enum.any?(msgs, &(&1.content == "hello B4"))
+      end)
+    end
+
+    test "B5: loads message history from existing conversation", %{conn: conn} do
+      tenant = ensure_demo_tenant()
+      {:ok, conv} = Context.create_conversation(tenant.id)
+      {:ok, _} = Context.add_message(conv.id, "user", "old question")
+      {:ok, _} = Context.add_message(conv.id, "assistant", "old answer")
+
+      _conn = post(conn, "/api/v1/chat", %{
+        "messages" => [%{"role" => "user", "content" => "new question"}],
+        "conversation_id" => conv.id
+      })
+
+      messages = Context.get_messages(conv.id)
+      contents = Enum.map(messages, & &1.content)
+      assert "old question" in contents
+      assert "old answer" in contents
+      assert "new question" in contents
     end
   end
 end
