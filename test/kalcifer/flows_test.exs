@@ -25,6 +25,11 @@ defmodule Kalcifer.FlowsTest do
       assert {:error, changeset} = Flows.create_flow(tenant.id, %{})
       assert %{name: ["can't be blank"]} = errors_on(changeset)
     end
+
+    test "fails without tenant_id" do
+      assert {:error, changeset} = Flows.create_flow(nil, %{name: "Test"})
+      assert %{tenant_id: _} = errors_on(changeset)
+    end
   end
 
   describe "get_flow/1" do
@@ -48,6 +53,11 @@ defmodule Kalcifer.FlowsTest do
 
       flows = Flows.list_flows(tenant.id)
       assert length(flows) == 2
+    end
+
+    test "returns empty list for tenant with no flows" do
+      tenant = insert(:tenant)
+      assert Flows.list_flows(tenant.id) == []
     end
 
     test "filters by status" do
@@ -141,6 +151,12 @@ defmodule Kalcifer.FlowsTest do
 
     test "archive_flow rejects draft flow" do
       flow = insert(:flow, status: "draft")
+      assert {:error, changeset} = Flows.archive_flow(flow)
+      assert %{status: _} = errors_on(changeset)
+    end
+
+    test "archive_flow rejects already archived flow" do
+      flow = insert(:flow, status: "archived")
       assert {:error, changeset} = Flows.archive_flow(flow)
       assert %{status: _} = errors_on(changeset)
     end
