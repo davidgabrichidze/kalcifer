@@ -2,6 +2,7 @@ defmodule Kalcifer.Flows.FlowGraph do
   @moduledoc false
 
   @entry_types ~w(segment_entry event_entry webhook_entry)
+  @end_types ~w(exit goal_reached)
   @branching_types ~w(condition ab_split wait_for_event check_segment preference_gate frequency_cap ai_decide)
 
   @doc """
@@ -16,10 +17,12 @@ defmodule Kalcifer.Flows.FlowGraph do
     allow_cycles = Keyword.get(opts, :allow_cycles, false)
 
     with :ok <- validate_has_entry(graph),
+         :ok <- validate_no_duplicate_ids(graph),
          :ok <- validate_edges_reference_valid_nodes(graph),
          :ok <- maybe_validate_no_cycles(graph, allow_cycles),
          :ok <- validate_no_orphans(graph),
-         :ok <- validate_branch_edges_complete(graph) do
+         :ok <- validate_branch_edges_complete(graph),
+         :ok <- validate_has_end(graph) do
       :ok
     end
   end
@@ -147,6 +150,28 @@ defmodule Kalcifer.Flows.FlowGraph do
     case entry_nodes(graph) do
       [] -> {:error, ["graph must have at least one entry node"]}
       _ -> :ok
+    end
+  end
+
+  defp validate_has_end(graph) do
+    has_end = Enum.any?(nodes(graph), fn node -> node["type"] in @end_types end)
+
+    if has_end do
+      :ok
+    else
+      {:error, ["graph must have at least one end node (exit or goal_reached)"]}
+    end
+  end
+
+  defp validate_no_duplicate_ids(graph) do
+    ids = Enum.map(nodes(graph), & &1["id"])
+    duplicates = ids -- Enum.uniq(ids)
+
+    if duplicates == [] do
+      :ok
+    else
+      dupes = Enum.uniq(duplicates)
+      {:error, Enum.map(dupes, &"duplicate node id: #{&1}")}
     end
   end
 

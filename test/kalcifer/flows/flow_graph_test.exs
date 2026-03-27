@@ -585,6 +585,69 @@ defmodule Kalcifer.Flows.FlowGraphTest do
 
   # --- Original edge case tests ---
 
+  describe "validate/1 — missing end node" do
+    test "rejects graph without any end node" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "email_1", "type" => "send_email", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "email_1"}
+        ]
+      }
+
+      assert {:error, errors} = FlowGraph.validate(graph)
+      assert Enum.any?(errors, &String.contains?(&1, "end node"))
+    end
+  end
+
+  describe "validate/1 — duplicate node IDs" do
+    test "rejects graph with duplicate node ids" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "entry_1", "type" => "send_email", "config" => %{}},
+          %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "exit_1"}
+        ]
+      }
+
+      assert {:error, errors} = FlowGraph.validate(graph)
+      assert Enum.any?(errors, &String.contains?(&1, "duplicate node id"))
+    end
+  end
+
+  describe "validate/1 — complex branching" do
+    test "accepts complex graph with multiple conditions and merges" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "cond_1", "type" => "condition", "config" => %{}},
+          %{"id" => "cond_2", "type" => "condition", "config" => %{}},
+          %{"id" => "email_1", "type" => "send_email", "config" => %{}},
+          %{"id" => "email_2", "type" => "send_email", "config" => %{}},
+          %{"id" => "email_3", "type" => "send_email", "config" => %{}},
+          %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "cond_1"},
+          %{"id" => "e2", "source" => "cond_1", "target" => "email_1", "branch" => "true"},
+          %{"id" => "e3", "source" => "cond_1", "target" => "cond_2", "branch" => "false"},
+          %{"id" => "e4", "source" => "cond_2", "target" => "email_2", "branch" => "true"},
+          %{"id" => "e5", "source" => "cond_2", "target" => "email_3", "branch" => "false"},
+          %{"id" => "e6", "source" => "email_1", "target" => "exit_1"},
+          %{"id" => "e7", "source" => "email_2", "target" => "exit_1"},
+          %{"id" => "e8", "source" => "email_3", "target" => "exit_1"}
+        ]
+      }
+
+      assert :ok = FlowGraph.validate(graph)
+    end
+  end
+
   describe "validate/1 — edge cases" do
     test "rejects non-map input" do
       assert {:error, ["graph must be a map"]} = FlowGraph.validate("not a map")
