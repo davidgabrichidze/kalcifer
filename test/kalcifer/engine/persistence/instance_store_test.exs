@@ -128,6 +128,38 @@ defmodule Kalcifer.Engine.Persistence.InstanceStoreTest do
     end
   end
 
+  describe "persist_waiting/3" do
+    test "transitions instance to waiting with context" do
+      instance = insert(:flow_instance, status: "running")
+      context = %{"_waiting_node_id" => "wait_1", "_waiting_event_type" => "purchase"}
+
+      assert {:ok, waiting} = InstanceStore.persist_waiting(instance, ["wait_1"], context)
+      assert waiting.status == "waiting"
+      assert waiting.current_nodes == ["wait_1"]
+      assert waiting.context["_waiting_node_id"] == "wait_1"
+    end
+  end
+
+  describe "list_recoverable_instances/0" do
+    test "returns running and waiting instances" do
+      flow = insert(:flow)
+      t = flow.tenant
+
+      insert(:flow_instance, flow: flow, tenant: t, customer_id: "c1", status: "running")
+      insert(:flow_instance, flow: flow, tenant: t, customer_id: "c2", status: "waiting")
+      insert(:flow_instance, flow: flow, tenant: t, customer_id: "c3", status: "completed")
+      insert(:flow_instance, flow: flow, tenant: t, customer_id: "c4", status: "failed")
+
+      result = InstanceStore.list_recoverable_instances()
+      statuses = Enum.map(result, & &1.status)
+
+      assert "running" in statuses
+      assert "waiting" in statuses
+      refute "completed" in statuses
+      refute "failed" in statuses
+    end
+  end
+
   describe "customer_active_in_flow?/2" do
     test "returns false when no instances exist" do
       flow = insert(:flow)

@@ -48,4 +48,46 @@ defmodule Kalcifer.Engine.Persistence.StepStoreTest do
       assert failed.error == %{reason: "connection refused"}
     end
   end
+
+  describe "list_steps/1" do
+    test "returns steps ordered by started_at" do
+      instance = insert(:flow_instance)
+      node_a = %{"id" => "a", "type" => "send_email", "config" => %{}}
+      node_b = %{"id" => "b", "type" => "send_sms", "config" => %{}}
+
+      {:ok, _} = StepStore.record_step_start(instance.id, node_a, 1)
+      Process.sleep(10)
+      {:ok, _} = StepStore.record_step_start(instance.id, node_b, 1)
+
+      steps = StepStore.list_steps(instance.id)
+      assert length(steps) == 2
+      assert [%{node_id: "a"}, %{node_id: "b"}] = steps
+    end
+
+    test "returns empty list for instance with no steps" do
+      instance = insert(:flow_instance)
+      assert StepStore.list_steps(instance.id) == []
+    end
+  end
+
+  describe "count_channel_steps_for_customer/3" do
+    test "counts completed channel steps within time window" do
+      flow = insert(:flow)
+      instance = insert(:flow_instance, flow: flow, tenant: flow.tenant, customer_id: "cust_1")
+
+      node = %{"id" => "email_1", "type" => "send_email", "config" => %{}}
+      {:ok, step} = StepStore.record_step_start(instance.id, node, 1)
+      {:ok, _} = StepStore.record_step_complete(step, %{sent: true})
+
+      since = DateTime.utc_now() |> DateTime.add(-3600)
+      count = StepStore.count_channel_steps_for_customer("cust_1", ["send_email"], since)
+      assert count == 1
+    end
+
+    test "excludes steps outside time window" do
+      since = DateTime.utc_now() |> DateTime.add(3600)
+      count = StepStore.count_channel_steps_for_customer("nobody", ["send_email"], since)
+      assert count == 0
+    end
+  end
 end
