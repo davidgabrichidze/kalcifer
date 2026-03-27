@@ -10,6 +10,12 @@ defmodule Kalcifer.Customers.SegmentEvaluator do
     compare(op, actual, value)
   end
 
+  defp evaluate_rule(%{"field" => field, "operator" => op}, customer)
+       when op in ["exists", "not_exists"] do
+    actual = get_field(customer, field)
+    compare(op, actual, nil)
+  end
+
   defp evaluate_rule(_, _customer), do: false
 
   defp get_field(customer, "email"), do: customer.email
@@ -37,5 +43,7 @@ defmodule Kalcifer.Customers.SegmentEvaluator do
   defp compare("contains", actual, value) when is_list(actual), do: value in actual
   defp compare("in", actual, values) when is_list(values), do: actual in values
   defp compare("not_in", actual, values) when is_list(values), do: actual not in values
+  defp compare("exists", actual, _), do: not is_nil(actual)
+  defp compare("not_exists", actual, _), do: is_nil(actual)
   defp compare(_, _, _), do: false
 end

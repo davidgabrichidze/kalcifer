@@ -82,5 +82,35 @@ defmodule Kalcifer.Customers.SegmentEvaluatorTest do
       seg = segment([])
       assert SegmentEvaluator.member?(customer(), seg)
     end
+
+    test "exists operator matches when field is set" do
+      seg = segment([%{"field" => "plan", "operator" => "exists"}])
+      assert SegmentEvaluator.member?(customer(), seg)
+    end
+
+    test "exists operator rejects when field is nil" do
+      seg = segment([%{"field" => "missing_field", "operator" => "exists"}])
+      refute SegmentEvaluator.member?(customer(), seg)
+    end
+
+    test "not_exists operator matches when field is nil" do
+      seg = segment([%{"field" => "missing_field", "operator" => "not_exists"}])
+      assert SegmentEvaluator.member?(customer(), seg)
+    end
+
+    test "not_exists operator rejects when field is set" do
+      seg = segment([%{"field" => "email", "operator" => "not_exists"}])
+      refute SegmentEvaluator.member?(customer(), seg)
+    end
+
+    test "nil field value with eq returns false" do
+      seg = segment([%{"field" => "unset_field", "operator" => "eq", "value" => "something"}])
+      refute SegmentEvaluator.member?(customer(), seg)
+    end
+
+    test "malformed rule without operator returns false" do
+      seg = segment([%{"field" => "plan"}])
+      refute SegmentEvaluator.member?(customer(), seg)
+    end
   end
 end
