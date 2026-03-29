@@ -22,6 +22,16 @@
   --radius: 14px;
 }
 
+/* ─── Split / Input / Right Panel tokens ─── */
+:root {
+  --split-ratio: 0.45;
+  --split-min-chat: 280px;
+  --split-min-editor: 240px;
+  --right-sidebar-width: 300px;
+  --right-transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --input-glow: 0 0 0 3px rgba(192, 122, 62, 0.12);
+}
+
 /* ─── HEARTH LIGHT (default) ─── */
 :root,
 [data-theme="hearth-light"] {
@@ -541,6 +551,11 @@ body {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Message entrance animation */
@@ -1514,4 +1529,316 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
   .browse-nav { width: 140px; min-width: 140px; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   CollapsibleSection
+   ════════════════════════════════════════════════════════════ */
+
+.collapsible-section {
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.collapsible-header:hover {
+  background: var(--color-surface-dim);
+}
+
+.collapsible-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.collapsible-title {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+
+.collapsible-chevron {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.collapsible-body {
+  padding: 4px 12px 10px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   DragHandle
+   ════════════════════════════════════════════════════════════ */
+
+.drag-handle {
+  width: 6px;
+  cursor: col-resize;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 50;
+  transition: background 0.2s;
+}
+
+.drag-handle:hover {
+  background: var(--color-primary-soft);
+}
+
+.drag-handle-line {
+  width: 2px;
+  height: 40px;
+  border-radius: 1px;
+  background: var(--color-border);
+  transition: background 0.2s, height 0.2s;
+}
+
+.drag-handle:hover .drag-handle-line {
+  background: var(--color-primary);
+  height: 60px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   Right Panel (sidebar + editor modes)
+   ════════════════════════════════════════════════════════════ */
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+}
+
+/* Sidebar mode — fixed width */
+.right-panel--sidebar {
+  width: var(--right-sidebar-width);
+  min-width: var(--right-sidebar-width);
+}
+
+/* Editor mode — flex-based */
+.right-panel--editor {
+  flex: calc(1 - var(--split-ratio, 0.45));
+  min-width: var(--split-min-editor);
+}
+
+.right-panel-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.right-panel-scroll::-webkit-scrollbar {
+  width: 3px;
+}
+
+.right-panel-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+/* Editor header */
+.right-editor-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.right-editor-title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.right-editor-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-xs);
+  background: none;
+  border: 1px solid transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+
+.right-editor-btn:hover {
+  border-color: var(--color-border);
+  color: var(--color-text);
+  background: var(--color-surface-dim);
+}
+
+/* Editor footer / stats */
+.right-editor-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--color-border);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════════════
+   ToolBadges
+   ════════════════════════════════════════════════════════════ */
+
+.tool-badges-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  background: var(--color-surface-dim);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-sec);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.tool-badges-summary:hover {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+.tool-badges-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tool-badges-list {
+  padding: 4px 0 0 16px;
+}
+
+.tool-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 11px;
+  color: var(--color-text-sec);
+}
+
+/* ════════════════════════════════════════════════════════════
+   ChatInput — enhanced
+   ════════════════════════════════════════════════════════════ */
+
+.chat-input-wrap {
+  padding: 10px 16px 12px;
+  flex-shrink: 0;
+}
+
+.chat-input-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 16px;
+  padding: 10px 14px;
+  transition: all 0.2s;
+}
+
+.chat-input-box:focus-within,
+.input-glow:focus-within {
+  border-color: var(--color-border-focus);
+  box-shadow: var(--input-glow);
+}
+
+.chat-input-textarea {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  font-size: 14.5px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  max-height: 80px;
+  line-height: 1.5;
+}
+
+.chat-input-attach {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.chat-input-attach:hover {
+  color: var(--color-primary);
+}
+
+.chat-input-send {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.chat-input-send--active {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.chat-input-send--disabled {
+  background: var(--color-surface-dim);
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.chat-input-hints {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 0;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  gap: 8px;
 }

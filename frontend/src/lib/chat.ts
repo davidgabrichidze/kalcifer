@@ -23,6 +23,10 @@ export interface AgentActivity {
   durationMs?: number
 }
 
+export interface QuickAction {
+  label: string
+}
+
 export interface ChatMessage {
   id: string
   role: 'user' | 'ai'
@@ -30,6 +34,7 @@ export interface ChatMessage {
   timestamp: number
   tools?: ToolActivity[]
   activity?: AgentActivity
+  quickActions?: QuickAction[]
 }
 
 let nextId = 1

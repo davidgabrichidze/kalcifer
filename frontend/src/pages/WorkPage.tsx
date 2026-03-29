@@ -1,23 +1,32 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import ChatPanel from '../components/ChatPanel'
-import FlowCanvas from '../components/FlowCanvas'
-import FlowEditorInline from '../components/FlowEditorInline'
 import Sidebar from '../components/Sidebar'
 import WelcomeScreen from '../components/WelcomeScreen'
-import ArtifactPanel, { type Artifact } from '../components/ArtifactPanel'
+import RightPanel from '../components/RightPanel'
+import DragHandle from '../components/DragHandle'
+import { type Artifact } from '../components/ArtifactPanel'
+import { type ContextItem } from '../components/RightSidebar'
+import { type ToolActivity } from '../lib/chat'
 import { fetchConversations, type SessionClassification, type FlowGraph } from '../lib/api'
 import './work-stages.css'
 
 /**
- * Stages:
+ * Stages (redesigned — 4 stages):
  * - welcome: no sidebar, centered welcome (first visit, zero conversations)
  * - lobby:   sidebar visible, centered welcome (has conversations, nothing selected)
- * - chat:    sidebar visible, chat active (conversation selected or just started)
- * - split:   chat + context side-by-side (context area visible, e.g. flow canvas)
- * - context: compact chat + full context (context area dominant)
+ * - chat:    sidebar visible, chat active, right sidebar (300px fixed)
+ * - split:   sidebar collapsed, chat + editor side-by-side (drag-to-resize)
  */
-type Stage = 'welcome' | 'lobby' | 'chat' | 'split' | 'context'
+type Stage = 'welcome' | 'lobby' | 'chat' | 'split'
+
+/**
+ * Right panel mode:
+ * - hidden: no right panel (welcome/lobby)
+ * - sidebar: 300px fixed sidebar with progress/artifacts/context
+ * - editor: flex-based editor with flow canvas or editor
+ */
+type RightMode = 'hidden' | 'sidebar' | 'editor'
 
 /**
  * Context area content — discriminated union for different content types.
@@ -39,12 +48,21 @@ export default function WorkPage() {
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0)
   const initializedRef = useRef(false)
 
-  // Context area state
+  // Right panel state
+  const [rightMode, setRightMode] = useState<RightMode>('hidden')
+  const [splitRatio, setSplitRatio] = useState(0.45)
   const [contextContent, setContextContent] = useState<ContextContent>(null)
-  const [contextScrollable, setContextScrollable] = useState(false)
+  const mainRef = useRef<HTMLDivElement>(null)
 
   // Artifacts — collected from tool results during conversation
   const [artifacts, setArtifacts] = useState<Artifact[]>([])
+
+  // Progress steps — tool activities for sidebar progress section
+  const [progressSteps, setProgressSteps] = useState<ToolActivity[]>([])
+  const [isWorking] = useState(false)
+
+  // Context items — skills/meta for sidebar
+  const [contextItems] = useState<ContextItem[]>([])
 
   // Unread tracking: lastSeenMap records when user last viewed each conversation
   const [lastSeenMap, setLastSeenMap] = useState<Map<string, string>>(new Map())
@@ -58,22 +76,20 @@ export default function WorkPage() {
 
     const now = new Date().toISOString()
     if (urlConvId) {
-      // URL has a conversation — go directly to chat
       setConversationId(urlConvId)
       setLastSeenMap(new Map([[urlConvId, now]]))
       setStage('chat')
+      setRightMode('sidebar')
     } else {
-      // No URL param — check if there are existing conversations
       fetchConversations({ status: 'all' }).then(convs => {
         if (convs.length > 0) {
-          // Has conversations — open the most recent one
           const latest = convs[0]!
           setConversationId(latest.id)
           setLastSeenMap(new Map([[latest.id, now]]))
           setSearchParams({ c: latest.id }, { replace: true })
           setStage('chat')
+          setRightMode('sidebar')
         }
-        // else: no conversations — stay in welcome
       }).catch(() => {
         // API error — stay in welcome
       })
@@ -102,6 +118,7 @@ export default function WorkPage() {
   // Welcome/lobby → chat transition: user sends first message
   const handleWelcomeSend = useCallback((text: string) => {
     setStage('chat')
+    setRightMode('sidebar')
     setInitialMessage(text)
   }, [])
 
@@ -117,23 +134,27 @@ export default function WorkPage() {
   // Sidebar: select existing conversation
   const handleSelectConversation = useCallback((id: string) => {
     setStage('chat')
+    setRightMode('sidebar')
     setConversationId(id)
     markSeen(id)
     setSessionKind(null)
     setInitialMessage(null)
-    // Close context and clear artifacts when switching conversations
     setContextContent(null)
     setArtifacts([])
+    setProgressSteps([])
     syncUrl(id)
-  }, [syncUrl])
+  }, [syncUrl, markSeen])
 
   // New session from sidebar or chat — go to lobby (sidebar stays visible)
   const handleNewSession = useCallback(() => {
     setStage('lobby')
+    setRightMode('hidden')
     setConversationId(null)
     setSessionKind(null)
     setInitialMessage(null)
     setContextContent(null)
+    setArtifacts([])
+    setProgressSteps([])
     syncUrl(null)
   }, [syncUrl])
 
@@ -153,8 +174,8 @@ export default function WorkPage() {
     // Auto-open flow editor when session is about a specific flow
     if (classification.flow_id && (classification.kind === 'flow' || classification.kind === 'campaign')) {
       setContextContent({ type: 'flow-editor', flowId: classification.flow_id })
-      setContextScrollable(false)
-      setStage(prev => (prev === 'chat' || prev === 'lobby') ? 'split' : prev)
+      setStage('split')
+      setRightMode('editor')
     }
   }, [])
 
@@ -170,29 +191,30 @@ export default function WorkPage() {
       setConversationId(null)
       setSessionKind(null)
       setContextContent(null)
+      setRightMode('hidden')
       setStage('lobby')
       syncUrl(null)
     }
   }, [conversationId, syncUrl])
 
-  // Context area: receive content from ChatPanel (tool results)
+  // Context area: receive content from ChatPanel (tool results) → open editor
   const handleContextContent = useCallback((content: ContextContent) => {
     setContextContent(content)
-    setContextScrollable(content?.type !== 'flow-canvas' && content?.type !== 'flow-editor')
-    if (stage === 'chat' || stage === 'lobby') {
-      setStage('split')
-    }
-  }, [stage])
+    setStage('split')
+    setRightMode('editor')
+  }, [])
 
-  // Context area: close → back to chat
-  const handleCloseContext = useCallback(() => {
-    setContextContent(null)
+  // Editor: back → return to sidebar mode
+  const handleBack = useCallback(() => {
+    setRightMode('sidebar')
     setStage('chat')
   }, [])
 
-  // Context area: toggle split ↔ context
-  const handleToggleExpand = useCallback(() => {
-    setStage(s => s === 'split' ? 'context' : 'split')
+  // Editor: close → return to sidebar mode
+  const handleClose = useCallback(() => {
+    setContextContent(null)
+    setRightMode('sidebar')
+    setStage('chat')
   }, [])
 
   // Artifact: add new (deduplicate by id)
@@ -200,7 +222,6 @@ export default function WorkPage() {
     setArtifacts(prev => {
       const exists = prev.findIndex(a => a.id === artifact.id)
       if (exists >= 0) {
-        // Update existing
         const updated = [...prev]
         updated[exists] = artifact
         return updated
@@ -209,48 +230,57 @@ export default function WorkPage() {
     })
   }, [])
 
-  // Artifact clicked — open corresponding content
+  // Artifact clicked in sidebar — open corresponding content in editor
   const handleArtifactClick = useCallback((artifact: Artifact) => {
     switch (artifact.type) {
       case 'flow':
         if (artifact.resourceId) {
           setContextContent({ type: 'flow-editor', flowId: artifact.resourceId })
-          setContextScrollable(false)
-          if (stage === 'chat' || stage === 'lobby') setStage('split')
+          setStage('split')
+          setRightMode('editor')
         }
         break
       case 'graph':
         if (artifact.data?.graph) {
           setContextContent({ type: 'flow-canvas', flowGraph: artifact.data.graph as FlowGraph })
-          setContextScrollable(false)
-          if (stage === 'chat' || stage === 'lobby') setStage('split')
+          setStage('split')
+          setRightMode('editor')
         }
         break
       case 'analysis':
       case 'debug':
       case 'memory':
-        // For non-visual artifacts, could show detail panel in future
-        // For now, just log
         break
     }
-  }, [stage])
+  }, [])
 
   // Open full editor page for a flow
   const handleOpenFullEditor = useCallback((flowId: string) => {
     navigate(`/editor?flow=${flowId}`)
   }, [navigate])
 
+  // Drag handler for split mode
+  const handleDrag = useCallback((clientX: number) => {
+    const rect = mainRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const sidebarW = stage === 'split' ? 52 : 210
+    const ratio = (clientX - rect.left - sidebarW) / (rect.width - sidebarW)
+    setSplitRatio(Math.max(0.2, Math.min(0.8, ratio)))
+  }, [stage])
+
   const showSidebar = stage !== 'welcome'
   const showWelcome = stage === 'welcome' || stage === 'lobby'
-  const showChat = stage === 'chat' || stage === 'split' || stage === 'context'
-  const showContext = stage === 'split' || stage === 'context'
+  const showChat = stage === 'chat' || stage === 'split'
+  const isEditorMode = rightMode === 'editor'
 
   return (
     <div
+      ref={mainRef}
       className="work-stage"
       data-stage={stage}
+      style={isEditorMode ? { '--split-ratio': splitRatio } as React.CSSProperties : undefined}
     >
-      {/* Sidebar — visible in lobby, chat, split, context */}
+      {/* Sidebar — visible in lobby, chat, split */}
       {showSidebar && (
         <Sidebar
           activeConversationId={conversationId}
@@ -259,11 +289,15 @@ export default function WorkPage() {
           onConversationRemoved={handleConversationRemoved}
           refreshKey={sidebarRefreshKey}
           lastSeenMap={lastSeenMap}
+          collapsed={stage === 'split'}
         />
       )}
 
       {/* Chat area */}
-      <div className="work-chat">
+      <div
+        className="work-chat"
+        style={isEditorMode ? { flex: splitRatio } : undefined}
+      >
         {showWelcome && (
           <WelcomeScreen onSend={handleWelcomeSend} />
         )}
@@ -282,60 +316,28 @@ export default function WorkPage() {
             />
           </div>
         )}
-
-        {/* Artifact panel — right sidebar with collected artifacts */}
-        {showChat && artifacts.length > 0 && (
-          <ArtifactPanel
-            artifacts={artifacts}
-            onArtifactClick={handleArtifactClick}
-          />
-        )}
       </div>
 
-      {/* Resize handle — visible only in split/context */}
-      {showContext && (
-        <div className="work-resize-handle" />
+      {/* Drag handle — visible only in split/editor mode */}
+      {isEditorMode && (
+        <DragHandle onDrag={handleDrag} />
       )}
 
-      {/* Context area */}
-      <div className={`work-context-area ${contextScrollable ? 'scrollable' : ''}`}>
-        {/* Context header with expand/close buttons */}
-        {showContext && (
-          <div className="work-context-header">
-            <button
-              className="work-context-btn"
-              onClick={handleToggleExpand}
-              title={stage === 'split' ? 'გადიდება' : 'შემცირება'}
-            >
-              {stage === 'split' ? '⤢' : '⤡'}
-            </button>
-            <button
-              className="work-context-btn"
-              onClick={handleCloseContext}
-              title="დახურვა"
-            >
-              ✕
-            </button>
-          </div>
-        )}
-
-        {/* Dynamic content rendering */}
-        {contextContent?.type === 'flow-canvas' && (
-          <FlowCanvas
-            flowGraph={contextContent.flowGraph}
-            editable={false}
-            showMiniMap={stage === 'context'}
-            showControls={true}
-          />
-        )}
-
-        {contextContent?.type === 'flow-editor' && (
-          <FlowEditorInline
-            flowId={contextContent.flowId}
-            onOpenFullEditor={handleOpenFullEditor}
-          />
-        )}
-      </div>
+      {/* Right panel — sidebar or editor */}
+      {rightMode !== 'hidden' && (
+        <RightPanel
+          mode={rightMode === 'editor' ? 'editor' : 'sidebar'}
+          progressSteps={progressSteps}
+          artifacts={artifacts}
+          contextItems={contextItems}
+          onArtifactClick={handleArtifactClick}
+          isWorking={isWorking}
+          editorContent={contextContent}
+          onBack={handleBack}
+          onClose={handleClose}
+          onOpenFullEditor={handleOpenFullEditor}
+        />
+      )}
     </div>
   )
 }

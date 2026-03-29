@@ -33,12 +33,12 @@ describe('ChatPanel', () => {
 
   it('renders send button', () => {
     render(<ChatPanel {...defaultProps} />)
-    expect(screen.getByTitle('Send')).toBeInTheDocument()
+    expect(screen.getByTitle('გაგზავნა')).toBeInTheDocument()
   })
 
   it('send button is disabled when input is empty', () => {
     render(<ChatPanel {...defaultProps} />)
-    const sendBtn = screen.getByTitle('Send')
+    const sendBtn = screen.getByTitle('გაგზავნა')
     expect(sendBtn).toBeDisabled()
   })
 

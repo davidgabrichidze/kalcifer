@@ -5,23 +5,8 @@ import { streamChat, fetchConversation, type ApiMessage, type SessionClassificat
 import { type ContextContent } from '../pages/WorkPage'
 import { type Artifact } from './ArtifactPanel'
 import ActivityIndicator from './ActivityIndicator'
-
-// Human-readable names for tools
-const TOOL_LABELS: Record<string, string> = {
-  classify_session: 'სესიის კლასიფიკაცია',
-  list_flows: 'ფლოუების ჩამონათვალი',
-  get_flow: 'ფლოუს დეტალები',
-  get_flow_graph: 'გრაფის წაკითხვა',
-  create_flow: 'ფლოუს შექმნა',
-  add_node: 'ნაბიჯის დამატება',
-  modify_node: 'ნაბიჯის შეცვლა',
-  remove_node: 'ნაბიჯის წაშლა',
-  list_node_types: 'ნაბიჯების ტიპები',
-  analyze_flow: 'ფლოუს ანალიზი',
-  debug_instance: 'ინსტანსის დიაგნოსტიკა',
-  remember: 'დამახსოვრება',
-  recall: 'გახსენება',
-}
+import ToolBadges from './ToolBadges'
+import ChatInput from './ChatInput'
 
 const KIND_LABELS: Record<string, { label: string; icon: string }> = {
   campaign: { label: 'კამპანია', icon: '📣' },
@@ -62,7 +47,6 @@ export default function ChatPanel({
   const [_streamingId, setStreamingId] = useState<string | null>(null)
   const [activityExpanded, setActivityExpanded] = useState(false)
   const msgsEndRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const activeAiIdRef = useRef<string | null>(null)
   const initialMessageSentRef = useRef(false)
@@ -71,15 +55,6 @@ export default function ChatPanel({
   useEffect(() => {
     msgsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
-
-  // Auto-resize textarea
-  useEffect(() => {
-    const el = textareaRef.current
-    if (el) {
-      el.style.height = 'auto'
-      el.style.height = `${Math.min(el.scrollHeight, 80)}px`
-    }
-  }, [input])
 
   const appendToMessage = useCallback((id: string, text: string) => {
     setMessages(prev =>
@@ -316,13 +291,6 @@ export default function ChatPanel({
     } catch { /* not JSON, ignore */ }
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
-
   // Send initial message from welcome screen (ref guard prevents StrictMode double-fire)
   useEffect(() => {
     if (initialMessage && !isTyping && messages.length === 0 && !initialMessageSentRef.current) {
@@ -440,6 +408,7 @@ export default function ChatPanel({
   }, [conversationId])
 
   const hasMessages = messages.length > 0
+  const lastAIIndex = messages.findLastIndex(m => m.role === 'ai')
 
   return (
     <div
@@ -481,10 +450,11 @@ export default function ChatPanel({
         className="flex-1 overflow-y-auto"
         style={{ padding: '16px' }}
       >
-        {messages.map(msg => {
+        {messages.map((msg, msgIndex) => {
           const isUser = msg.role === 'user'
           const hasContent = msg.content.length > 0
           const hasTools = (msg.tools?.length ?? 0) > 0
+          const isLastAI = msgIndex === lastAIIndex
 
           // Hide empty AI messages (typing indicator handles the visual)
           if (!isUser && !hasContent && !hasTools) return null
@@ -495,22 +465,23 @@ export default function ChatPanel({
               style={{
                 display: 'flex',
                 gap: 8,
-                marginBottom: 12,
+                marginBottom: 16,
                 alignItems: 'flex-start',
                 flexDirection: isUser ? 'row-reverse' : 'row',
+                animation: 'fadeUp 0.3s ease',
               }}
             >
               {/* Avatar */}
               <div
                 style={{
-                  width: 30,
-                  height: 30,
+                  width: 28,
+                  height: 28,
                   borderRadius: '50%',
                   flexShrink: 0,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 11,
+                  fontSize: isUser ? 9 : 11,
                   fontWeight: 600,
                   background: isUser
                     ? 'var(--color-accent)'
@@ -522,106 +493,14 @@ export default function ChatPanel({
               </div>
 
               {/* Body */}
-              <div style={{ maxWidth: '85%' }}>
+              <div style={{ maxWidth: '82%', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
                 {/* Agent activity indicator */}
                 {msg.activity && (
-                  <div style={{ marginBottom: 6 }}>
-                    <ActivityIndicator
-                      activity={msg.activity}
-                      expanded={activityExpanded}
-                      onToggle={() => setActivityExpanded(e => !e)}
-                    />
-                  </div>
-                )}
-
-                {/* Tool activity indicators (fallback when no agent activity) */}
-                {!msg.activity && msg.tools && msg.tools.length > 0 && (
-                  <div style={{ marginBottom: 6 }}>
-                    {msg.tools.map((t, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          padding: '4px 10px',
-                          marginRight: 4,
-                          marginBottom: 4,
-                          borderRadius: 8,
-                          fontSize: 12,
-                          background: 'var(--color-info-soft)',
-                          color: 'var(--color-info)',
-                          border: '1px solid var(--color-info-soft)',
-                        }}
-                      >
-                        <span style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: '50%',
-                          background: t.status === 'running'
-                            ? 'var(--color-warn)'
-                            : 'var(--color-success)',
-                          animation: t.status === 'running'
-                            ? 'typingDot 1.2s infinite'
-                            : 'none',
-                        }} />
-                        {TOOL_LABELS[t.tool] ?? t.tool}
-                        {t.status === 'done' && ' ✓'}
-                        {t.status === 'done' && FLOW_TOOLS.includes(t.tool) && t.result && (() => {
-                          try {
-                            const parsed = JSON.parse(t.result!)
-                            // Prefer opening interactive editor if we have flow_id
-                            const flowId = parsed.id || parsed.flow_id
-                            if (flowId) {
-                              return (
-                                <button
-                                  onClick={() => onContextContent?.({ type: 'flow-editor', flowId })}
-                                  style={{
-                                    marginLeft: 4,
-                                    padding: '1px 6px',
-                                    borderRadius: 4,
-                                    fontSize: 10,
-                                    fontWeight: 600,
-                                    background: 'var(--color-primary-soft)',
-                                    color: 'var(--color-primary)',
-                                    border: '1px solid var(--color-primary-muted)',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.15s',
-                                  }}
-                                  title="ედიტორში გახსნა"
-                                >
-                                  ⤢ ედიტორი
-                                </button>
-                              )
-                            }
-                            if (parsed.graph?.nodes && parsed.graph?.edges) {
-                              return (
-                                <button
-                                  onClick={() => onContextContent?.({ type: 'flow-canvas', flowGraph: parsed.graph })}
-                                  style={{
-                                    marginLeft: 4,
-                                    padding: '1px 6px',
-                                    borderRadius: 4,
-                                    fontSize: 10,
-                                    fontWeight: 600,
-                                    background: 'var(--color-primary-soft)',
-                                    color: 'var(--color-primary)',
-                                    border: '1px solid var(--color-primary-muted)',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.15s',
-                                  }}
-                                  title="Canvas-ში გახსნა"
-                                >
-                                  ⤢ გახსნა
-                                </button>
-                              )
-                            }
-                          } catch { /* ignore */ }
-                          return null
-                        })()}
-                      </div>
-                    ))}
-                  </div>
+                  <ActivityIndicator
+                    activity={msg.activity}
+                    expanded={activityExpanded}
+                    onToggle={() => setActivityExpanded(e => !e)}
+                  />
                 )}
 
                 {/* Message bubble */}
@@ -629,10 +508,12 @@ export default function ChatPanel({
                   <div
                     className="chat-md"
                     style={{
-                      padding: '12px 16px',
+                      padding: '11px 15px',
                       borderRadius: 14,
-                      fontSize: 14.5,
-                      lineHeight: 1.65,
+                      fontSize: 13.5,
+                      lineHeight: 1.6,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
                       ...(isUser
                         ? {
                             background: 'var(--color-primary-soft)',
@@ -653,6 +534,111 @@ export default function ChatPanel({
                     )}
                   </div>
                 )}
+
+                {/* Tool badges — BELOW message text (spec: text → badges → artifacts → actions) */}
+                {!msg.activity && msg.tools && msg.tools.length > 0 && (
+                  <ToolBadges tools={msg.tools} />
+                )}
+
+                {/* Artifact card — inline flow/graph preview card (prototype style) */}
+                {!isUser && msg.tools && (() => {
+                  const flowTool = msg.tools.find(t =>
+                    t.status === 'done' && FLOW_TOOLS.includes(t.tool) && t.result
+                  )
+                  if (!flowTool) return null
+                  try {
+                    const parsed = JSON.parse(flowTool.result!)
+                    const flowId = parsed.id || parsed.flow_id
+                    const title = parsed.name || (flowId ? 'Flow' : 'Graph')
+                    const nodeCount = parsed.graph?.nodes?.length ?? 0
+                    const edgeCount = parsed.graph?.edges?.length ?? 0
+                    const subtitle = nodeCount > 0 ? `${nodeCount} node · ${edgeCount} edge · Draft` : undefined
+                    const icon = '⚡'
+
+                    const handleClick = () => {
+                      if (flowId) {
+                        onContextContent?.({ type: 'flow-editor', flowId })
+                      } else if (parsed.graph?.nodes && parsed.graph?.edges) {
+                        onContextContent?.({ type: 'flow-canvas', flowGraph: parsed.graph })
+                      }
+                    }
+
+                    return (
+                      <button
+                        onClick={handleClick}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          padding: '10px 14px',
+                          borderRadius: 12,
+                          width: '100%',
+                          background: 'var(--color-surface-raised)',
+                          border: '1px solid var(--color-border)',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          fontFamily: 'inherit',
+                          animation: 'fadeUp 0.4s ease 0.15s both',
+                        }}
+                      >
+                        <span style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: 10,
+                          background: 'var(--color-primary-soft)',
+                          border: '1px solid var(--color-primary-muted)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 17,
+                          flexShrink: 0,
+                        }}>
+                          {icon}
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-text)' }}>{title}</div>
+                          {subtitle && <div style={{ fontSize: 10.5, color: 'var(--color-text-muted)', marginTop: 1 }}>{subtitle}</div>}
+                        </div>
+                        <span style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: 'var(--color-primary)',
+                          padding: '5px 10px',
+                          borderRadius: 8,
+                          background: 'var(--color-primary-soft)',
+                          border: '1px solid var(--color-primary-muted)',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                        }}>
+                          ⤢ გახსნა
+                        </span>
+                      </button>
+                    )
+                  } catch { return null }
+                })()}
+
+                {/* Quick actions — only on last AI message (prototype style: chip buttons) */}
+                {isLastAI && !isUser && msg.quickActions && msg.quickActions.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, animation: 'fadeUp 0.3s ease 0.25s both' }}>
+                    {msg.quickActions.map((qa: { label: string }, i: number) => (
+                      <button
+                        key={i}
+                        style={{
+                          padding: '5px 12px',
+                          borderRadius: 16,
+                          background: 'var(--color-surface)',
+                          border: '1px solid var(--color-border)',
+                          color: 'var(--color-text-sec)',
+                          fontSize: 11,
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        {qa.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )
@@ -666,12 +652,13 @@ export default function ChatPanel({
               gap: 8,
               marginBottom: 12,
               alignItems: 'flex-start',
+              animation: 'fadeUp 0.3s ease',
             }}
           >
             <div
               style={{
-                width: 30,
-                height: 30,
+                width: 28,
+                height: 28,
                 borderRadius: '50%',
                 flexShrink: 0,
                 display: 'flex',
@@ -732,84 +719,14 @@ export default function ChatPanel({
         <div ref={msgsEndRef} />
       </div>
 
-      {/* Input */}
-      <div
-        style={{
-          padding: '10px 16px 12px',
-          flexShrink: 0,
-          borderTop: hasMessages ? '1px solid var(--color-border)' : 'none',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            gap: 6,
-            background: 'var(--color-surface)',
-            border: '1.5px solid var(--color-border)',
-            borderRadius: 14,
-            padding: '8px 12px',
-            transition: 'all 0.2s',
-          }}
-        >
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            rows={1}
-            style={{
-              flex: 1,
-              background: 'none',
-              border: 'none',
-              color: 'var(--color-text)',
-              fontSize: 14.5,
-              fontFamily: 'inherit',
-              resize: 'none',
-              outline: 'none',
-              maxHeight: 80,
-              lineHeight: 1.5,
-            }}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim()}
-            title="Send"
-            style={{
-              background: input.trim()
-                ? 'var(--color-primary)'
-                : 'var(--color-surface-dim)',
-              border: 'none',
-              color: input.trim()
-                ? 'var(--color-text-on-primary)'
-                : 'var(--color-text-muted)',
-              width: 30,
-              height: 30,
-              borderRadius: '50%',
-              cursor: input.trim() ? 'pointer' : 'default',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s',
-              flexShrink: 0,
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ width: 13, height: 13 }}
-            >
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
-          </button>
-        </div>
-      </div>
+      {/* Input — extracted to ChatInput component */}
+      <ChatInput
+        value={input}
+        onChange={setInput}
+        onSend={handleSend}
+        placeholder={placeholder}
+        disabled={isTyping}
+      />
     </div>
   )
 }

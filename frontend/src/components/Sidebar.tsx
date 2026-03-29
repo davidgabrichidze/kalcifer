@@ -22,6 +22,8 @@ interface SidebarProps {
   refreshKey?: number
   /** Map of conversationId → last time user viewed it (ISO string) */
   lastSeenMap?: Map<string, string>
+  /** When true, sidebar shows icon-only collapsed view (52px) */
+  collapsed?: boolean
 }
 
 export default function Sidebar({
@@ -31,6 +33,7 @@ export default function Sidebar({
   onConversationRemoved,
   refreshKey = 0,
   lastSeenMap,
+  collapsed = false,
 }: SidebarProps) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(false)
@@ -143,6 +146,34 @@ export default function Sidebar({
     const lastSeen = lastSeenMap?.get(c.id)
     const hasUnread = !isActive && lastSeen && c.updated_at > lastSeen
 
+    // Collapsed mode: just show the dot
+    if (collapsed) {
+      return (
+        <div
+          key={c.id}
+          className={`flow-item${isActive ? ' active' : ''}`}
+          onClick={() => onSelectConversation(c.id)}
+          title={c.title || 'ახალი საუბარი'}
+          style={{ justifyContent: 'center', padding: '6px 0' }}
+        >
+          <div className={`flow-dot ${getDotClass(c)}`} style={{ margin: 0 }}>
+            {hasUnread && (
+              <span style={{
+                position: 'absolute',
+                top: -2,
+                right: -2,
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: 'var(--color-primary)',
+                border: '1.5px solid var(--color-surface)',
+              }} />
+            )}
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div
         key={c.id}
@@ -216,20 +247,21 @@ export default function Sidebar({
     <div className="work-sidebar">
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* New session button */}
-        <div style={{ padding: '10px 10px 4px' }}>
+        <div style={{ padding: collapsed ? '10px 8px 4px' : '10px 10px 4px' }}>
           <button
             onClick={onNewSession}
             style={{
               display: 'flex',
               alignItems: 'center',
+              justifyContent: collapsed ? 'center' : 'flex-start',
               gap: 6,
               width: '100%',
-              padding: '7px 10px',
+              padding: collapsed ? '7px 0' : '7px 10px',
               background: 'var(--color-primary-soft)',
               border: '1px dashed var(--color-primary)',
               borderRadius: 10,
               color: 'var(--color-primary)',
-              fontSize: 12,
+              fontSize: collapsed ? 16 : 12,
               fontWeight: 500,
               cursor: 'pointer',
               fontFamily: 'inherit',
@@ -248,8 +280,9 @@ export default function Sidebar({
               el.style.color = 'var(--color-primary)'
               el.style.borderStyle = 'dashed'
             }}
+            title="ახალი სესია"
           >
-            + ახალი სესია
+            {collapsed ? '+' : '+ ახალი სესია'}
           </button>
         </div>
 
@@ -265,7 +298,7 @@ export default function Sidebar({
           )}
 
           {/* Unclassified conversations */}
-          {unclassified.length > 0 && (
+          {!collapsed && unclassified.length > 0 && (
             <SectionLabel>ახალი საუბრები</SectionLabel>
           )}
           {unclassified.map(c => renderItem(c))}
@@ -273,14 +306,16 @@ export default function Sidebar({
           {/* Grouped by kind */}
           {Array.from(grouped.entries()).map(([kind, convs]) => (
             <div key={kind}>
-              <SectionLabel>
-                {KIND_META[kind]?.icon} {KIND_META[kind]?.label ?? kind}
-              </SectionLabel>
+              {!collapsed && (
+                <SectionLabel>
+                  {KIND_META[kind]?.icon} {KIND_META[kind]?.label ?? kind}
+                </SectionLabel>
+              )}
               {convs.map(c => renderItem(c))}
             </div>
           ))}
 
-          {active.length === 0 && !loading && (
+          {active.length === 0 && !loading && !collapsed && (
             <div style={{ padding: '12px 8px', fontSize: 11, color: 'var(--color-text-muted)' }}>
               ჯერ საუბრები არ არის
             </div>
@@ -289,7 +324,7 @@ export default function Sidebar({
           {/* Archived */}
           {archived.length > 0 && (
             <>
-              <SectionLabel>არქივი</SectionLabel>
+              {!collapsed && <SectionLabel>არქივი</SectionLabel>}
               {archived.map(c => renderItem(c, true))}
             </>
           )}
