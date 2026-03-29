@@ -170,7 +170,8 @@ defmodule KalciferWeb.AuthController do
   end
 
   defp sign(payload) do
-    secret = Application.get_env(:kalcifer, :auth_session_secret, "kalcifer-dev-secret-change-in-prod")
+    secret =
+      Application.get_env(:kalcifer, :auth_session_secret, "kalcifer-dev-secret-change-in-prod")
 
     :crypto.mac(:hmac, :sha256, secret, payload)
     |> Base.url_encode64(padding: false)

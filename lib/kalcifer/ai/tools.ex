@@ -676,7 +676,9 @@ defmodule Kalcifer.AI.Tools do
           }
 
           result = if version_graph, do: Map.put(result, :graph, version_graph), else: result
-          result = if warnings != [], do: Map.put(result, :validation_warnings, warnings), else: result
+
+          result =
+            if warnings != [], do: Map.put(result, :validation_warnings, warnings), else: result
 
           {:ok, Jason.encode!(result, pretty: true)}
 

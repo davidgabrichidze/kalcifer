@@ -11,12 +11,16 @@ defmodule KalciferWeb.ChatControllerTest do
   # Get the demo tenant (auto-created by TenantResolver)
   defp ensure_demo_tenant do
     case Kalcifer.Repo.get_by(Kalcifer.Tenants.Tenant, name: "Demo Tenant") do
-      %{} = t -> t
+      %{} = t ->
+        t
+
       nil ->
-        {:ok, t} = Tenants.create_tenant(%{
-          name: "Demo Tenant",
-          api_key_hash: Tenants.hash_api_key("demo-dev-key")
-        })
+        {:ok, t} =
+          Tenants.create_tenant(%{
+            name: "Demo Tenant",
+            api_key_hash: Tenants.hash_api_key("demo-dev-key")
+          })
+
         t
     end
   end
@@ -41,26 +45,29 @@ defmodule KalciferWeb.ChatControllerTest do
 
   describe "B. conversation resolution" do
     test "B1: creates new conversation when none provided", %{conn: conn} do
-      _conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "hello B1"}]
-      })
+      _conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "hello B1"}]
+        })
 
       tenant = ensure_demo_tenant()
       convs = Context.list_conversations(tenant.id)
+
       assert Enum.any?(convs, fn c ->
-        msgs = Context.get_messages(c.id)
-        Enum.any?(msgs, &(&1.content == "hello B1"))
-      end)
+               msgs = Context.get_messages(c.id)
+               Enum.any?(msgs, &(&1.content == "hello B1"))
+             end)
     end
 
     test "B2: reuses existing conversation when valid id provided", %{conn: conn} do
       tenant = ensure_demo_tenant()
       {:ok, conv} = Context.create_conversation(tenant.id, %{title: "Existing"})
 
-      _conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "hello B2"}],
-        "conversation_id" => conv.id
-      })
+      _conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "hello B2"}],
+          "conversation_id" => conv.id
+        })
 
       # Message should be in the SAME conversation
       messages = Context.get_messages(conv.id)
@@ -70,10 +77,11 @@ defmodule KalciferWeb.ChatControllerTest do
     test "B3: creates new conversation for nonexistent id", %{conn: conn} do
       fake_id = Ecto.UUID.generate()
 
-      _conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "hello B3"}],
-        "conversation_id" => fake_id
-      })
+      _conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "hello B3"}],
+          "conversation_id" => fake_id
+        })
 
       # Message should NOT be in fake conversation (it doesn't exist)
       assert Context.get_messages(fake_id) == []
@@ -81,10 +89,11 @@ defmodule KalciferWeb.ChatControllerTest do
       # But should exist in SOME conversation
       tenant = ensure_demo_tenant()
       convs = Context.list_conversations(tenant.id)
+
       assert Enum.any?(convs, fn c ->
-        msgs = Context.get_messages(c.id)
-        Enum.any?(msgs, &(&1.content == "hello B3"))
-      end)
+               msgs = Context.get_messages(c.id)
+               Enum.any?(msgs, &(&1.content == "hello B3"))
+             end)
     end
 
     test "B4: rejects other tenant's conversation (security)", %{conn: conn} do
@@ -92,10 +101,11 @@ defmodule KalciferWeb.ChatControllerTest do
       {:ok, other_conv} = Context.create_conversation(other_tenant.id, %{title: "Secret"})
       {:ok, _} = Context.add_message(other_conv.id, "user", "private data")
 
-      _conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "hello B4"}],
-        "conversation_id" => other_conv.id
-      })
+      _conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "hello B4"}],
+          "conversation_id" => other_conv.id
+        })
 
       # B4 message should NOT be in other tenant's conversation
       other_msgs = Context.get_messages(other_conv.id)
@@ -104,10 +114,11 @@ defmodule KalciferWeb.ChatControllerTest do
       # Should be in a NEW conversation under demo tenant
       tenant = ensure_demo_tenant()
       convs = Context.list_conversations(tenant.id)
+
       assert Enum.any?(convs, fn c ->
-        msgs = Context.get_messages(c.id)
-        Enum.any?(msgs, &(&1.content == "hello B4"))
-      end)
+               msgs = Context.get_messages(c.id)
+               Enum.any?(msgs, &(&1.content == "hello B4"))
+             end)
     end
 
     test "B5: loads message history from existing conversation", %{conn: conn} do
@@ -116,10 +127,11 @@ defmodule KalciferWeb.ChatControllerTest do
       {:ok, _} = Context.add_message(conv.id, "user", "old question")
       {:ok, _} = Context.add_message(conv.id, "assistant", "old answer")
 
-      _conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "new question"}],
-        "conversation_id" => conv.id
-      })
+      _conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "new question"}],
+          "conversation_id" => conv.id
+        })
 
       messages = Context.get_messages(conv.id)
       contents = Enum.map(messages, & &1.content)
@@ -136,10 +148,11 @@ defmodule KalciferWeb.ChatControllerTest do
       tenant = ensure_demo_tenant()
       {:ok, conv} = Context.create_conversation(tenant.id)
 
-      _conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "C1 test message"}],
-        "conversation_id" => conv.id
-      })
+      _conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "C1 test message"}],
+          "conversation_id" => conv.id
+        })
 
       messages = Context.get_messages(conv.id)
       user_msgs = Enum.filter(messages, &(&1.role == "user"))
@@ -150,13 +163,14 @@ defmodule KalciferWeb.ChatControllerTest do
       tenant = ensure_demo_tenant()
       {:ok, conv} = Context.create_conversation(tenant.id)
 
-      _conn = post(conn, "/api/v1/chat", %{
-        "messages" => [
-          %{"role" => "user", "content" => "first C2"},
-          %{"role" => "user", "content" => "second C2"}
-        ],
-        "conversation_id" => conv.id
-      })
+      _conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [
+            %{"role" => "user", "content" => "first C2"},
+            %{"role" => "user", "content" => "second C2"}
+          ],
+          "conversation_id" => conv.id
+        })
 
       messages = Context.get_messages(conv.id)
       user_contents = messages |> Enum.filter(&(&1.role == "user")) |> Enum.map(& &1.content)
@@ -168,13 +182,14 @@ defmodule KalciferWeb.ChatControllerTest do
       tenant = ensure_demo_tenant()
       {:ok, conv} = Context.create_conversation(tenant.id)
 
-      _conn = post(conn, "/api/v1/chat", %{
-        "messages" => [
-          %{"role" => "assistant", "content" => "should not save"},
-          %{"role" => "user", "content" => "C3 real message"}
-        ],
-        "conversation_id" => conv.id
-      })
+      _conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [
+            %{"role" => "assistant", "content" => "should not save"},
+            %{"role" => "user", "content" => "C3 real message"}
+          ],
+          "conversation_id" => conv.id
+        })
 
       messages = Context.get_messages(conv.id)
       contents = Enum.map(messages, & &1.content)
@@ -189,9 +204,10 @@ defmodule KalciferWeb.ChatControllerTest do
 
   describe "D. SSE event format" do
     test "D1: response has text/event-stream content type", %{conn: conn} do
-      conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "D1"}]
-      })
+      conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "D1"}]
+        })
 
       assert conn.status == 200
       assert {"content-type", ct} = List.keyfind(conn.resp_headers, "content-type", 0)
@@ -199,25 +215,28 @@ defmodule KalciferWeb.ChatControllerTest do
     end
 
     test "D2: response has no-cache header", %{conn: conn} do
-      conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "D2"}]
-      })
+      conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "D2"}]
+        })
 
       assert {"cache-control", "no-cache"} = List.keyfind(conn.resp_headers, "cache-control", 0)
     end
 
     test "D3: response has x-accel-buffering no header", %{conn: conn} do
-      conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "D3"}]
-      })
+      conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "D3"}]
+        })
 
       assert {"x-accel-buffering", "no"} = List.keyfind(conn.resp_headers, "x-accel-buffering", 0)
     end
 
     test "D4: response state is chunked", %{conn: conn} do
-      conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "D4"}]
-      })
+      conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "D4"}]
+        })
 
       assert conn.state == :chunked
     end
@@ -229,9 +248,10 @@ defmodule KalciferWeb.ChatControllerTest do
 
   describe "E. agent flow path" do
     test "E1: normal message triggers agent flow (200 + SSE)", %{conn: conn} do
-      conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "hello normal"}]
-      })
+      conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "hello normal"}]
+        })
 
       # Should return 200 with SSE — engine or fallback, both produce SSE
       assert conn.status == 200
@@ -243,10 +263,11 @@ defmodule KalciferWeb.ChatControllerTest do
       {:ok, conv} = Context.create_conversation(tenant.id)
 
       # "საბჭო" is a council keyword
-      conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "საბჭო, დაფიქრდი ამაზე"}],
-        "conversation_id" => conv.id
-      })
+      conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "საბჭო, დაფიქრდი ამაზე"}],
+          "conversation_id" => conv.id
+        })
 
       # Should still work (200) — council or simple, both valid
       assert conn.status == 200
@@ -260,10 +281,11 @@ defmodule KalciferWeb.ChatControllerTest do
       tenant = ensure_demo_tenant()
       {:ok, conv} = Context.create_conversation(tenant.id)
 
-      _conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "E3 test"}],
-        "conversation_id" => conv.id
-      })
+      _conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "E3 test"}],
+          "conversation_id" => conv.id
+        })
 
       # At minimum, user message should be saved
       msgs = Context.get_messages(conv.id)
@@ -307,9 +329,10 @@ defmodule KalciferWeb.ChatControllerTest do
   describe "G. error handling" do
     test "G1: engine failure falls back gracefully (still 200)", %{conn: conn} do
       # Without API key, engine starts but AI call fails → fallback → still 200
-      conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "G1 error test"}]
-      })
+      conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "G1 error test"}]
+        })
 
       assert conn.status == 200
       assert conn.state == :chunked
@@ -327,9 +350,10 @@ defmodule KalciferWeb.ChatControllerTest do
 
   describe "I. system prompt" do
     test "I1: chat works without operator memories", %{conn: conn} do
-      conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "I1 no memories"}]
-      })
+      conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "I1 no memories"}]
+        })
 
       assert conn.status == 200
     end
@@ -345,9 +369,10 @@ defmodule KalciferWeb.ChatControllerTest do
       assert Enum.any?(memories, &(&1.key == "test_key" && &1.value == "test_value"))
 
       # Chat should still work
-      conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "I2 with memories"}]
-      })
+      conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "I2 with memories"}]
+        })
 
       assert conn.status == 200
     end
@@ -365,10 +390,11 @@ defmodule KalciferWeb.ChatControllerTest do
         tenant = ensure_demo_tenant()
         {:ok, conv} = Context.create_conversation(tenant.id)
 
-        _conn = post(conn, "/api/v1/chat", %{
-          "messages" => [%{"role" => "user", "content" => "#{word} please"}],
-          "conversation_id" => conv.id
-        })
+        _conn =
+          post(conn, "/api/v1/chat", %{
+            "messages" => [%{"role" => "user", "content" => "#{word} please"}],
+            "conversation_id" => conv.id
+          })
 
         # Just verify it doesn't crash — council flow selection
         msgs = Context.get_messages(conv.id)
@@ -380,10 +406,11 @@ defmodule KalciferWeb.ChatControllerTest do
       tenant = ensure_demo_tenant()
       {:ok, conv} = Context.create_conversation(tenant.id)
 
-      _conn = post(conn, "/api/v1/chat", %{
-        "messages" => [%{"role" => "user", "content" => "just a normal hello"}],
-        "conversation_id" => conv.id
-      })
+      _conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "just a normal hello"}],
+          "conversation_id" => conv.id
+        })
 
       # Should work fine (simple flow path)
       msgs = Context.get_messages(conv.id)

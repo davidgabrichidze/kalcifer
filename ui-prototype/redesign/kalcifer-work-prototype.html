@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalcifer Work — Prototype v5</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { margin: 0; overflow: hidden; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.06); opacity: 1; } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+    .chat-scroll::-webkit-scrollbar { width: 4px; }
+    .chat-scroll::-webkit-scrollbar-thumb { background: #302a24; border-radius: 4px; }
+    .chat-scroll::-webkit-scrollbar-track { background: transparent; }
+    .hint-chip:hover { border-color: #e0a060 !important; color: #e0a060 !important; background: rgba(224,160,96,0.10) !important; }
+    .artifact-card:hover { border-color: #e0a060 !important; background: rgba(224,160,96,0.10) !important; }
+    .flow-node:hover { background: #282220 !important; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .ctx-btn:hover { border-color: #e0a060 !important; color: #e8ddd0 !important; }
+    .btn-new-session:hover { background: #e0a060 !important; color: #161210 !important; border-style: solid !important; }
+    .drag-handle { background: transparent; transition: background 0.15s; }
+    .drag-handle:hover { background: rgba(224,160,96,0.25) !important; }
+    .drag-handle.dragging { background: rgba(224,160,96,0.4) !important; }
+    .input-glow:focus-within { border-color: #e0a060 !important; box-shadow: 0 0 0 3px rgba(224,160,96,0.12), 0 2px 8px rgba(0,0,0,0.15) !important; }
+    .badge-toggle:hover { background: rgba(224,160,96,0.10) !important; color: #e0a060 !important; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useCallback, useRef, useEffect, useMemo } = React;
+
+    const C = {
+      bg: "#161210", surface: "#1e1a16", surfaceDim: "#1a1612", surfaceRaised: "#282220",
+      primary: "#e0a060", primaryHover: "#e8b070", primarySoft: "rgba(224,160,96,0.10)",
+      primaryMuted: "rgba(224,160,96,0.22)", accent: "#c090d0", accentSoft: "rgba(192,144,208,0.10)",
+      border: "#302a24", borderLight: "#282220", text: "#e8ddd0", textSec: "#b8a898",
+      textMuted: "#786858", textOnPrimary: "#161210", success: "#6cc480",
+      successSoft: "rgba(108,196,128,0.10)", warn: "#e0b860", warnSoft: "rgba(224,184,96,0.10)",
+      danger: "#e07060", dangerSoft: "rgba(224,112,96,0.10)", info: "#70a8e0",
+      infoSoft: "rgba(112,168,224,0.10)",
+    };
+    const EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
+
+    const KIND_META = {
+      campaign: { icon: "\u{1F4E3}", label: "\u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d4\u10d1\u10d8", color: C.primary },
+      flow: { icon: "\u26A1", label: "\u10e4\u10da\u10dd\u10e3\u10d4\u10d1\u10d8", color: C.info },
+      analysis: { icon: "\u{1F4CA}", label: "\u10d0\u10dc\u10d0\u10da\u10d8\u10d6\u10d8", color: C.accent },
+      debug: { icon: "\u{1F50D}", label: "\u10d3\u10d8\u10d0\u10d2\u10dc\u10dd\u10e1\u10e2\u10d8\u10d9\u10d0", color: C.warn },
+    };
+
+    const SESSIONS = [
+      { id: "s1", title: "Welcome \u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d0", kind: "campaign", status: "done", updatedAt: "5 \u10ec\u10d7 \u10ec\u10d8\u10dc", unread: true },
+      { id: "s2", title: "Churn re-engagement", kind: "flow", status: "thinking", updatedAt: "2 \u10e1\u10d7 \u10ec\u10d8\u10dc", unread: false },
+      { id: "s3", title: "Email conversion rates", kind: "analysis", status: "done", updatedAt: "1 \u10d3\u10e6\u10d8\u10e1 \u10ec\u10d8\u10dc", unread: false },
+      { id: "s4", title: "Instance #a8f3 debug", kind: "debug", status: "idle", updatedAt: "3 \u10d3\u10e6\u10d8\u10e1 \u10ec\u10d8\u10dc", unread: false },
+    ];
+
+    const STATUS_INDICATOR = {
+      thinking: { color: C.warn, pulse: true },
+      done: { color: C.success, pulse: false },
+      idle: { color: C.textMuted, pulse: false },
+      error: { color: C.danger, pulse: false },
+    };
+
+    const DEMO_MESSAGES = [
+      { id: "m1", role: "user", content: "Welcome \u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d0 \u10d2\u10d0\u10d5\u10d0\u10d9\u10d4\u10d7\u10dd\u10d7 \u2014 \u10d0\u10ee\u10d0\u10da\u10d8 \u10db\u10dd\u10db\u10ee\u10db\u10d0\u10e0\u10d4\u10d1\u10da\u10d4\u10d1\u10d8 \u10e0\u10dd\u10db \u10d3\u10d0\u10e0\u10d4\u10d2\u10d8\u10e1\u10e2\u10e0\u10d8\u10e0\u10d3\u10d4\u10d1\u10d8\u10d0\u10dc, \u10db\u10d8\u10e1\u10d0\u10da\u10db\u10d4\u10d1\u10d8\u10e1 email \u10d2\u10d0\u10d5\u10e3\u10d2\u10d6\u10d0\u10d5\u10dc\u10dd\u10d7, 3 \u10d3\u10e6\u10d4\u10e8\u10d8 follow-up." },
+      { id: "m2", role: "ai",
+        content: "\u10d2\u10d0\u10d5\u10d0\u10d9\u10d4\u10d7\u10d4 Welcome \u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d8\u10e1 flow.\n\n**Event Entry** \u2192 user_registered\n**Send Email** \u2192 \u10db\u10dd\u10d2\u10d4\u10e1\u10d0\u10da\u10db\u10d4\u10d1\u10d8\u10d7! \u{1F44B}\n**Wait 3d** \u2192 3 \u10d3\u10e6\u10d4\n**Send Email** \u2192 \u10e0\u10dd\u10d2\u10dd\u10e0 \u10db\u10dd\u10d2\u10d4\u10ec\u10dd\u10dc\u10d0\u10d7? \u{1F914}\n**End** \u2192 flow \u10e1\u10e0\u10e3\u10da\u10d3\u10d4\u10d1\u10d0",
+        tools: [
+          { name: "create_flow", label: "\u10e4\u10da\u10dd\u10e3\u10e1 \u10e8\u10d4\u10e5\u10db\u10dc\u10d0", status: "done" },
+          { name: "add_node", label: "5 \u10dc\u10d0\u10d1\u10d8\u10ef\u10d8\u10e1 \u10d3\u10d0\u10db\u10d0\u10e2\u10d4\u10d1\u10d0", status: "done" },
+        ],
+        artifact: { id: "flow-welcome", type: "flow", title: "Welcome \u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d0", subtitle: "5 node \u00b7 4 edge \u00b7 Draft", icon: "\u26A1" },
+        quickActions: [{ label: "\u10d2\u10d0\u10d5\u10d0\u10d0\u10e5\u10e2\u10d8\u10e3\u10e0\u10dd?" }, { label: "Dry Run" }, { label: "\u10e1\u10e0\u10e3\u10da \u10d4\u10d3\u10d8\u10e2\u10dd\u10e0\u10e8\u10d8" }],
+      },
+      { id: "m3", role: "user", content: "\u10de\u10d8\u10e0\u10d5\u10d4\u10da email-\u10e8\u10d8 emoji \u10d3\u10d0\u10d0\u10db\u10d0\u10e2\u10d4 subject-\u10e8\u10d8 \u10d3\u10d0 body-\u10e8\u10d8 CTA \u10e6\u10d8\u10da\u10d0\u10d9\u10d8 \u10d8\u10e7\u10dd\u10e1." },
+      { id: "m4", role: "ai", content: "\u10e8\u10d4\u10d5\u10ea\u10d5\u10d0\u10da\u10d4 \u2014 subject \u10d0\u10ee\u10da\u10d0 \"\u10db\u10dd\u10d2\u10d4\u10e1\u10d0\u10da\u10db\u10d4\u10d1\u10d8\u10d7! \u{1F44B}\" \u10d3\u10d0 body-\u10e8\u10d8 CTA \u10e6\u10d8\u10da\u10d0\u10d9\u10d8 \u10d3\u10d0\u10d5\u10d0\u10db\u10d0\u10e2\u10d4.",
+        tools: [{ name: "modify_node", label: "\u10dc\u10d0\u10d1\u10d8\u10ef\u10d8\u10e1 \u10e8\u10d4\u10ea\u10d5\u10da\u10d0", status: "done" }] },
+      { id: "m5", role: "user", content: "\u10d9\u10d0\u10e0\u10d2\u10d8\u10d0. wait-\u10d8\u10e1 \u10dc\u10d0\u10ea\u10d5\u10da\u10d0\u10d3 2 \u10d3\u10e6\u10d4 \u10d8\u10e7\u10dd\u10e1 \u2014 3 \u10d1\u10d4\u10d5\u10e0\u10d8\u10d0." },
+      { id: "m6", role: "ai", content: "\u10e8\u10d4\u10d5\u10ea\u10d5\u10d0\u10da\u10d4 \u2014 Wait \u10d0\u10ee\u10da\u10d0 2 \u10d3\u10e6\u10d4\u10d0. Canvas \u10d2\u10d0\u10dc\u10d0\u10ee\u10da\u10d3\u10d0.",
+        tools: [{ name: "modify_node", label: "\u10dc\u10d0\u10d1\u10d8\u10ef\u10d8\u10e1 \u10e8\u10d4\u10ea\u10d5\u10da\u10d0", status: "done" }],
+        quickActions: [{ label: "\u10d2\u10d0\u10d5\u10d0\u10d0\u10e5\u10e2\u10d8\u10e3\u10e0\u10dd?" }, { label: "Dry Run" }] },
+    ];
+
+    const DEMO_PROGRESS = [
+      { id: "a1", label: "\u10e4\u10da\u10dd\u10e3\u10e1 \u10e8\u10d4\u10e5\u10db\u10dc\u10d0", status: "done", detail: "Welcome \u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d0" },
+      { id: "a2", label: "Event Entry \u10d3\u10d0\u10db\u10d0\u10e2\u10d4\u10d1\u10d0", status: "done", detail: "user_registered" },
+      { id: "a3", label: "Send Email \u10d3\u10d0\u10db\u10d0\u10e2\u10d4\u10d1\u10d0", status: "done", detail: "\u10db\u10dd\u10d2\u10d4\u10e1\u10d0\u10da\u10db\u10d4\u10d1\u10d8\u10d7! \u{1F44B}" },
+      { id: "a4", label: "Wait \u10d3\u10d0\u10db\u10d0\u10e2\u10d4\u10d1\u10d0", status: "done", detail: "3 \u10d3\u10e6\u10d4" },
+      { id: "a5", label: "Send Email \u10d3\u10d0\u10db\u10d0\u10e2\u10d4\u10d1\u10d0", status: "done", detail: "\u10e0\u10dd\u10d2\u10dd\u10e0 \u10db\u10dd\u10d2\u10d4\u10ec\u10dd\u10dc\u10d0\u10d7?" },
+      { id: "a6", label: "End \u10d3\u10d0\u10db\u10d0\u10e2\u10d4\u10d1\u10d0", status: "done" },
+    ];
+
+    const DEMO_CONTEXT = [
+      { label: "Flow Engine", type: "skill", detail: "create_flow, add_node, modify_node" },
+      { label: "Email Channel", type: "skill", detail: "send_email, template builder" },
+      { label: "\u10e1\u10d4\u10e1\u10d8\u10d8\u10e1 \u10e2\u10d8\u10de\u10d8", type: "meta", detail: "\u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d0" },
+    ];
+
+    const FLOW_NODES = [
+      { id: "n1", type: "trigger", label: "Event Entry", sub: "event_entry", detail: "user_registered", color: C.info, icon: "T" },
+      { id: "n2", type: "action", label: "Send Email", sub: "send_email", detail: "\u10db\u10dd\u10d2\u10d4\u10e1\u10d0\u10da\u10db\u10d4\u10d1\u10d8\u10d7! \u{1F44B}", color: C.primary, icon: "\u2709" },
+      { id: "n3", type: "wait", label: "Wait", sub: "wait", detail: "2d", color: C.accent, icon: "W" },
+      { id: "n4", type: "action", label: "Send Email", sub: "send_email", detail: "\u10e0\u10dd\u10d2\u10dd\u10e0 \u10db\u10dd\u10d2\u10d4\u10ec\u10dd\u10dc\u10d0\u10d7? \u{1F914}", color: C.primary, icon: "\u2709" },
+      { id: "n5", type: "end", label: "End", sub: "end", detail: "", color: C.success, icon: "\u2713" },
+    ];
+
+    const WELCOME_HINTS = [
+      { label: "Welcome \u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d0", text: "Welcome \u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d0 \u10d2\u10d0\u10d5\u10d0\u10d9\u10d4\u10d7\u10dd\u10d7" },
+      { label: "Churn re-engagement", text: "90 \u10d3\u10e6\u10d4 \u10d0\u10e0\u10d0\u10d0\u10e5\u10e2\u10d8\u10e3\u10e0 \u10db\u10dd\u10db\u10ee\u10db\u10d0\u10e0\u10d4\u10d1\u10da\u10d4\u10d1\u10e1 re-engagement flow" },
+      { label: "A/B \u10e2\u10d4\u10e1\u10e2\u10d8", text: "A/B \u10e2\u10d4\u10e1\u10e2\u10d8 email subject-\u10d4\u10d1\u10d8\u10e1\u10d7\u10d5\u10d8\u10e1" },
+      { label: "\u10e0\u10d0 nodes \u10d0\u10e0\u10e1\u10d4\u10d1\u10dd\u10d1\u10e1?", text: "\u10e0\u10d0 \u10e2\u10d8\u10de\u10d8\u10e1 nodes \u10d0\u10e0\u10e1\u10d4\u10d1\u10dd\u10d1\u10e1 \u10e1\u10d8\u10e1\u10e2\u10d4\u10db\u10d0\u10e8\u10d8?" },
+    ];
+
+    var BADGE_VARIANTS = ["default", "minimal", "compact"];
+
+    // ── CollapsibleSection ──
+    function CollapsibleSection(props) {
+      var title = props.title, icon = props.icon, expanded = props.expanded, onToggle = props.onToggle, children = props.children;
+      return (
+        <div style={{ borderBottom: "1px solid " + C.border }}>
+          <button onClick={onToggle} style={{
+            width: "100%", display: "flex", alignItems: "center", gap: 8,
+            padding: "10px 14px", border: "none", background: "transparent",
+            cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+          }}>
+            {icon}
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: C.text, flex: 1 }}>{title}</span>
+            <span style={{ fontSize: 9, color: C.textMuted, transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>{"\u25BC"}</span>
+          </button>
+          {expanded && children}
+        </div>
+      );
+    }
+
+    // ── SidebarContent (right panel sidebar mode) ──
+    function SidebarContent(props) {
+      var progressSteps = props.progressSteps, artifacts = props.artifacts, contextItems = props.contextItems;
+      var doneCount = progressSteps.filter(function(s) { return s.status === "done"; }).length;
+      var isRunning = progressSteps.some(function(s) { return s.status === "running"; });
+
+      return (
+        <div style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }} className="chat-scroll">
+          {progressSteps.length > 0 && (
+            <CollapsibleSection
+              title={isRunning ? "\u10db\u10d8\u10db\u10d3\u10d8\u10dc\u10d0\u10e0\u10d4\u10dd\u10d1\u10e1..." : doneCount + "/" + progressSteps.length + " \u10e8\u10d4\u10e1\u10e0\u10e3\u10da\u10d3\u10d0"}
+              icon={<span style={{ width: 6, height: 6, borderRadius: "50%", background: isRunning ? C.warn : C.success, animation: isRunning ? "pulse 1.2s infinite" : "none" }} />}
+              expanded={props.progressExpanded}
+              onToggle={props.onToggleProgress}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 1, padding: "0 14px 10px" }}>
+                {progressSteps.map(function(step, i) {
+                  return (
+                    <div key={step.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", animation: "fadeUp 0.2s ease " + (i * 0.04) + "s both" }}>
+                      <span style={{
+                        width: 16, height: 16, borderRadius: "50%", flexShrink: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8,
+                        background: step.status === "done" ? C.successSoft : C.warnSoft,
+                        color: step.status === "done" ? C.success : C.warn,
+                      }}>{step.status === "done" ? "\u2713" : "\u2022"}</span>
+                      <span style={{ fontSize: 11, color: step.status === "done" ? C.textSec : C.text, flex: 1 }}>{step.label}</span>
+                      {step.detail && <span style={{ fontSize: 10, color: C.textMuted, fontFamily: "monospace" }}>{step.detail}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </CollapsibleSection>
+          )}
+
+          {artifacts.length > 0 && (
+            <CollapsibleSection
+              title={artifacts.length + " \u10d0\u10e0\u10e2\u10d4\u10e4\u10d0\u10e5\u10e2\u10d8"}
+              icon={<span style={{ fontSize: 11 }}>{"\u{1F4CE}"}</span>}
+              expanded={props.artifactsExpanded}
+              onToggle={props.onToggleArtifacts}
+            >
+              <div style={{ padding: "0 10px 10px" }}>
+                {artifacts.map(function(art, i) {
+                  return (
+                    <button key={art.id} onClick={props.onArtifactClick} className="artifact-card" style={{
+                      display: "flex", alignItems: "center", gap: 8, width: "100%",
+                      padding: "8px 10px", borderRadius: 10,
+                      background: C.surfaceRaised, border: "1px solid " + C.border,
+                      cursor: "pointer", textAlign: "left", fontFamily: "inherit",
+                      marginBottom: 4, transition: "all 0.2s",
+                      animation: "fadeUp 0.3s ease " + (i * 0.08) + "s both",
+                    }}>
+                      <span style={{ width: 32, height: 32, borderRadius: 8, background: C.primarySoft, border: "1px solid " + C.primaryMuted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>{art.icon}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 11.5, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{art.title}</div>
+                        <div style={{ fontSize: 9.5, color: C.textMuted, marginTop: 1 }}>{art.subtitle}</div>
+                      </div>
+                      <span style={{ fontSize: 10, color: C.primary, fontWeight: 600, flexShrink: 0 }}>{"\u2192"}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </CollapsibleSection>
+          )}
+
+          {contextItems && contextItems.length > 0 && (
+            <CollapsibleSection
+              title={"\u10d9\u10dd\u10dc\u10e2\u10d4\u10e5\u10e1\u10e2\u10d8"}
+              icon={<span style={{ fontSize: 11 }}>{"\u{1F9E9}"}</span>}
+              expanded={props.contextExpanded}
+              onToggle={props.onToggleContext}
+            >
+              <div style={{ padding: "0 14px 10px", display: "flex", flexDirection: "column", gap: 4 }}>
+                {contextItems.map(function(item, i) {
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "4px 0" }}>
+                      <span style={{
+                        fontSize: 8, padding: "2px 6px", borderRadius: 4, fontWeight: 600, flexShrink: 0, marginTop: 2,
+                        background: item.type === "skill" ? C.infoSoft : C.accentSoft,
+                        color: item.type === "skill" ? C.info : C.accent,
+                      }}>{item.type === "skill" ? "SKILL" : "META"}</span>
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: C.text }}>{item.label}</div>
+                        <div style={{ fontSize: 10, color: C.textMuted }}>{item.detail}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CollapsibleSection>
+          )}
+        </div>
+      );
+    }
+
+    // ── PanelBtn ──
+    function PanelBtn(props) {
+      return <button onClick={props.onClick} className="ctx-btn" style={{ width: props.small ? 24 : 28, height: props.small ? 24 : 28, borderRadius: 6, background: C.surfaceDim, border: "1px solid " + C.border, color: C.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: props.small ? 12 : 14 }}>{props.children}</button>;
+    }
+
+    // ── EditorContent ──
+    function EditorContent(props) {
+      var nodes = props.nodes, title = props.title;
+      return (
+        <React.Fragment>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 14px", flexShrink: 0, borderBottom: "1px solid " + C.border, background: C.surface }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <PanelBtn onClick={props.onBack} small>{"\u2190"}</PanelBtn>
+              <span style={{ fontSize: 14 }}>{"\u26A1"}</span>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>{title}</span>
+              <span style={{ fontSize: 9.5, padding: "2px 8px", borderRadius: 8, background: C.infoSoft, color: C.info, fontWeight: 600 }}>Draft</span>
+              <span style={{ fontSize: 10, color: C.textMuted, fontFamily: "monospace" }}>v1</span>
+            </div>
+            <div style={{ display: "flex", gap: 4 }}>
+              <PanelBtn onClick={props.onClose}>{"\u2715"}</PanelBtn>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 4, padding: "8px 14px", borderBottom: "1px solid " + C.border, background: C.surface }}>
+            {[{ l: "\u270E Edit", active: true }, { l: "\u25B6 Simulate", active: false }, { l: "\u25C9 Live", active: false }].map(function(m) {
+              return <button key={m.l} style={{ height: 26, padding: "0 10px", borderRadius: 5, fontSize: 10.5, fontWeight: 500, fontFamily: "inherit", cursor: "pointer", border: m.active ? "1px solid " + C.primary : "1px solid " + C.border, background: m.active ? C.primary : C.surfaceDim, color: m.active ? C.textOnPrimary : C.textSec }}>{m.l}</button>;
+            })}
+          </div>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 20px", overflow: "auto" }} className="chat-scroll">
+            {nodes.map(function(node, i) {
+              return (
+                <div key={node.id}>
+                  <div className="flow-node" style={{ width: 240, padding: "12px 16px", background: C.surface, border: "1.5px solid " + node.color, borderRadius: 12, cursor: "pointer", transition: "all 0.3s", animation: "fadeUp 0.4s ease " + (i * 0.08) + "s both" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: node.detail ? 6 : 0 }}>
+                      <span style={{ width: 26, height: 26, borderRadius: 7, background: node.color + "18", color: node.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0, border: "1px solid " + node.color + "30" }}>{node.icon}</span>
+                      <div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: C.text }}>{node.label}</div>
+                        <div style={{ fontSize: 9, color: C.textMuted, fontFamily: "monospace" }}>{node.sub}</div>
+                      </div>
+                    </div>
+                    {node.detail && <div style={{ fontSize: 11, color: C.textSec, paddingLeft: 34 }}>{node.detail}</div>}
+                  </div>
+                  {i < nodes.length - 1 && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: 28 }}>
+                      <div style={{ width: 2, flex: 1, background: C.border }} />
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.border, margin: "2px 0" }} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ height: 36, flexShrink: 0, background: C.surface, borderTop: "1px solid " + C.border, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 14px", fontSize: 10, color: C.textMuted }}>
+            <div style={{ display: "flex", gap: 12 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: C.success }} /><strong style={{ color: C.textSec }}>{nodes.length}</strong> nodes</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: C.info }} /><strong style={{ color: C.textSec }}>{nodes.length - 1}</strong> edges</span>
+            </div>
+            <span style={{ fontFamily: "monospace", padding: "2px 8px", background: C.surfaceDim, borderRadius: 4 }}>Ready</span>
+          </div>
+        </React.Fragment>
+      );
+    }
+
+    // ── RightPanel ──
+    function RightPanel(props) {
+      var isSidebar = props.mode === "sidebar";
+
+      return (
+        <div style={{
+          display: "flex", flexDirection: "column",
+          overflow: "hidden", background: C.bg,
+          borderLeft: isSidebar ? "1px solid " + C.border : "none",
+          animation: "slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+          height: "100%", width: "100%",
+        }}>
+          {isSidebar ? (
+            <SidebarContent
+              progressSteps={props.progressSteps} progressExpanded={props.progressExpanded} onToggleProgress={props.onToggleProgress}
+              artifacts={props.artifacts} artifactsExpanded={props.artifactsExpanded} onToggleArtifacts={props.onToggleArtifacts}
+              contextItems={props.contextItems} contextExpanded={props.contextExpanded} onToggleContext={props.onToggleContext}
+              onArtifactClick={props.onArtifactClick}
+            />
+          ) : (
+            <EditorContent
+              nodes={props.nodes} title={props.editorTitle}
+              onBack={props.onBackToSidebar} onClose={props.onClose}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // ── DragHandle ──
+    function DragHandle(props) {
+      var _d = useState(false), dragging = _d[0], setDragging = _d[1];
+      var handleRef = useRef(null);
+
+      useEffect(function() {
+        if (!dragging) return;
+        var onMove = function(e) {
+          e.preventDefault();
+          if (props.onDrag) props.onDrag(e.clientX);
+        };
+        var onUp = function() { setDragging(false); document.body.style.cursor = ""; document.body.style.userSelect = ""; };
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onUp);
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+        return function() { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
+      }, [dragging, props.onDrag]);
+
+      return (
+        <div
+          ref={handleRef}
+          className={"drag-handle" + (dragging ? " dragging" : "")}
+          onMouseDown={function(e) { e.preventDefault(); setDragging(true); }}
+          style={{
+            width: 6, flexShrink: 0, cursor: "col-resize",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            position: "relative", zIndex: 10,
+          }}
+        >
+          <div style={{ width: 2, height: 32, borderRadius: 1, background: dragging ? C.primary : C.border, transition: "background 0.15s" }} />
+        </div>
+      );
+    }
+
+    // ── Sidebar (left) ──
+    function LeftSidebar(props) {
+      var mode = props.mode, width = props.width, sessions = props.sessions, activeId = props.activeId;
+      var isCollapsed = mode === "collapsed";
+      if (mode === "hidden") return null;
+      var groups = useMemo(function() { var m = new Map(); sessions.forEach(function(s) { var l = m.get(s.kind) || []; l.push(s); m.set(s.kind, l); }); return m; }, [sessions]);
+
+      return (
+        <div style={{ width: width, minWidth: width, maxWidth: width, background: C.surface, borderRight: "1px solid " + C.border, display: "flex", flexDirection: "column", transition: "all 0.35s " + EASE, overflow: "hidden" }}>
+          <div style={{ padding: isCollapsed ? "10px 7px 4px" : "10px 10px 4px", flexShrink: 0 }}>
+            {isCollapsed ? (
+              <button onClick={props.onToggle} style={{ width: 38, height: 38, borderRadius: 10, background: C.primarySoft, border: "1px solid " + C.primaryMuted, color: C.primary, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u2630"}</button>
+            ) : (
+              <div style={{ display: "flex", gap: 4 }}>
+                <button onClick={props.onNewSession} className="btn-new-session" style={{ flex: 1, display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", background: C.primarySoft, border: "1px dashed " + C.primary, borderRadius: 10, color: C.primary, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}>{"+\u00a0\u10d0\u10ee\u10d0\u10da\u10d8 \u10e1\u10d4\u10e1\u10d8\u10d0"}</button>
+                <button onClick={props.onToggle} style={{ width: 32, height: 32, borderRadius: 8, background: "transparent", border: "1px solid " + C.border, color: C.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u25C0"}</button>
+              </div>
+            )}
+          </div>
+          <div style={{ flex: 1, overflow: "auto", padding: isCollapsed ? "4px 7px" : "4px 10px" }} className="chat-scroll">
+            {isCollapsed ? sessions.map(function(s) {
+              var active = s.id === activeId, si = STATUS_INDICATOR[s.status] || STATUS_INDICATOR.idle;
+              return <button key={s.id} onClick={function() { props.onSelect(s.id); }} title={s.title} style={{ width: 38, height: 38, borderRadius: 10, background: active ? C.primarySoft : "transparent", border: active ? "1px solid " + C.primaryMuted : "1px solid transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, marginBottom: 2, position: "relative" }}>
+                {KIND_META[s.kind] ? KIND_META[s.kind].icon : "\u{1F4AC}"}
+                <span style={{ position: "absolute", bottom: 2, right: 2, width: 7, height: 7, borderRadius: "50%", background: si.color, border: "2px solid " + C.surface, animation: si.pulse ? "pulse 2s infinite" : "none" }} />
+                {s.unread && !active && <span style={{ position: "absolute", top: 1, right: 1, width: 8, height: 8, borderRadius: "50%", background: C.primary, border: "2px solid " + C.surface }} />}
+              </button>;
+            }) : Array.from(groups.entries()).map(function(entry) {
+              var kind = entry[0], items = entry[1];
+              return (
+                <div key={kind} style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: 9.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, color: C.textMuted, padding: "6px 6px 3px", display: "flex", alignItems: "center", gap: 4 }}><span style={{ fontSize: 11 }}>{KIND_META[kind] ? KIND_META[kind].icon : ""}</span>{KIND_META[kind] ? KIND_META[kind].label : kind}</div>
+                  {items.map(function(s) {
+                    var active = s.id === activeId, si = STATUS_INDICATOR[s.status] || STATUS_INDICATOR.idle;
+                    return <button key={s.id} onClick={function() { props.onSelect(s.id); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 8px", background: active ? C.primarySoft : "transparent", border: active ? "1px solid " + C.primaryMuted : "1px solid transparent", borderRadius: 8, cursor: "pointer", textAlign: "left", fontFamily: "inherit", marginBottom: 1 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", flexShrink: 0, background: si.color, animation: si.pulse ? "pulse 2s infinite" : "none" }} />
+                      <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 11.5, fontWeight: active ? 600 : 500, color: active ? C.text : C.textSec, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.title}</div><div style={{ fontSize: 9.5, color: C.textMuted, marginTop: 1 }}>{s.updatedAt}</div></div>
+                      {s.unread && !active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.primary, flexShrink: 0 }} />}
+                    </button>;
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // ── WelcomeScreen ──
+    function WelcomeScreen(props) {
+      return (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40 }}>
+          <div style={{ width: 72, height: 72, borderRadius: "50%", background: C.primarySoft, border: "2px solid " + C.primary, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 700, color: C.primary, marginBottom: 20, animation: "breathe 4s ease-in-out infinite" }}>K</div>
+          <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 6 }}>{"\u10e0\u10d0\u10d6\u10d4 \u10d5\u10d8\u10db\u10e3\u10e8\u10d0\u10dd\u10d7?"}</div>
+          <div style={{ fontSize: 13, color: C.textMuted, maxWidth: 380, lineHeight: 1.6, textAlign: "center", marginBottom: 24 }}>{"\u10db\u10d8\u10d0\u10db\u10d1\u10d4 \u10e0\u10d0 \u10d2\u10d8\u10dc\u10d3\u10d0 \u10d2\u10d0\u10d0\u10d9\u10d4\u10d7\u10dd \u2014 flow-\u10e1 \u10d0\u10d5\u10d0\u10ec\u10e7\u10dd\u10d1, \u10d2\u10d0\u10d5\u10e2\u10d4\u10e1\u10e2\u10d0\u10d5, \u10d2\u10d0\u10d5\u10d0\u10d0\u10dc\u10d0\u10da\u10d8\u10d6\u10d4\u10d1."}{props.showSubtitle && " \u10d0\u10dc \u10d0\u10d8\u10e0\u10e9\u10d8\u10d4 \u10db\u10d0\u10e0\u10ea\u10ee\u10dc\u10d8\u10d3\u10d0\u10dc \u10d0\u10e0\u10e1\u10d4\u10d1\u10e3\u10da\u10d8 \u10e1\u10d4\u10e1\u10d8\u10d0."}</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", maxWidth: 480 }}>
+            {props.hints.map(function(h) { return <button key={h.label} onClick={function() { props.onHintClick(h); }} className="hint-chip" style={{ background: C.surface, border: "1px solid " + C.border, color: C.textSec, padding: "7px 16px", borderRadius: 20, fontSize: 11.5, cursor: "pointer", fontFamily: "inherit" }}>{h.label}</button>; })}
+          </div>
+        </div>
+      );
+    }
+
+    // ── ToolBadges — 3 variants ──
+    function ToolBadges(props) {
+      var tools = props.tools, variant = props.variant;
+      var _exp = useState(false), expanded = _exp[0], setExpanded = _exp[1];
+      if (!tools || tools.length === 0) return null;
+
+      if (variant === "minimal") {
+        // Variant B: minimal — clickable, expands to show details
+        var doneCount = tools.filter(function(t) { return t.status === "done"; }).length;
+        var runCount = tools.length - doneCount;
+        var summary = runCount > 0
+          ? tools.filter(function(t) { return t.status !== "done"; })[0].label + "..."
+          : doneCount + " \u10e1\u10d0\u10db\u10e3\u10e8\u10d0\u10dd \u10e8\u10d4\u10e1\u10e0\u10e3\u10da\u10d3\u10d0";
+        return (
+          <div>
+            <button onClick={function() { setExpanded(function(e) { return !e; }); }} style={{
+              display: "flex", alignItems: "center", gap: 6, padding: "3px 8px",
+              fontSize: 11, color: C.textMuted, background: "transparent",
+              border: "1px solid " + (expanded ? C.border : "transparent"),
+              borderRadius: 6, cursor: "pointer", fontFamily: "inherit",
+              transition: "all 0.15s",
+            }}>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: runCount > 0 ? C.warn : C.success, animation: runCount > 0 ? "pulse 1.2s infinite" : "none", flexShrink: 0 }} />
+              <span>{summary}</span>
+              <span style={{ fontSize: 8, transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.15s", marginLeft: 2 }}>{"\u25BC"}</span>
+            </button>
+            {expanded && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "4px 8px 2px", animation: "fadeUp 0.15s ease" }}>
+                {tools.map(function(t, i) {
+                  var isDone = t.status === "done";
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, color: C.textMuted, padding: "1px 0" }}>
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: isDone ? C.success : C.warn, flexShrink: 0, animation: !isDone ? "pulse 1.2s infinite" : "none" }} />
+                      <span style={{ color: isDone ? C.textMuted : C.textSec }}>{t.label}</span>
+                      {isDone && <span style={{ fontSize: 9, opacity: 0.5 }}>{"\u2713"}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      if (variant === "compact") {
+        // Variant C: compact collapsed row
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "2px 0" }}>
+            {tools.map(function(t, i) {
+              var isDone = t.status === "done";
+              return <span key={i} title={t.label} style={{
+                width: 18, height: 18, borderRadius: 4, fontSize: 8,
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                background: isDone ? C.successSoft : C.warnSoft,
+                color: isDone ? C.success : C.warn,
+                border: "1px solid " + (isDone ? "rgba(108,196,128,0.15)" : "rgba(224,184,96,0.15)"),
+              }}>{isDone ? "\u2713" : "\u2022"}</span>;
+            })}
+            <span style={{ fontSize: 10, color: C.textMuted, marginLeft: 4 }}>{tools.length} tool{tools.length > 1 ? "s" : ""}</span>
+          </div>
+        );
+      }
+
+      // Variant A: default (original style)
+      return (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+          {tools.map(function(t, i) {
+            return <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 8, background: C.infoSoft, color: C.info, fontSize: 11, border: "1px solid rgba(112,168,224,0.15)" }}>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: t.status === "done" ? C.success : C.warn, animation: t.status === "running" ? "pulse 1.2s infinite" : "none" }} />
+              {t.label}{t.status === "done" && <span style={{ opacity: 0.7 }}>{"\u2713"}</span>}
+            </span>;
+          })}
+        </div>
+      );
+    }
+
+    // ── ChatMessage ──
+    function ChatMessage(props) {
+      var msg = props.msg, isUser = msg.role === "user", isLastAI = props.isLastAI, compact = props.compact, badgeVariant = props.badgeVariant;
+      return (
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "flex-start", flexDirection: isUser ? "row-reverse" : "row", animation: "fadeUp 0.3s ease" }}>
+          <div style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0, background: isUser ? C.accent : C.primary, color: C.textOnPrimary, display: "flex", alignItems: "center", justifyContent: "center", fontSize: isUser ? 9 : 11, fontWeight: 600 }}>{isUser ? "DG" : "K"}</div>
+          <div style={{ maxWidth: compact ? "95%" : "82%", display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+            {msg.content && <div style={{ padding: compact ? "9px 13px" : "11px 15px", borderRadius: 14, fontSize: compact ? 13 : 13.5, lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word", background: isUser ? C.primarySoft : C.surface, border: isUser ? "1px solid " + C.primaryMuted : "1px solid " + C.border, color: C.text }}>{msg.content.split(/(\*\*[^*]+\*\*)/).map(function(part, i) { return (part.startsWith("**") && part.endsWith("**")) ? <strong key={i} style={{ color: C.primary }}>{part.slice(2, -2)}</strong> : part; })}</div>}
+            <ToolBadges tools={msg.tools} variant={badgeVariant} />
+            {msg.artifact && <button onClick={props.onOpenArtifact} className="artifact-card" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, width: "100%", background: C.surfaceRaised, border: "1px solid " + C.border, cursor: "pointer", textAlign: "left", fontFamily: "inherit", animation: "fadeUp 0.4s ease 0.15s both" }}>
+              <span style={{ width: 38, height: 38, borderRadius: 10, background: C.primarySoft, border: "1px solid " + C.primaryMuted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>{msg.artifact.icon}</span>
+              <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 12.5, fontWeight: 600 }}>{msg.artifact.title}</div><div style={{ fontSize: 10.5, color: C.textMuted, marginTop: 1 }}>{msg.artifact.subtitle}</div></div>
+              <span style={{ fontSize: 10, fontWeight: 600, color: C.primary, padding: "5px 10px", borderRadius: 8, background: C.primarySoft, border: "1px solid " + C.primaryMuted, whiteSpace: "nowrap", flexShrink: 0 }}>{"\u2922 \u10d2\u10d0\u10ee\u10e1\u10dc\u10d0"}</span>
+            </button>}
+            {/* Quick actions — only on the last AI message */}
+            {isLastAI && msg.quickActions && <div style={{ display: "flex", flexWrap: "wrap", gap: 5, animation: "fadeUp 0.3s ease 0.25s both" }}>{msg.quickActions.map(function(qa, i) { return <button key={i} className="hint-chip" style={{ padding: "5px 12px", borderRadius: 16, background: C.surface, border: "1px solid " + C.border, color: C.textSec, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>{qa.label}</button>; })}</div>}
+          </div>
+        </div>
+      );
+    }
+
+    // ── TypingIndicator ──
+    function TypingIndicator() {
+      return <div style={{ display: "flex", gap: 8, marginBottom: 12, animation: "fadeUp 0.3s ease" }}><div style={{ width: 28, height: 28, borderRadius: "50%", background: C.primary, color: C.textOnPrimary, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600 }}>K</div><div style={{ padding: "10px 14px", borderRadius: 14, background: C.surface, border: "1px solid " + C.border }}><div style={{ display: "flex", gap: 4 }}>{[0, 0.2, 0.4].map(function(d, i) { return <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: C.primary, animation: "pulse 1.2s infinite " + d + "s" }} />; })}</div></div></div>;
+    }
+
+    // ── ChatInput (enhanced) ──
+    function ChatInput(props) {
+      var ref = useRef(null);
+      useEffect(function() { if (ref.current) { ref.current.style.height = "auto"; ref.current.style.height = Math.min(ref.current.scrollHeight, 100) + "px"; } }, [props.value]);
+      return (
+        <div style={{ padding: "10px 16px 14px", flexShrink: 0 }}>
+          <div className="input-glow" style={{
+            display: "flex", alignItems: "flex-end", gap: 8,
+            background: C.surface, border: "1.5px solid " + C.border, borderRadius: 16,
+            padding: "10px 14px",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}>
+            {/* Attach button */}
+            <button title={"\u10e4\u10d0\u10d8\u10da\u10d8\u10e1 \u10db\u10d8\u10db\u10d0\u10d2\u10e0\u10d4\u10d1\u10d0"} style={{
+              width: 32, height: 32, borderRadius: 8, background: C.surfaceDim,
+              border: "1px solid " + C.border, color: C.textMuted, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0,
+            }}>{"\u{1F4CE}"}</button>
+            <textarea ref={ref} value={props.value} onChange={function(e) { props.onChange(e.target.value); }} onKeyDown={function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); props.onSend(); } }} placeholder={props.placeholder} rows={1} style={{
+              flex: 1, background: "none", border: "none", color: C.text,
+              fontSize: 14, fontFamily: "inherit", resize: "none", outline: "none",
+              maxHeight: 100, lineHeight: 1.5, padding: "4px 0",
+            }} />
+            <button onClick={props.onSend} disabled={!props.value.trim()} style={{
+              background: props.value.trim() ? C.primary : C.surfaceDim,
+              border: "none", color: props.value.trim() ? C.textOnPrimary : C.textMuted,
+              width: 34, height: 34, borderRadius: 10, cursor: props.value.trim() ? "pointer" : "default",
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              transition: "background 0.15s, color 0.15s",
+            }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+            </button>
+          </div>
+          {/* Keyboard hint */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 6 }}>
+            <span style={{ fontSize: 10, color: C.textMuted }}>{"Enter \u10d2\u10d0\u10e1\u10d0\u10d2\u10d6\u10d0\u10d5\u10dc\u10d0\u10d3"}</span>
+            <span style={{ fontSize: 10, color: C.textMuted }}>{"Shift+Enter \u10d0\u10ee\u10d0\u10da\u10d8 \u10ee\u10d0\u10d6\u10d8"}</span>
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════
+    // Main App
+    // ═══════════════════════════════════════
+
+    function KalciferWork() {
+      // Stages: "welcome" | "lobby" | "chat" | "split" (merged split+context)
+      var _stage = useState("welcome"), stage = _stage[0], setStage = _stage[1];
+      var _sm = useState("hidden"), sidebarMode = _sm[0], setSidebarMode = _sm[1];
+      var _as = useState(null), activeSessionId = _as[0], setActiveSessionId = _as[1];
+      var _msgs = useState([]), messages = _msgs[0], setMessages = _msgs[1];
+      var _iv = useState(""), inputVal = _iv[0], setInputVal = _iv[1];
+      var _it = useState(false), isTyping = _it[0], setIsTyping = _it[1];
+      var _st = useState(""), sessionTitle = _st[0], setSessionTitle = _st[1];
+      var _rm = useState("hidden"), rightMode = _rm[0], setRightMode = _rm[1];
+      var _ps = useState([]), progressSteps = _ps[0], setProgressSteps = _ps[1];
+      var _pe = useState(false), progressExpanded = _pe[0], setProgressExpanded = _pe[1];
+      var _ae = useState(true), artifactsExpanded = _ae[0], setArtifactsExpanded = _ae[1];
+      var _ce = useState(false), contextExpanded = _ce[0], setContextExpanded = _ce[1];
+      // Split ratio: 0.0 (chat minimal) to 1.0 (chat full). Default 0.45
+      var _sr = useState(0.45), splitRatio = _sr[0], setSplitRatio = _sr[1];
+      // Badge variant toggle
+      var _bv = useState("minimal"), badgeVariant = _bv[0], setBadgeVariant = _bv[1];
+
+      var chatEndRef = useRef(null);
+      var demoTimersRef = useRef([]);
+      var mainRef = useRef(null);
+
+      useEffect(function() { return function() { demoTimersRef.current.forEach(clearTimeout); }; }, []);
+      useEffect(function() { if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: "smooth" }); }, [messages, isTyping]);
+      useEffect(function() {
+        if (stage === "welcome") setSidebarMode("hidden");
+        else if (stage === "lobby" || stage === "chat") setSidebarMode("expanded");
+        else if (stage === "split") setSidebarMode("collapsed");
+      }, [stage]);
+
+      var artifacts = useMemo(function() { return messages.filter(function(m) { return m.artifact; }).map(function(m) { return m.artifact; }); }, [messages]);
+
+      // Find last AI message ID for quick actions
+      var lastAIId = useMemo(function() {
+        for (var i = messages.length - 1; i >= 0; i--) {
+          if (messages[i].role === "ai") return messages[i].id;
+        }
+        return null;
+      }, [messages]);
+
+      var clearDemo = useCallback(function() { demoTimersRef.current.forEach(clearTimeout); demoTimersRef.current = []; }, []);
+      var addTimer = useCallback(function(fn, ms) { var t = setTimeout(fn, ms); demoTimersRef.current.push(t); return t; }, []);
+
+      var reset = useCallback(function() {
+        clearDemo(); setStage("welcome"); setMessages([]); setActiveSessionId(null);
+        setIsTyping(false); setRightMode("hidden"); setInputVal(""); setSessionTitle("");
+        setProgressSteps([]); setProgressExpanded(false); setArtifactsExpanded(true); setContextExpanded(false);
+        setSplitRatio(0.45);
+      }, [clearDemo]);
+
+      var openEditor = useCallback(function() {
+        setRightMode("editor");
+        setStage("split");
+      }, []);
+      var backToSidebar = useCallback(function() {
+        setRightMode("sidebar");
+        setStage("chat");
+      }, []);
+      var closeRightPanel = useCallback(function() {
+        setRightMode("hidden");
+        setStage(function(s) { return s === "split" ? "chat" : s; });
+      }, []);
+      var toggleSidebar = useCallback(function() { setSidebarMode(function(m) { return m === "expanded" ? "collapsed" : "expanded"; }); }, []);
+
+      // Drag handler for split resize
+      var handleDrag = useCallback(function(clientX) {
+        if (!mainRef.current) return;
+        var rect = mainRef.current.getBoundingClientRect();
+        // Account for left sidebar width
+        var sidebarW = (stage === "split") ? 52 : 210;
+        var availableW = rect.width - sidebarW;
+        var relX = clientX - rect.left - sidebarW;
+        var ratio = relX / availableW;
+        // Clamp between 0.2 and 0.8
+        ratio = Math.max(0.2, Math.min(0.8, ratio));
+        setSplitRatio(ratio);
+      }, [stage]);
+
+      var cycleBadgeVariant = useCallback(function() {
+        setBadgeVariant(function(v) {
+          var idx = BADGE_VARIANTS.indexOf(v);
+          return BADGE_VARIANTS[(idx + 1) % BADGE_VARIANTS.length];
+        });
+      }, []);
+
+      var runDemo = useCallback(function() {
+        clearDemo(); setActiveSessionId("s1"); setStage("chat"); setMessages([]);
+        setSessionTitle("Welcome \u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d0"); setRightMode("sidebar");
+        setProgressSteps([]); setProgressExpanded(false); setArtifactsExpanded(true); setContextExpanded(false);
+
+        addTimer(function() { setMessages([DEMO_MESSAGES[0]]); setIsTyping(true); }, 300);
+        addTimer(function() {
+          setProgressSteps([Object.assign({}, DEMO_PROGRESS[0], { status: "running" })]);
+          setProgressExpanded(true);
+          setMessages([DEMO_MESSAGES[0], Object.assign({}, DEMO_MESSAGES[1], { content: "", tools: [{ name: "create_flow", label: "\u10e4\u10da\u10dd\u10e3\u10e1 \u10e8\u10d4\u10e5\u10db\u10dc\u10d0", status: "running" }] })]);
+        }, 1200);
+        addTimer(function() {
+          setProgressSteps(DEMO_PROGRESS.slice(0, 3).map(function(s, i) { return Object.assign({}, s, { status: i < 2 ? "done" : "running" }); }));
+          setMessages([DEMO_MESSAGES[0], Object.assign({}, DEMO_MESSAGES[1], { content: "", tools: [
+            { name: "create_flow", label: "\u10e4\u10da\u10dd\u10e3\u10e1 \u10e8\u10d4\u10e5\u10db\u10dc\u10d0", status: "done" },
+            { name: "add_node", label: "5 \u10dc\u10d0\u10d1\u10d8\u10ef\u10d8\u10e1 \u10d3\u10d0\u10db\u10d0\u10e2\u10d4\u10d1\u10d0", status: "running" },
+          ] })]);
+        }, 2200);
+        addTimer(function() { setProgressSteps(DEMO_PROGRESS.map(function(s) { return Object.assign({}, s, { status: "done" }); })); }, 3000);
+        addTimer(function() { setIsTyping(false); setMessages(DEMO_MESSAGES.slice(0, 2)); setProgressExpanded(false); }, 3500);
+        addTimer(function() { setRightMode("editor"); setStage("split"); }, 5500);
+        addTimer(function() { setMessages(DEMO_MESSAGES.slice(0, 3)); setIsTyping(true); }, 7500);
+        addTimer(function() { setIsTyping(false); setMessages(DEMO_MESSAGES.slice(0, 4)); }, 9000);
+        addTimer(function() { setMessages(DEMO_MESSAGES.slice(0, 5)); setIsTyping(true); }, 11500);
+        addTimer(function() { setIsTyping(false); setMessages(DEMO_MESSAGES.slice(0, 6)); }, 13000);
+      }, [clearDemo, addTimer]);
+
+      var handleSend = useCallback(function() {
+        if (!inputVal.trim()) return; setInputVal("");
+        if (stage === "welcome" || stage === "lobby") runDemo();
+      }, [inputVal, stage, runDemo]);
+      var handleHintClick = useCallback(function(hint) { setInputVal(hint.text); setTimeout(function() { runDemo(); }, 100); }, [runDemo]);
+
+      useEffect(function() {
+        var h = function(e) { if ((e.metaKey || e.ctrlKey) && e.key === "\\") { e.preventDefault(); toggleSidebar(); } };
+        window.addEventListener("keydown", h); return function() { window.removeEventListener("keydown", h); };
+      }, [toggleSidebar]);
+
+      var sidebarWidth = sidebarMode === "hidden" ? 0 : sidebarMode === "collapsed" ? 52 : 210;
+      var showRight = rightMode !== "hidden";
+      var isEditorMode = rightMode === "editor";
+
+      // Calculate chat width in split mode based on splitRatio
+      var chatFlex = "1";
+      if (isEditorMode && showRight) {
+        chatFlex = String(splitRatio);
+      }
+      var editorFlex = isEditorMode && showRight ? String(1 - splitRatio) : "0 0 300px";
+
+      return (
+        <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: C.bg, color: C.text, fontFamily: "'Inter', -apple-system, sans-serif", overflow: "hidden" }}>
+          {/* TopBar */}
+          <header style={{ height: 48, flexShrink: 0, background: C.surface, borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px" }}>
+            <span style={{ fontSize: 17, fontWeight: 700, color: C.primary, letterSpacing: -0.5, cursor: "pointer" }} onClick={reset}>Kalcifer</span>
+            <nav style={{ display: "flex", gap: 4 }}>
+              {[{ l: "Work", active: true }, { l: "Browse", active: false }, { l: "Engine Room", active: false }].map(function(n) {
+                return <button key={n.l} style={{ height: 30, padding: "0 12px", borderRadius: 6, fontSize: 11, fontWeight: 500, fontFamily: "inherit", cursor: "pointer", border: n.active ? "1px solid " + C.primary : "1px solid " + C.border, background: n.active ? C.primary : C.surfaceDim, color: n.active ? C.textOnPrimary : C.textSec }}>{n.l}</button>;
+              })}
+            </nav>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {/* Stage switcher */}
+              <div style={{ display: "flex", gap: 2, background: C.surfaceRaised, borderRadius: 6, padding: 2 }}>
+                {["welcome", "chat", "split"].map(function(s) {
+                  return <button key={s} onClick={function() {
+                    if (s === "welcome") { reset(); return; }
+                    if (!messages.length) { setMessages(DEMO_MESSAGES); setActiveSessionId("s1"); setSessionTitle("Welcome \u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d0"); setProgressSteps(DEMO_PROGRESS); }
+                    setStage(s);
+                    if (s === "chat") setRightMode("sidebar");
+                    else if (s === "split") setRightMode("editor");
+                  }} style={{ padding: "3px 8px", borderRadius: 4, border: "none", fontSize: 9, fontWeight: 600, fontFamily: "inherit", cursor: "pointer", textTransform: "uppercase", letterSpacing: 0.3, background: stage === s ? C.primary : "transparent", color: stage === s ? C.textOnPrimary : C.textMuted }}>{s}</button>;
+                })}
+              </div>
+              {/* Badge variant toggle */}
+              <button onClick={cycleBadgeVariant} className="badge-toggle" title={"Badge: " + badgeVariant} style={{ padding: "3px 8px", borderRadius: 4, border: "1px solid " + C.border, fontSize: 9, fontWeight: 600, fontFamily: "inherit", cursor: "pointer", background: C.surfaceDim, color: C.textMuted, transition: "all 0.15s" }}>
+                {"badge: " + badgeVariant}
+              </button>
+              <div style={{ width: 28, height: 28, borderRadius: "50%", background: C.primary, color: C.textOnPrimary, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600 }}>DG</div>
+            </div>
+          </header>
+
+          {/* Main */}
+          <div ref={mainRef} style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
+            <LeftSidebar mode={sidebarMode} width={sidebarWidth} sessions={SESSIONS} activeId={activeSessionId}
+              onSelect={function(id) { setActiveSessionId(id); if (stage === "welcome") runDemo(); }}
+              onNewSession={function() { if (stage === "welcome") return; clearDemo(); setStage("lobby"); setActiveSessionId(null); setMessages([]); setRightMode("hidden"); setSessionTitle(""); setProgressSteps([]); }}
+              onToggle={toggleSidebar} />
+
+            {/* Chat */}
+            <div style={{
+              flex: chatFlex,
+              display: "flex", flexDirection: "column",
+              minWidth: 280, overflow: "hidden",
+              background: C.bg,
+            }}>
+              {(stage === "chat" || stage === "split") && sessionTitle && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", flexShrink: 0, borderBottom: "1px solid " + C.border, background: C.surface }}>
+                  <span style={{ fontSize: 13 }}>{"\u{1F4E3}"}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>{sessionTitle}</span>
+                  <span style={{ fontSize: 9.5, padding: "2px 7px", borderRadius: 6, background: C.primarySoft, color: C.primary, fontWeight: 600 }}>{"\u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d0"}</span>
+                </div>
+              )}
+              {(stage === "welcome" || stage === "lobby") && <WelcomeScreen hints={WELCOME_HINTS} onHintClick={handleHintClick} showSubtitle={stage === "lobby"} />}
+              {(stage === "chat" || stage === "split") && (
+                <div style={{ flex: 1, overflow: "auto", padding: "16px 16px 8px" }} className="chat-scroll">
+                  {messages.map(function(msg) { return <ChatMessage key={msg.id} msg={msg} onOpenArtifact={openEditor} compact={stage === "split" && splitRatio < 0.35} isLastAI={msg.id === lastAIId && msg.role === "ai"} badgeVariant={badgeVariant} />; })}
+                  {isTyping && <TypingIndicator />}
+                  <div ref={chatEndRef} />
+                </div>
+              )}
+              <ChatInput value={inputVal} onChange={setInputVal} onSend={handleSend}
+                placeholder={stage === "welcome" || stage === "lobby" ? "\u10db\u10d8\u10d0\u10db\u10d1\u10d4 \u10e0\u10d0 \u10d2\u10d8\u10dc\u10d3\u10d0 \u10d2\u10d0\u10d0\u10d9\u10d4\u10d7\u10dd..." : "\u10e8\u10d4\u10e2\u10e7\u10dd\u10d1\u10d8\u10dc\u10d4\u10d1\u10d0..."} />
+            </div>
+
+            {/* Drag Handle — only in split with editor */}
+            {isEditorMode && showRight && <DragHandle onDrag={handleDrag} />}
+
+            {/* Right Panel */}
+            {showRight && (
+              <div style={{ flex: isEditorMode ? editorFlex : "0 0 300px", display: "flex", overflow: "hidden", minWidth: 240 }}>
+                <RightPanel
+                  mode={rightMode}
+                  progressSteps={progressSteps} progressExpanded={progressExpanded} onToggleProgress={function() { setProgressExpanded(function(p) { return !p; }); }}
+                  artifacts={artifacts} artifactsExpanded={artifactsExpanded} onToggleArtifacts={function() { setArtifactsExpanded(function(a) { return !a; }); }}
+                  contextItems={DEMO_CONTEXT} contextExpanded={contextExpanded} onToggleContext={function() { setContextExpanded(function(c) { return !c; }); }}
+                  onArtifactClick={openEditor}
+                  nodes={FLOW_NODES} editorTitle={"Welcome \u10d9\u10d0\u10db\u10de\u10d0\u10dc\u10d8\u10d0"}
+                  onBackToSidebar={backToSidebar} onClose={closeRightPanel}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<KalciferWork />);
+  </script>
+</body>
+</html>

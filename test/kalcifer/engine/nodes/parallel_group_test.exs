@@ -12,8 +12,16 @@ defmodule Kalcifer.Engine.Nodes.Action.ParallelGroupTest do
     test "executes multiple tasks in parallel" do
       config = %{
         "tasks" => [
-          %{"id" => "cond1", "type" => "condition", "config" => %{"field" => "plan", "value" => "premium"}},
-          %{"id" => "cond2", "type" => "condition", "config" => %{"field" => "age", "operator" => "greater_than", "value" => 18}}
+          %{
+            "id" => "cond1",
+            "type" => "condition",
+            "config" => %{"field" => "plan", "value" => "premium"}
+          },
+          %{
+            "id" => "cond2",
+            "type" => "condition",
+            "config" => %{"field" => "age", "operator" => "greater_than", "value" => 18}
+          }
         ],
         "timeout_ms" => 5000
       }

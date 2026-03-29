@@ -85,7 +85,10 @@ defmodule Kalcifer.Engine.EventBroadcaster do
   end
 
   defp classify_result({:completed, data}), do: {"completed", data}
-  defp classify_result({:branched, branch, data}), do: {"branched", Map.put(data, :branch, branch)}
+
+  defp classify_result({:branched, branch, data}),
+    do: {"branched", Map.put(data, :branch, branch)}
+
   defp classify_result({:waiting, config}), do: {"waiting", config}
   defp classify_result({:failed, reason}), do: {"failed", %{reason: inspect(reason)}}
   defp classify_result(other), do: {"completed", other}

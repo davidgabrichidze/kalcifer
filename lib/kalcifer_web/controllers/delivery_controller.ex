@@ -8,9 +8,18 @@ defmodule KalciferWeb.DeliveryController do
     tenant_id = KalciferWeb.TenantResolver.resolve_id(conn)
 
     opts = [tenant_id: tenant_id]
-    opts = if params["instance_id"], do: Keyword.put(opts, :instance_id, params["instance_id"]), else: opts
+
+    opts =
+      if params["instance_id"],
+        do: Keyword.put(opts, :instance_id, params["instance_id"]),
+        else: opts
+
     opts = if params["status"], do: Keyword.put(opts, :status, params["status"]), else: opts
-    opts = if params["limit"], do: Keyword.put(opts, :limit, parse_int(params["limit"], 50)), else: opts
+
+    opts =
+      if params["limit"],
+        do: Keyword.put(opts, :limit, parse_int(params["limit"], 50)),
+        else: opts
 
     deliveries = Channels.list_deliveries(opts)
 
@@ -79,11 +88,13 @@ defmodule KalciferWeb.DeliveryController do
   end
 
   defp parse_int(nil, default), do: default
+
   defp parse_int(val, default) when is_binary(val) do
     case Integer.parse(val) do
       {n, _} -> n
       :error -> default
     end
   end
+
   defp parse_int(val, _default) when is_integer(val), do: val
 end

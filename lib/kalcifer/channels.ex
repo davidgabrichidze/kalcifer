@@ -31,7 +31,9 @@ defmodule Kalcifer.Channels do
 
     query = from(d in Delivery, order_by: [desc: d.inserted_at], limit: ^limit)
 
-    query = if instance_id, do: from(d in query, where: d.instance_id == ^instance_id), else: query
+    query =
+      if instance_id, do: from(d in query, where: d.instance_id == ^instance_id), else: query
+
     query = if tenant_id, do: from(d in query, where: d.tenant_id == ^tenant_id), else: query
     query = if status, do: from(d in query, where: d.status == ^status), else: query
 

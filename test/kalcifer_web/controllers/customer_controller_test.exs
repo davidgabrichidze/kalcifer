@@ -125,7 +125,10 @@ defmodule KalciferWeb.CustomerControllerTest do
       other = insert(:customer, tenant: insert(:tenant))
 
       conn =
-        post(conn, "/api/v1/customers/#{other.id}/tags", %{"customer_id" => other.id, "tags" => ["vip"]})
+        post(conn, "/api/v1/customers/#{other.id}/tags", %{
+          "customer_id" => other.id,
+          "tags" => ["vip"]
+        })
 
       assert json_response(conn, 404)
     end
