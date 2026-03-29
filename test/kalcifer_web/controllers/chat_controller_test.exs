@@ -303,7 +303,7 @@ defmodule KalciferWeb.ChatControllerTest do
   # classify_session is an AI tool — we test the maybe_emit logic indirectly
 
   describe "F. session classification" do
-    test "F1: classify_session tool result updates conversation kind", %{conn: conn} do
+    test "F1: classify_session tool result updates conversation kind", %{conn: _conn} do
       tenant = ensure_demo_tenant()
       {:ok, conv} = Context.create_conversation(tenant.id)
 

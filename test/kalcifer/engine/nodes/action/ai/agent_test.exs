@@ -58,7 +58,7 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.AgentTest do
 
   describe "execute/2 — real call" do
     test "runs chat_with_tools and returns response" do
-      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn messages,
+      expect(Kalcifer.AI.MockClient, :chat_with_tools, fn _messages,
                                                           _tools,
                                                           _executor,
                                                           callback,

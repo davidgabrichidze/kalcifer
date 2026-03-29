@@ -51,14 +51,6 @@ defmodule Kalcifer.Property.CorePropertiesTest do
     end
   end
 
-  defp operator_pair_gen do
-    member_of([
-      {"equals", "not_equals"},
-      {"contains", "not_contains"},
-      {"exists", "not_exists"}
-    ])
-  end
-
   # ── P-001: Valid DAG always passes validation ───────────────
 
   describe "P-001: valid DAG always passes validation" do

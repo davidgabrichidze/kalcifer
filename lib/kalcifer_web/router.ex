@@ -70,16 +70,15 @@ defmodule KalciferWeb.Router do
   scope "/api/v1", KalciferWeb do
     pipe_through [:api, :authenticated]
 
-    resources "/flows", FlowController, except: [:new, :edit] do
+    resources "/flows", FlowController, only: [:create, :update, :delete] do
       resources "/versions", FlowVersionController,
-        only: [:index, :create, :show],
+        only: [:create],
         param: "version_number"
     end
 
     post "/flows/:id/activate", FlowController, :activate
     post "/flows/:id/pause", FlowController, :pause
     post "/flows/:id/archive", FlowController, :archive
-    post "/flows/:id/preflight", FlowController, :preflight
 
     post "/flows/:flow_id/versions/:version_number/migrate", MigrationController, :migrate
     post "/flows/:flow_id/versions/:version_number/rollback", MigrationController, :rollback
@@ -92,17 +91,11 @@ defmodule KalciferWeb.Router do
     post "/customers/:customer_id/tags", CustomerController, :add_tags
     put "/customers/:customer_id/preferences", CustomerController, :update_preferences
 
-    get "/flows/:flow_id/instances", InstanceController, :index
-    get "/instances/:id", InstanceController, :show
-    get "/instances/:id/timeline", InstanceController, :timeline
     post "/instances/:id/cancel", InstanceController, :cancel
 
-    get "/flows/:flow_id/analytics/summary", AnalyticsController, :summary
-    get "/flows/:flow_id/analytics/nodes", AnalyticsController, :nodes
-    get "/flows/:flow_id/analytics/funnel", AnalyticsController, :funnel
     get "/flows/:flow_id/nodes/:node_id/ab_results", AnalyticsController, :ab_results
 
-    resources "/journeys", JourneyController, except: [:new, :edit]
+    resources "/journeys", JourneyController, only: [:create, :show, :update, :delete]
 
     post "/journeys/:id/launch", JourneyController, :launch
     post "/journeys/:id/pause", JourneyController, :pause
