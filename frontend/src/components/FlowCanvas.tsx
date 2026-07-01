@@ -17,12 +17,14 @@ import {
 import '@xyflow/react/dist/style.css'
 import { type FlowGraph } from '../lib/api'
 import { FlowNode } from '../pages/editor/FlowNode'
+import { GroupNode } from '../pages/editor/GroupNode'
 import { convertGraphToReactFlow } from '../pages/editor/flowGraphUtils'
 import { useUndoRedo } from '../pages/editor/useUndoRedo'
 import './flow-canvas.css'
 
 const nodeTypes = {
   flowNode: FlowNode,
+  groupNode: GroupNode,
 }
 
 export interface FlowCanvasProps {
@@ -150,6 +152,7 @@ function FlowCanvasInner({
 
   const handleNodeClick = useCallback(
     (_: any, node: Node) => {
+      if (node.type === 'groupNode') return
       const data = node.data as Record<string, unknown>
       onNodeSelect?.(node.id, {
         type: (data.type as string) || '',
@@ -295,13 +298,101 @@ function FlowCanvasInner({
           ...newNodes,
         ])
         setEdges(eds => [...eds, ...newEdges])
+      } else if (mod && e.key === 'g' && !e.shiftKey) {
+        // Group selected nodes into a visual container
+        const selected = getNodes().filter(
+          n => n.selected && n.type === 'flowNode' && !n.parentId,
+        )
+        if (selected.length < 2) return
+        e.preventDefault()
+        takeSnapshot(getNodes(), getEdges())
+
+        const PAD = 40
+        const width = (n: Node) => n.measured?.width ?? 220
+        const height = (n: Node) => n.measured?.height ?? 90
+        const minX = Math.min(...selected.map(n => n.position.x)) - PAD
+        const minY = Math.min(...selected.map(n => n.position.y)) - PAD
+        const maxX = Math.max(...selected.map(n => n.position.x + width(n))) + PAD
+        const maxY = Math.max(...selected.map(n => n.position.y + height(n))) + PAD
+
+        const groupId = `group-${Date.now()}`
+        const groupNode: Node = {
+          id: groupId,
+          type: 'groupNode',
+          position: { x: minX, y: minY },
+          style: { width: maxX - minX, height: maxY - minY },
+          data: { label: 'Group' },
+        }
+
+        const selectedIds = new Set(selected.map(n => n.id))
+        setNodes(nds => [
+          ...nds.filter(n => !selectedIds.has(n.id)),
+          groupNode,
+          ...nds
+            .filter(n => selectedIds.has(n.id))
+            .map(n => ({
+              ...n,
+              parentId: groupId,
+              extent: 'parent' as const,
+              position: { x: n.position.x - minX, y: n.position.y - minY },
+              selected: false,
+            })),
+        ])
+      } else if (mod && e.key === 'g' && e.shiftKey) {
+        // Ungroup: selected group containers, or the groups of selected members
+        const all = getNodes()
+        const selectedGroups = all.filter(n => n.selected && n.type === 'groupNode')
+        const memberGroups = all
+          .filter(n => n.selected && n.parentId)
+          .map(n => n.parentId as string)
+        const groupIds = new Set([...selectedGroups.map(n => n.id), ...memberGroups])
+        if (groupIds.size === 0) return
+        e.preventDefault()
+        takeSnapshot(all, getEdges())
+
+        const origins = new Map(
+          all.filter(n => groupIds.has(n.id)).map(n => [n.id, n.position]),
+        )
+
+        setNodes(nds =>
+          nds
+            .filter(n => !groupIds.has(n.id))
+            .map(n => {
+              if (!n.parentId || !groupIds.has(n.parentId)) return n
+              const origin = origins.get(n.parentId) || { x: 0, y: 0 }
+              const { parentId: _parentId, extent: _extent, ...rest } = n
+              return {
+                ...rest,
+                position: { x: n.position.x + origin.x, y: n.position.y + origin.y },
+              }
+            }),
+        )
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
         const selected = getNodes().filter(n => n.selected)
         if (selected.length === 0) return
         e.preventDefault()
         takeSnapshot(getNodes(), getEdges())
         const selectedIds = new Set(selected.map(n => n.id))
-        setNodes(nds => nds.filter(n => !selectedIds.has(n.id)))
+        const deletedGroupIds = new Set(
+          selected.filter(n => n.type === 'groupNode').map(n => n.id),
+        )
+        const origins = new Map(
+          selected.filter(n => n.type === 'groupNode').map(n => [n.id, n.position]),
+        )
+        setNodes(nds =>
+          nds
+            .filter(n => !selectedIds.has(n.id))
+            .map(n => {
+              // Deleting a group frees its children instead of orphaning them
+              if (!n.parentId || !deletedGroupIds.has(n.parentId)) return n
+              const origin = origins.get(n.parentId) || { x: 0, y: 0 }
+              const { parentId: _parentId, extent: _extent, ...rest } = n
+              return {
+                ...rest,
+                position: { x: n.position.x + origin.x, y: n.position.y + origin.y },
+              }
+            }),
+        )
         setEdges(eds =>
           eds.filter(e => !selectedIds.has(e.source) && !selectedIds.has(e.target)),
         )
