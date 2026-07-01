@@ -47,6 +47,10 @@ defmodule KalciferWeb.FallbackController do
     )
   end
 
+  def call(conn, {:error, {:invalid_params, message}}) when is_binary(message) do
+    ErrorResponse.send_error(conn, :bad_request, "invalid_params", message)
+  end
+
   # Catch-all for unhandled error atoms
   def call(conn, {:error, reason}) when is_atom(reason) do
     render_catalog(conn, :internal_server_error, reason)

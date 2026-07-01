@@ -2,6 +2,7 @@ defmodule KalciferWeb.SegmentController do
   use KalciferWeb, :controller
 
   alias Kalcifer.Customers
+  alias KalciferWeb.Params
 
   action_fallback KalciferWeb.FallbackController
 
@@ -41,13 +42,9 @@ defmodule KalciferWeb.SegmentController do
   end
 
   def members(conn, %{"segment_id" => id} = params) do
-    with {:ok, segment} <- fetch_segment(conn, id) do
-      opts = [
-        limit: parse_int(params["limit"], 50),
-        offset: parse_int(params["offset"], 0)
-      ]
-
-      members = Customers.list_segment_members(segment, opts)
+    with {:ok, segment} <- fetch_segment(conn, id),
+         {:ok, page} <- Params.validate(params, Params.pagination_schema()) do
+      members = Customers.list_segment_members(segment, limit: page.limit, offset: page.offset)
       total = Customers.count_segment_members(segment)
 
       json(conn, %{
@@ -63,16 +60,6 @@ defmodule KalciferWeb.SegmentController do
     case Customers.get_segment(id) do
       %{tenant_id: ^tenant_id} = segment -> {:ok, segment}
       _ -> {:error, :not_found}
-    end
-  end
-
-  defp parse_int(nil, default), do: default
-  defp parse_int(value, _default) when is_integer(value), do: value
-
-  defp parse_int(value, default) when is_binary(value) do
-    case Integer.parse(value) do
-      {int, _} -> int
-      :error -> default
     end
   end
 
