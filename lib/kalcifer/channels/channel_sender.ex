@@ -50,6 +50,16 @@ defmodule Kalcifer.Channels.ChannelSender do
   end
 
   defp build_message(config) do
-    Map.take(config, ["template_id", "subject", "body", "url", "placement", "expiry"])
+    Map.take(config, [
+      "template_id",
+      "subject",
+      "body",
+      "from_name",
+      "reply_to",
+      "sender_id",
+      "url",
+      "placement",
+      "expiry"
+    ])
   end
 end
