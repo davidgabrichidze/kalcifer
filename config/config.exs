@@ -27,7 +27,7 @@ config :kalcifer, Oban,
     {Oban.Plugins.Cron,
      crontab: [
        {"0 3 * * *", Kalcifer.Engine.Jobs.CleanupJob},
-       {"*/5 * * * *", Kalcifer.Engine.Jobs.StatsRollupJob}
+       {"10 2 * * *", Kalcifer.Engine.Jobs.StatsRollupJob}
      ]}
   ]
 
