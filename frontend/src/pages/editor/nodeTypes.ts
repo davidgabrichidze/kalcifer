@@ -174,13 +174,82 @@ export const NODE_TYPES: Record<string, NodeTypeMetadata> = {
     description: 'AI-powered branching logic',
   },
 
+  // Actions - Data (advanced)
+  custom_code: {
+    key: 'custom_code',
+    category: 'action',
+    label: 'Custom Code',
+    icon: '</>',
+    description: 'Run custom logic',
+  },
+  memory_recall: {
+    key: 'memory_recall',
+    category: 'action',
+    label: 'Memory Recall',
+    icon: '🧠',
+    description: 'Recall operator memories into context',
+  },
+
+  // Actions - AI
+  ai_think: {
+    key: 'ai_think',
+    category: 'action',
+    label: 'AI Think',
+    icon: '✦',
+    description: 'AI text generation with flow context',
+  },
+  ai_notify: {
+    key: 'ai_notify',
+    category: 'action',
+    label: 'AI Notify',
+    icon: '📣',
+    description: 'Notify operators (PubSub)',
+  },
+  agent: {
+    key: 'agent',
+    category: 'action',
+    label: 'Agent',
+    icon: '🤖',
+    description: 'Multi-round AI agent with tools',
+  },
+  flow_router: {
+    key: 'flow_router',
+    category: 'condition',
+    label: 'Flow Router',
+    icon: '⇶',
+    description: 'AI picks a route to a sub-flow',
+  },
+
+  // Orchestration
+  parallel_group: {
+    key: 'parallel_group',
+    category: 'action',
+    label: 'Parallel Group',
+    icon: '≡',
+    description: 'Run branches in parallel',
+  },
+  sub_flow: {
+    key: 'sub_flow',
+    category: 'action',
+    label: 'Sub-Flow',
+    icon: '▣',
+    description: 'Run another flow as a child',
+  },
+
   // End
-  end: {
-    key: 'end',
+  exit: {
+    key: 'exit',
     category: 'end',
-    label: 'End',
+    label: 'Exit',
     icon: '✓',
     description: 'Complete flow instance',
+  },
+  goal_reached: {
+    key: 'goal_reached',
+    category: 'end',
+    label: 'Goal Reached',
+    icon: '🏁',
+    description: 'Complete flow and record conversion',
   },
 }
 
