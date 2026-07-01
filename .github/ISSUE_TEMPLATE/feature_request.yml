@@ -1,0 +1,40 @@
+name: Feature request
+description: Suggest a new capability for Kalcifer
+title: "[feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case or pain point, not just the solution.
+      placeholder: As a marketer building journeys, I need ...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like to happen? Node type, API endpoint, UI change...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Engine / nodes
+        - REST API
+        - Flow editor UI
+        - AI features
+        - Channels / providers
+        - Analytics
+        - Other
+    validations:
+      required: false
