@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in Kalcifer is not working as expected
+title: "[bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill in as much detail as you can.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Clear description of the bug and what you expected instead.
+      placeholder: When I trigger a flow with a wait_until node, ...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps, ideally with the flow graph JSON or API calls.
+      placeholder: |
+        1. Create a flow with ...
+        2. POST /api/v1/flows/:id/trigger ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Kalcifer version / commit
+      placeholder: v0.1.0 or commit SHA
+    validations:
+      required: false
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Elixir/OTP versions, PostgreSQL version, Docker or source install.
+      placeholder: |
+        Elixir 1.18 / OTP 28, PostgreSQL 16, docker compose
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      render: shell
+    validations:
+      required: false
