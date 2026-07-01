@@ -48,4 +48,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.FlowRouterTest do
       assert FlowRouter.category() == :condition
     end
   end
+
+  describe "config_schema/0" do
+    test "documents the model override supported at runtime" do
+      schema = FlowRouter.config_schema()
+      assert schema["model"]["type"] == "string"
+    end
+  end
 end

@@ -63,6 +63,11 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.FlowRouter do
       "context_mapping" => %{
         "type" => "object",
         "description" => "Map parent context keys to child context keys"
+      },
+      "model" => %{
+        "type" => "string",
+        "description" =>
+          "Override AI model for this node (e.g. 'gpt-4o', 'claude-sonnet-4-5-20250514')"
       }
     }
   end
