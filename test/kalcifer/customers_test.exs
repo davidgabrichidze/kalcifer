@@ -94,6 +94,26 @@ defmodule Kalcifer.CustomersTest do
       {:ok, updated} = Customers.remove_tag(customer, "vip")
       assert updated.tags == ["active"]
     end
+
+    test "add_tags adds multiple tags in one update" do
+      customer = insert(:customer, tags: ["existing"])
+      {:ok, updated} = Customers.add_tags(customer, ["vip", "beta", "existing"])
+      assert updated.tags == ["existing", "vip", "beta"]
+    end
+
+    test "remove_tags removes multiple tags in one update" do
+      customer = insert(:customer, tags: ["vip", "beta", "active"])
+      {:ok, updated} = Customers.remove_tags(customer, ["vip", "beta", "missing"])
+      assert updated.tags == ["active"]
+    end
+  end
+
+  describe "delete" do
+    test "delete_customer removes the record" do
+      customer = insert(:customer)
+      assert {:ok, _} = Customers.delete_customer(customer)
+      assert Customers.get_customer(customer.id) == nil
+    end
   end
 
   describe "field_coverage/2" do

@@ -51,19 +51,29 @@ defmodule Kalcifer.Customers do
     end
   end
 
-  def add_tag(customer, tag) when is_binary(tag) do
-    tags = Enum.uniq([tag | customer.tags])
+  def delete_customer(customer) do
+    Repo.delete(customer)
+  end
+
+  def add_tag(customer, tag) when is_binary(tag), do: add_tags(customer, [tag])
+
+  def remove_tag(customer, tag) when is_binary(tag), do: remove_tags(customer, [tag])
+
+  @doc "Adds a list of tags in a single update, preserving order and uniqueness."
+  def add_tags(customer, tags) when is_list(tags) do
+    merged = Enum.uniq(customer.tags ++ tags)
 
     customer
-    |> Ecto.Changeset.change(tags: tags)
+    |> Ecto.Changeset.change(tags: merged)
     |> Repo.update()
   end
 
-  def remove_tag(customer, tag) when is_binary(tag) do
-    tags = List.delete(customer.tags, tag)
+  @doc "Removes a list of tags in a single update."
+  def remove_tags(customer, tags) when is_list(tags) do
+    remaining = customer.tags -- tags
 
     customer
-    |> Ecto.Changeset.change(tags: tags)
+    |> Ecto.Changeset.change(tags: remaining)
     |> Repo.update()
   end
 

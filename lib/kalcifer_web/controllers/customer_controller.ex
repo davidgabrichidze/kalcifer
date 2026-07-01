@@ -51,21 +51,45 @@ defmodule KalciferWeb.CustomerController do
     end
   end
 
+  def delete(conn, %{"id" => id}) do
+    tenant = conn.assigns.current_tenant
+    tenant_id = tenant.id
+
+    with %{tenant_id: ^tenant_id} = customer <- Customers.get_customer(id),
+         {:ok, _deleted} <- Customers.delete_customer(customer) do
+      send_resp(conn, :no_content, "")
+    else
+      nil -> {:error, :not_found}
+      %{} -> {:error, :not_found}
+      {:error, changeset} -> {:error, changeset}
+    end
+  end
+
   def add_tags(conn, %{"customer_id" => id, "tags" => tags}) when is_list(tags) do
     tenant = conn.assigns.current_tenant
     tenant_id = tenant.id
 
-    with %{tenant_id: ^tenant_id} = customer <- Customers.get_customer(id) do
-      customer =
-        Enum.reduce(tags, customer, fn tag, acc ->
-          {:ok, updated} = Customers.add_tag(acc, tag)
-          updated
-        end)
-
-      json(conn, %{data: serialize(customer)})
+    with %{tenant_id: ^tenant_id} = customer <- Customers.get_customer(id),
+         {:ok, updated} <- Customers.add_tags(customer, tags) do
+      json(conn, %{data: serialize(updated)})
     else
       nil -> {:error, :not_found}
       %{} -> {:error, :not_found}
+      {:error, changeset} -> {:error, changeset}
+    end
+  end
+
+  def remove_tags(conn, %{"customer_id" => id, "tags" => tags}) when is_list(tags) do
+    tenant = conn.assigns.current_tenant
+    tenant_id = tenant.id
+
+    with %{tenant_id: ^tenant_id} = customer <- Customers.get_customer(id),
+         {:ok, updated} <- Customers.remove_tags(customer, tags) do
+      json(conn, %{data: serialize(updated)})
+    else
+      nil -> {:error, :not_found}
+      %{} -> {:error, :not_found}
+      {:error, changeset} -> {:error, changeset}
     end
   end
 

@@ -152,6 +152,51 @@ defmodule KalciferWeb.CustomerControllerTest do
     end
   end
 
+  describe "delete" do
+    test "deletes a customer", %{conn: conn, tenant: tenant} do
+      customer = insert(:customer, tenant: tenant)
+
+      conn_resp = delete(conn, "/api/v1/customers/#{customer.id}")
+      assert response(conn_resp, 204)
+
+      conn_resp = get(conn, "/api/v1/customers/#{customer.id}")
+      assert json_response(conn_resp, 404)
+    end
+
+    test "returns 404 for another tenant's customer", %{conn: conn} do
+      other = insert(:customer)
+
+      conn_resp = delete(conn, "/api/v1/customers/#{other.id}")
+      assert json_response(conn_resp, 404)
+    end
+  end
+
+  describe "remove_tags" do
+    test "removes multiple tags in one call", %{conn: conn, tenant: tenant} do
+      customer = insert(:customer, tenant: tenant, tags: ["vip", "beta", "active"])
+
+      conn_resp =
+        delete(conn, "/api/v1/customers/#{customer.id}/tags", %{
+          "customer_id" => customer.id,
+          "tags" => ["vip", "beta"]
+        })
+
+      assert json_response(conn_resp, 200)["data"]["tags"] == ["active"]
+    end
+
+    test "returns 404 for another tenant's customer", %{conn: conn} do
+      other = insert(:customer, tags: ["vip"])
+
+      conn_resp =
+        delete(conn, "/api/v1/customers/#{other.id}/tags", %{
+          "customer_id" => other.id,
+          "tags" => ["vip"]
+        })
+
+      assert json_response(conn_resp, 404)
+    end
+  end
+
   describe "authentication" do
     test "returns 401 without API key", %{conn: conn} do
       conn =

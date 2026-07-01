@@ -87,8 +87,9 @@ defmodule KalciferWeb.Router do
     post "/flows/:flow_id/trigger", TriggerController, :create
     post "/events", EventController, :create
 
-    resources "/customers", CustomerController, except: [:new, :edit, :delete]
+    resources "/customers", CustomerController, except: [:new, :edit]
     post "/customers/:customer_id/tags", CustomerController, :add_tags
+    delete "/customers/:customer_id/tags", CustomerController, :remove_tags
     put "/customers/:customer_id/preferences", CustomerController, :update_preferences
 
     post "/instances/:id/cancel", InstanceController, :cancel
