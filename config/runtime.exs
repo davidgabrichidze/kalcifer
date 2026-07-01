@@ -13,6 +13,12 @@ config :kalcifer, :auth_session_secret, System.get_env("AUTH_SESSION_SECRET")
 # AI — reads from .env or system env
 config :kalcifer, Kalcifer.AI.Client, api_key: System.get_env("ANTHROPIC_API_KEY", "")
 
+# SendGrid email provider credentials
+config :kalcifer, :sendgrid,
+  api_key: System.get_env("SENDGRID_API_KEY"),
+  from_email: System.get_env("SENDGRID_FROM_EMAIL", "no-reply@kalcifer.dev"),
+  from_name: System.get_env("SENDGRID_FROM_NAME", "Kalcifer")
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

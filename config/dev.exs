@@ -10,8 +10,16 @@ config :kalcifer, Kalcifer.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
+# BIND_IP=ipv4 binds 0.0.0.0 for environments without IPv6 support
+# (binding :: fails there with :eafnosupport)
+bind_ip =
+  case System.get_env("BIND_IP", "ipv6") do
+    "ipv4" -> {0, 0, 0, 0}
+    _ -> {0, 0, 0, 0, 0, 0, 0, 0}
+  end
+
 config :kalcifer, KalciferWeb.Endpoint,
-  http: [ip: {0, 0, 0, 0, 0, 0, 0, 0}, port: 4500],
+  http: [ip: bind_ip, port: 4500],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
