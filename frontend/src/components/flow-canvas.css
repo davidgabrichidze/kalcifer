@@ -240,3 +240,29 @@
   font-weight: 600;
   font-size: 8px;
 }
+
+/* --- Node groups --- */
+.group-node {
+  width: 100%;
+  height: 100%;
+  border: 2px dashed var(--color-border, #8888aa);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-info, #6b7cff) 6%, transparent);
+  position: relative;
+}
+
+.group-node-selected {
+  border-color: var(--color-info, #6b7cff);
+}
+
+.group-node-label {
+  position: absolute;
+  top: -9px;
+  left: 12px;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-sec, #888);
+  background: var(--color-surface, #fff);
+  border-radius: 4px;
+}

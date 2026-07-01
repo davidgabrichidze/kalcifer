@@ -109,12 +109,28 @@ export function summarizeNodeConfig(gn: FlowGraphNode): string {
 /**
  * Convert backend FlowGraph to React Flow nodes/edges with auto-layout
  */
+interface EditorGroupMeta {
+  id: string
+  label?: string
+}
+
+/** Reads editor-only group metadata persisted in a node's config. */
+export function nodeGroupMeta(config: Record<string, unknown> | undefined): EditorGroupMeta | null {
+  const editor = config?._editor as { group?: EditorGroupMeta } | undefined
+  const group = editor?.group
+  return group?.id ? group : null
+}
+
+const GROUP_PADDING = 40
+const NODE_EST_WIDTH = 220
+const NODE_EST_HEIGHT = 90
+
 export function convertGraphToReactFlow(
   flowGraph: FlowGraph,
 ): { nodes: Node[]; edges: Edge[] } {
   const positions = autoLayoutNodes(flowGraph.nodes, flowGraph.edges)
 
-  const nodes = flowGraph.nodes.map(gn => {
+  let nodes = flowGraph.nodes.map(gn => {
     const pos = positions[gn.id] || { x: 0, y: 0 }
     const nodeTypeMeta = getNodeType(gn.type)
     return {
@@ -129,6 +145,59 @@ export function convertGraphToReactFlow(
       },
     } as Node
   })
+
+  // Reconstruct visual group containers from members' _editor.group config
+  const groups = new Map<string, { label: string; members: string[] }>()
+  flowGraph.nodes.forEach(gn => {
+    const meta = nodeGroupMeta(gn.config)
+    if (!meta) return
+    const entry = groups.get(meta.id) || { label: meta.label || 'Group', members: [] }
+    if (meta.label) entry.label = meta.label
+    entry.members.push(gn.id)
+    groups.set(meta.id, entry)
+  })
+
+  if (groups.size > 0) {
+    const groupNodes: Node[] = []
+    const memberToGroup = new Map<string, { groupId: string; origin: { x: number; y: number } }>()
+
+    groups.forEach(({ label, members }, groupId) => {
+      const memberNodes = nodes.filter(n => members.includes(n.id))
+      if (memberNodes.length === 0) return
+
+      const minX = Math.min(...memberNodes.map(n => n.position.x)) - GROUP_PADDING
+      const minY = Math.min(...memberNodes.map(n => n.position.y)) - GROUP_PADDING
+      const maxX = Math.max(...memberNodes.map(n => n.position.x + NODE_EST_WIDTH)) + GROUP_PADDING
+      const maxY = Math.max(...memberNodes.map(n => n.position.y + NODE_EST_HEIGHT)) + GROUP_PADDING
+
+      groupNodes.push({
+        id: groupId,
+        type: 'groupNode',
+        position: { x: minX, y: minY },
+        style: { width: maxX - minX, height: maxY - minY },
+        data: { label },
+      } as Node)
+
+      members.forEach(id => memberToGroup.set(id, { groupId, origin: { x: minX, y: minY } }))
+    })
+
+    nodes = nodes.map(n => {
+      const membership = memberToGroup.get(n.id)
+      if (!membership) return n
+      return {
+        ...n,
+        parentId: membership.groupId,
+        extent: 'parent' as const,
+        position: {
+          x: n.position.x - membership.origin.x,
+          y: n.position.y - membership.origin.y,
+        },
+      }
+    })
+
+    // React Flow requires parent nodes to appear before their children
+    nodes = [...groupNodes, ...nodes]
+  }
 
   const edges = flowGraph.edges.map(ge => ({
     id: `${ge.source}-${ge.target}${ge.branch ? `-${ge.branch}` : ''}`,
@@ -179,11 +248,37 @@ export function convertReactFlowToGraph(
     }
   }
 
-  const nodes: FlowGraphNode[] = rfNodes.map(n => ({
-    id: n.id,
-    type: (n.data as Record<string, unknown>).type as string || 'unknown',
-    config: configMap.get(n.id) || {},
-  }))
+  const groupLabels = new Map<string, string>()
+  rfNodes.forEach(n => {
+    if (n.type === 'groupNode') {
+      groupLabels.set(n.id, ((n.data as Record<string, unknown>).label as string) || 'Group')
+    }
+  })
+
+  const nodes: FlowGraphNode[] = rfNodes
+    .filter(n => n.type !== 'groupNode')
+    .map(n => {
+      const config = { ...(configMap.get(n.id) || {}) }
+      const editor = { ...((config._editor as Record<string, unknown>) || {}) }
+
+      if (n.parentId && groupLabels.has(n.parentId)) {
+        editor.group = { id: n.parentId, label: groupLabels.get(n.parentId) }
+      } else {
+        delete editor.group
+      }
+
+      if (Object.keys(editor).length > 0) {
+        config._editor = editor
+      } else {
+        delete config._editor
+      }
+
+      return {
+        id: n.id,
+        type: ((n.data as Record<string, unknown>).type as string) || 'unknown',
+        config,
+      }
+    })
 
   const edges = rfEdges.map(e => {
     const edge: { id: string; source: string; target: string; branch?: string } = {

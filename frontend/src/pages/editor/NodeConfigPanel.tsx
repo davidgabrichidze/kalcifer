@@ -1,4 +1,5 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { fetchFlows, type Flow } from '../../lib/api'
 import './editor.css'
 
 interface NodeConfigPanelProps {
@@ -406,6 +407,40 @@ export function NodeConfigPanel({
           </>
         )}
 
+        {nodeType === 'sub_flow' && (
+          <SubFlowFields nodeConfig={nodeConfig} onConfigChange={handleConfigChange} />
+        )}
+
+        {nodeType === 'parallel_group' && (
+          <>
+            <div className="config-field">
+              <label className="config-label">On Error</label>
+              <select
+                className="config-input"
+                defaultValue={(nodeConfig.on_error as string) || 'continue'}
+                onChange={e => handleConfigChange('on_error', e.target.value)}
+              >
+                <option value="continue">Continue (collect failures)</option>
+                <option value="fail_all">Fail all</option>
+              </select>
+            </div>
+            <div className="config-field">
+              <label className="config-label">Timeout (ms)</label>
+              <input
+                className="config-input"
+                type="number"
+                min="0"
+                placeholder="30000"
+                defaultValue={(nodeConfig.timeout_ms as number) || ''}
+                onChange={e => handleConfigChange('timeout_ms', parseInt(e.target.value))}
+              />
+            </div>
+            <div className="config-hint" style={{ fontSize: '10px', opacity: 0.7 }}>
+              Define parallel tasks in the raw config below.
+            </div>
+          </>
+        )}
+
         {/* Raw JSON config */}
         <div className="config-field">
           <label className="config-label">Raw Config (JSON)</label>
@@ -471,5 +506,76 @@ export function NodeConfigPanel({
         </button>
       </div>
     </div>
+  )
+}
+
+interface SubFlowFieldsProps {
+  nodeConfig: Record<string, unknown>
+  onConfigChange: (key: string, value: unknown) => void
+}
+
+function SubFlowFields({ nodeConfig, onConfigChange }: SubFlowFieldsProps) {
+  const [flows, setFlows] = useState<Flow[]>([])
+  const [loadError, setLoadError] = useState(false)
+
+  useEffect(() => {
+    fetchFlows()
+      .then(setFlows)
+      .catch(() => setLoadError(true))
+  }, [])
+
+  const waitEnabled = nodeConfig.wait === true
+
+  return (
+    <>
+      <div className="config-field">
+        <label className="config-label">Sub-Flow</label>
+        {loadError ? (
+          <input
+            className="config-input"
+            type="text"
+            placeholder="Flow UUID"
+            defaultValue={(nodeConfig.flow_id as string) || ''}
+            onChange={e => onConfigChange('flow_id', e.target.value)}
+          />
+        ) : (
+          <select
+            className="config-input"
+            value={(nodeConfig.flow_id as string) || ''}
+            onChange={e => onConfigChange('flow_id', e.target.value)}
+          >
+            <option value="">Select a flow…</option>
+            {flows.map(f => (
+              <option key={f.id} value={f.id}>
+                {f.name} ({f.status})
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+      <div className="config-field">
+        <label className="config-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <input
+            type="checkbox"
+            checked={waitEnabled}
+            onChange={e => onConfigChange('wait', e.target.checked)}
+          />
+          Wait for sub-flow completion
+        </label>
+      </div>
+      {waitEnabled && (
+        <div className="config-field">
+          <label className="config-label">Timeout (ms)</label>
+          <input
+            className="config-input"
+            type="number"
+            min="0"
+            placeholder="60000"
+            defaultValue={(nodeConfig.timeout_ms as number) || ''}
+            onChange={e => onConfigChange('timeout_ms', parseInt(e.target.value))}
+          />
+        </div>
+      )}
+    </>
   )
 }
