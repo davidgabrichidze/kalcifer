@@ -53,13 +53,13 @@ defmodule KalciferWeb.Plugs.WebhookSignatureTest do
         |> put_req_header("x-twilio-email-event-webhook-timestamp", timestamp)
         |> post(@sendgrid_path, Jason.encode!(%{"event" => [%{"forged" => true}]}))
 
-      assert json_response(conn, 401)["error"] == "invalid webhook signature"
+      assert json_response(conn, 401)["error"] == "invalid_webhook_signature"
     end
 
     test "rejects when signature headers are missing", %{conn: conn} do
       conn = post(conn, @sendgrid_path, Jason.encode!(%{"event" => []}))
 
-      assert json_response(conn, 401)["error"] == "invalid webhook signature"
+      assert json_response(conn, 401)["error"] == "invalid_webhook_signature"
     end
   end
 
@@ -101,7 +101,7 @@ defmodule KalciferWeb.Plugs.WebhookSignatureTest do
         |> put_req_header("x-twilio-signature", Base.encode64("forged"))
         |> post(@twilio_path, URI.encode_query(params))
 
-      assert json_response(conn, 401)["error"] == "invalid webhook signature"
+      assert json_response(conn, 401)["error"] == "invalid_webhook_signature"
     end
 
     test "rejects when signature header is missing", %{conn: conn} do
@@ -109,7 +109,7 @@ defmodule KalciferWeb.Plugs.WebhookSignatureTest do
 
       conn = post(conn, @twilio_path, URI.encode_query(params))
 
-      assert json_response(conn, 401)["error"] == "invalid webhook signature"
+      assert json_response(conn, 401)["error"] == "invalid_webhook_signature"
     end
   end
 

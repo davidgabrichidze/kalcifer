@@ -1,7 +1,13 @@
 defmodule KalciferWeb.FallbackController do
+  @moduledoc """
+  Renders all controller error tuples in the standard envelope
+  (see `KalciferWeb.ErrorResponse`).
+  """
+
   use KalciferWeb, :controller
 
   alias Kalcifer.Engine.ErrorCatalog
+  alias KalciferWeb.ErrorResponse
 
   @status_map %{
     not_found: :not_found,
@@ -20,43 +26,46 @@ defmodule KalciferWeb.FallbackController do
   }
 
   def call(conn, {:error, code}) when is_atom(code) and is_map_key(@status_map, code) do
-    status = Map.fetch!(@status_map, code)
-    info = ErrorCatalog.humanize_code(code)
-
-    conn
-    |> put_status(status)
-    |> json(info)
+    render_catalog(conn, Map.fetch!(@status_map, code), code)
   end
 
   def call(conn, {:error, {:invalid_changeset, %Ecto.Changeset{} = changeset}}) do
-    errors = format_errors(changeset)
-
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{errors: errors})
+    render_changeset(conn, changeset)
   end
 
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
-    errors = format_errors(changeset)
-
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{errors: errors})
+    render_changeset(conn, changeset)
   end
 
   def call(conn, {:error, {:preflight_failed, errors}}) when is_list(errors) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{error: "preflight_failed", details: errors})
+    ErrorResponse.send_error(
+      conn,
+      :unprocessable_entity,
+      "preflight_failed",
+      "Flow preflight validation failed.",
+      details: errors
+    )
   end
 
   # Catch-all for unhandled error atoms
   def call(conn, {:error, reason}) when is_atom(reason) do
-    info = ErrorCatalog.humanize_code(reason)
+    render_catalog(conn, :internal_server_error, reason)
+  end
 
-    conn
-    |> put_status(:internal_server_error)
-    |> json(info)
+  defp render_catalog(conn, status, code) do
+    info = ErrorCatalog.humanize_code(code)
+
+    ErrorResponse.send_error(conn, status, info.code, info.message, suggestion: info[:suggestion])
+  end
+
+  defp render_changeset(conn, changeset) do
+    ErrorResponse.send_error(
+      conn,
+      :unprocessable_entity,
+      "validation_failed",
+      "Validation failed.",
+      details: format_errors(changeset)
+    )
   end
 
   defp format_errors(changeset) do

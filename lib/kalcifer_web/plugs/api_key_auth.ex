@@ -17,10 +17,12 @@ defmodule KalciferWeb.Plugs.ApiKeyAuth do
       assign(conn, :current_tenant, tenant)
     else
       _ ->
-        conn
-        |> put_status(:unauthorized)
-        |> Phoenix.Controller.json(%{error: "invalid_api_key"})
-        |> halt()
+        KalciferWeb.ErrorResponse.send_error(
+          conn,
+          :unauthorized,
+          "invalid_api_key",
+          "Invalid or missing API key. Pass it as 'Authorization: Bearer <key>'."
+        )
     end
   end
 

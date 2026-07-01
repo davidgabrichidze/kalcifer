@@ -25,12 +25,12 @@ defmodule KalciferWeb.Plugs.RateLimiter do
           {:deny, retry_after} ->
             conn
             |> put_resp_header("retry-after", to_string(retry_after))
-            |> put_status(:too_many_requests)
-            |> Phoenix.Controller.json(%{
-              error: "rate_limit_exceeded",
-              retry_after: retry_after
-            })
-            |> halt()
+            |> KalciferWeb.ErrorResponse.send_error(
+              :too_many_requests,
+              "rate_limit_exceeded",
+              "Too many requests. Retry after #{retry_after} seconds.",
+              details: %{retry_after: retry_after}
+            )
         end
     end
   end

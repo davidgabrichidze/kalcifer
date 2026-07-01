@@ -202,7 +202,7 @@ export async function updateSettings(params: {
   })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
-    throw new Error(data.errors?.settings?.[0] || `HTTP ${res.status}`)
+    throw new Error(data.details?.settings?.[0] || data.message || `HTTP ${res.status}`)
   }
   return res.json()
 }

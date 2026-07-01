@@ -160,8 +160,7 @@ defmodule KalciferWeb.FlowController do
         json(conn, %{data: serialize_flow(flow), message: "Flow imported successfully"})
 
       {:error, changeset} ->
-        errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, _} -> msg end)
-        conn |> put_status(422) |> json(%{errors: errors})
+        KalciferWeb.FallbackController.call(conn, {:error, changeset})
     end
   end
 

@@ -86,9 +86,11 @@ defmodule KalciferWeb.Plugs.WebhookSignature do
   end
 
   defp reject(conn) do
-    conn
-    |> put_status(:unauthorized)
-    |> Phoenix.Controller.json(%{error: "invalid webhook signature"})
-    |> halt()
+    KalciferWeb.ErrorResponse.send_error(
+      conn,
+      :unauthorized,
+      "invalid_webhook_signature",
+      "Webhook signature verification failed."
+    )
   end
 end
