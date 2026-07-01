@@ -17,7 +17,8 @@ config :kalcifer, Kalcifer.AI.Client, api_key: System.get_env("ANTHROPIC_API_KEY
 config :kalcifer, :sendgrid,
   api_key: System.get_env("SENDGRID_API_KEY"),
   from_email: System.get_env("SENDGRID_FROM_EMAIL", "no-reply@kalcifer.dev"),
-  from_name: System.get_env("SENDGRID_FROM_NAME", "Kalcifer")
+  from_name: System.get_env("SENDGRID_FROM_NAME", "Kalcifer"),
+  webhook_verification_key: System.get_env("SENDGRID_WEBHOOK_VERIFICATION_KEY")
 
 # Twilio SMS/WhatsApp provider credentials
 config :kalcifer, :twilio,
