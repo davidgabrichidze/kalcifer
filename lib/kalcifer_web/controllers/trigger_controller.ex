@@ -3,28 +3,27 @@ defmodule KalciferWeb.TriggerController do
 
   alias Kalcifer.Engine.FlowTrigger
   alias Kalcifer.Flows
+  alias KalciferWeb.Params
 
   action_fallback KalciferWeb.FallbackController
 
-  def create(conn, %{"flow_id" => flow_id, "customer_id" => cid} = params)
-      when is_binary(cid) and cid != "" do
+  @create_schema [
+    customer_id: [type: {:custom, Params, :non_empty_string, []}, required: true],
+    dry_run: [type: :boolean, default: false],
+    context: [type: {:custom, Params, :json_map, []}, default: %{}]
+  ]
+
+  def create(conn, %{"flow_id" => flow_id} = params) do
     tenant = conn.assigns.current_tenant
 
-    dry_run = params["dry_run"] == true
-
-    with {:ok, _flow} <- fetch_tenant_flow(tenant, flow_id),
+    with {:ok, p} <- Params.validate(params, @create_schema),
+         {:ok, _flow} <- fetch_tenant_flow(tenant, flow_id),
          {:ok, instance_id} <-
-           FlowTrigger.trigger(flow_id, cid, params["context"] || %{}, dry_run: dry_run) do
+           FlowTrigger.trigger(flow_id, p.customer_id, p.context, dry_run: p.dry_run) do
       conn
       |> put_status(:created)
       |> json(%{instance_id: instance_id})
     end
-  end
-
-  def create(conn, %{"flow_id" => _flow_id}) do
-    conn
-    |> put_status(:bad_request)
-    |> json(%{error: "customer_id is required"})
   end
 
   defp fetch_tenant_flow(tenant, flow_id) do

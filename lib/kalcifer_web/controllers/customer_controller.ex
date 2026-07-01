@@ -2,14 +2,17 @@ defmodule KalciferWeb.CustomerController do
   use KalciferWeb, :controller
 
   alias Kalcifer.Customers
+  alias KalciferWeb.Params
 
   action_fallback KalciferWeb.FallbackController
 
   def index(conn, params) do
     tenant = conn.assigns.current_tenant
-    opts = [limit: Map.get(params, "limit", 50), offset: Map.get(params, "offset", 0)]
-    customers = Customers.list_customers(tenant.id, opts)
-    json(conn, %{data: Enum.map(customers, &serialize/1)})
+
+    with {:ok, page} <- Params.validate(params, Params.pagination_schema()) do
+      customers = Customers.list_customers(tenant.id, limit: page.limit, offset: page.offset)
+      json(conn, %{data: Enum.map(customers, &serialize/1)})
+    end
   end
 
   def create(conn, params) do

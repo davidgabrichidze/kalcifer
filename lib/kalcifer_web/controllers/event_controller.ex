@@ -2,25 +2,26 @@ defmodule KalciferWeb.EventController do
   use KalciferWeb, :controller
 
   alias Kalcifer.Engine.EventRouter
+  alias KalciferWeb.Params
 
   action_fallback KalciferWeb.FallbackController
 
-  def create(conn, %{"customer_id" => cid, "event_type" => et} = params)
-      when is_binary(cid) and cid != "" and is_binary(et) and et != "" do
+  @create_schema [
+    customer_id: [type: {:custom, Params, :non_empty_string, []}, required: true],
+    event_type: [type: {:custom, Params, :non_empty_string, []}, required: true],
+    data: [type: {:custom, Params, :json_map, []}, default: %{}]
+  ]
+
+  def create(conn, params) do
     tenant = conn.assigns.current_tenant
-    event_data = params["data"] || %{}
 
-    results = EventRouter.route_event(tenant.id, cid, et, event_data)
-    routed = Enum.count(results, &match?({:ok, _}, &1))
+    with {:ok, p} <- Params.validate(params, @create_schema) do
+      results = EventRouter.route_event(tenant.id, p.customer_id, p.event_type, p.data)
+      routed = Enum.count(results, &match?({:ok, _}, &1))
 
-    conn
-    |> put_status(:accepted)
-    |> json(%{routed: routed})
-  end
-
-  def create(conn, _params) do
-    conn
-    |> put_status(:bad_request)
-    |> json(%{error: "customer_id and event_type are required"})
+      conn
+      |> put_status(:accepted)
+      |> json(%{routed: routed})
+    end
   end
 end
