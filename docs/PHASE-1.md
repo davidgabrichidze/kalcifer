@@ -547,12 +547,12 @@ Phase 1 დასრულების შემდეგ: **~554 tests**, produ
 
 ### Phase 1-ის დასრულების კრიტერიუმი:
 
-- [ ] 0 known_bug tests
-- [ ] ყველა channel node რეალურ provider-თან მუშაობს (min: log + webhook)
-- [ ] Customer CRUD + segments + preferences
-- [ ] Analytics API — flow summary, node breakdown, AB results, funnel
-- [ ] WebSocket real-time monitoring
-- [ ] Rate limiting + structured logging
-- [ ] Instance inspector API
-- [ ] Oban maintenance jobs
+- [x] 0 known_bug tests
+- [x] ყველა channel node რეალურ provider-თან მუშაობს (log, webhook, sendgrid, twilio)
+- [x] Customer CRUD + segments + preferences
+- [x] Analytics API — flow summary, node breakdown, AB results, funnel
+- [x] WebSocket real-time monitoring
+- [x] Rate limiting + structured logging
+- [x] Instance inspector API
+- [x] Oban maintenance jobs
 - [ ] dialyzer clean
