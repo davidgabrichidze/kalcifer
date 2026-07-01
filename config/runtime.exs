@@ -19,6 +19,13 @@ config :kalcifer, :sendgrid,
   from_email: System.get_env("SENDGRID_FROM_EMAIL", "no-reply@kalcifer.dev"),
   from_name: System.get_env("SENDGRID_FROM_NAME", "Kalcifer")
 
+# Twilio SMS/WhatsApp provider credentials
+config :kalcifer, :twilio,
+  account_sid: System.get_env("TWILIO_ACCOUNT_SID"),
+  auth_token: System.get_env("TWILIO_AUTH_TOKEN"),
+  from_number: System.get_env("TWILIO_FROM_NUMBER"),
+  whatsapp_from: System.get_env("TWILIO_WHATSAPP_FROM")
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
