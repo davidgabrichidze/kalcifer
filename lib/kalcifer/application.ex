@@ -26,6 +26,9 @@ defmodule Kalcifer.Application do
       %{level: :info}
     )
 
+    # Forward engine telemetry into batched analytics stats
+    Kalcifer.Analytics.TelemetryForwarder.attach()
+
     result
   end
 

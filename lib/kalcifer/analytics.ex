@@ -6,6 +6,8 @@ defmodule Kalcifer.Analytics do
   alias Kalcifer.Analytics.Conversion
   alias Kalcifer.Analytics.FlowStats
   alias Kalcifer.Analytics.NodeStats
+  alias Kalcifer.Flows.ExecutionStep
+  alias Kalcifer.Flows.FlowInstance
   alias Kalcifer.Repo
 
   # --- Flow Stats ---
@@ -122,8 +124,6 @@ defmodule Kalcifer.Analytics do
   Returns a map of %{node_id => avg_duration_ms}.
   """
   def node_avg_durations(flow_id) do
-    alias Kalcifer.Flows.{ExecutionStep, FlowInstance}
-
     from(s in ExecutionStep,
       join: i in FlowInstance,
       on: s.instance_id == i.id,
@@ -196,6 +196,172 @@ defmodule Kalcifer.Analytics do
       select: count(c.id)
     )
     |> Repo.one()
+  end
+
+  ## Daily rollup — recompute a date's stats from the source of truth
+
+  @doc """
+  Recomputes flow and node stats for a date from flow_instances and
+  execution_steps, overwriting the counters (branch_counts are kept from
+  live collection — branch keys are not persisted on steps). Dry-run
+  instances are excluded. Failed instances are attributed to the date
+  they were last updated, as instances carry no failed_at timestamp.
+  """
+  def recompute_date(date) do
+    flow_counts =
+      %{}
+      |> merge_flow_counts(instances_entered_on(date), :entered)
+      |> merge_flow_counts(instances_completed_on(date), :completed)
+      |> merge_flow_counts(instances_failed_on(date), :failed)
+      |> merge_flow_counts(instances_exited_on(date), :exited)
+
+    Enum.each(flow_counts, fn {{flow_id, version_number}, counts} ->
+      set_flow_stats(flow_id, version_number, date, counts)
+    end)
+
+    date
+    |> node_step_counts()
+    |> Enum.each(fn {{flow_id, version_number, node_id}, counts} ->
+      set_node_stats(flow_id, version_number, node_id, date, counts)
+    end)
+
+    :ok
+  end
+
+  def set_flow_stats(flow_id, version_number, date, counts) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    attrs = %{
+      flow_id: flow_id,
+      version_number: version_number,
+      date: date,
+      entered: Map.get(counts, :entered, 0),
+      completed: Map.get(counts, :completed, 0),
+      failed: Map.get(counts, :failed, 0),
+      exited: Map.get(counts, :exited, 0),
+      inserted_at: now,
+      updated_at: now
+    }
+
+    Repo.insert(
+      FlowStats.changeset(%FlowStats{}, attrs),
+      on_conflict: [
+        set: [
+          entered: attrs.entered,
+          completed: attrs.completed,
+          failed: attrs.failed,
+          exited: attrs.exited,
+          updated_at: now
+        ]
+      ],
+      conflict_target: [:flow_id, :version_number, :date]
+    )
+  end
+
+  def set_node_stats(flow_id, version_number, node_id, date, counts) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    attrs = %{
+      flow_id: flow_id,
+      version_number: version_number,
+      node_id: node_id,
+      date: date,
+      executed: Map.get(counts, :executed, 0),
+      completed: Map.get(counts, :completed, 0),
+      failed: Map.get(counts, :failed, 0),
+      branch_counts: %{},
+      inserted_at: now,
+      updated_at: now
+    }
+
+    Repo.insert(
+      NodeStats.changeset(%NodeStats{}, attrs),
+      on_conflict: [
+        set: [
+          executed: attrs.executed,
+          completed: attrs.completed,
+          failed: attrs.failed,
+          updated_at: now
+        ]
+      ],
+      conflict_target: [:flow_id, :version_number, :node_id, :date]
+    )
+  end
+
+  defp merge_flow_counts(acc, rows, key) do
+    Enum.reduce(rows, acc, fn {flow_key, count}, acc ->
+      Map.update(acc, flow_key, %{key => count}, &Map.put(&1, key, count))
+    end)
+  end
+
+  defp instances_entered_on(date) do
+    from(i in FlowInstance,
+      where: not i.dry_run and fragment("?::date", i.entered_at) == ^date,
+      group_by: [i.flow_id, i.version_number],
+      select: {{i.flow_id, i.version_number}, count(i.id)}
+    )
+    |> Repo.all()
+  end
+
+  defp instances_completed_on(date) do
+    from(i in FlowInstance,
+      where: not i.dry_run and fragment("?::date", i.completed_at) == ^date,
+      group_by: [i.flow_id, i.version_number],
+      select: {{i.flow_id, i.version_number}, count(i.id)}
+    )
+    |> Repo.all()
+  end
+
+  defp instances_failed_on(date) do
+    from(i in FlowInstance,
+      where:
+        not i.dry_run and i.status == "failed" and
+          fragment("?::date", i.updated_at) == ^date,
+      group_by: [i.flow_id, i.version_number],
+      select: {{i.flow_id, i.version_number}, count(i.id)}
+    )
+    |> Repo.all()
+  end
+
+  defp instances_exited_on(date) do
+    from(i in FlowInstance,
+      where: not i.dry_run and fragment("?::date", i.exited_at) == ^date,
+      group_by: [i.flow_id, i.version_number],
+      select: {{i.flow_id, i.version_number}, count(i.id)}
+    )
+    |> Repo.all()
+  end
+
+  defp node_step_counts(date) do
+    from(s in ExecutionStep,
+      join: i in assoc(s, :instance),
+      where: not i.dry_run and fragment("?::date", s.started_at) == ^date,
+      group_by: [i.flow_id, s.version_number, s.node_id, s.status],
+      select: {{i.flow_id, s.version_number, s.node_id}, s.status, count(s.id)}
+    )
+    |> Repo.all()
+    |> Enum.reduce(%{}, fn {node_key, status, count}, acc ->
+      Map.update(
+        acc,
+        node_key,
+        step_counts(status, count),
+        &merge_step_counts(&1, status, count)
+      )
+    end)
+  end
+
+  defp step_counts(status, count) do
+    merge_step_counts(%{executed: 0, completed: 0, failed: 0}, status, count)
+  end
+
+  defp merge_step_counts(counts, status, count) do
+    counts = Map.update!(counts, :executed, &(&1 + count))
+
+    case status do
+      "completed" -> Map.update!(counts, :completed, &(&1 + count))
+      "failed" -> Map.update!(counts, :failed, &(&1 + count))
+      _ -> counts
+    end
   end
 
   defp date_range_to_datetime(date) do

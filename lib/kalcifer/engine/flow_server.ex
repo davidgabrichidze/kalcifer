@@ -433,7 +433,8 @@ defmodule Kalcifer.Engine.FlowServer do
         node_id: node["id"],
         node_type: node["type"],
         status: status,
-        branch_key: branch_key
+        branch_key: branch_key,
+        dry_run: Map.get(state.context, "_dry_run", false)
       }
     )
   end
@@ -447,7 +448,8 @@ defmodule Kalcifer.Engine.FlowServer do
         version_number: state.version_number,
         instance_id: state.instance_id,
         customer_id: state.customer_id,
-        tenant_id: state.tenant_id
+        tenant_id: state.tenant_id,
+        dry_run: Map.get(state.context, "_dry_run", false)
       }
     )
   end
