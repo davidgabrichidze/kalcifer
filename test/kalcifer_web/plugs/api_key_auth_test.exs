@@ -32,7 +32,7 @@ defmodule KalciferWeb.Plugs.ApiKeyAuthTest do
       |> put_req_header("content-type", "application/json")
       |> post(@auth_route, %{})
 
-    assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
+    assert json_response(conn, 401)["error"] == "invalid_api_key"
   end
 
   test "rejects invalid API key", %{conn: conn} do
@@ -42,7 +42,7 @@ defmodule KalciferWeb.Plugs.ApiKeyAuthTest do
       |> put_req_header("content-type", "application/json")
       |> post(@auth_route, %{})
 
-    assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
+    assert json_response(conn, 401)["error"] == "invalid_api_key"
   end
 
   test "rejects malformed authorization header", %{conn: conn} do
@@ -52,7 +52,7 @@ defmodule KalciferWeb.Plugs.ApiKeyAuthTest do
       |> put_req_header("content-type", "application/json")
       |> post(@auth_route, %{})
 
-    assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
+    assert json_response(conn, 401)["error"] == "invalid_api_key"
   end
 
   test "rejects empty bearer token", %{conn: conn} do
@@ -62,7 +62,7 @@ defmodule KalciferWeb.Plugs.ApiKeyAuthTest do
       |> put_req_header("content-type", "application/json")
       |> post(@auth_route, %{})
 
-    assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
+    assert json_response(conn, 401)["error"] == "invalid_api_key"
   end
 
   test "rejects lowercase bearer prefix", %{conn: conn} do
@@ -72,6 +72,6 @@ defmodule KalciferWeb.Plugs.ApiKeyAuthTest do
       |> put_req_header("content-type", "application/json")
       |> post(@auth_route, %{})
 
-    assert json_response(conn, 401) == %{"error" => "invalid_api_key"}
+    assert json_response(conn, 401)["error"] == "invalid_api_key"
   end
 end

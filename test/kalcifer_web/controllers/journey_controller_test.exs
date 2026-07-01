@@ -74,13 +74,13 @@ defmodule KalciferWeb.JourneyControllerTest do
     test "returns error for missing name", %{conn: conn, flow: flow} do
       conn = post(conn, "/api/v1/journeys", %{"flow_id" => flow.id})
 
-      assert json_response(conn, 422)["errors"]["name"]
+      assert json_response(conn, 422)["details"]["name"]
     end
 
     test "returns error for missing flow_id", %{conn: conn} do
       conn = post(conn, "/api/v1/journeys", %{"name" => "Test"})
 
-      assert json_response(conn, 422)["errors"]["flow_id"]
+      assert json_response(conn, 422)["details"]["flow_id"]
     end
 
     test "ignores unknown params", %{conn: conn, flow: flow} do

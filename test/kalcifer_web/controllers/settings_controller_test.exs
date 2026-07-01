@@ -78,7 +78,7 @@ defmodule KalciferWeb.SettingsControllerTest do
 
     test "rejects invalid model", %{conn: conn} do
       conn = put(conn, "/api/v1/settings", %{"ai_model" => "gpt-4"})
-      assert json_response(conn, 422)["errors"]
+      assert json_response(conn, 422)["details"]
     end
 
     test "partial update — model change does not clear api_key", %{conn: conn, tenant: tenant} do

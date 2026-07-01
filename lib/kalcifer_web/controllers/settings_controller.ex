@@ -46,10 +46,7 @@ defmodule KalciferWeb.SettingsController do
             json(conn, settings_response(updated))
 
           {:error, changeset} ->
-            errors =
-              Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
-
-            conn |> put_status(422) |> json(%{errors: errors})
+            KalciferWeb.FallbackController.call(conn, {:error, changeset})
         end
     end
   end

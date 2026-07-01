@@ -70,7 +70,7 @@ defmodule KalciferWeb.FlowControllerTest do
     test "returns error for missing name", %{conn: conn} do
       conn = post(conn, "/api/v1/flows", %{})
 
-      assert json_response(conn, 422)["errors"]["name"]
+      assert json_response(conn, 422)["details"]["name"]
     end
   end
 
