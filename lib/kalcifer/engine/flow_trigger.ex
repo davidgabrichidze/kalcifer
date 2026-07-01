@@ -112,5 +112,6 @@ defmodule Kalcifer.Engine.FlowTrigger do
     context
     |> Map.put("_customer", customer_map)
     |> Map.put_new("preferences", customer.preferences || %{})
+    |> Map.put_new("segments", Customers.customer_segment_ids(customer))
   end
 end
