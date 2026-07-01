@@ -7,6 +7,7 @@ defmodule Kalcifer.Factory do
   alias Kalcifer.AI.ConversationMessage
   alias Kalcifer.AI.Memory
   alias Kalcifer.Customers.Customer
+  alias Kalcifer.Customers.Segment
   alias Kalcifer.Flows.ExecutionStep
   alias Kalcifer.Flows.Flow
   alias Kalcifer.Flows.FlowInstance
@@ -68,6 +69,16 @@ defmodule Kalcifer.Factory do
       started_at: DateTime.utc_now() |> DateTime.truncate(:second),
       completed_at: DateTime.utc_now() |> DateTime.truncate(:second),
       instance: build(:flow_instance)
+    }
+  end
+
+  def segment_factory do
+    %Segment{
+      name: sequence(:segment_name, &"Segment #{&1}"),
+      description: "A test segment",
+      type: "dynamic",
+      rules: [],
+      tenant: build(:tenant)
     }
   end
 

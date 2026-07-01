@@ -92,6 +92,9 @@ defmodule KalciferWeb.Router do
     delete "/customers/:customer_id/tags", CustomerController, :remove_tags
     put "/customers/:customer_id/preferences", CustomerController, :update_preferences
 
+    resources "/segments", SegmentController, except: [:new, :edit]
+    get "/segments/:segment_id/members", SegmentController, :members
+
     post "/instances/:id/cancel", InstanceController, :cancel
 
     get "/flows/:flow_id/nodes/:node_id/ab_results", AnalyticsController, :ab_results

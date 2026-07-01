@@ -4,6 +4,9 @@ defmodule Kalcifer.Customers do
   import Ecto.Query
 
   alias Kalcifer.Customers.Customer
+  alias Kalcifer.Customers.Segment
+  alias Kalcifer.Customers.SegmentEvaluator
+  alias Kalcifer.Customers.SegmentQuery
   alias Kalcifer.Repo
 
   def get_customer(id), do: Repo.get(Customer, id)
@@ -83,6 +86,60 @@ defmodule Kalcifer.Customers do
     customer
     |> Ecto.Changeset.change(preferences: merged)
     |> Repo.update()
+  end
+
+  ## Segments
+
+  def list_segments(tenant_id) do
+    from(s in Segment,
+      where: s.tenant_id == ^tenant_id,
+      order_by: [asc: s.name]
+    )
+    |> Repo.all()
+  end
+
+  def get_segment(id), do: Repo.get(Segment, id)
+
+  def create_segment(attrs) do
+    %Segment{}
+    |> Segment.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_segment(segment, attrs) do
+    segment
+    |> Segment.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_segment(segment), do: Repo.delete(segment)
+
+  @doc "Lists members of a segment by evaluating its rules in the database."
+  def list_segment_members(segment, opts \\ []) do
+    limit = Keyword.get(opts, :limit, 50)
+    offset = Keyword.get(opts, :offset, 0)
+
+    segment
+    |> SegmentQuery.members_query()
+    |> order_by([c], desc: c.inserted_at)
+    |> limit(^limit)
+    |> offset(^offset)
+    |> Repo.all()
+  end
+
+  def count_segment_members(segment) do
+    segment
+    |> SegmentQuery.members_query()
+    |> select([c], count(c.id))
+    |> Repo.one()
+  end
+
+  @doc "Returns ids of the tenant's segments the customer currently belongs to."
+  def customer_segment_ids(customer) do
+    customer.tenant_id
+    |> list_segments()
+    |> Enum.filter(&SegmentEvaluator.member?(customer, &1))
+    |> Enum.map(& &1.id)
   end
 
   @doc """
