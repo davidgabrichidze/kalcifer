@@ -108,6 +108,81 @@ defmodule Kalcifer.CustomersTest do
     end
   end
 
+  describe "properties validation" do
+    test "accepts valid nested JSON properties" do
+      attrs = %{
+        "plan" => "pro",
+        "score" => 42,
+        "active" => true,
+        "address" => %{"city" => "Tbilisi", "geo" => %{"lat" => 41.7, "lng" => 44.8}},
+        "devices" => ["ios", "web"]
+      }
+
+      customer = insert(:customer)
+      assert {:ok, updated} = Customers.update_customer(customer, %{properties: attrs})
+      assert updated.properties["address"]["geo"]["lat"] == 41.7
+    end
+
+    test "rejects more than 100 top-level keys" do
+      properties = Map.new(1..101, fn i -> {"key_#{i}", i} end)
+      customer = insert(:customer)
+
+      assert {:error, changeset} = Customers.update_customer(customer, %{properties: properties})
+      assert %{properties: [message]} = errors_on(changeset)
+      assert message =~ "at most 100"
+    end
+
+    test "rejects non-string keys" do
+      customer = insert(:customer)
+
+      assert {:error, changeset} =
+               Customers.update_customer(customer, %{properties: %{123 => "x"}})
+
+      assert %{properties: [message]} = errors_on(changeset)
+      assert message =~ "keys must be strings"
+    end
+
+    test "rejects nesting deeper than 3 levels" do
+      properties = %{"l1" => %{"l2" => %{"l3" => %{"l4" => 1}}}}
+      customer = insert(:customer)
+
+      assert {:error, changeset} = Customers.update_customer(customer, %{properties: properties})
+      assert %{properties: [message]} = errors_on(changeset)
+      assert message =~ "nested at most 3 levels"
+    end
+
+    test "rejects non-JSON values" do
+      customer = insert(:customer)
+
+      assert {:error, changeset} =
+               Customers.update_customer(customer, %{
+                 properties: %{"when" => ~U[2026-01-01 00:00:00Z]}
+               })
+
+      assert %{properties: [_message]} = errors_on(changeset)
+    end
+
+    test "rejects oversized payloads" do
+      properties = %{"blob" => String.duplicate("x", 70_000)}
+      customer = insert(:customer)
+
+      assert {:error, changeset} = Customers.update_customer(customer, %{properties: properties})
+      assert %{properties: [message]} = errors_on(changeset)
+      assert message =~ "encoded size"
+    end
+
+    test "create_changeset also validates properties" do
+      assert {:error, changeset} =
+               Customers.create_customer(%{
+                 external_id: "ext-1",
+                 tenant_id: Ecto.UUID.generate(),
+                 properties: %{123 => "x"}
+               })
+
+      assert %{properties: [_message]} = errors_on(changeset)
+    end
+  end
+
   describe "delete" do
     test "delete_customer removes the record" do
       customer = insert(:customer)
