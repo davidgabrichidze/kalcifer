@@ -3,6 +3,9 @@ defmodule KalciferWeb.WebhookController do
 
   alias Kalcifer.Channels
 
+  plug KalciferWeb.Plugs.WebhookSignature, [provider: :sendgrid] when action == :sendgrid
+  plug KalciferWeb.Plugs.WebhookSignature, [provider: :twilio] when action == :twilio
+
   def sendgrid(conn, %{"event" => events}) when is_list(events) do
     Enum.each(events, &process_sendgrid_event/1)
 
