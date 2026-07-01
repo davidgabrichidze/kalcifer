@@ -20,7 +20,7 @@ vi.mock('../lib/api', () => ({
         graph: {
           nodes: [
             { id: 'entry_1', type: 'webhook_entry', position: { x: 0, y: 0 }, config: {} },
-            { id: 'exit_1', type: 'end', position: { x: 200, y: 0 }, config: {} },
+            { id: 'exit_1', type: 'exit', position: { x: 200, y: 0 }, config: {} },
           ],
           edges: [{ source: 'entry_1', target: 'exit_1' }],
         },
