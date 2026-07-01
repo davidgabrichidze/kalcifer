@@ -1,6 +1,43 @@
-# Kalcifer — Status & Plan (2026-03-24)
+# Kalcifer — Status & Plan (2026-07-01)
 
 ## 1. რა გაკეთდა (Completed)
+
+### Production Readiness Sprint — 2026-07-01 (DONE)
+
+აუდიტით დადგენილი ყველა ნაკლული ფუნქცია დაიხურა, თითო PR-ით (#3–#22):
+
+**Channels:**
+- SendGrid provider (v3 Mail Send, template/dynamic data, from/reply-to) — #3
+- Twilio provider (SMS + WhatsApp, sender_id override) — #4
+- Inbound webhook signature verification (SendGrid ECDSA, Twilio HMAC-SHA1) + raw-body caching — #5
+- CircuitBreaker რეალურად ჩაერთო delivery გზაზე (snooze on open circuit) — #6
+
+**Customers & Segments:**
+- Customer delete + batch tag ops ერთი query-თ — #7
+- Properties JSON ვალიდაცია (key/depth/size ლიმიტები) — #8
+- Segments: CRUD API + DB-level evaluation (SegmentQuery) + engine wiring
+  (context["segments"] ივსება, check_segment რეალურად მუშაობს) — #9
+
+**Analytics:**
+- TelemetryForwarder — engine telemetry → Collector (dry-run გამორიცხულია);
+  StatsRollupJob გახდა დღიური source-of-truth recompute — #10
+
+**API:**
+- ერთიანი error envelope {error, code, message, details?, suggestion?} — #11
+- NimbleOptions request validation layer (trigger/event/pagination) — #12
+- flow_router config_schema-ში model ველი — #13
+
+**Frontend:**
+- პალიტრა ფარავს ყველა 31 node type-ს; ფანტომური 'end' → exit/goal_reached — #14
+- Node groups (Ctrl+G/Ctrl+Shift+G, _editor.group persistence) + sub_flow
+  flow-picker UI + parallel_group form — #15
+- Tenant switcher TopBar-ში (X-Tenant-Id header, GET /tenants) — #16
+
+**Infra/Release:**
+- Flaky step ordering fix (usec timestamps) — #17
+- LICENSE (Apache 2.0) — #18, community health files — #19,
+  root docker-compose.yml + .env.example — #20, release.yml — #21,
+  CHANGELOG v0.1.0 — #22
 
 ### Agent Activity Visibility — "კალციფერი რას აკეთებს?" (DONE)
 
@@ -255,7 +292,7 @@ docker compose -f docker-compose.dev.yml restart app
 - [x] Validation overlay: preflight warnings on nodes
 - [x] Edge labels with branch conditions ("✓ yes" / "✗ no")
 - [x] Copy/paste nodes (Ctrl+C/Ctrl+V)
-- [ ] Node groups / subflows
+- [x] Node groups / subflows (Ctrl+G grouping + sub_flow config UI)
 
 ### Theme C: Debugging & Observability
 - [x] Live mode: running instance real-time tracking on canvas
@@ -282,7 +319,7 @@ docker compose -f docker-compose.dev.yml restart app
 - [x] Rate limiting: per-tenant ETS-based, wired to authenticated pipeline
 - [x] Audit log: schema + API + flow CRUD tracking
 - [x] Google OAuth authentication (user accounts, session tokens)
-- [ ] Tenant switching UI
+- [x] Tenant switching UI (TopBar switcher + X-Tenant-Id resolution)
 
 ---
 

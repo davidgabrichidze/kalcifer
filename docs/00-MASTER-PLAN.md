@@ -388,14 +388,14 @@ POST /api/v1/ai/conversations/:id    # Continue conversation
 ```
 
 **v0.1.0 Release Checklist**:
-- [ ] Engine: 24 nodes, 0 bugs, full API
-- [ ] Providers: SendGrid, Twilio, Webhook
-- [ ] UI: React flow editor + AI copilot
-- [ ] AI: Flow generation, explanation, BYOK
-- [ ] Docker: `docker compose up` → working system
+- [x] Engine: 31 nodes, 0 known bugs, full API
+- [x] Providers: SendGrid, Twilio, Webhook (+ signature-verified callbacks)
+- [x] UI: React flow editor + AI copilot
+- [x] AI: Flow generation, explanation, BYOK
+- [x] Docker: `docker compose up` → working system
 - [ ] Docs: Getting started, API reference, node development guide
 - [ ] GitHub Release: binary + Docker image (ghcr.io)
-- [ ] CHANGELOG.md: v0.1.0
+- [x] CHANGELOG.md: v0.1.0
 
 ---
 
