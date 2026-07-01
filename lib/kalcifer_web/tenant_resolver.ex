@@ -6,7 +6,8 @@ defmodule KalciferWeb.TenantResolver do
   Resolution order:
   1. `conn.assigns[:current_tenant]` — set by the ApiKeyAuth plug
   2. Bearer token from Authorization header — manual auth attempt
-  3. Demo Tenant fallback — auto-created if missing (dev convenience)
+  3. `x-tenant-id` header — dev frontend tenant switching
+  4. Demo Tenant fallback — auto-created if missing (dev convenience)
   """
 
   alias Kalcifer.Repo
@@ -15,15 +16,17 @@ defmodule KalciferWeb.TenantResolver do
 
   @doc "Returns the tenant struct for the current request."
   def resolve(conn) do
-    case conn.assigns[:current_tenant] do
-      %Tenant{} = tenant ->
-        tenant
+    with nil <- assigned_tenant(conn),
+         nil <- try_auth_header(conn),
+         nil <- try_tenant_header(conn) do
+      get_or_create_demo_tenant()
+    end
+  end
 
-      _ ->
-        case try_auth_header(conn) do
-          %Tenant{} = tenant -> tenant
-          nil -> get_or_create_demo_tenant()
-        end
+  defp assigned_tenant(conn) do
+    case conn.assigns[:current_tenant] do
+      %Tenant{} = tenant -> tenant
+      _ -> nil
     end
   end
 
@@ -40,6 +43,15 @@ defmodule KalciferWeb.TenantResolver do
 
       _ ->
         nil
+    end
+  end
+
+  defp try_tenant_header(conn) do
+    with [id] when id != "" <- Plug.Conn.get_req_header(conn, "x-tenant-id"),
+         {:ok, _uuid} <- Ecto.UUID.cast(id) do
+      Repo.get(Tenant, id)
+    else
+      _ -> nil
     end
   end
 

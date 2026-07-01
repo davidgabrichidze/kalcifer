@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { type ThemeId } from '../lib/themes'
 import { type AuthUser } from '../lib/api'
+import TenantSwitcher from './TenantSwitcher'
 import ThemeSwitcher from './ThemeSwitcher'
 
 interface TopBarProps {
@@ -77,6 +78,7 @@ export default function TopBar({ theme, onThemeChange, user, onLogout }: TopBarP
 
       {/* Right: Theme switcher + User */}
       <div className="flex items-center" style={{ gap: 8 }}>
+        <TenantSwitcher />
         <ThemeSwitcher current={theme} onChange={onThemeChange} />
 
         {user && (

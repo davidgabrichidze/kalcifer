@@ -6,6 +6,11 @@ defmodule Kalcifer.Tenants do
 
   def get_tenant(id), do: Repo.get(Tenant, id)
 
+  def list_tenants do
+    import Ecto.Query, only: [from: 2]
+    Repo.all(from(t in Tenant, order_by: [asc: t.name]))
+  end
+
   def get_tenant_by_api_key_hash(hash) do
     Repo.get_by(Tenant, api_key_hash: hash)
   end

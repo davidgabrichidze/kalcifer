@@ -38,6 +38,9 @@ defmodule KalciferWeb.Router do
 
     get "/engine", EngineController, :show
 
+    # Dev frontend tenant switcher
+    get "/tenants", TenantController, :index
+
     # Browse mode — read-only flow/journey/version listing (dev frontend)
     get "/flows", FlowController, :index
     get "/flows/:id", FlowController, :show

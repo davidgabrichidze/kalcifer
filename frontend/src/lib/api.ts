@@ -1,5 +1,49 @@
 const API_BASE = '/api/v1'
 
+// --- Tenant switching (dev) ---
+
+const TENANT_STORAGE_KEY = 'kalcifer_tenant_id'
+
+export function getActiveTenantId(): string | null {
+  try {
+    return localStorage.getItem(TENANT_STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function setActiveTenantId(id: string | null) {
+  try {
+    if (id) localStorage.setItem(TENANT_STORAGE_KEY, id)
+    else localStorage.removeItem(TENANT_STORAGE_KEY)
+  } catch {
+    // storage unavailable — ignore
+  }
+}
+
+/** fetch wrapper injecting the active tenant header for dev tenant switching */
+function apiFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+  const tenantId = getActiveTenantId()
+  if (!tenantId) return fetch(input, init)
+  const headers = new Headers(init.headers)
+  if (!headers.has('X-Tenant-Id')) headers.set('X-Tenant-Id', tenantId)
+  return fetch(input, { ...init, headers })
+}
+
+export interface TenantSummary {
+  id: string
+  name: string
+  active: boolean
+}
+
+export async function fetchTenants(): Promise<TenantSummary[]> {
+  const res = await apiFetch(`${API_BASE}/tenants`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const data = await res.json()
+  return data.data
+}
+
+
 // ── Auth types ─────────────────────────────────────────
 
 export interface AuthUser {
@@ -39,7 +83,7 @@ function authHeaders(): Record<string, string> {
 }
 
 export async function googleLogin(idToken: string): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE}/auth/google`, {
+  const res = await apiFetch(`${API_BASE}/auth/google`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id_token: idToken }),
@@ -56,7 +100,7 @@ export async function googleLogin(idToken: string): Promise<AuthResponse> {
 export async function fetchMe(): Promise<AuthUser | null> {
   if (!_authToken) return null
   try {
-    const res = await fetch(`${API_BASE}/auth/me`, {
+    const res = await apiFetch(`${API_BASE}/auth/me`, {
       headers: authHeaders(),
     })
     if (!res.ok) return null
@@ -104,21 +148,21 @@ export async function fetchConversations(opts?: {
   if (opts?.kind) params.set('kind', opts.kind)
   if (opts?.status) params.set('status', opts.status)
   const url = `${API_BASE}/conversations${params.toString() ? '?' + params : ''}`
-  const res = await fetch(url)
+  const res = await apiFetch(url)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data = await res.json()
   return data.conversations
 }
 
 export async function fetchConversation(id: string): Promise<ConversationDetail> {
-  const res = await fetch(`${API_BASE}/conversations/${id}`)
+  const res = await apiFetch(`${API_BASE}/conversations/${id}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data = await res.json()
   return { ...data.conversation, messages: data.messages }
 }
 
 export async function renameConversation(id: string, title: string): Promise<Conversation> {
-  const res = await fetch(`${API_BASE}/conversations/${id}`, {
+  const res = await apiFetch(`${API_BASE}/conversations/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title }),
@@ -129,14 +173,14 @@ export async function renameConversation(id: string, title: string): Promise<Con
 }
 
 export async function archiveConversation(id: string): Promise<Conversation> {
-  const res = await fetch(`${API_BASE}/conversations/${id}/archive`, { method: 'POST' })
+  const res = await apiFetch(`${API_BASE}/conversations/${id}/archive`, { method: 'POST' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data = await res.json()
   return data.conversation
 }
 
 export async function deleteConversation(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/conversations/${id}`, { method: 'DELETE' })
+  const res = await apiFetch(`${API_BASE}/conversations/${id}`, { method: 'DELETE' })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
     throw new Error(data.error || `HTTP ${res.status}`)
@@ -182,7 +226,7 @@ export interface Stats {
 // ── Settings API ──────────────────────────────────────
 
 export async function fetchSettings(): Promise<Settings> {
-  const res = await fetch(`${API_BASE}/settings`)
+  const res = await apiFetch(`${API_BASE}/settings`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
@@ -195,7 +239,7 @@ export async function updateSettings(params: {
   channel_provider?: { channel: string; provider: string; config?: Record<string, unknown>; enabled?: boolean }
   remove_channel_provider?: string
 }): Promise<Settings> {
-  const res = await fetch(`${API_BASE}/settings`, {
+  const res = await apiFetch(`${API_BASE}/settings`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
@@ -208,13 +252,13 @@ export async function updateSettings(params: {
 }
 
 export async function regenerateApiKey(): Promise<{ api_key: string; message: string }> {
-  const res = await fetch(`${API_BASE}/settings/regenerate-api-key`, { method: 'POST' })
+  const res = await apiFetch(`${API_BASE}/settings/regenerate-api-key`, { method: 'POST' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
 
 export async function fetchStats(): Promise<Stats> {
-  const res = await fetch(`${API_BASE}/settings/stats`)
+  const res = await apiFetch(`${API_BASE}/settings/stats`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
@@ -253,14 +297,14 @@ export async function fetchDeliveries(opts?: {
   if (opts?.status) params.set('status', opts.status)
   if (opts?.limit) params.set('limit', String(opts.limit))
   const qs = params.toString()
-  const res = await fetch(`${API_BASE}/deliveries${qs ? `?${qs}` : ''}`)
+  const res = await apiFetch(`${API_BASE}/deliveries${qs ? `?${qs}` : ''}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
 }
 
 export async function fetchDeliveryStats(): Promise<DeliveryStats> {
-  const res = await fetch(`${API_BASE}/deliveries/stats`)
+  const res = await apiFetch(`${API_BASE}/deliveries/stats`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
@@ -332,7 +376,7 @@ export interface LogEntry {
 // ── Engine API ──────────────────────────────────────────
 
 export async function fetchEngine(): Promise<EngineData> {
-  const res = await fetch(`${API_BASE}/engine`)
+  const res = await apiFetch(`${API_BASE}/engine`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
@@ -356,14 +400,14 @@ export type FlowStatus = Flow['status']
 
 export async function fetchFlows(status?: FlowStatus): Promise<Flow[]> {
   const params = status ? `?status=${status}` : ''
-  const res = await fetch(`${API_BASE}/flows${params}`)
+  const res = await apiFetch(`${API_BASE}/flows${params}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
 }
 
 export async function exportFlow(id: string): Promise<Record<string, unknown>> {
-  const res = await fetch(`${API_BASE}/flows/${id}/export`)
+  const res = await apiFetch(`${API_BASE}/flows/${id}/export`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
@@ -374,7 +418,7 @@ export async function importFlow(data: {
   graph?: FlowGraph
   flow?: { name?: string; description?: string }
 }): Promise<Flow> {
-  const res = await fetch(`${API_BASE}/flows/import`, {
+  const res = await apiFetch(`${API_BASE}/flows/import`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -385,21 +429,21 @@ export async function importFlow(data: {
 }
 
 export async function activateFlow(id: string): Promise<Flow> {
-  const res = await fetch(`${API_BASE}/flows/${id}/activate`, { method: 'POST' })
+  const res = await apiFetch(`${API_BASE}/flows/${id}/activate`, { method: 'POST' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
 }
 
 export async function pauseFlow(id: string): Promise<Flow> {
-  const res = await fetch(`${API_BASE}/flows/${id}/pause`, { method: 'POST' })
+  const res = await apiFetch(`${API_BASE}/flows/${id}/pause`, { method: 'POST' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
 }
 
 export async function archiveFlow(id: string): Promise<Flow> {
-  const res = await fetch(`${API_BASE}/flows/${id}/archive`, { method: 'POST' })
+  const res = await apiFetch(`${API_BASE}/flows/${id}/archive`, { method: 'POST' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
@@ -415,7 +459,7 @@ export interface PreflightResult {
 }
 
 export async function preflightFlow(flowId: string): Promise<PreflightResult> {
-  const res = await fetch(`${API_BASE}/flows/${flowId}/preflight`, { method: 'POST' })
+  const res = await apiFetch(`${API_BASE}/flows/${flowId}/preflight`, { method: 'POST' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
@@ -482,7 +526,7 @@ export function streamChat(
     body.conversation_id = conversationId
   }
 
-  fetch(`${API_BASE}/chat`, {
+  apiFetch(`${API_BASE}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -604,14 +648,14 @@ export interface FlowGraphEdge {
 }
 
 export async function fetchFlow(id: string): Promise<Flow> {
-  const res = await fetch(`${API_BASE}/flows/${id}`)
+  const res = await apiFetch(`${API_BASE}/flows/${id}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
 }
 
 export async function fetchFlowVersions(flowId: string): Promise<FlowVersion[]> {
-  const res = await fetch(`${API_BASE}/flows/${flowId}/versions`)
+  const res = await apiFetch(`${API_BASE}/flows/${flowId}/versions`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
@@ -621,7 +665,7 @@ export async function fetchFlowVersion(
   flowId: string,
   versionNumber: number,
 ): Promise<FlowVersion> {
-  const res = await fetch(`${API_BASE}/flows/${flowId}/versions/${versionNumber}`)
+  const res = await apiFetch(`${API_BASE}/flows/${flowId}/versions/${versionNumber}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
@@ -655,7 +699,7 @@ export function simulateFlow(
   if (opts?.customer_id) body.customer_id = opts.customer_id
   if (opts?.context) body.context = opts.context
 
-  fetch(`${API_BASE}/flows/${flowId}/simulate`, {
+  apiFetch(`${API_BASE}/flows/${flowId}/simulate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -750,7 +794,7 @@ export async function fetchInstances(
   if (opts?.dry_run !== undefined) params.set('dry_run', String(opts.dry_run))
   if (opts?.limit) params.set('limit', String(opts.limit))
   const qs = params.toString()
-  const res = await fetch(`${API_BASE}/flows/${flowId}/instances${qs ? `?${qs}` : ''}`)
+  const res = await apiFetch(`${API_BASE}/flows/${flowId}/instances${qs ? `?${qs}` : ''}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
@@ -760,13 +804,13 @@ export async function fetchInstance(id: string): Promise<{
   data: FlowInstanceSummary
   steps: ExecutionStepData[]
 }> {
-  const res = await fetch(`${API_BASE}/instances/${id}`)
+  const res = await apiFetch(`${API_BASE}/instances/${id}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
 
 export async function fetchInstanceTimeline(id: string): Promise<ExecutionStepData[]> {
-  const res = await fetch(`${API_BASE}/instances/${id}/timeline`)
+  const res = await apiFetch(`${API_BASE}/instances/${id}/timeline`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
@@ -797,14 +841,14 @@ export async function fetchNodeAnalytics(
   const params = new URLSearchParams()
   if (opts?.version) params.set('version', String(opts.version))
   const qs = params.toString()
-  const res = await fetch(`${API_BASE}/flows/${flowId}/analytics/nodes${qs ? `?${qs}` : ''}`)
+  const res = await apiFetch(`${API_BASE}/flows/${flowId}/analytics/nodes${qs ? `?${qs}` : ''}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
 }
 
 export async function fetchFlowSummary(flowId: string): Promise<FlowSummaryStats> {
-  const res = await fetch(`${API_BASE}/flows/${flowId}/analytics/summary`)
+  const res = await apiFetch(`${API_BASE}/flows/${flowId}/analytics/summary`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.data
@@ -817,7 +861,7 @@ export async function updateFlowVersion(
   versionNumber: number,
   graph: FlowGraph,
 ): Promise<FlowVersion> {
-  const res = await fetch(`${API_BASE}/flows/${flowId}/versions/${versionNumber}`, {
+  const res = await apiFetch(`${API_BASE}/flows/${flowId}/versions/${versionNumber}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ graph }),
