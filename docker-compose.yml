@@ -1,0 +1,63 @@
+# One-command Kalcifer: `docker compose up` → API on http://localhost:4500
+#
+# Defaults are for local evaluation only — override SECRET_KEY_BASE and
+# AUTH_SESSION_SECRET (see .env.example) before exposing this anywhere.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: kalcifer
+      POSTGRES_PASSWORD: kalcifer
+      POSTGRES_DB: kalcifer
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kalcifer"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: ["bin/kalcifer", "eval", "Kalcifer.Release.migrate()"]
+    environment:
+      DATABASE_URL: ecto://kalcifer:kalcifer@postgres/kalcifer
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-local-eval-only-secret-key-base-0123456789abcdefghijklmnopqrstuv}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "4500:4500"
+    environment:
+      DATABASE_URL: ecto://kalcifer:kalcifer@postgres/kalcifer
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-local-eval-only-secret-key-base-0123456789abcdefghijklmnopqrstuv}
+      AUTH_SESSION_SECRET: ${AUTH_SESSION_SECRET:-local-eval-only-session-secret}
+      PHX_SERVER: "true"
+      PHX_HOST: ${PHX_HOST:-localhost}
+      PORT: "4500"
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:4500/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
