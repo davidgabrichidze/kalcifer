@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  ELIXIR_VERSION: '1.18'
+  OTP_VERSION: '28'
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: kalcifer_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Run tests
+        run: mix test
+        env:
+          MIX_ENV: test
+
+      - name: Build release tarball
+        run: |
+          mix release --overwrite
+          tar -czf kalcifer-${{ github.ref_name }}-linux-x86_64.tar.gz \
+            -C _build/prod/rel kalcifer
+        env:
+          MIX_ENV: prod
+
+      - name: Extract changelog entry
+        id: changelog
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            awk '/^## /{n++} n==1' CHANGELOG.md > release-notes.md
+          else
+            echo "Release ${{ github.ref_name }}" > release-notes.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          files: kalcifer-${{ github.ref_name }}-linux-x86_64.tar.gz
+          generate_release_notes: true
