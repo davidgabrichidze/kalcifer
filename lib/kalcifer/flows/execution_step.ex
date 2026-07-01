@@ -19,8 +19,8 @@ defmodule Kalcifer.Flows.ExecutionStep do
     field :input, :map
     field :output, :map
     field :error, :map
-    field :started_at, :utc_datetime
-    field :completed_at, :utc_datetime
+    field :started_at, :utc_datetime_usec
+    field :completed_at, :utc_datetime_usec
 
     belongs_to :instance, FlowInstance
 
@@ -28,7 +28,7 @@ defmodule Kalcifer.Flows.ExecutionStep do
   end
 
   def create_changeset(step, attrs) do
-    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    now = DateTime.utc_now()
 
     step
     |> cast(attrs, [:instance_id, :node_id, :node_type, :version_number, :input])
@@ -39,7 +39,7 @@ defmodule Kalcifer.Flows.ExecutionStep do
   end
 
   def complete_changeset(step, attrs \\ %{}) do
-    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    now = DateTime.utc_now()
 
     step
     |> cast(attrs, [:output, :error])
@@ -48,7 +48,7 @@ defmodule Kalcifer.Flows.ExecutionStep do
   end
 
   def fail_changeset(step, error) do
-    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    now = DateTime.utc_now()
 
     step
     |> change(status: "failed", error: error, completed_at: now)
