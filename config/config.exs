@@ -38,6 +38,10 @@ config :kalcifer, :rate_limits, %{
   default: {500, 60}
 }
 
+# Allow the x-tenant-id request header to select a tenant (dev frontend only).
+# Off by default and in prod; dev/test override to true.
+config :kalcifer, :allow_tenant_header, false
+
 # Provider simulators — simulated callback latency
 config :kalcifer, :simulators,
   base_latency_ms: 500,

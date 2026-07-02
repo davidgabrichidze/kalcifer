@@ -29,6 +29,9 @@ config :kalcifer, KalciferWeb.Endpoint,
 # Enable dev routes for dashboard
 config :kalcifer, dev_routes: true
 
+# Dev frontend selects tenant via x-tenant-id (unauthenticated)
+config :kalcifer, :allow_tenant_header, true
+
 # Dev channel providers — simulators emulate real provider callbacks
 config :kalcifer, :channel_providers, %{
   email: Kalcifer.Simulators.Email,

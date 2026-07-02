@@ -21,6 +21,9 @@ config :kalcifer, Oban, testing: :manual
 # Skip automatic recovery on boot — tests call RecoveryManager.recover() manually.
 config :kalcifer, skip_recovery: true
 
+# Tests exercise the dev tenant-header resolution path
+config :kalcifer, :allow_tenant_header, true
+
 # Simulators run with zero latency in tests
 config :kalcifer, :simulators, base_latency_ms: 0, jitter_ms: 0
 
