@@ -63,4 +63,39 @@ defmodule Kalcifer.Channels.DeliveryTest do
     changeset = Delivery.status_changeset(delivery, "invalid_status")
     refute changeset.valid?
   end
+
+  describe "terminal status protection" do
+    test "cannot transition out of a terminal status" do
+      for terminal <- ~w(delivered bounced failed) do
+        delivery = %Delivery{id: Ecto.UUID.generate(), status: terminal}
+
+        for target <- ~w(sent delivered bounced failed) -- [terminal] do
+          changeset = Delivery.status_changeset(delivery, target)
+          refute changeset.valid?, "#{terminal} -> #{target} should be rejected"
+        end
+      end
+    end
+
+    test "idempotent same-terminal-status write is allowed" do
+      delivery = %Delivery{id: Ecto.UUID.generate(), status: "delivered"}
+      assert Delivery.status_changeset(delivery, "delivered").valid?
+    end
+
+    test "a late delivered webhook cannot override a bounced delivery" do
+      tenant = insert(:tenant)
+      instance = insert(:flow_instance, tenant: tenant)
+
+      {:ok, delivery} =
+        Channels.create_delivery(%{
+          channel: "email",
+          recipient: %{"email" => "x@y.z"},
+          instance_id: instance.id,
+          tenant_id: tenant.id
+        })
+
+      {:ok, bounced} = Channels.update_delivery_status(delivery, "bounced", %{})
+      assert {:error, _changeset} = Channels.update_delivery_status(bounced, "delivered", %{})
+      assert Channels.get_delivery(delivery.id).status == "bounced"
+    end
+  end
 end
