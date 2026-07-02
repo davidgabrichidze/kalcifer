@@ -5,6 +5,7 @@ defmodule Kalcifer.Channels.Jobs.SendMessageJob do
 
   alias Kalcifer.Channels
   alias Kalcifer.Channels.ProviderRegistry
+  alias Kalcifer.Channels.ProviderResolver
   alias Kalcifer.Engine.CircuitBreaker
 
   # Matches the CircuitBreaker default cooldown so a snoozed job retries
@@ -32,7 +33,7 @@ defmodule Kalcifer.Channels.Jobs.SendMessageJob do
       "provider_opts" => provider_opts
     } = args
 
-    with {:ok, provider} <- lookup_provider(channel_atom),
+    with {:ok, provider} <- lookup_provider(channel_atom, args["provider"]),
          {:ok, delivery} <- fetch_delivery(delivery_id) do
       provider.send_message(channel_atom, recipient, message, provider_opts)
       |> handle_send_result(channel_atom, delivery, final?)
@@ -77,7 +78,18 @@ defmodule Kalcifer.Channels.Jobs.SendMessageJob do
 
   defp now, do: DateTime.utc_now() |> DateTime.truncate(:second)
 
-  defp lookup_provider(channel_atom) do
+  # Prefer the provider chosen at enqueue time (per-tenant); fall back to the
+  # global registry default when the delivery carries no provider name.
+  defp lookup_provider(channel_atom, nil), do: registry_provider(channel_atom)
+
+  defp lookup_provider(channel_atom, name) do
+    case ProviderResolver.module_for(name) do
+      nil -> registry_provider(channel_atom)
+      module -> {:ok, module}
+    end
+  end
+
+  defp registry_provider(channel_atom) do
     case ProviderRegistry.lookup(channel_atom) do
       {:ok, provider} -> {:ok, provider}
       :error -> {:error, {:no_provider, channel_atom}}

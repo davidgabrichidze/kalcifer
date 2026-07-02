@@ -3,33 +3,34 @@ defmodule Kalcifer.Channels.ChannelSender do
 
   alias Kalcifer.Channels
   alias Kalcifer.Channels.Jobs.SendMessageJob
-  alias Kalcifer.Channels.ProviderRegistry
+  alias Kalcifer.Channels.ProviderResolver
 
   def send(channel, config, context) do
     recipient = build_recipient(context)
     message = build_message(config)
     tenant_id = context["_tenant_id"]
     instance_id = context["_instance_id"]
+    node_opts = Map.get(config, "provider_opts", %{})
 
-    case ProviderRegistry.lookup(channel) do
-      {:ok, _provider} ->
+    case ProviderResolver.resolve(channel, tenant_id, node_opts) do
+      {:ok, resolution} ->
         {:ok, delivery} =
           Channels.create_delivery(%{
             channel: Atom.to_string(channel),
             recipient: recipient,
             message: message,
+            provider: resolution.provider_name,
             instance_id: instance_id,
             tenant_id: tenant_id
           })
-
-        provider_opts = Map.get(config, "provider_opts", %{})
 
         SendMessageJob.new(%{
           delivery_id: delivery.id,
           channel: Atom.to_string(channel),
           recipient: recipient,
           message: message,
-          provider_opts: provider_opts
+          provider: resolution.provider_name,
+          provider_opts: resolution.provider_opts
         })
         |> Oban.insert()
 

@@ -47,6 +47,14 @@ config :kalcifer, :simulators,
   base_latency_ms: 500,
   jitter_ms: 1_000
 
+# Provider name (from tenant settings) → module, for per-tenant selection
+config :kalcifer, :provider_modules, %{
+  "log" => Kalcifer.Channels.Providers.LogProvider,
+  "webhook" => Kalcifer.Channels.Providers.WebhookProvider,
+  "sendgrid" => Kalcifer.Channels.Providers.SendgridProvider,
+  "twilio" => Kalcifer.Channels.Providers.TwilioProvider
+}
+
 # Channel providers — channel atom → provider module
 config :kalcifer, :channel_providers, %{
   email: Kalcifer.Channels.Providers.LogProvider,
