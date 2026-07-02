@@ -38,6 +38,11 @@ config :kalcifer, :rate_limits, %{
   default: {500, 60}
 }
 
+# Provider simulators — simulated callback latency
+config :kalcifer, :simulators,
+  base_latency_ms: 500,
+  jitter_ms: 1_000
+
 # Channel providers — channel atom → provider module
 config :kalcifer, :channel_providers, %{
   email: Kalcifer.Channels.Providers.LogProvider,

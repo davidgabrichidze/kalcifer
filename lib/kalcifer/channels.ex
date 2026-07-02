@@ -20,6 +20,19 @@ defmodule Kalcifer.Channels do
     Repo.get(Delivery, id)
   end
 
+  def get_delivery_by_provider_message_id(provider_message_id) do
+    Repo.get_by(Delivery, provider_message_id: provider_message_id)
+  end
+
+  @doc "Appends an engagement event (open, click, read, reply, seen...) to a delivery."
+  def append_delivery_event(delivery, event) when is_map(event) do
+    stamped = Map.put_new(event, "at", DateTime.utc_now() |> DateTime.to_iso8601())
+
+    delivery
+    |> Ecto.Changeset.change(events: delivery.events ++ [stamped])
+    |> Repo.update()
+  end
+
   import Ecto.Query
 
   @doc "List deliveries for a flow's instances, newest first."

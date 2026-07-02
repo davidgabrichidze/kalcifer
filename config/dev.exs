@@ -29,6 +29,16 @@ config :kalcifer, KalciferWeb.Endpoint,
 # Enable dev routes for dashboard
 config :kalcifer, dev_routes: true
 
+# Dev channel providers — simulators emulate real provider callbacks
+config :kalcifer, :channel_providers, %{
+  email: Kalcifer.Simulators.Email,
+  sms: Kalcifer.Channels.Providers.LogProvider,
+  push: Kalcifer.Channels.Providers.LogProvider,
+  whatsapp: Kalcifer.Channels.Providers.LogProvider,
+  in_app: Kalcifer.Channels.Providers.LogProvider,
+  webhook: Kalcifer.Channels.Providers.WebhookProvider
+}
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"
 
