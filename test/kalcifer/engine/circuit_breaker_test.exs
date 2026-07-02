@@ -104,6 +104,25 @@ defmodule Kalcifer.Engine.CircuitBreakerTest do
     assert CircuitBreaker.status(cb, :email) == :open
   end
 
+  test "half-open admits only one probe per cooldown window", %{cb: cb} do
+    Enum.each(1..5, fn _ -> CircuitBreaker.record_failure(cb, :email) end)
+    Process.sleep(60)
+
+    # First caller past cooldown becomes the probe...
+    assert CircuitBreaker.allow?(cb, :email) == true
+    assert CircuitBreaker.status(cb, :email) == :half_open
+
+    # ...concurrent callers are rejected while the probe is outstanding,
+    # so a still-down provider isn't hit by a thundering herd.
+    assert CircuitBreaker.allow?(cb, :email) == false
+    assert CircuitBreaker.allow?(cb, :email) == false
+
+    # After another cooldown with no resolution, a fresh probe is admitted
+    # (the circuit doesn't wedge shut if the probe never reports back).
+    Process.sleep(60)
+    assert CircuitBreaker.allow?(cb, :email) == true
+  end
+
   test "reset returns circuit to closed state", %{cb: cb} do
     Enum.each(1..5, fn _ ->
       CircuitBreaker.record_failure(cb, :email)
