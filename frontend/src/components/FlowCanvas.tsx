@@ -158,7 +158,7 @@ function FlowCanvasInner({
         type: (data.type as string) || '',
         label: (data.label as string) || '',
         description: (data.description as string) || '',
-        config: {},
+        config: (data.config as Record<string, unknown>) || {},
       })
     },
     [onNodeSelect],

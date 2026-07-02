@@ -142,6 +142,9 @@ export function convertGraphToReactFlow(
         type: gn.type,
         description: summarizeNodeConfig(gn),
         configDetail: '',
+        // Carry the node's config so the config panel can read/edit it and
+        // the reverse conversion can persist edits (see convertReactFlowToGraph).
+        config: gn.config || {},
       },
     } as Node
   })
@@ -258,7 +261,12 @@ export function convertReactFlowToGraph(
   const nodes: FlowGraphNode[] = rfNodes
     .filter(n => n.type !== 'groupNode')
     .map(n => {
-      const config = { ...(configMap.get(n.id) || {}) }
+      const nodeData = n.data as Record<string, unknown>
+      // Prefer the (possibly edited) config carried on the node; fall back to
+      // the original graph for nodes that never entered the editor's data.
+      const config = {
+        ...((nodeData.config as Record<string, unknown>) ?? configMap.get(n.id) ?? {}),
+      }
       const editor = { ...((config._editor as Record<string, unknown>) || {}) }
 
       if (n.parentId && groupLabels.has(n.parentId)) {
