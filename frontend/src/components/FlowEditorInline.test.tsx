@@ -46,7 +46,7 @@ vi.mock('../lib/useFlowSocket', () => ({
 
 // Mock FlowCanvas
 vi.mock('./FlowCanvas', () => ({
-  default: ({ flowGraph }: any) => (
+  default: ({ flowGraph }: { flowGraph: { nodes: unknown[] } | null }) => (
     <div data-testid="flow-canvas">
       {flowGraph ? `${flowGraph.nodes.length} nodes` : 'no graph'}
     </div>

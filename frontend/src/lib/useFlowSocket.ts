@@ -35,7 +35,9 @@ export function useFlowSocket({ flowId, enabled = true, onEvent }: UseFlowSocket
   const [failedNodes, setFailedNodes] = useState<Set<string>>(new Set())
 
   const onEventRef = useRef(onEvent)
-  onEventRef.current = onEvent
+  useEffect(() => {
+    onEventRef.current = onEvent
+  }, [onEvent])
 
   const processEvent = useCallback((type: string, msg: { payload: Record<string, unknown>; timestamp: string }) => {
     const event: FlowEvent = { type, payload: msg.payload, timestamp: msg.timestamp }

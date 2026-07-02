@@ -80,8 +80,8 @@ export default function EnginePage() {
       const updated = await updateSettings({ ai_model: model })
       setSettings(updated)
       toast('მოდელი შეიცვალა', 'ok')
-    } catch (e: any) {
-      toast(e.message, 'err')
+    } catch (e) {
+      toast((e instanceof Error ? e.message : String(e)), 'err')
     } finally {
       setSaving(false)
     }
@@ -93,8 +93,8 @@ export default function EnginePage() {
       const updated = await updateSettings({ provider_key: { provider, key } })
       setSettings(updated)
       toast(`${provider} დაკავშირდა`, 'ok')
-    } catch (e: any) {
-      toast(e.message, 'err')
+    } catch (e) {
+      toast((e instanceof Error ? e.message : String(e)), 'err')
     } finally {
       setSaving(false)
     }
@@ -106,8 +106,8 @@ export default function EnginePage() {
       const updated = await updateSettings({ remove_provider_key: provider })
       setSettings(updated)
       toast(`${provider} გათიშულია`, 'ok')
-    } catch (e: any) {
-      toast(e.message, 'err')
+    } catch (e) {
+      toast((e instanceof Error ? e.message : String(e)), 'err')
     } finally {
       setSaving(false)
     }
@@ -183,8 +183,8 @@ export default function EnginePage() {
                 })
                 setSettings(updated)
                 setMessage({ text: `${channel} → ${provider}`, type: 'ok' })
-              } catch (e: any) {
-                setMessage({ text: e.message, type: 'err' })
+              } catch (e) {
+                setMessage({ text: (e instanceof Error ? e.message : String(e)), type: 'err' })
               } finally {
                 setSaving(false)
               }
@@ -453,8 +453,8 @@ function ApiKeySection() {
     try {
       const result = await regenerateApiKey()
       setNewKey(result.api_key)
-    } catch (e: any) {
-      alert('შეცდომა: ' + e.message)
+    } catch (e) {
+      alert('შეცდომა: ' + (e instanceof Error ? e.message : String(e)))
     } finally {
       setRegenerating(false)
     }

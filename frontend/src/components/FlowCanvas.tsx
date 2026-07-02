@@ -151,7 +151,7 @@ function FlowCanvasInner({
   )
 
   const handleNodeClick = useCallback(
-    (_: any, node: Node) => {
+    (_: React.MouseEvent, node: Node) => {
       if (node.type === 'groupNode') return
       const data = node.data as Record<string, unknown>
       onNodeSelect?.(node.id, {
