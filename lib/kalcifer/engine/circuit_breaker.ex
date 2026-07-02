@@ -44,20 +44,32 @@ defmodule Kalcifer.Engine.CircuitBreaker do
   def handle_call({:allow?, channel}, _from, state) do
     circuit = Map.get(state.circuits, channel, default_circuit())
 
+    now = System.monotonic_time(:millisecond)
+
     {result, circuit} =
       case circuit.state do
         :closed ->
           {true, circuit}
 
         :open ->
-          if cooldown_elapsed?(circuit, state.cooldown_ms) do
-            {true, %{circuit | state: :half_open}}
+          if now - circuit.opened_at >= state.cooldown_ms do
+            # First caller past cooldown becomes the probe.
+            {true, %{circuit | state: :half_open, probe_at: now}}
           else
             {false, circuit}
           end
 
         :half_open ->
-          {true, circuit}
+          # Admit only one probe per cooldown window: concurrent callers are
+          # rejected until the probe resolves (success → closed, failure →
+          # open) so a still-down provider isn't hit by a thundering herd.
+          # If the probe never reports back, a fresh one is allowed after the
+          # next window rather than wedging the circuit shut forever.
+          if now - circuit.probe_at >= state.cooldown_ms do
+            {true, %{circuit | probe_at: now}}
+          else
+            {false, circuit}
+          end
       end
 
     circuits = Map.put(state.circuits, channel, circuit)
@@ -112,13 +124,7 @@ defmodule Kalcifer.Engine.CircuitBreaker do
     {:noreply, %{state | circuits: circuits}}
   end
 
-  defp cooldown_elapsed?(circuit, cooldown_ms) do
-    now = System.monotonic_time(:millisecond)
-    elapsed = now - circuit.opened_at
-    elapsed >= cooldown_ms
-  end
-
   defp default_circuit do
-    %{state: :closed, failure_count: 0, opened_at: nil}
+    %{state: :closed, failure_count: 0, opened_at: nil, probe_at: nil}
   end
 end
