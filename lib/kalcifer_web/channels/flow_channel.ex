@@ -8,11 +8,14 @@ defmodule KalciferWeb.FlowChannel do
 
   use Phoenix.Channel
 
+  alias KalciferWeb.Presence
+
   @impl true
-  def join("flow:" <> flow_id, _params, socket) do
+  def join("flow:" <> flow_id, params, socket) do
     if authorized?(socket, flow_id) do
       Phoenix.PubSub.subscribe(Kalcifer.PubSub, "flow:#{flow_id}")
-      {:ok, socket}
+      send(self(), :after_join)
+      {:ok, assign(socket, :operator, operator_meta(params))}
     else
       {:error, %{reason: "unauthorized"}}
     end
@@ -36,8 +39,21 @@ defmodule KalciferWeb.FlowChannel do
     end
   end
 
-  # Forward PubSub events to connected clients
   @impl true
+  def handle_info(:after_join, socket) do
+    %{id: id, name: name} = socket.assigns.operator
+
+    {:ok, _ref} =
+      Presence.track(socket, id, %{
+        name: name,
+        online_at: DateTime.utc_now() |> DateTime.to_iso8601()
+      })
+
+    push(socket, "presence_state", Presence.list(socket))
+    {:noreply, socket}
+  end
+
+  # Forward PubSub events to connected clients
   def handle_info(%{type: type, payload: payload} = msg, socket) do
     timestamp = Map.get(msg, :timestamp, DateTime.utc_now())
 
@@ -50,6 +66,13 @@ defmodule KalciferWeb.FlowChannel do
   end
 
   def handle_info(_msg, socket), do: {:noreply, socket}
+
+  defp operator_meta(params) do
+    %{
+      id: params["operator_id"] || "op-" <> Ecto.UUID.generate(),
+      name: params["operator_name"] || "Operator"
+    }
+  end
 
   defp authorized?(socket, flow_id) do
     case Kalcifer.Flows.get_flow(flow_id) do

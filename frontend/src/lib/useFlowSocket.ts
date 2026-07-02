@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Socket, Channel } from 'phoenix'
+import { Channel, Presence, Socket } from 'phoenix'
 
 export interface FlowEvent {
   type: string
@@ -28,6 +28,7 @@ export function useFlowSocket({ flowId, enabled = true, onEvent }: UseFlowSocket
   const socketRef = useRef<Socket | null>(null)
   const channelRef = useRef<Channel | null>(null)
   const [connected, setConnected] = useState(false)
+  const [operators, setOperators] = useState<Array<{ id: string; name: string }>>([])
   const [activeInstances, setActiveInstances] = useState<Set<string>>(new Set())
   const [completedNodes, setCompletedNodes] = useState<Map<string, Set<string>>>(new Map())
   const [activeNodes, setActiveNodes] = useState<Map<string, string | null>>(new Map())
@@ -114,14 +115,28 @@ export function useFlowSocket({ flowId, enabled = true, onEvent }: UseFlowSocket
 
     // Connect socket
     const socket = new Socket(SOCKET_URL, {
-      params: { token: 'demo-dev-key' },
+      params: { api_key: 'demo-dev-key' },
     })
     socket.connect()
     socketRef.current = socket
 
-    // Join flow channel
-    const channel = socket.channel(`flow:${flowId}`, {})
+    // Join flow channel with a per-tab operator identity for presence
+    const operatorId = `op-${Math.random().toString(36).slice(2, 10)}`
+    const channel = socket.channel(`flow:${flowId}`, {
+      operator_id: operatorId,
+      operator_name: 'Operator',
+    })
     channelRef.current = channel
+
+    // Track who else is viewing this flow
+    const presence = new Presence(channel)
+    presence.onSync(() => {
+      const list = presence.list((id, entry) => ({
+        id,
+        name: entry.metas[0]?.name || 'Operator',
+      }))
+      setOperators(list)
+    })
 
     // Listen for all engine events
     const eventTypes = [
@@ -150,6 +165,7 @@ export function useFlowSocket({ flowId, enabled = true, onEvent }: UseFlowSocket
       channel.leave()
       socket.disconnect()
       setConnected(false)
+      setOperators([])
     }
   }, [flowId, enabled, processEvent])
 
@@ -162,6 +178,7 @@ export function useFlowSocket({ flowId, enabled = true, onEvent }: UseFlowSocket
 
   return {
     connected,
+    operators,
     activeInstances,
     completedNodes,
     activeNodes,

@@ -54,6 +54,7 @@ export default function FlowEditorPage() {
   // Live mode — WebSocket connection
   const {
     connected: liveConnected,
+    operators: liveOperators,
     activeInstances: liveActiveInstances,
     completedNodes: liveCompletedNodes,
     activeNodes: liveActiveNodes,
@@ -477,7 +478,7 @@ export default function FlowEditorPage() {
               ? simStatus === 'running' ? 'Simulating...' : simStatus === 'done' ? 'Done' : simStatus === 'failed' ? 'Failed' : 'Ready'
               : mode === 'live'
                 ? liveConnected
-                  ? `Live ${liveActiveInstances.size > 0 ? `(${liveActiveInstances.size} active)` : '(idle)'}`
+                  ? `Live ${liveActiveInstances.size > 0 ? `(${liveActiveInstances.size} active)` : '(idle)'}${liveOperators.length > 1 ? ` · ${liveOperators.length} operators` : ''}`
                   : 'Connecting...'
                 : 'Ready'}
           </div>
