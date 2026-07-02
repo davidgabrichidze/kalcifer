@@ -1224,4 +1224,95 @@ defmodule Kalcifer.AI.ToolsTest do
       assert msg =~ "Internal error executing create_flow"
     end
   end
+
+  describe "tenant isolation on single-resource tools" do
+    setup %{tenant: tenant} do
+      other = insert(:tenant)
+
+      other_flow =
+        insert(:flow, tenant: other, name: "Other Tenant Flow", status: "active")
+
+      insert(:flow_version,
+        flow: other_flow,
+        version_number: 1,
+        status: "published",
+        graph: %{
+          "nodes" => [%{"id" => "n1", "type" => "wait", "config" => %{"duration" => "1d"}}],
+          "edges" => []
+        }
+      )
+
+      other_instance = insert(:flow_instance, flow: other_flow, tenant: other)
+
+      %{tenant: tenant, other_flow: other_flow, other_instance: other_instance}
+    end
+
+    test "get_flow refuses another tenant's flow", ctx do
+      assert {:error, msg} =
+               Tools.execute("get_flow", %{"flow_id" => ctx.other_flow.id}, ctx.tenant.id)
+
+      assert msg =~ "not found"
+    end
+
+    test "get_flow_graph refuses another tenant's flow", ctx do
+      assert {:error, msg} =
+               Tools.execute("get_flow_graph", %{"flow_id" => ctx.other_flow.id}, ctx.tenant.id)
+
+      assert msg =~ "not found"
+    end
+
+    test "analyze_flow refuses another tenant's flow", ctx do
+      assert {:error, msg} =
+               Tools.execute("analyze_flow", %{"flow_id" => ctx.other_flow.id}, ctx.tenant.id)
+
+      assert msg =~ "not found"
+    end
+
+    test "modify_node refuses to mutate another tenant's flow", ctx do
+      assert {:error, msg} =
+               Tools.execute(
+                 "modify_node",
+                 %{"flow_id" => ctx.other_flow.id, "node_id" => "n1", "config" => %{"x" => 1}},
+                 ctx.tenant.id
+               )
+
+      assert msg =~ "not found"
+    end
+
+    test "remove_node refuses to mutate another tenant's flow", ctx do
+      assert {:error, msg} =
+               Tools.execute(
+                 "remove_node",
+                 %{"flow_id" => ctx.other_flow.id, "node_id" => "n1"},
+                 ctx.tenant.id
+               )
+
+      assert msg =~ "not found"
+    end
+
+    test "add_node refuses to mutate another tenant's flow", ctx do
+      assert {:error, msg} =
+               Tools.execute(
+                 "add_node",
+                 %{
+                   "flow_id" => ctx.other_flow.id,
+                   "node" => %{"id" => "x", "type" => "exit", "config" => %{}}
+                 },
+                 ctx.tenant.id
+               )
+
+      assert msg =~ "not found"
+    end
+
+    test "debug_instance refuses another tenant's instance", ctx do
+      assert {:error, msg} =
+               Tools.execute(
+                 "debug_instance",
+                 %{"instance_id" => ctx.other_instance.id},
+                 ctx.tenant.id
+               )
+
+      assert msg =~ "not found"
+    end
+  end
 end

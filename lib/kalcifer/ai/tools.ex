@@ -611,8 +611,8 @@ defmodule Kalcifer.AI.Tools do
     {:ok, Jason.encode!(result, pretty: true)}
   end
 
-  defp do_execute("get_flow", %{"flow_id" => flow_id}, _tenant_id, _ctx) do
-    case Flows.get_flow(flow_id) do
+  defp do_execute("get_flow", %{"flow_id" => flow_id}, tenant_id, _ctx) do
+    case fetch_tenant_flow(flow_id, tenant_id) do
       nil ->
         {:error, "Flow not found: #{flow_id}"}
 
@@ -689,11 +689,11 @@ defmodule Kalcifer.AI.Tools do
     end
   end
 
-  defp do_execute("get_flow_graph", input, _tenant_id, _ctx) do
+  defp do_execute("get_flow_graph", input, tenant_id, _ctx) do
     flow_id = Map.fetch!(input, "flow_id")
     version_number = Map.get(input, "version_number")
 
-    with {:flow, flow} when not is_nil(flow) <- {:flow, Flows.get_flow(flow_id)},
+    with {:flow, flow} when not is_nil(flow) <- {:flow, fetch_tenant_flow(flow_id, tenant_id)},
          {:version, version} when not is_nil(version) <-
            {:version, resolve_version(flow, version_number)} do
       graph = version.graph || %{"nodes" => [], "edges" => []}
@@ -715,12 +715,12 @@ defmodule Kalcifer.AI.Tools do
     end
   end
 
-  defp do_execute("add_node", input, _tenant_id, _ctx) do
+  defp do_execute("add_node", input, tenant_id, _ctx) do
     flow_id = Map.fetch!(input, "flow_id")
     new_node = Map.fetch!(input, "node")
     new_edges = Map.get(input, "edges", [])
 
-    with {:flow, flow} when not is_nil(flow) <- {:flow, Flows.get_flow(flow_id)},
+    with {:flow, flow} when not is_nil(flow) <- {:flow, fetch_tenant_flow(flow_id, tenant_id)},
          {:version, version} when not is_nil(version) <-
            {:version, get_or_create_draft_version(flow)} do
       graph = version.graph || %{"nodes" => [], "edges" => []}
@@ -786,12 +786,12 @@ defmodule Kalcifer.AI.Tools do
     end
   end
 
-  defp do_execute("modify_node", input, _tenant_id, _ctx) do
+  defp do_execute("modify_node", input, tenant_id, _ctx) do
     flow_id = Map.fetch!(input, "flow_id")
     node_id = Map.fetch!(input, "node_id")
     new_config = Map.fetch!(input, "config")
 
-    with {:flow, flow} when not is_nil(flow) <- {:flow, Flows.get_flow(flow_id)},
+    with {:flow, flow} when not is_nil(flow) <- {:flow, fetch_tenant_flow(flow_id, tenant_id)},
          {:version, version} when not is_nil(version) <-
            {:version, get_or_create_draft_version(flow)} do
       graph = version.graph || %{"nodes" => [], "edges" => []}
@@ -827,11 +827,11 @@ defmodule Kalcifer.AI.Tools do
     end
   end
 
-  defp do_execute("remove_node", input, _tenant_id, _ctx) do
+  defp do_execute("remove_node", input, tenant_id, _ctx) do
     flow_id = Map.fetch!(input, "flow_id")
     node_id = Map.fetch!(input, "node_id")
 
-    with {:flow, flow} when not is_nil(flow) <- {:flow, Flows.get_flow(flow_id)},
+    with {:flow, flow} when not is_nil(flow) <- {:flow, fetch_tenant_flow(flow_id, tenant_id)},
          {:version, version} when not is_nil(version) <-
            {:version, get_or_create_draft_version(flow)} do
       graph = version.graph || %{"nodes" => [], "edges" => []}
@@ -871,10 +871,10 @@ defmodule Kalcifer.AI.Tools do
     end
   end
 
-  defp do_execute("analyze_flow", input, _tenant_id, _ctx) do
+  defp do_execute("analyze_flow", input, tenant_id, _ctx) do
     flow_id = Map.fetch!(input, "flow_id")
 
-    with {:flow, flow} when not is_nil(flow) <- {:flow, Flows.get_flow(flow_id)},
+    with {:flow, flow} when not is_nil(flow) <- {:flow, fetch_tenant_flow(flow_id, tenant_id)},
          {:version, version} when not is_nil(version) <- {:version, resolve_version(flow, nil)} do
       graph = version.graph || %{"nodes" => [], "edges" => []}
       nodes = Map.get(graph, "nodes", [])
@@ -943,12 +943,15 @@ defmodule Kalcifer.AI.Tools do
     end
   end
 
-  defp do_execute("debug_instance", input, _tenant_id, _ctx) do
+  defp do_execute("debug_instance", input, tenant_id, _ctx) do
     instance_id = Map.fetch!(input, "instance_id")
 
     alias Kalcifer.Engine.Persistence.{InstanceStore, StepStore}
 
     case InstanceStore.get_instance(instance_id) do
+      %{tenant_id: instance_tenant} when instance_tenant != tenant_id ->
+        {:error, "Instance not found: #{instance_id}"}
+
       nil ->
         {:error, "Instance not found: #{instance_id}"}
 
@@ -1130,6 +1133,15 @@ defmodule Kalcifer.AI.Tools do
          |> List.first() do
       nil -> nil
       version -> version.graph
+    end
+  end
+
+  # Fetches a flow only when it belongs to the acting tenant, so single-resource
+  # tools can never read or mutate another tenant's flow via a raw UUID.
+  defp fetch_tenant_flow(flow_id, tenant_id) do
+    case Flows.get_flow(flow_id) do
+      %{tenant_id: ^tenant_id} = flow -> flow
+      _ -> nil
     end
   end
 
