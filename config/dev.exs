@@ -35,6 +35,9 @@ config :kalcifer, :allow_tenant_header, true
 # Session signing secret for local dev (override in prod via AUTH_SESSION_SECRET)
 config :kalcifer, :auth_session_secret, "dev-only-session-secret-not-for-production"
 
+# Allow webhooks to loopback/private hosts for local testing
+config :kalcifer, :allow_private_webhooks, true
+
 # Dev channel providers — simulators emulate real provider callbacks
 config :kalcifer, :channel_providers, %{
   email: Kalcifer.Simulators.Email,

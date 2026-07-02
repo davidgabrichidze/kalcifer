@@ -27,6 +27,9 @@ config :kalcifer, :allow_tenant_header, true
 # Session signing secret for the test suite
 config :kalcifer, :auth_session_secret, "test-session-secret"
 
+# Private-webhook guard is toggled per-test; default off matches prod
+config :kalcifer, :allow_private_webhooks, false
+
 # Simulators run with zero latency in tests
 config :kalcifer, :simulators, base_latency_ms: 0, jitter_ms: 0
 

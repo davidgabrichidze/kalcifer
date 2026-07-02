@@ -3,26 +3,32 @@ defmodule Kalcifer.Channels.Providers.WebhookProvider do
 
   @behaviour Kalcifer.Channels.Provider
 
+  alias Kalcifer.Channels.UrlGuard
+
   @impl true
   def send_message(_channel, recipient, message, opts) do
     url = opts["url"] || recipient["webhook_url"]
 
-    if url do
-      payload = %{recipient: recipient, message: message, timestamp: DateTime.utc_now()}
-      headers = build_headers(payload, opts)
+    cond do
+      is_nil(url) -> {:error, :missing_webhook_url}
+      UrlGuard.validate(url) != :ok -> {:error, :blocked_url}
+      true -> post(url, recipient, message, opts)
+    end
+  end
 
-      case Req.post(url, json: payload, headers: headers, receive_timeout: 15_000) do
-        {:ok, %{status: status}} when status in 200..299 ->
-          {:ok, Ecto.UUID.generate()}
+  defp post(url, recipient, message, opts) do
+    payload = %{recipient: recipient, message: message, timestamp: DateTime.utc_now()}
+    headers = build_headers(payload, opts)
 
-        {:ok, %{status: status, body: body}} ->
-          {:error, {:http_error, status, body}}
+    case Req.post(url, json: payload, headers: headers, receive_timeout: 15_000) do
+      {:ok, %{status: status}} when status in 200..299 ->
+        {:ok, Ecto.UUID.generate()}
 
-        {:error, reason} ->
-          {:error, reason}
-      end
-    else
-      {:error, :missing_webhook_url}
+      {:ok, %{status: status, body: body}} ->
+        {:error, {:http_error, status, body}}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
