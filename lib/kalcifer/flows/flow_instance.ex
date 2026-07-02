@@ -37,6 +37,7 @@ defmodule Kalcifer.Flows.FlowInstance do
     field :entered_at, :utc_datetime
     field :completed_at, :utc_datetime
     field :exited_at, :utc_datetime
+    field :failed_at, :utc_datetime
     field :exit_reason, :string
     field :dry_run, :boolean, default: false
     field :migrated_from_version, :integer
@@ -66,11 +67,26 @@ defmodule Kalcifer.Flows.FlowInstance do
 
   def status_changeset(instance, new_status, attrs \\ %{}) do
     instance
-    |> cast(attrs, [:completed_at, :exited_at, :exit_reason, :current_nodes, :context])
+    |> cast(attrs, [:completed_at, :exited_at, :failed_at, :exit_reason, :current_nodes, :context])
     |> put_change(:status, new_status)
+    |> maybe_stamp_failed_at(instance, new_status)
     |> validate_inclusion(:status, @statuses)
     |> validate_transition(instance.status, new_status)
   end
+
+  # Stamp failed_at once, on the transition into "failed", unless the caller
+  # supplied one. Analytics attributes failures by this timestamp, so it must
+  # not drift when the row is later touched.
+  defp maybe_stamp_failed_at(changeset, %{status: "failed"}, "failed"), do: changeset
+
+  defp maybe_stamp_failed_at(changeset, _instance, "failed") do
+    case get_change(changeset, :failed_at) do
+      nil -> put_change(changeset, :failed_at, DateTime.utc_now() |> DateTime.truncate(:second))
+      _ -> changeset
+    end
+  end
+
+  defp maybe_stamp_failed_at(changeset, _instance, _new_status), do: changeset
 
   # Same-status "transition" is a no-op (e.g. update_current_nodes while running)
   defp validate_transition(changeset, same, same), do: changeset

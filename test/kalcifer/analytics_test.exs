@@ -5,6 +5,31 @@ defmodule Kalcifer.AnalyticsTest do
 
   alias Kalcifer.Analytics
 
+  describe "recompute_date/1" do
+    test "attributes a failed instance by failed_at, not updated_at" do
+      flow = insert(:flow)
+      failed_day = ~D[2026-06-01]
+      drift_day = ~D[2026-06-10]
+
+      # A failed instance whose row was touched again later (recovery sweep,
+      # migration) so updated_at has drifted past the actual failure date.
+      insert(:flow_instance,
+        flow: flow,
+        version_number: 1,
+        status: "failed",
+        failed_at: ~U[2026-06-01 12:00:00Z],
+        inserted_at: ~U[2026-06-01 12:00:00Z],
+        updated_at: ~U[2026-06-10 09:00:00Z]
+      )
+
+      Analytics.recompute_date(failed_day)
+      Analytics.recompute_date(drift_day)
+
+      assert Analytics.flow_summary(flow.id, Date.range(failed_day, failed_day)).failed == 1
+      assert Analytics.flow_summary(flow.id, Date.range(drift_day, drift_day)).failed == 0
+    end
+  end
+
   describe "flow stats" do
     test "upsert_flow_stats creates new record" do
       flow = insert(:flow)
