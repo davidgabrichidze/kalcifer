@@ -31,7 +31,7 @@ defmodule Kalcifer.AI.Providers.Google do
   def build_body(messages, opts) do
     system_text = Keyword.get(opts, :system, "")
 
-    contents = Enum.map(messages, &convert_message/1)
+    contents = convert_messages(messages)
 
     body = %{contents: contents}
 
@@ -49,47 +49,64 @@ defmodule Kalcifer.AI.Providers.Google do
     Map.put(body, :generationConfig, generation_config)
   end
 
-  defp convert_message(%{role: "assistant", content: content}) when is_binary(content) do
-    %{role: "model", parts: [%{text: content}]}
+  # Stateful conversion: Gemini correlates a functionResponse to its
+  # functionCall by tool NAME, but the Anthropic-format tool_result blocks
+  # only carry tool_use_id. Thread a tool_use_id -> name map (built from the
+  # preceding assistant turn's tool_use blocks) so each response uses the
+  # real name instead of a placeholder.
+  defp convert_messages(messages) do
+    {contents, _names} =
+      Enum.reduce(messages, {[], %{}}, fn msg, {acc, names} ->
+        {content, names} = convert_message(msg, names)
+        {[content | acc], names}
+      end)
+
+    Enum.reverse(contents)
   end
 
-  defp convert_message(%{role: "user", content: content}) when is_binary(content) do
-    %{role: "user", parts: [%{text: content}]}
+  defp convert_message(%{role: "assistant", content: content}, names) when is_binary(content) do
+    {%{role: "model", parts: [%{text: content}]}, names}
   end
 
-  defp convert_message(%{role: "assistant", content: blocks}) when is_list(blocks) do
+  defp convert_message(%{role: "user", content: content}, names) when is_binary(content) do
+    {%{role: "user", parts: [%{text: content}]}, names}
+  end
+
+  defp convert_message(%{role: "assistant", content: blocks}, names) when is_list(blocks) do
+    {parts, names} =
+      Enum.reduce(blocks, {[], names}, fn
+        %{"type" => "text", "text" => text}, {parts, n} ->
+          {[%{text: text} | parts], n}
+
+        %{"type" => "tool_use", "name" => name, "input" => args} = block, {parts, n} ->
+          n = if id = block["id"], do: Map.put(n, id, name), else: n
+          {[%{functionCall: %{name: name, args: args}} | parts], n}
+
+        _, acc ->
+          acc
+      end)
+
+    {%{role: "model", parts: Enum.reverse(parts)}, names}
+  end
+
+  defp convert_message(%{role: "user", content: blocks}, names) when is_list(blocks) do
     parts =
       Enum.flat_map(blocks, fn
         %{"type" => "text", "text" => text} ->
           [%{text: text}]
 
-        %{"type" => "tool_use", "name" => name, "input" => args} ->
-          [%{functionCall: %{name: name, args: args}}]
+        %{"type" => "tool_result", "content" => content} = block ->
+          name = Map.get(names, block["tool_use_id"], "tool")
+          [%{functionResponse: %{name: name, response: %{result: content}}}]
 
         _ ->
           []
       end)
 
-    %{role: "model", parts: parts}
+    {%{role: "user", parts: parts}, names}
   end
 
-  defp convert_message(%{role: "user", content: blocks}) when is_list(blocks) do
-    parts =
-      Enum.flat_map(blocks, fn
-        %{"type" => "text", "text" => text} ->
-          [%{text: text}]
-
-        %{"type" => "tool_result", "content" => content, "tool_use_id" => _id} ->
-          [%{functionResponse: %{name: "tool", response: %{result: content}}}]
-
-        _ ->
-          []
-      end)
-
-    %{role: "user", parts: parts}
-  end
-
-  defp convert_message(msg), do: msg
+  defp convert_message(msg, names), do: {msg, names}
 
   def extract_text(%{"candidates" => [%{"content" => %{"parts" => parts}} | _]}) do
     text =
