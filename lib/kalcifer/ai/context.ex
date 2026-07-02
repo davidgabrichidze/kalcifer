@@ -9,8 +9,8 @@ defmodule Kalcifer.AI.Context do
 
   import Ecto.Query
 
-  alias Kalcifer.Repo
   alias Kalcifer.AI.{Conversation, ConversationMessage, Memory}
+  alias Kalcifer.Repo
 
   # ── Conversations ─────────────────────────────────────────────
 
@@ -118,6 +118,21 @@ defmodule Kalcifer.AI.Context do
     |> Enum.map(fn msg ->
       %{role: msg.role, content: msg.content}
     end)
+  end
+
+  @doc """
+  Most recent messages (chronological order) formatted for the Claude API,
+  capped to the last `limit`. Used to bound the history re-sent each turn so
+  a long conversation can't outgrow the model's context window.
+  """
+  def recent_api_messages(conversation_id, limit \\ 100) do
+    ConversationMessage
+    |> where([m], m.conversation_id == ^conversation_id)
+    |> order_by([m], desc: m.inserted_at)
+    |> limit(^limit)
+    |> Repo.all()
+    |> Enum.reverse()
+    |> Enum.map(fn msg -> %{role: msg.role, content: msg.content} end)
   end
 
   # ── Memory ────────────────────────────────────────────────────

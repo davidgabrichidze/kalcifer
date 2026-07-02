@@ -248,22 +248,19 @@ defmodule KalciferWeb.ChatController do
     {conv.id, []}
   end
 
+  # Cap the history re-sent to the model each turn so a long-running
+  # conversation can't grow past the context window (which would 400 every
+  # subsequent request and brick the conversation).
+  @history_limit 100
+
   defp resolve_conversation(tenant_id, conversation_id) do
-    case Context.get_conversation_with_messages(conversation_id) do
+    case Context.get_conversation(tenant_id, conversation_id) do
       nil ->
+        # Missing or another tenant's conversation — start a fresh one.
         resolve_conversation(tenant_id, nil)
 
-      %{tenant_id: ^tenant_id} = conv ->
-        history =
-          Enum.map(conv.messages, fn msg ->
-            %{role: msg.role, content: msg.content}
-          end)
-
-        {conv.id, history}
-
-      _wrong_tenant ->
-        # Conversation belongs to different tenant — create new
-        resolve_conversation(tenant_id, nil)
+      conv ->
+        {conv.id, Context.recent_api_messages(conv.id, @history_limit)}
     end
   end
 

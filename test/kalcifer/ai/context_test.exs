@@ -7,6 +7,28 @@ defmodule Kalcifer.AI.ContextTest do
 
   # ── Conversations ──────────────────────────────────────────
 
+  describe "recent_api_messages/2" do
+    test "returns only the most recent messages, in chronological order" do
+      tenant = insert(:tenant)
+      {:ok, conv} = Context.create_conversation(tenant.id)
+      base = ~U[2026-01-01 00:00:00Z]
+
+      for i <- 1..5 do
+        insert(:conversation_message,
+          conversation: conv,
+          role: "user",
+          content: "m#{i}",
+          inserted_at: DateTime.add(base, i, :second)
+        )
+      end
+
+      msgs = Context.recent_api_messages(conv.id, 3)
+
+      assert Enum.map(msgs, & &1.content) == ["m3", "m4", "m5"]
+      assert Enum.all?(msgs, &(&1.role == "user"))
+    end
+  end
+
   describe "create_conversation/2" do
     test "creates a conversation for a tenant" do
       tenant = insert(:tenant)
