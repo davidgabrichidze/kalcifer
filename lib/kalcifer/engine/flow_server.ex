@@ -174,34 +174,52 @@ defmodule Kalcifer.Engine.FlowServer do
 
   # --- Execution loop ---
 
-  defp execute_nodes(state, []) do
+  defp execute_nodes(state, queue), do: execute_nodes(state, queue, [])
+
+  defp execute_nodes(state, [], _executed) do
     state
   end
 
-  defp execute_nodes(state, [node_id | rest]) do
-    if state.node_execution_count >= @max_node_executions do
-      Logger.error("max node executions reached (#{@max_node_executions}), stopping flow")
-      state = %{state | status: :failed}
-      InstanceStore.fail_instance(get_instance(state), "max_node_executions_exceeded")
-      state
-    else
-      node = GraphWalker.find_node(state.graph, node_id)
-      state = %{state | node_execution_count: state.node_execution_count + 1}
+  defp execute_nodes(state, [node_id | rest], executed) do
+    cond do
+      state.node_execution_count >= @max_node_executions ->
+        Logger.error("max node executions reached (#{@max_node_executions}), stopping flow")
+        state = %{state | status: :failed}
+        InstanceStore.fail_instance(get_instance(state), "max_node_executions_exceeded")
+        state
 
-      case execute_single_node(state, node) do
-        {:continue, %{status: :completed} = state, _next_node_ids} ->
-          state
+      # Reconverging paths (diamond graphs) enqueue a join node once per
+      # inbound branch — execute it only the first time it is dequeued so
+      # downstream nodes don't fire twice.
+      node_id in executed ->
+        execute_nodes(state, rest, executed)
 
-        {:continue, state, next_node_ids} ->
-          execute_nodes(state, rest ++ next_node_ids)
+      true ->
+        node = GraphWalker.find_node(state.graph, node_id)
+        state = %{state | node_execution_count: state.node_execution_count + 1}
+        executed = [node_id | executed]
 
-        {:waiting, state} ->
-          execute_nodes(state, rest)
+        case execute_single_node(state, node) do
+          {:continue, %{status: :completed} = state, _next_node_ids} ->
+            state
 
-        {:failed, state} ->
-          state
-      end
+          {:continue, state, next_node_ids} ->
+            execute_nodes(state, enqueue(rest, next_node_ids, executed), executed)
+
+          {:waiting, state} ->
+            execute_nodes(state, rest, executed)
+
+          {:failed, state} ->
+            state
+        end
     end
+  end
+
+  # Appends successors to the work queue without duplicating a node already
+  # queued or already executed in this run.
+  defp enqueue(queue, next_ids, executed) do
+    fresh = Enum.reject(next_ids, &(&1 in queue or &1 in executed))
+    queue ++ fresh
   end
 
   defp execute_single_node(state, node) do
@@ -214,7 +232,7 @@ defmodule Kalcifer.Engine.FlowServer do
         EventBroadcaster.broadcast_node_executed(state, node, result)
         state = accumulate_context(state, node["id"], result)
         next = resolve_next_nodes(state.graph, node, nil)
-        handle_next(state, next)
+        handle_next(state, node["id"], next)
 
       {:branched, branch_key, result} ->
         StepStore.record_step_complete(step, result)
@@ -222,7 +240,7 @@ defmodule Kalcifer.Engine.FlowServer do
         EventBroadcaster.broadcast_node_executed(state, node, result)
         state = accumulate_context(state, node["id"], result)
         next = resolve_next_nodes(state.graph, node, branch_key)
-        handle_next(state, next)
+        handle_next(state, node["id"], next)
 
       {:waiting, wait_config} ->
         StepStore.record_step_complete(step, wait_config)
@@ -269,7 +287,7 @@ defmodule Kalcifer.Engine.FlowServer do
     end
   end
 
-  defp handle_next(state, []) do
+  defp handle_next(state, _node_id, []) do
     state = %{state | current_nodes: [], status: :completed}
     InstanceStore.complete_instance(get_instance(state))
     Logger.info("flow instance completed")
@@ -278,10 +296,13 @@ defmodule Kalcifer.Engine.FlowServer do
     {:continue, state, []}
   end
 
-  defp handle_next(state, next_nodes) do
+  defp handle_next(state, node_id, next_nodes) do
     next_ids = Enum.map(next_nodes, & &1["id"])
-    all_current = Enum.uniq(state.current_nodes ++ next_ids)
-    state = %{state | current_nodes: all_current}
+    # current_nodes is the live frontier: drop the node that just executed
+    # and add its successors, so it reflects where the instance actually is
+    # (not its full history) — migration safety checks depend on this.
+    frontier = Enum.uniq((state.current_nodes -- [node_id]) ++ next_ids)
+    state = %{state | current_nodes: frontier}
     persist_current_state(state)
     {:continue, state, next_ids}
   end

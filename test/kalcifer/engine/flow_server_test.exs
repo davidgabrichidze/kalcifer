@@ -582,4 +582,44 @@ defmodule Kalcifer.Engine.FlowServerTest do
       ]
     }
   end
+
+  describe "reconverging graph (diamond)" do
+    # entry -> {a, b} -> join -> exit  (join has two inbound edges)
+    defp diamond_graph do
+      %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{"event_type" => "go"}},
+          %{"id" => "branch_a", "type" => "add_tag", "config" => %{"tag" => "a"}},
+          %{"id" => "branch_b", "type" => "add_tag", "config" => %{"tag" => "b"}},
+          %{"id" => "join_1", "type" => "add_tag", "config" => %{"tag" => "joined"}},
+          %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "branch_a"},
+          %{"id" => "e2", "source" => "entry_1", "target" => "branch_b"},
+          %{"id" => "e3", "source" => "branch_a", "target" => "join_1"},
+          %{"id" => "e4", "source" => "branch_b", "target" => "join_1"},
+          %{"id" => "e5", "source" => "join_1", "target" => "exit_1"}
+        ]
+      }
+    end
+
+    test "the join node and downstream execute exactly once" do
+      {pid, ref, args} = start_server(diamond_graph())
+      assert :ok = wait_for_completion(pid, ref)
+
+      steps =
+        Repo.all(
+          from s in ExecutionStep,
+            where: s.instance_id == ^args.instance_id,
+            select: s.node_id
+        )
+
+      counts = Enum.frequencies(steps)
+      assert counts["join_1"] == 1, "join node executed #{counts["join_1"]} times, expected 1"
+      assert counts["exit_1"] == 1
+      assert counts["branch_a"] == 1
+      assert counts["branch_b"] == 1
+    end
+  end
 end
