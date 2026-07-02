@@ -54,4 +54,26 @@ defmodule KalciferWeb.FlowChannelTest do
     assert {:error, %{reason: "unauthorized"}} =
              subscribe_and_join(socket, "flow:#{other_flow.id}", %{})
   end
+
+  describe "instance topic authorization" do
+    test "joins own tenant's instance", %{socket: socket, tenant: tenant} do
+      flow = insert(:flow, tenant: tenant)
+      instance = insert(:flow_instance, flow: flow, tenant: tenant)
+
+      assert {:ok, _reply, _socket} =
+               subscribe_and_join(socket, "instance:#{instance.id}", %{})
+    end
+
+    test "rejects another tenant's instance", %{socket: socket} do
+      other_instance = insert(:flow_instance, tenant: insert(:tenant))
+
+      assert {:error, %{reason: "unauthorized"}} =
+               subscribe_and_join(socket, "instance:#{other_instance.id}", %{})
+    end
+
+    test "rejects an unknown instance id", %{socket: socket} do
+      assert {:error, %{reason: "unauthorized"}} =
+               subscribe_and_join(socket, "instance:#{Ecto.UUID.generate()}", %{})
+    end
+  end
 end

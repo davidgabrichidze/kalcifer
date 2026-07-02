@@ -15,6 +15,7 @@ defmodule Kalcifer.Application do
       {Oban, Application.fetch_env!(:kalcifer, Oban)},
       Kalcifer.Engine.Supervisor,
       Kalcifer.Simulators.Engine,
+      KalciferWeb.Plugs.RateLimiter.Sweeper,
       KalciferWeb.Endpoint
     ]
 
