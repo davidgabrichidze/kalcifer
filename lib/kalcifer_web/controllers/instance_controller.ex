@@ -115,11 +115,23 @@ defmodule KalciferWeb.InstanceController do
 
   defp maybe_filter_customer(query, _), do: query
 
-  defp maybe_limit(query, %{"limit" => limit}) do
-    from(i in query, limit: ^limit)
+  @default_limit 50
+  @max_limit 200
+
+  defp maybe_limit(query, %{"limit" => limit}) when is_binary(limit) do
+    case Integer.parse(limit) do
+      {n, _} -> from(i in query, limit: ^clamp_limit(n))
+      :error -> from(i in query, limit: ^@default_limit)
+    end
   end
 
-  defp maybe_limit(query, _), do: from(i in query, limit: 50)
+  defp maybe_limit(query, %{"limit" => limit}) when is_integer(limit) do
+    from(i in query, limit: ^clamp_limit(limit))
+  end
+
+  defp maybe_limit(query, _), do: from(i in query, limit: ^@default_limit)
+
+  defp clamp_limit(n), do: n |> max(1) |> min(@max_limit)
 
   defp serialize_instance(instance) do
     %{

@@ -29,6 +29,14 @@ defmodule KalciferWeb.InstanceBrowseControllerTest do
       assert %{"data" => []} = json_response(conn, 200)
     end
 
+    test "tolerates a bad or out-of-range limit param", %{conn: conn, flow: flow} do
+      # Non-numeric, negative, and huge limits must not 500 or scan unbounded.
+      for limit <- ["abc", "-5", "999999"] do
+        conn = get(conn, "/api/v1/flows/#{flow.id}/instances?limit=#{limit}")
+        assert %{"data" => _} = json_response(conn, 200)
+      end
+    end
+
     test "returns instances for flow", %{conn: conn, flow: flow, tenant: tenant} do
       {:ok, instance} =
         InstanceStore.create_instance(%{
