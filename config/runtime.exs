@@ -7,8 +7,11 @@ end
 config :kalcifer, KalciferWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4500"))]
 
-# Auth session token signing
-config :kalcifer, :auth_session_secret, System.get_env("AUTH_SESSION_SECRET")
+# Auth session token signing — only override when provided, so the
+# dev/test compile-time defaults survive when the env var is unset.
+if secret = System.get_env("AUTH_SESSION_SECRET") do
+  config :kalcifer, :auth_session_secret, secret
+end
 
 # AI — reads from .env or system env
 config :kalcifer, Kalcifer.AI.Client, api_key: System.get_env("ANTHROPIC_API_KEY", "")

@@ -93,29 +93,27 @@ defmodule KalciferWeb.AuthController do
   # ── Token verification ────────────────────────────────────
 
   defp verify_google_token(id_token) do
-    # Use Google's tokeninfo endpoint for simple verification
-    url = "#{@google_token_info_url}?id_token=#{URI.encode_www_form(id_token)}"
+    # Req verifies the server's TLS certificate by default — critical here,
+    # since an unverified response could forge email_verified/sub/email and
+    # let an on-path attacker mint a session for any account.
+    case Req.get(@google_token_info_url,
+           params: [id_token: id_token],
+           receive_timeout: 10_000
+         ) do
+      {:ok, %{status: 200, body: %{"email_verified" => verified} = claims}}
+      when verified in [true, "true"] ->
+        {:ok,
+         %{
+           "sub" => claims["sub"],
+           "email" => claims["email"],
+           "name" => claims["name"] || claims["email"],
+           "picture" => claims["picture"]
+         }}
 
-    case :httpc.request(:get, {String.to_charlist(url), []}, [], []) do
-      {:ok, {{_, 200, _}, _headers, body}} ->
-        case Jason.decode(to_string(body)) do
-          {:ok, %{"email_verified" => "true"} = claims} ->
-            {:ok,
-             %{
-               "sub" => claims["sub"],
-               "email" => claims["email"],
-               "name" => claims["name"] || claims["email"],
-               "picture" => claims["picture"]
-             }}
+      {:ok, %{status: 200}} ->
+        {:error, "Email not verified"}
 
-          {:ok, _} ->
-            {:error, "Email not verified"}
-
-          {:error, _} ->
-            {:error, "Invalid token response"}
-        end
-
-      {:ok, {{_, status, _}, _, _}} ->
+      {:ok, %{status: status}} ->
         {:error, "Google returned #{status}"}
 
       {:error, reason} ->
@@ -145,7 +143,7 @@ defmodule KalciferWeb.AuthController do
       [user_id, timestamp_str, signature] ->
         payload = "#{user_id}.#{timestamp_str}"
 
-        if sign(payload) == signature do
+        if Plug.Crypto.secure_compare(sign(payload), signature) do
           case Integer.parse(timestamp_str) do
             {timestamp, _} ->
               now = System.system_time(:second)
@@ -170,10 +168,20 @@ defmodule KalciferWeb.AuthController do
   end
 
   defp sign(payload) do
-    secret =
-      Application.get_env(:kalcifer, :auth_session_secret, "kalcifer-dev-secret-change-in-prod")
-
-    :crypto.mac(:hmac, :sha256, secret, payload)
+    :crypto.mac(:hmac, :sha256, session_secret(), payload)
     |> Base.url_encode64(padding: false)
+  end
+
+  # A fixed literal fallback would make every unconfigured deployment share a
+  # public signing key, so tokens would be trivially forgeable. Fail loudly
+  # instead; dev/test set the secret in config.
+  defp session_secret do
+    case Application.get_env(:kalcifer, :auth_session_secret) do
+      secret when is_binary(secret) and secret != "" ->
+        secret
+
+      _ ->
+        raise "auth_session_secret is not configured (set AUTH_SESSION_SECRET)"
+    end
   end
 end
