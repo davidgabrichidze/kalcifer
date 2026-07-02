@@ -38,6 +38,19 @@ config :kalcifer, :auth_session_secret, "dev-only-session-secret-not-for-product
 # Allow webhooks to loopback/private hosts for local testing
 config :kalcifer, :allow_private_webhooks, true
 
+# Named providers can point at simulators in dev
+config :kalcifer, :provider_modules, %{
+  "log" => Kalcifer.Channels.Providers.LogProvider,
+  "webhook" => Kalcifer.Channels.Providers.WebhookProvider,
+  "sendgrid" => Kalcifer.Channels.Providers.SendgridProvider,
+  "twilio" => Kalcifer.Channels.Providers.TwilioProvider,
+  "email_sim" => Kalcifer.Simulators.Email,
+  "sms_sim" => Kalcifer.Simulators.Sms,
+  "push_sim" => Kalcifer.Simulators.Push,
+  "whatsapp_sim" => Kalcifer.Simulators.Whatsapp,
+  "in_app_sim" => Kalcifer.Simulators.InApp
+}
+
 # Dev channel providers — simulators emulate real provider callbacks
 config :kalcifer, :channel_providers, %{
   email: Kalcifer.Simulators.Email,
