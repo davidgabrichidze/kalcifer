@@ -91,14 +91,21 @@ defmodule KalciferWeb.InstanceBrowseController do
 
   defp maybe_filter_dry_run(query, _), do: query
 
+  @default_limit 50
+  @max_limit 200
+
   defp maybe_limit(query, %{"limit" => limit}) when is_binary(limit) do
     case Integer.parse(limit) do
-      {n, _} -> from(i in query, limit: ^n)
-      :error -> from(i in query, limit: 50)
+      {n, _} -> from(i in query, limit: ^clamp_limit(n))
+      :error -> from(i in query, limit: ^@default_limit)
     end
   end
 
-  defp maybe_limit(query, _), do: from(i in query, limit: 50)
+  defp maybe_limit(query, _), do: from(i in query, limit: ^@default_limit)
+
+  # Keep the limit sane: a negative value makes Postgres error (500) and an
+  # unbounded value lets a caller scan the whole table.
+  defp clamp_limit(n), do: n |> max(1) |> min(@max_limit)
 
   defp serialize_instance(instance) do
     %{
