@@ -28,25 +28,27 @@ defmodule Kalcifer.Simulators do
   @doc "Generates a simulator provider message id."
   def message_id, do: "sim_" <> Ecto.UUID.generate()
 
-  @doc "Schedules every step of a plan against the delivery's provider message id."
-  def schedule_plan(provider_message_id, steps) do
-    Enum.each(steps, fn step ->
-      Engine.schedule(step.after_ms, fn -> apply_step(provider_message_id, step) end)
-    end)
+  @doc """
+  Schedules a plan against the delivery's provider message id. Steps are
+  chained — the next step is only scheduled after the previous one has
+  applied — so callback order is guaranteed even at zero latency.
+  `after_ms` is therefore relative to the previous step.
+  """
+  def schedule_plan(_provider_message_id, []), do: :ok
 
+  def schedule_plan(provider_message_id, [step | rest]) do
+    Engine.schedule(step.after_ms, fn -> run_step(provider_message_id, step, rest) end)
     :ok
   end
 
-  @doc """
-  Applies one plan step: status transition and/or engagement event.
-  The delivery row is created and marked "sent" by SendMessageJob after
-  the provider returns, so lookup retries briefly to avoid the race.
-  """
-  def apply_step(provider_message_id, step, retries \\ @lookup_retries) do
+  # Applies one plan step: status transition and/or engagement event.
+  # The delivery row is created and marked "sent" by SendMessageJob after
+  # the provider returns, so lookup retries briefly to avoid the race.
+  defp run_step(provider_message_id, step, rest, retries \\ @lookup_retries) do
     case Channels.get_delivery_by_provider_message_id(provider_message_id) do
       nil when retries > 0 ->
         Engine.schedule(@lookup_retry_ms, fn ->
-          apply_step(provider_message_id, step, retries - 1)
+          run_step(provider_message_id, step, rest, retries - 1)
         end)
 
         :ok
@@ -57,7 +59,7 @@ defmodule Kalcifer.Simulators do
       delivery ->
         delivery = maybe_transition(delivery, step[:status])
         maybe_event(delivery, step[:event])
-        :ok
+        schedule_plan(provider_message_id, rest)
     end
   end
 
