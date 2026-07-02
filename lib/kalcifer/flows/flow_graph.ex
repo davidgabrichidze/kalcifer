@@ -75,13 +75,46 @@ defmodule Kalcifer.Flows.FlowGraph do
   end
 
   defp validate_node_config(node, registry) do
-    with {:ok, module} <- registry.lookup(node["type"]),
-         {:error, reasons} <- module.validate(node["config"] || %{}) do
-      Enum.map(reasons, &"node #{node["id"]} (#{node["type"]}): #{&1}")
+    case registry.lookup(node["type"]) do
+      {:ok, module} ->
+        config = node["config"] || %{}
+        errors = required_config_errors(module, config) ++ custom_config_errors(module, config)
+        Enum.map(errors, &"node #{node["id"]} (#{node["type"]}): #{&1}")
+
+      _ ->
+        []
+    end
+  end
+
+  # Generic check against the node's config_schema: every field marked
+  # required must be present and non-empty. Catches nodes that do not
+  # implement a custom validate/1 (e.g. wait_for_event without an
+  # event_type would otherwise wait forever, un-resumable).
+  defp required_config_errors(module, config) do
+    if function_exported?(module, :config_schema, 0) do
+      do_required_config_errors(module, config)
     else
+      []
+    end
+  end
+
+  defp do_required_config_errors(module, config) do
+    module.config_schema()
+    |> Enum.filter(fn {_field, spec} -> spec["required"] == true end)
+    |> Enum.reject(fn {field, _spec} -> present?(config[field]) end)
+    |> Enum.map(fn {field, _spec} -> "missing required config field \"#{field}\"" end)
+  end
+
+  defp custom_config_errors(module, config) do
+    case module.validate(config) do
+      {:error, reasons} -> reasons
       _ -> []
     end
   end
+
+  defp present?(nil), do: false
+  defp present?(""), do: false
+  defp present?(_value), do: true
 
   @doc """
   Extracts context field names referenced by condition nodes in the graph.

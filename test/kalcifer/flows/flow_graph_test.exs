@@ -355,6 +355,36 @@ defmodule Kalcifer.Flows.FlowGraphTest do
       assert Enum.any?(errors, &String.contains?(&1, "missing required field"))
     end
 
+    test "flags missing required config_schema fields" do
+      graph = %{
+        "nodes" => [%{"id" => "w1", "type" => "wait_for_event", "config" => %{}}],
+        "edges" => []
+      }
+
+      registry = stub_registry(%{"wait_for_event" => __MODULE__.StubSchemaNode})
+
+      assert {:error, errors} = FlowGraph.analyze_config_completeness(graph, registry)
+
+      assert Enum.any?(
+               errors,
+               &String.contains?(&1, ~s(missing required config field "event_type"))
+             )
+
+      refute Enum.any?(errors, &String.contains?(&1, "timeout"))
+    end
+
+    test "accepts present required config_schema fields" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "w1", "type" => "wait_for_event", "config" => %{"event_type" => "purchase"}}
+        ],
+        "edges" => []
+      }
+
+      registry = stub_registry(%{"wait_for_event" => __MODULE__.StubSchemaNode})
+      assert :ok = FlowGraph.analyze_config_completeness(graph, registry)
+    end
+
     test "skips unknown node types gracefully" do
       graph = %{
         "nodes" => [
@@ -576,6 +606,17 @@ defmodule Kalcifer.Flows.FlowGraphTest do
 
   defmodule StubInvalidNode do
     def validate(_config), do: {:error, ["missing required field: template_id"]}
+  end
+
+  defmodule StubSchemaNode do
+    def validate(_config), do: :ok
+
+    def config_schema do
+      %{
+        "event_type" => %{"type" => "string", "required" => true},
+        "timeout" => %{"type" => "string"}
+      }
+    end
   end
 
   defp stub_registry(type_map) do

@@ -127,6 +127,27 @@ defmodule Kalcifer.Flows do
     Repo.get_by(FlowVersion, flow_id: flow_id, version_number: version_number)
   end
 
+  @doc """
+  Updates a version's graph/changelog. Draft versions are updated in
+  place; published versions are immutable snapshots, so editing one
+  produces a new draft version instead.
+  """
+  def update_version(%Flow{} = flow, version_number, attrs) do
+    case get_version(flow.id, version_number) do
+      nil ->
+        {:error, :version_not_found}
+
+      %FlowVersion{status: "draft"} = version ->
+        version
+        |> FlowVersion.update_changeset(attrs)
+        |> Repo.update()
+
+      %FlowVersion{} ->
+        attrs = Map.put_new(attrs, :changelog, "Edited from published v#{version_number}")
+        create_version(flow, attrs)
+    end
+  end
+
   def list_versions(flow_id) do
     FlowVersion
     |> where(flow_id: ^flow_id)
