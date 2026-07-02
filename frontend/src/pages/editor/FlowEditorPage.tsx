@@ -183,7 +183,9 @@ export default function FlowEditorPage() {
         latestEdgesRef.current,
         flowVersion.graph,
       )
-      await updateFlowVersion(flowId, flowVersion.version_number, graph)
+      // Published versions are immutable — the API may return a new draft
+      const saved = await updateFlowVersion(flowId, flowVersion.version_number, graph)
+      setFlowVersion(saved)
       setHasChanges(false)
     } catch (err) {
       console.error('Save failed:', err)

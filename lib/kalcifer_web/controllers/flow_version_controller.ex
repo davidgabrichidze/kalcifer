@@ -21,6 +21,17 @@ defmodule KalciferWeb.FlowVersionController do
     end
   end
 
+  def update(conn, %{"flow_id" => flow_id, "version_number" => version_number} = params) do
+    with {:ok, flow} <- fetch_tenant_flow(conn, flow_id),
+         {vn, ""} <- Integer.parse(version_number),
+         {:ok, version} <- Flows.update_version(flow, vn, version_params(params)) do
+      json(conn, %{data: serialize_version(version)})
+    else
+      :error -> {:error, :not_found}
+      error -> error
+    end
+  end
+
   def show(conn, %{"flow_id" => flow_id, "version_number" => version_number}) do
     with {:ok, _flow} <- fetch_tenant_flow(conn, flow_id),
          {vn, ""} <- Integer.parse(version_number),
