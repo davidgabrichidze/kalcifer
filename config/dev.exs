@@ -35,7 +35,7 @@ config :kalcifer, :channel_providers, %{
   sms: Kalcifer.Simulators.Sms,
   push: Kalcifer.Simulators.Push,
   whatsapp: Kalcifer.Simulators.Whatsapp,
-  in_app: Kalcifer.Channels.Providers.LogProvider,
+  in_app: Kalcifer.Simulators.InApp,
   webhook: Kalcifer.Channels.Providers.WebhookProvider
 }
 
