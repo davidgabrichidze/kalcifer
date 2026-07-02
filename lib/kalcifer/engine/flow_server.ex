@@ -142,6 +142,12 @@ defmodule Kalcifer.Engine.FlowServer do
         {:resume, node_id, trigger},
         %{status: :waiting, waiting_node_id: node_id} = state
       ) do
+    # Checkpoint before running post-wait nodes: flip the persisted row
+    # waiting -> running and drop the wait bookkeeping. A crash mid-resume is
+    # then recovered as crashed (at-most-once) instead of re-resuming the wait
+    # and repeating already-run side effects (e.g. a duplicate email).
+    state = checkpoint_resume(state)
+
     EventBroadcaster.broadcast_node_resumed(state, node_id)
     node = GraphWalker.find_node(state.graph, node_id)
     {:ok, step} = StepStore.record_step_start(state.instance_id, node, state.version_number)
@@ -333,6 +339,20 @@ defmodule Kalcifer.Engine.FlowServer do
     if instance do
       InstanceStore.update_current_nodes(instance, state.current_nodes)
     end
+  end
+
+  @waiting_meta_keys ~w(_waiting_node_id _waiting_node_type _resume_scheduled_at _waiting_event_type)
+
+  defp checkpoint_resume(state) do
+    context = Map.drop(state.context, @waiting_meta_keys)
+    state = %{state | status: :running, waiting_node_id: nil, context: context}
+
+    case get_instance(state) do
+      nil -> :ok
+      instance -> InstanceStore.mark_running(instance, context)
+    end
+
+    state
   end
 
   defp persist_waiting_state(state) do
