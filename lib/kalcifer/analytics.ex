@@ -204,8 +204,9 @@ defmodule Kalcifer.Analytics do
   Recomputes flow and node stats for a date from flow_instances and
   execution_steps, overwriting the counters (branch_counts are kept from
   live collection — branch keys are not persisted on steps). Dry-run
-  instances are excluded. Failed instances are attributed to the date
-  they were last updated, as instances carry no failed_at timestamp.
+  instances are excluded. Failed instances are attributed to their
+  failed_at date (falling back to updated_at for rows predating that
+  column).
   """
   def recompute_date(date) do
     flow_counts =
@@ -313,10 +314,12 @@ defmodule Kalcifer.Analytics do
   end
 
   defp instances_failed_on(date) do
+    # Prefer the stable failed_at stamp; fall back to updated_at only for rows
+    # that predate the column, so historical counts are preserved.
     from(i in FlowInstance,
       where:
         not i.dry_run and i.status == "failed" and
-          fragment("?::date", i.updated_at) == ^date,
+          fragment("COALESCE(?, ?)::date", i.failed_at, i.updated_at) == ^date,
       group_by: [i.flow_id, i.version_number],
       select: {{i.flow_id, i.version_number}, count(i.id)}
     )

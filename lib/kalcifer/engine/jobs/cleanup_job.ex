@@ -20,22 +20,23 @@ defmodule Kalcifer.Engine.Jobs.CleanupJob do
   end
 
   defp mark_stale_instances do
-    cutoff = DateTime.add(DateTime.utc_now(), -@stale_days, :day)
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    cutoff = DateTime.add(now, -@stale_days, :day)
 
     {running, _} =
       from(i in FlowInstance,
         where: i.status == "running",
         where: i.updated_at < ^cutoff
       )
-      |> Repo.update_all(set: [status: "failed", exit_reason: "stale_timeout"])
+      |> Repo.update_all(set: [status: "failed", exit_reason: "stale_timeout", failed_at: now])
 
-    running + reap_orphaned_waiters(cutoff)
+    running + reap_orphaned_waiters(cutoff, now)
   end
 
   # A "waiting" instance is only stuck if it has no pending resume job — a
   # long legitimate wait (e.g. "30d") keeps a scheduled job and is left alone.
   # This catches instances stranded by a wait node whose config left no timer.
-  defp reap_orphaned_waiters(cutoff) do
+  defp reap_orphaned_waiters(cutoff, now) do
     pending_states = ~w(scheduled available retryable executing)
 
     active_instance_ids =
@@ -51,7 +52,9 @@ defmodule Kalcifer.Engine.Jobs.CleanupJob do
         where: i.updated_at < ^cutoff,
         where: i.id not in ^active_instance_ids
       )
-      |> Repo.update_all(set: [status: "failed", exit_reason: "stale_no_resume_job"])
+      |> Repo.update_all(
+        set: [status: "failed", exit_reason: "stale_no_resume_job", failed_at: now]
+      )
 
     count
   end
