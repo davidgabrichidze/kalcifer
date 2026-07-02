@@ -65,6 +65,8 @@ defmodule KalciferWeb.Plugs.RateLimiter do
     end
   end
 
+  # The table is created and swept by RateLimiter.Sweeper; fall back to
+  # creating it here in case a request races startup.
   defp ensure_table do
     case :ets.whereis(:kalcifer_rate_limits) do
       :undefined ->

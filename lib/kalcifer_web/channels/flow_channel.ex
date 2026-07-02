@@ -31,7 +31,7 @@ defmodule KalciferWeb.FlowChannel do
   end
 
   def join("instance:" <> instance_id, _params, socket) do
-    if socket.assigns[:tenant_id] do
+    if instance_authorized?(socket, instance_id) do
       Phoenix.PubSub.subscribe(Kalcifer.PubSub, "instance:#{instance_id}")
       {:ok, socket}
     else
@@ -76,6 +76,15 @@ defmodule KalciferWeb.FlowChannel do
 
   defp authorized?(socket, flow_id) do
     case Kalcifer.Flows.get_flow(flow_id) do
+      %{tenant_id: tid} -> tid == socket.assigns.tenant_id
+      _ -> false
+    end
+  end
+
+  # Confirm the instance belongs to the socket's tenant — otherwise any
+  # tenant could subscribe to another's live engine events by instance id.
+  defp instance_authorized?(socket, instance_id) do
+    case Kalcifer.Engine.Persistence.InstanceStore.get_instance(instance_id) do
       %{tenant_id: tid} -> tid == socket.assigns.tenant_id
       _ -> false
     end
