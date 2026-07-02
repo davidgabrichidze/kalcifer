@@ -32,7 +32,7 @@ config :kalcifer, dev_routes: true
 # Dev channel providers — simulators emulate real provider callbacks
 config :kalcifer, :channel_providers, %{
   email: Kalcifer.Simulators.Email,
-  sms: Kalcifer.Channels.Providers.LogProvider,
+  sms: Kalcifer.Simulators.Sms,
   push: Kalcifer.Channels.Providers.LogProvider,
   whatsapp: Kalcifer.Channels.Providers.LogProvider,
   in_app: Kalcifer.Channels.Providers.LogProvider,
