@@ -21,6 +21,16 @@ defmodule Kalcifer.Engine.Nodes.Wait.Wait do
     {:failed, :unexpected_trigger}
   end
 
+  # Reject an unparseable duration at preflight so the instance can't strand
+  # in :waiting with no resume job ever scheduled.
+  @impl true
+  def validate(config) do
+    case Kalcifer.Engine.Duration.to_seconds(config["duration"]) do
+      {:ok, _seconds} -> :ok
+      _ -> {:error, ["duration must be a value like \"3d\", \"2h\", \"30m\""]}
+    end
+  end
+
   @impl true
   def config_schema do
     %{"duration" => %{"type" => "string", "required" => true}}

@@ -21,6 +21,17 @@ defmodule Kalcifer.Engine.Nodes.Wait.WaitTest do
     end
   end
 
+  describe "Wait.validate/1" do
+    test "accepts a parseable duration" do
+      assert :ok = Wait.validate(%{"duration" => "3d"})
+    end
+
+    test "rejects an unparseable duration (would strand the instance)" do
+      assert {:error, [_msg]} = Wait.validate(%{"duration" => "next week"})
+      assert {:error, [_msg]} = Wait.validate(%{"duration" => nil})
+    end
+  end
+
   describe "Wait.resume/3" do
     test "timer_expired returns completed" do
       assert {:completed, %{waited: true}} = Wait.resume(%{}, %{}, :timer_expired)
@@ -50,6 +61,17 @@ defmodule Kalcifer.Engine.Nodes.Wait.WaitTest do
       config = %{"datetime" => "2026-04-01T00:00:00Z"}
       assert {:completed, result} = WaitUntil.execute(config, %{"_dry_run" => true})
       assert result.dry_run == true
+    end
+  end
+
+  describe "WaitUntil.validate/1" do
+    test "accepts an ISO8601 datetime" do
+      assert :ok = WaitUntil.validate(%{"datetime" => "2026-01-01T00:00:00Z"})
+    end
+
+    test "rejects a non-ISO8601 datetime" do
+      assert {:error, [_msg]} = WaitUntil.validate(%{"datetime" => "next friday"})
+      assert {:error, [_msg]} = WaitUntil.validate(%{"datetime" => nil})
     end
   end
 

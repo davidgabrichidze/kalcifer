@@ -54,4 +54,42 @@ defmodule Kalcifer.Engine.Jobs.CleanupJobTest do
 
     assert Repo.get(FlowInstance, instance.id) == nil
   end
+
+  describe "orphaned waiters" do
+    import Ecto.Query
+
+    defp make_stale(instance) do
+      old = DateTime.add(DateTime.utc_now(), -10, :day) |> DateTime.truncate(:second)
+
+      Repo.update_all(
+        from(i in FlowInstance, where: i.id == ^instance.id),
+        set: [updated_at: old]
+      )
+    end
+
+    test "reaps a stale waiting instance with no pending resume job" do
+      instance = insert(:flow_instance, status: "waiting")
+      make_stale(instance)
+
+      assert {:ok, %{stale_marked: n}} = CleanupJob.perform(%Oban.Job{args: %{}})
+      assert n >= 1
+
+      reloaded = Repo.get(FlowInstance, instance.id)
+      assert reloaded.status == "failed"
+      assert reloaded.exit_reason == "stale_no_resume_job"
+    end
+
+    test "leaves a stale waiting instance that still has a pending resume job" do
+      instance = insert(:flow_instance, status: "waiting")
+      make_stale(instance)
+
+      {:ok, _job} =
+        %{"instance_id" => instance.id, "node_id" => "w1", "trigger" => "timer_expired"}
+        |> Kalcifer.Engine.Jobs.ResumeFlowJob.new(schedule_in: 3600)
+        |> Oban.insert()
+
+      assert {:ok, _} = CleanupJob.perform(%Oban.Job{args: %{}})
+      assert Repo.get(FlowInstance, instance.id).status == "waiting"
+    end
+  end
 end
