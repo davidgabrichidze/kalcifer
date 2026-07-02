@@ -6,8 +6,8 @@ declare global {
     google?: {
       accounts: {
         id: {
-          initialize: (config: any) => void
-          renderButton: (element: HTMLElement, config: any) => void
+          initialize: (config: Record<string, unknown>) => void
+          renderButton: (element: HTMLElement, config: Record<string, unknown>) => void
           prompt: () => void
         }
       }
@@ -35,8 +35,8 @@ export default function LoginButton({ onLogin, onError }: LoginButtonProps) {
         // Store user info
         localStorage.setItem('kalcifer_user', JSON.stringify(authResponse.user))
         onLogin(authResponse)
-      } catch (e: any) {
-        onError?.(e.message || 'Login failed')
+      } catch (e) {
+        onError?.(e instanceof Error ? e.message : 'Login failed')
       }
     },
     [onLogin, onError],

@@ -16,6 +16,7 @@ import {
   updateFlowVersion,
   preflightFlow,
   parseNodeWarnings,
+  type Flow,
   type FlowVersion,
   type SimulationStep,
   type FlowInstanceSummary,
@@ -41,7 +42,7 @@ interface FlowEditorInlineProps {
  */
 export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEditorInlineProps) {
   // Flow data
-  const [flow, setFlow] = useState<any>(null)
+  const [flow, setFlow] = useState<Flow | null>(null)
   const [flowVersion, setFlowVersion] = useState<FlowVersion | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

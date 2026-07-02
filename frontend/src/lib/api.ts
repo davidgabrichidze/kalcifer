@@ -547,6 +547,19 @@ export function streamChat(
   return controller
 }
 
+type SsePayload = {
+  conversation_id?: string
+  text?: string
+  tool?: string
+  input?: Record<string, unknown>
+  result?: string
+  instance_id?: string
+  node_id?: string
+  node_type?: string
+  status?: string
+  [key: string]: unknown
+}
+
 async function readSSEStream(
   response: Response,
   callbacks: ChatStreamCallbacks,
@@ -573,7 +586,7 @@ async function readSSEStream(
       if (line.startsWith('event: ')) {
         currentEvent = line.slice(7)
       } else if (line.startsWith('data: ')) {
-        let data: any
+        let data: SsePayload
         try {
           data = JSON.parse(line.slice(6))
         } catch {
@@ -582,34 +595,34 @@ async function readSSEStream(
         }
         switch (currentEvent) {
           case 'init':
-            callbacks.onInit?.(data.conversation_id)
+            callbacks.onInit?.(data.conversation_id ?? '')
             break
           case 'delta':
-            callbacks.onDelta(data.text)
+            callbacks.onDelta(data.text ?? '')
             break
           case 'tool_start':
-            callbacks.onToolStart?.(data.tool, data.input)
+            callbacks.onToolStart?.(data.tool ?? '', data.input ?? {})
             break
           case 'tool_done':
-            callbacks.onToolDone?.(data.tool, data.result)
+            callbacks.onToolDone?.(data.tool ?? '', data.result ?? '')
             break
           case 'session_classified':
-            callbacks.onSessionClassified?.(data)
+            callbacks.onSessionClassified?.(data as unknown as SessionClassification)
             break
           case 'activity_start':
-            callbacks.onActivityStart?.(data.instance_id)
+            callbacks.onActivityStart?.(data.instance_id ?? '')
             break
           case 'activity_step':
-            callbacks.onActivityStep?.(data.node_id, data.node_type, data.status)
+            callbacks.onActivityStep?.(data.node_id ?? '', data.node_type ?? '', data.status ?? '')
             break
           case 'activity_done':
-            callbacks.onActivityDone?.(data.status)
+            callbacks.onActivityDone?.(data.status ?? '')
             break
           case 'done':
-            callbacks.onDone(data.text)
+            callbacks.onDone(data.text ?? '')
             break
           case 'error':
-            callbacks.onError(data.message)
+            callbacks.onError(typeof data.message === 'string' ? data.message : 'error')
             break
         }
       }
@@ -750,7 +763,7 @@ async function readSimSSE(response: Response, callbacks: SimulationCallbacks): P
             callbacks.onDone(data)
             break
           case 'error':
-            callbacks.onError(data.message)
+            callbacks.onError(typeof data.message === 'string' ? data.message : 'error')
             break
         }
       }

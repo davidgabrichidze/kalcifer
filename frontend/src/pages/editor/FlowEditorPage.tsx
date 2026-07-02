@@ -6,7 +6,7 @@ import {
 } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { type Node, type Edge } from '@xyflow/react'
-import { fetchFlow, fetchFlowVersions, simulateFlow, updateFlowVersion, preflightFlow, parseNodeWarnings, type FlowVersion, type SimulationStep } from '../../lib/api'
+import { fetchFlow, fetchFlowVersions, simulateFlow, updateFlowVersion, preflightFlow, parseNodeWarnings, type Flow, type FlowVersion, type SimulationStep } from '../../lib/api'
 import FlowCanvas from '../../components/FlowCanvas'
 import { useFlowSocket } from '../../lib/useFlowSocket'
 import { NodePalette } from './NodePalette'
@@ -20,7 +20,7 @@ export default function FlowEditorPage() {
   const flowId = searchParams.get('flow') || ''
 
   // State
-  const [flow, setFlow] = useState<any>(null)
+  const [flow, setFlow] = useState<Flow | null>(null)
   const [flowVersion, setFlowVersion] = useState<FlowVersion | null>(null)
   const [_loading, setLoading] = useState(true)
   const [_error, setError] = useState<string | null>(null)
