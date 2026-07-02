@@ -120,4 +120,20 @@ defmodule KalciferWeb.ConversationControllerTest do
       assert statuses == ["active", "archived"]
     end
   end
+
+  describe "tenant isolation" do
+    test "show/update/archive/delete refuse another tenant's conversation", %{conn: conn} do
+      other = insert(:tenant, name: "Other Tenant")
+      {:ok, conv} = Context.create_conversation(other.id, %{title: "Secret"})
+
+      # No x-tenant-id header → resolves to Demo Tenant, so other's conv is invisible
+      assert json_response(get(conn, "/api/v1/conversations/#{conv.id}"), 404)
+      assert json_response(put(conn, "/api/v1/conversations/#{conv.id}", %{"title" => "x"}), 404)
+      assert json_response(post(conn, "/api/v1/conversations/#{conv.id}/archive"), 404)
+      assert json_response(delete(conn, "/api/v1/conversations/#{conv.id}"), 404)
+
+      # And it is untouched
+      assert Context.get_conversation(conv.id).title == "Secret"
+    end
+  end
 end

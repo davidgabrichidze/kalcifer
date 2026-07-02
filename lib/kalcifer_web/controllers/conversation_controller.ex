@@ -30,7 +30,7 @@ defmodule KalciferWeb.ConversationController do
 
   @doc "GET /api/v1/conversations/:id — get conversation with messages."
   def show(conn, %{"id" => id}) do
-    case Context.get_conversation_with_messages(id) do
+    case Context.get_conversation_with_messages(resolve_dev_tenant(conn), id) do
       nil ->
         conn |> put_status(404) |> json(%{error: "Conversation not found"})
 
@@ -53,7 +53,7 @@ defmodule KalciferWeb.ConversationController do
 
   @doc "PUT /api/v1/conversations/:id — rename a conversation."
   def update(conn, %{"id" => id} = params) do
-    case Context.get_conversation(id) do
+    case Context.get_conversation(resolve_dev_tenant(conn), id) do
       nil ->
         conn |> put_status(404) |> json(%{error: "Conversation not found"})
 
@@ -75,7 +75,7 @@ defmodule KalciferWeb.ConversationController do
 
   @doc "POST /api/v1/conversations/:id/archive"
   def archive(conn, %{"id" => id}) do
-    case Context.get_conversation(id) do
+    case Context.get_conversation(resolve_dev_tenant(conn), id) do
       nil ->
         conn |> put_status(404) |> json(%{error: "Conversation not found"})
 
@@ -87,7 +87,7 @@ defmodule KalciferWeb.ConversationController do
 
   @doc "DELETE /api/v1/conversations/:id — only unclassified conversations."
   def delete(conn, %{"id" => id}) do
-    case Context.get_conversation(id) do
+    case Context.get_conversation(resolve_dev_tenant(conn), id) do
       nil ->
         conn |> put_status(404) |> json(%{error: "Conversation not found"})
 
