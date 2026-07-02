@@ -3,6 +3,7 @@ defmodule KalciferWeb.SimulationController do
 
   alias Kalcifer.Engine.FlowServer
   alias Kalcifer.Flows
+  alias KalciferWeb.TenantResolver
 
   @doc """
   POST /api/v1/flows/:flow_id/simulate
@@ -20,6 +21,10 @@ defmodule KalciferWeb.SimulationController do
     - `error`       — error message
   """
   def create(conn, %{"flow_id" => flow_id} = params) do
+    # Resolve the tenant before opening the stream so a foreign flow_id is
+    # rejected as not-found rather than simulated (leaking its graph + output).
+    tenant = TenantResolver.resolve(conn)
+
     conn =
       conn
       |> put_resp_content_type("text/event-stream")
@@ -30,7 +35,7 @@ defmodule KalciferWeb.SimulationController do
     customer_id = params["customer_id"] || "sim_customer"
     initial_context = params["context"] || %{}
 
-    case resolve_flow_and_version(flow_id) do
+    case resolve_flow_and_version(flow_id, tenant) do
       {:ok, flow, version} ->
         run_simulation(conn, flow, version, customer_id, initial_context)
 
@@ -136,28 +141,33 @@ defmodule KalciferWeb.SimulationController do
     end
   end
 
-  defp resolve_flow_and_version(flow_id) do
+  # Public for testing: resolves a flow to a runnable version, scoped to the
+  # tenant. A flow owned by another tenant reads as not-found (no probing).
+  @doc false
+  def resolve_flow_and_version(flow_id, tenant) do
     case Flows.get_flow(flow_id) do
-      nil ->
-        {:error, :not_found}
+      %{tenant_id: tenant_id} when tenant_id != tenant.id -> {:error, :not_found}
+      nil -> {:error, :not_found}
+      %{status: "draft"} = flow -> draft_version(flow)
+      flow -> active_version(flow)
+    end
+  end
 
-      %{status: "draft"} = flow ->
-        # For drafts, use latest draft version
-        case get_latest_version(flow.id) do
-          nil -> {:error, :no_version}
-          version -> {:ok, flow, version}
-        end
+  # Drafts run on their latest version.
+  defp draft_version(flow) do
+    case get_latest_version(flow.id) do
+      nil -> {:error, :no_version}
+      version -> {:ok, flow, version}
+    end
+  end
 
-      flow ->
-        # For active/paused flows, use active version
-        case flow.active_version_id do
-          nil ->
-            {:error, :no_active_version}
+  # Active/paused flows run on their pinned active version.
+  defp active_version(%{active_version_id: nil}), do: {:error, :no_active_version}
 
-          vid ->
-            version = Kalcifer.Repo.get(Kalcifer.Flows.FlowVersion, vid)
-            if version, do: {:ok, flow, version}, else: {:error, :no_active_version}
-        end
+  defp active_version(flow) do
+    case Kalcifer.Repo.get(Kalcifer.Flows.FlowVersion, flow.active_version_id) do
+      nil -> {:error, :no_active_version}
+      version -> {:ok, flow, version}
     end
   end
 
