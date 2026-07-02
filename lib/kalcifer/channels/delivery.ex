@@ -21,6 +21,7 @@ defmodule Kalcifer.Channels.Delivery do
     field :status, :string, default: "pending"
     field :step_id, :binary_id
     field :error, :string
+    field :events, {:array, :map}, default: []
     field :sent_at, :utc_datetime
     field :delivered_at, :utc_datetime
     field :failed_at, :utc_datetime
