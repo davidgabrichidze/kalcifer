@@ -21,12 +21,22 @@ export function setActiveTenantId(id: string | null) {
   }
 }
 
-/** fetch wrapper injecting the active tenant header for dev tenant switching */
+/**
+ * fetch wrapper injecting auth on every request: the Bearer token when
+ * signed in, plus the active tenant header for dev tenant switching.
+ * Explicit headers on the call are preserved (never overwritten).
+ */
 function apiFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
   const tenantId = getActiveTenantId()
-  if (!tenantId) return fetch(input, init)
   const headers = new Headers(init.headers)
-  if (!headers.has('X-Tenant-Id')) headers.set('X-Tenant-Id', tenantId)
+
+  if (_authToken && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${_authToken}`)
+  }
+  if (tenantId && !headers.has('X-Tenant-Id')) {
+    headers.set('X-Tenant-Id', tenantId)
+  }
+
   return fetch(input, { ...init, headers })
 }
 
@@ -74,14 +84,6 @@ export function getAuthToken(): string | null {
   return _authToken
 }
 
-/** Inject auth token into fetch requests */
-function authHeaders(): Record<string, string> {
-  if (_authToken) {
-    return { Authorization: `Bearer ${_authToken}` }
-  }
-  return {}
-}
-
 export async function googleLogin(idToken: string): Promise<AuthResponse> {
   const res = await apiFetch(`${API_BASE}/auth/google`, {
     method: 'POST',
@@ -100,9 +102,7 @@ export async function googleLogin(idToken: string): Promise<AuthResponse> {
 export async function fetchMe(): Promise<AuthUser | null> {
   if (!_authToken) return null
   try {
-    const res = await apiFetch(`${API_BASE}/auth/me`, {
-      headers: authHeaders(),
-    })
+    const res = await apiFetch(`${API_BASE}/auth/me`)
     if (!res.ok) return null
     const data = await res.json()
     return data.user
