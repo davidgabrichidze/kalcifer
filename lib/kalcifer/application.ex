@@ -10,6 +10,7 @@ defmodule Kalcifer.Application do
       Kalcifer.Repo,
       {DNSCluster, query: Application.get_env(:kalcifer, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Kalcifer.PubSub},
+      KalciferWeb.Presence,
       {Finch, name: Kalcifer.Finch},
       {Oban, Application.fetch_env!(:kalcifer, Oban)},
       Kalcifer.Engine.Supervisor,

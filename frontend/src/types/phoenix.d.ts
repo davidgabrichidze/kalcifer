@@ -16,4 +16,21 @@ declare module 'phoenix' {
   export class Push {
     receive(status: string, callback: (response: unknown) => void): Push
   }
+
+  export interface PresenceMeta {
+    phx_ref: string
+    name?: string
+    online_at?: string
+    [key: string]: unknown
+  }
+
+  export interface PresenceEntry {
+    metas: PresenceMeta[]
+  }
+
+  export class Presence {
+    constructor(channel: Channel, opts?: Record<string, unknown>)
+    onSync(callback: () => void): void
+    list<T>(chooser: (id: string, entry: PresenceEntry) => T): T[]
+  }
 }
