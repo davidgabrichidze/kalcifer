@@ -18,6 +18,10 @@ interface UseFlowSocketOptions {
 
 const SOCKET_URL = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/socket`
 
+// Socket auth key: the server hashes this to a tenant. Configurable per
+// deployment via VITE_SOCKET_API_KEY; falls back to the local dev tenant key.
+const SOCKET_API_KEY = import.meta.env.VITE_SOCKET_API_KEY || 'demo-dev-key'
+
 /**
  * Hook to connect to a Phoenix Channel for real-time flow events.
  *
@@ -117,7 +121,7 @@ export function useFlowSocket({ flowId, enabled = true, onEvent }: UseFlowSocket
 
     // Connect socket
     const socket = new Socket(SOCKET_URL, {
-      params: { api_key: 'demo-dev-key' },
+      params: { api_key: SOCKET_API_KEY },
     })
     socket.connect()
     socketRef.current = socket
