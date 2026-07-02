@@ -23,7 +23,7 @@ import {
   type ExecutionStepData,
   type NodeAnalytics,
 } from '../lib/api'
-import FlowCanvas from './FlowCanvas'
+import FlowCanvas, { type FlowCanvasHandle, type NodePatch } from './FlowCanvas'
 import { useFlowSocket } from '../lib/useFlowSocket'
 import { NodePalette } from '../pages/editor/NodePalette'
 import { NodeConfigPanel } from '../pages/editor/NodeConfigPanel'
@@ -68,6 +68,7 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
   const [hasChanges, setHasChanges] = useState(false)
   const latestNodesRef = useRef<Node[]>([])
   const latestEdgesRef = useRef<Edge[]>([])
+  const canvasRef = useRef<FlowCanvasHandle>(null)
 
   // Undo/redo
   const [canUndo, setCanUndo] = useState(false)
@@ -190,19 +191,22 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
   }, [])
 
   // Palette
-  const handleAddNodeFromPalette = useCallback((_nodeType: string) => {
+  const handleAddNodeFromPalette = useCallback((nodeType: string) => {
+    canvasRef.current?.addNode(nodeType)
     setPaletteOpen(false)
   }, [])
 
-  // Config panel
-  const handleConfigSave = useCallback((_config: Record<string, unknown>) => {
-    setConfigOpen(false)
-  }, [])
+  // Config panel — apply an edit to the selected node (stays open)
+  const handleConfigSave = useCallback((patch: NodePatch) => {
+    if (selectedNodeId) canvasRef.current?.updateNode(selectedNodeId, patch)
+  }, [selectedNodeId])
 
   const handleDeleteNode = useCallback(() => {
+    if (selectedNodeId) canvasRef.current?.deleteNode(selectedNodeId)
     setSelectedNodeId(null)
+    setSelectedNodeData(null)
     setConfigOpen(false)
-  }, [])
+  }, [selectedNodeId])
 
   // Save
   const saveGraph = useCallback(async () => {
@@ -485,6 +489,7 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
       {/* Canvas area */}
       <div className="fei-canvas-area">
         <FlowCanvas
+          ref={canvasRef}
           flowGraph={flowVersion?.graph || null}
           editable={mode === 'edit'}
           onNodeSelect={handleNodeSelect}
@@ -522,6 +527,7 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
         {/* Config Panel */}
         {selectedNodeData && (
           <NodeConfigPanel
+            key={selectedNodeId}
             isOpen={configOpen}
             nodeId={selectedNodeId}
             nodeType={selectedNodeData.type}

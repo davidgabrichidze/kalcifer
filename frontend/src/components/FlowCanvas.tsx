@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, DragEvent as ReactDragEvent } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  DragEvent as ReactDragEvent,
+} from 'react'
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -25,6 +32,20 @@ import './flow-canvas.css'
 const nodeTypes = {
   flowNode: FlowNode,
   groupNode: GroupNode,
+}
+
+/** Patch applied to a node's data by the config panel. */
+export interface NodePatch {
+  label?: string
+  description?: string
+  config?: Record<string, unknown>
+}
+
+/** Imperative API the editor page drives from the config panel / palette. */
+export interface FlowCanvasHandle {
+  updateNode: (id: string, patch: NodePatch) => void
+  deleteNode: (id: string) => void
+  addNode: (type: string) => void
 }
 
 export interface FlowCanvasProps {
@@ -54,7 +75,7 @@ export interface FlowCanvasProps {
   nodeAnalytics?: Map<string, { executed: number; completed: number; failed: number; avg_duration_ms?: number | null }>
 }
 
-function FlowCanvasInner({
+const FlowCanvasInner = forwardRef<FlowCanvasHandle, FlowCanvasProps>(function FlowCanvasInner({
   flowGraph,
   editable = false,
   onGraphChange,
@@ -68,13 +89,62 @@ function FlowCanvasInner({
   nodeWarnings,
   failedNodes,
   nodeAnalytics,
-}: FlowCanvasProps) {
+}: FlowCanvasProps, ref) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const { getNodes, getEdges } = useReactFlow()
   const { takeSnapshot, undo, redo, canUndo, canRedo, clear } = useUndoRedo()
   const isRestoringRef = useRef(false)
   const clipboardRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null)
+
+  // Imperative API for the config panel (edit/delete a node) and palette (add).
+  useImperativeHandle(ref, () => ({
+    updateNode: (id, patch) => {
+      takeSnapshot(getNodes(), getEdges())
+      setNodes(nds =>
+        nds.map(n =>
+          n.id === id
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  ...(patch.label !== undefined ? { label: patch.label } : {}),
+                  ...(patch.description !== undefined ? { description: patch.description } : {}),
+                  ...(patch.config !== undefined ? { config: patch.config } : {}),
+                },
+              }
+            : n,
+        ),
+      )
+    },
+    deleteNode: (id) => {
+      takeSnapshot(getNodes(), getEdges())
+      const target = getNodes().find(n => n.id === id)
+      const isGroup = target?.type === 'groupNode'
+      const origin = target?.position ?? { x: 0, y: 0 }
+      setNodes(nds =>
+        nds
+          .filter(n => n.id !== id)
+          .map(n => {
+            // Deleting a group frees its children rather than orphaning them.
+            if (!isGroup || n.parentId !== id) return n
+            const { parentId: _parentId, extent: _extent, ...rest } = n
+            return { ...rest, position: { x: n.position.x + origin.x, y: n.position.y + origin.y } }
+          }),
+      )
+      setEdges(eds => eds.filter(e => e.source !== id && e.target !== id))
+    },
+    addNode: (type) => {
+      takeSnapshot(getNodes(), getEdges())
+      const newNode: Node = {
+        id: `node-${Date.now()}`,
+        type: 'flowNode',
+        position: { x: 120, y: 120 },
+        data: { label: type, type, description: '', config: {} },
+      }
+      setNodes(nds => [...nds, newNode])
+    },
+  }), [setNodes, setEdges, takeSnapshot, getNodes, getEdges])
 
   // Convert flowGraph prop → React Flow nodes/edges
   useEffect(() => {
@@ -437,12 +507,14 @@ function FlowCanvasInner({
       </ReactFlow>
     </div>
   )
-}
+})
 
-export default function FlowCanvas(props: FlowCanvasProps) {
+const FlowCanvas = forwardRef<FlowCanvasHandle, FlowCanvasProps>(function FlowCanvas(props, ref) {
   return (
     <ReactFlowProvider>
-      <FlowCanvasInner {...props} />
+      <FlowCanvasInner {...props} ref={ref} />
     </ReactFlowProvider>
   )
-}
+})
+
+export default FlowCanvas

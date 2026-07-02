@@ -7,7 +7,7 @@ import {
 import { useSearchParams } from 'react-router-dom'
 import { type Node, type Edge } from '@xyflow/react'
 import { fetchFlow, fetchFlowVersions, simulateFlow, updateFlowVersion, preflightFlow, parseNodeWarnings, type Flow, type FlowVersion, type SimulationStep } from '../../lib/api'
-import FlowCanvas from '../../components/FlowCanvas'
+import FlowCanvas, { type FlowCanvasHandle, type NodePatch } from '../../components/FlowCanvas'
 import { useFlowSocket } from '../../lib/useFlowSocket'
 import { NodePalette } from './NodePalette'
 import { NodeConfigPanel } from './NodeConfigPanel'
@@ -46,6 +46,7 @@ export default function FlowEditorPage() {
   const [hasChanges, setHasChanges] = useState(false)
   const latestNodesRef = useRef<Node[]>([])
   const latestEdgesRef = useRef<Edge[]>([])
+  const canvasRef = useRef<FlowCanvasHandle>(null)
 
   // Undo/redo state
   const [canUndo, setCanUndo] = useState(false)
@@ -149,30 +150,30 @@ export default function FlowEditorPage() {
     setCanRedo(redo)
   }, [])
 
-  // Palette: add node (TODO: wire to FlowCanvas via ref or callback)
+  // Palette: add a node to the canvas
   const handleAddNodeFromPalette = useCallback(
-    (_nodeType: string) => {
-      // For now, close palette — full wiring will come with FlowCanvas ref API
+    (nodeType: string) => {
+      canvasRef.current?.addNode(nodeType)
       setPaletteOpen(false)
     },
     [],
   )
 
-  // Config panel: save
+  // Config panel: apply an edit to the selected node (stays open for further edits)
   const handleConfigSave = useCallback(
-    (_config: Record<string, unknown>) => {
-      // TODO: wire to FlowCanvas for node updates
-      setConfigOpen(false)
+    (patch: NodePatch) => {
+      if (selectedNodeId) canvasRef.current?.updateNode(selectedNodeId, patch)
     },
-    [],
+    [selectedNodeId],
   )
 
-  // Config panel: delete
+  // Config panel: delete the selected node
   const handleDeleteNode = useCallback(() => {
-    // TODO: wire to FlowCanvas for node deletion
+    if (selectedNodeId) canvasRef.current?.deleteNode(selectedNodeId)
     setSelectedNodeId(null)
+    setSelectedNodeData(null)
     setConfigOpen(false)
-  }, [])
+  }, [selectedNodeId])
 
   const saveGraph = useCallback(async () => {
     if (!flowId || !flowVersion || saving) return
@@ -379,6 +380,7 @@ export default function FlowEditorPage() {
 
         {/* Canvas */}
         <FlowCanvas
+          ref={canvasRef}
           flowGraph={flowVersion?.graph || null}
           editable={mode === 'edit'}
           onNodeSelect={handleNodeSelect}
@@ -410,6 +412,7 @@ export default function FlowEditorPage() {
         {/* Config Panel */}
         {selectedNodeData && (
           <NodeConfigPanel
+            key={selectedNodeId}
             isOpen={configOpen}
             nodeId={selectedNodeId}
             nodeType={selectedNodeData.type}

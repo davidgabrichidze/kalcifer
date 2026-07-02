@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchFlows, type Flow } from '../../lib/api'
+import { type NodePatch } from '../../components/FlowCanvas'
 import './editor.css'
 
 interface NodeConfigPanelProps {
@@ -10,7 +11,7 @@ interface NodeConfigPanelProps {
   nodeDescription: string
   nodeConfig: Record<string, unknown>
   onClose: () => void
-  onSave: (config: Record<string, unknown>) => void
+  onSave: (patch: NodePatch) => void
   onDelete: () => void
 }
 
@@ -18,40 +19,55 @@ export function NodeConfigPanel({
   isOpen,
   nodeId,
   nodeType,
-  nodeLabel,
-  nodeDescription,
-  nodeConfig,
+  nodeLabel: initialLabel,
+  nodeDescription: initialDescription,
+  nodeConfig: initialConfig,
   onClose,
   onSave,
   onDelete,
 }: NodeConfigPanelProps) {
+  // Local working copies (shadowing the props) so multi-field edits accumulate
+  // correctly. The parent remounts this panel per node (key={nodeId}), so these
+  // seed from the freshly selected node.
+  const [nodeLabel, setNodeLabel] = useState(initialLabel)
+  const [nodeDescription, setNodeDescription] = useState(initialDescription)
+  const [nodeConfig, setNodeConfig] = useState<Record<string, unknown>>(initialConfig)
+
   const handleLabelChange = useCallback(
-    (_e: React.ChangeEvent<HTMLInputElement>) => {
-      // This would need parent state management
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value
+      setNodeLabel(value)
+      onSave({ label: value })
     },
-    [],
+    [onSave],
   )
 
   const handleDescriptionChange = useCallback(
-    (_e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      // This would need parent state management
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value
+      setNodeDescription(value)
+      onSave({ description: value })
     },
-    [],
+    [onSave],
   )
 
   const handleConfigChange = useCallback(
     (key: string, value: unknown) => {
-      const newConfig = { ...nodeConfig, [key]: value }
-      onSave(newConfig)
+      setNodeConfig(prev => {
+        const next = { ...prev, [key]: value }
+        onSave({ config: next })
+        return next
+      })
     },
-    [nodeConfig, onSave],
+    [onSave],
   )
 
   const handleRawConfigChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       try {
-        const newConfig = JSON.parse(e.target.value)
-        onSave(newConfig)
+        const next = JSON.parse(e.target.value)
+        setNodeConfig(next)
+        onSave({ config: next })
       } catch {
         // Invalid JSON, don't update
       }
@@ -101,7 +117,7 @@ export function NodeConfigPanel({
           <input
             className="config-input"
             type="text"
-            defaultValue={nodeLabel}
+            value={nodeLabel}
             onChange={handleLabelChange}
             placeholder="Node title"
           />
@@ -124,7 +140,7 @@ export function NodeConfigPanel({
           <label className="config-label">Description</label>
           <textarea
             className="config-textarea"
-            defaultValue={nodeDescription}
+            value={nodeDescription}
             onChange={handleDescriptionChange}
             placeholder="Node description"
             style={{ minHeight: '60px', fontFamily: 'var(--font-mono)' }}
@@ -456,7 +472,10 @@ export function NodeConfigPanel({
       <div className="config-actions">
         <button
           className="config-btn config-btn-p"
-          onClick={() => onSave(nodeConfig)}
+          onClick={() => {
+            onSave({ label: nodeLabel, description: nodeDescription, config: nodeConfig })
+            onClose()
+          }}
           style={{
             backgroundColor: 'var(--color-primary)',
             color: 'var(--color-text-on-primary)',
