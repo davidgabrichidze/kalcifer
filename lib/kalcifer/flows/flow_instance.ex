@@ -58,6 +58,10 @@ defmodule Kalcifer.Flows.FlowInstance do
     |> put_change(:entered_at, now)
     |> foreign_key_constraint(:flow_id)
     |> foreign_key_constraint(:tenant_id)
+    |> unique_constraint([:flow_id, :customer_id],
+      name: :flow_instances_active_customer,
+      message: "customer already active in this flow"
+    )
   end
 
   def status_changeset(instance, new_status, attrs \\ %{}) do

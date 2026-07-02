@@ -71,19 +71,24 @@ defmodule Kalcifer.Engine.FlowServer do
     entry_nodes = GraphWalker.entry_nodes(args.graph)
     entry_node_ids = Enum.map(entry_nodes, & &1["id"])
 
-    {:ok, instance} =
-      InstanceStore.create_instance(
-        %{
-          flow_id: args.flow_id,
-          version_number: args.version_number,
-          customer_id: args.customer_id,
-          tenant_id: args.tenant_id,
-          current_nodes: entry_node_ids,
-          dry_run: Map.get(args, :dry_run, false)
-        },
-        id: args.instance_id
-      )
+    case InstanceStore.create_instance(
+           %{
+             flow_id: args.flow_id,
+             version_number: args.version_number,
+             customer_id: args.customer_id,
+             tenant_id: args.tenant_id,
+             current_nodes: entry_node_ids,
+             dry_run: Map.get(args, :dry_run, false)
+           },
+           id: args.instance_id
+         ) do
+      {:ok, instance} -> start_instance(args, instance, entry_node_ids)
+      # Lost the dedup race — another trigger created the active instance.
+      {:error, %Ecto.Changeset{}} -> {:stop, :already_in_flow}
+    end
+  end
 
+  defp start_instance(args, instance, entry_node_ids) do
     initial_context =
       Map.get(args, :initial_context, %{})
       |> Map.put("_customer_id", args.customer_id)
