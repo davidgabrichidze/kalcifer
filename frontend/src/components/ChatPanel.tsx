@@ -359,7 +359,16 @@ export default function ChatPanel({
   // Load conversation history + cleanup — single effect to avoid race conditions
   const loadedConvRef = useRef<string | null>(null)
   useEffect(() => {
-    // 1. Abort any in-flight stream from previous conversation
+    // 0. Bail BEFORE aborting when the stream in flight is one we must not
+    //    kill, otherwise the first reply of a new conversation is dropped:
+    //    - initialMessage set: the initial-message effect owns the stream and
+    //      runs on the same mount commit as this one.
+    //    - id matches what we're already streaming into: our OWN onInit just
+    //      assigned the new conversation its id.
+    if (initialMessage) return
+    if (conversationId && conversationId === loadedConvRef.current) return
+
+    // 1. Abort any in-flight stream from a previous conversation
     if (abortRef.current) {
       abortRef.current.abort()
       abortRef.current = null
@@ -381,11 +390,8 @@ export default function ChatPanel({
       return
     }
 
-    // 4. Skip reload if same conversation AND not a fresh switch
-    //    (loadedConvRef prevents re-fetching on re-renders, but allows
-    //     reload when explicitly switching back to same conversation)
-    if (conversationId === loadedConvRef.current) return
-    if (initialMessage) return // Skip if we're sending initial message
+    // 4. Skip if we're sending the initial message (its own effect streams it)
+    if (initialMessage) return
 
     loadedConvRef.current = conversationId
 
