@@ -7,6 +7,9 @@ defmodule KalciferWeb.EngineController do
 
   import Ecto.Query
 
+  # Global/cross-tenant engine data + logs — dev frontend only, never prod.
+  plug KalciferWeb.Plugs.DevOnly
+
   alias Kalcifer.Engine.{LogCollector, NodeRegistry}
   alias Kalcifer.Flows.FlowInstance
   alias Kalcifer.Repo
