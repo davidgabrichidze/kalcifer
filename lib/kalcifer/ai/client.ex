@@ -99,11 +99,14 @@ defmodule Kalcifer.AI.Client do
           keyword()
         ) :: {:ok, String.t()} | {:error, term()}
   def chat_with_tools(messages, tools, tool_executor, callback, opts \\ []) do
-    tool_loop(messages, tools, tool_executor, callback, opts, 0)
+    # Callers (e.g. the agent node) can tighten the round cap via opts;
+    # @max_tool_rounds is the hard default ceiling.
+    limit = Keyword.get(opts, :max_tool_rounds, @max_tool_rounds)
+    tool_loop(messages, tools, tool_executor, callback, opts, 0, limit)
   end
 
-  defp tool_loop(messages, tools, tool_executor, callback, opts, round)
-       when round < @max_tool_rounds do
+  defp tool_loop(messages, tools, tool_executor, callback, opts, round, limit)
+       when round < limit do
     provider = resolve_provider_module(opts)
     key = resolve_api_key(opts, provider)
     body = provider.build_body(messages, ensure_system(opts))
@@ -127,7 +130,7 @@ defmodule Kalcifer.AI.Client do
               [provider.build_assistant_message(content)] ++
               [%{role: "user", content: tool_results}]
 
-          tool_loop(next_messages, tools, tool_executor, callback, opts, round + 1)
+          tool_loop(next_messages, tools, tool_executor, callback, opts, round + 1, limit)
         else
           # Final response — re-send with streaming for proper UX
           stream_body = provider.build_body(messages, ensure_system(opts))
@@ -148,8 +151,8 @@ defmodule Kalcifer.AI.Client do
     end
   end
 
-  defp tool_loop(_messages, _tools, _executor, callback, _opts, _round) do
-    Logger.warning("AI tool loop exceeded #{@max_tool_rounds} rounds")
+  defp tool_loop(_messages, _tools, _executor, callback, _opts, _round, limit) do
+    Logger.warning("AI tool loop exceeded #{limit} rounds")
     callback.({:error, "ძალიან ბევრი ნაბიჯი დამჭირდა — სცადე უფრო მოკლე დავალებით."})
     {:error, :max_tool_rounds}
   end
