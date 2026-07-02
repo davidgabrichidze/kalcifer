@@ -34,6 +34,7 @@ defmodule KalciferWeb.DeliveryController do
             provider: d.provider,
             provider_message_id: d.provider_message_id,
             error: d.error,
+            events: d.events,
             sent_at: d.sent_at,
             delivered_at: d.delivered_at,
             failed_at: d.failed_at,
