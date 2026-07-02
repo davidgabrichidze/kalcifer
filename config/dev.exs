@@ -32,6 +32,9 @@ config :kalcifer, dev_routes: true
 # Dev frontend selects tenant via x-tenant-id (unauthenticated)
 config :kalcifer, :allow_tenant_header, true
 
+# Session signing secret for local dev (override in prod via AUTH_SESSION_SECRET)
+config :kalcifer, :auth_session_secret, "dev-only-session-secret-not-for-production"
+
 # Dev channel providers — simulators emulate real provider callbacks
 config :kalcifer, :channel_providers, %{
   email: Kalcifer.Simulators.Email,
