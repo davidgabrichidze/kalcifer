@@ -31,11 +31,33 @@ defmodule KalciferWeb.WebhookControllerTest do
         %{"sg_message_id" => "sg_msg_001", "event" => "delivered", "timestamp" => 1_234_567_890}
       ]
 
-      conn_resp = post(conn, "/api/v1/webhooks/sendgrid", %{"event" => events})
+      # SendGrid POSTs a bare top-level array; Plug surfaces it under "_json".
+      conn_resp = post(conn, "/api/v1/webhooks/sendgrid", Jason.encode!(events))
       assert json_response(conn_resp, 200)["processed"] == 1
 
       updated = Channels.get_delivery(delivery.id)
       assert updated.status == "delivered"
+    end
+
+    test "still accepts the {\"event\": [...]} object form", %{conn: conn} do
+      tenant = insert(:tenant)
+      instance = insert(:flow_instance, tenant: tenant)
+
+      {:ok, delivery} =
+        Channels.create_delivery(%{
+          channel: "email",
+          recipient: %{"email" => "test@example.com"},
+          instance_id: instance.id,
+          tenant_id: tenant.id
+        })
+
+      Channels.update_delivery_status(delivery, "sent", %{provider_message_id: "sg_msg_002"})
+
+      events = [%{"sg_message_id" => "sg_msg_002", "event" => "bounce"}]
+      conn_resp = post(conn, "/api/v1/webhooks/sendgrid", %{"event" => events})
+
+      assert json_response(conn_resp, 200)["processed"] == 1
+      assert Channels.get_delivery(delivery.id).status == "bounced"
     end
 
     test "returns 400 for missing event array", %{conn: conn} do

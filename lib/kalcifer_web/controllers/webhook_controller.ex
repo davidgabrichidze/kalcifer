@@ -6,18 +6,27 @@ defmodule KalciferWeb.WebhookController do
   plug KalciferWeb.Plugs.WebhookSignature, [provider: :sendgrid] when action == :sendgrid
   plug KalciferWeb.Plugs.WebhookSignature, [provider: :twilio] when action == :twilio
 
-  def sendgrid(conn, %{"event" => events}) when is_list(events) do
-    Enum.each(events, &process_sendgrid_event/1)
+  # SendGrid's Event Webhook POSTs a bare top-level JSON array, which
+  # Plug.Parsers surfaces under the "_json" key. Accept that (the real shape)
+  # as well as an {"event": [...]} object for backward compatibility.
+  def sendgrid(conn, %{"_json" => events}) when is_list(events),
+    do: process_sendgrid_batch(conn, events)
 
-    conn
-    |> put_status(:ok)
-    |> json(%{processed: length(events)})
-  end
+  def sendgrid(conn, %{"event" => events}) when is_list(events),
+    do: process_sendgrid_batch(conn, events)
 
   def sendgrid(conn, _params) do
     conn
     |> put_status(:bad_request)
     |> json(%{error: "expected event array"})
+  end
+
+  defp process_sendgrid_batch(conn, events) do
+    Enum.each(events, &process_sendgrid_event/1)
+
+    conn
+    |> put_status(:ok)
+    |> json(%{processed: length(events)})
   end
 
   def twilio(conn, %{"MessageSid" => message_sid, "MessageStatus" => status}) do
