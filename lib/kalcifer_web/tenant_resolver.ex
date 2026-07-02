@@ -46,12 +46,17 @@ defmodule KalciferWeb.TenantResolver do
     end
   end
 
+  # The x-tenant-id header lets a caller pick any tenant, which is only safe
+  # for the local dev frontend. Disabled in production so it can never be used
+  # to assume another tenant; there, resolution requires a real Bearer token.
   defp try_tenant_header(conn) do
-    with [id] when id != "" <- Plug.Conn.get_req_header(conn, "x-tenant-id"),
-         {:ok, _uuid} <- Ecto.UUID.cast(id) do
-      Repo.get(Tenant, id)
-    else
-      _ -> nil
+    if Application.get_env(:kalcifer, :allow_tenant_header, false) do
+      with [id] when id != "" <- Plug.Conn.get_req_header(conn, "x-tenant-id"),
+           {:ok, _uuid} <- Ecto.UUID.cast(id) do
+        Repo.get(Tenant, id)
+      else
+        _ -> nil
+      end
     end
   end
 
