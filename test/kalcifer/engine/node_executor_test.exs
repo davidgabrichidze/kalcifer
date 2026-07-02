@@ -13,6 +13,36 @@ defmodule Kalcifer.Engine.NodeExecutorTest.CrashingNode do
   def category, do: :action
 end
 
+defmodule Kalcifer.Engine.NodeExecutorTest.ExitingNode do
+  @moduledoc false
+
+  use Kalcifer.Engine.NodeBehaviour
+
+  @impl true
+  def execute(_config, _context), do: exit(:boom)
+
+  @impl true
+  def config_schema, do: %{}
+
+  @impl true
+  def category, do: :action
+end
+
+defmodule Kalcifer.Engine.NodeExecutorTest.ThrowingNode do
+  @moduledoc false
+
+  use Kalcifer.Engine.NodeBehaviour
+
+  @impl true
+  def execute(_config, _context), do: throw(:boom)
+
+  @impl true
+  def config_schema, do: %{}
+
+  @impl true
+  def category, do: :action
+end
+
 defmodule Kalcifer.Engine.NodeExecutorTest do
   use ExUnit.Case, async: false
 
@@ -50,6 +80,18 @@ defmodule Kalcifer.Engine.NodeExecutorTest do
       NodeRegistry.register("crashing_test", CrashingNode)
       node = %{"type" => "crashing_test", "config" => %{}}
       assert {:failed, %{reason: "boom"}} = NodeExecutor.execute(node, %{})
+    end
+
+    test "contains a node that exits instead of crashing the caller" do
+      NodeRegistry.register("exiting_test", Kalcifer.Engine.NodeExecutorTest.ExitingNode)
+      node = %{"type" => "exiting_test", "config" => %{}}
+      assert {:failed, %{reason: "node exit: :boom"}} = NodeExecutor.execute(node, %{})
+    end
+
+    test "contains a node that throws instead of crashing the caller" do
+      NodeRegistry.register("throwing_test", Kalcifer.Engine.NodeExecutorTest.ThrowingNode)
+      node = %{"type" => "throwing_test", "config" => %{}}
+      assert {:failed, %{reason: "node throw: :boom"}} = NodeExecutor.execute(node, %{})
     end
 
     test "handles nil config gracefully" do

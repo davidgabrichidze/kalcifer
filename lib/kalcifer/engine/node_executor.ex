@@ -31,5 +31,15 @@ defmodule Kalcifer.Engine.NodeExecutor do
          reason: Exception.message(error),
          stacktrace: Exception.format_stacktrace(__STACKTRACE__)
        }}
+  catch
+    # A node that exits or throws (e.g. an unwrapped gen_tcp/HTTP client exit)
+    # would otherwise crash the FlowServer, restart it with the same args, and
+    # crash-loop on the already-inserted instance row. Contain it as a failure.
+    kind, value ->
+      {:failed,
+       %{
+         reason: "node #{kind}: #{inspect(value)}",
+         stacktrace: Exception.format_stacktrace(__STACKTRACE__)
+       }}
   end
 end
