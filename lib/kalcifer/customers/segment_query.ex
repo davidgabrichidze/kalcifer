@@ -32,8 +32,10 @@ defmodule Kalcifer.Customers.SegmentQuery do
 
   defp condition("tags", op, value) do
     case op do
+      # Array containment (@>) rather than `value = ANY(tags)` so the query
+      # can use the GIN index on tags; the two are equivalent for one value.
       "contains" when is_binary(value) ->
-        dynamic([c], fragment("? = ANY(?)", ^value, c.tags))
+        dynamic([c], fragment("? @> ?", c.tags, ^[value]))
 
       "eq" when is_list(value) ->
         dynamic([c], c.tags == ^value)
