@@ -97,6 +97,18 @@ describe('ChatPanel', () => {
     expect(onSent).toHaveBeenCalled()
   })
 
+  it('aborts the in-flight stream on unmount', async () => {
+    const controller = new AbortController()
+    const abortSpy = vi.spyOn(controller, 'abort')
+    vi.mocked(streamChat).mockReturnValueOnce(controller)
+
+    const { unmount } = render(<ChatPanel {...defaultProps} initialMessage="ჰეი" />)
+    await waitFor(() => expect(streamChat).toHaveBeenCalled())
+
+    unmount()
+    expect(abortSpy).toHaveBeenCalled()
+  })
+
   it('keeps the first reply when the new conversation id arrives mid-stream', async () => {
     const controller = new AbortController()
     const abortSpy = vi.spyOn(controller, 'abort')

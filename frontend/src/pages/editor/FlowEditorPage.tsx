@@ -244,6 +244,9 @@ export default function FlowEditorPage() {
     setSimActiveNode(null)
   }, [])
 
+  // Abort an in-flight simulation stream when the page unmounts.
+  useEffect(() => () => simAbortRef.current?.abort(), [])
+
   const resetSimulation = useCallback(() => {
     setSimStatus('idle')
     setSimSteps([])
