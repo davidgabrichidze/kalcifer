@@ -182,6 +182,13 @@ defmodule Kalcifer.Engine.FlowServerTest do
         )
 
       assert instance.status == "completed"
+
+      # The resume checkpoint flips the row to running and drops the wait
+      # bookkeeping, so a crash mid-resume is recovered as crashed rather than
+      # re-resuming the already-fired wait node (which would repeat post-wait
+      # side effects). The completed row must carry no stale wait metadata.
+      refute Map.has_key?(instance.context, "_waiting_node_id")
+      refute Map.has_key?(instance.context, "_resume_scheduled_at")
     end
 
     test "persists waiting status and context to DB" do

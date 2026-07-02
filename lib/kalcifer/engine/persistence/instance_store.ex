@@ -28,6 +28,15 @@ defmodule Kalcifer.Engine.Persistence.InstanceStore do
     |> Repo.update()
   end
 
+  # Flip a waiting instance back to running and persist the cleaned context.
+  # Called when a resume begins so a crash mid-resume is recovered as crashed
+  # (at-most-once), not re-resumed from the already-fired wait node.
+  def mark_running(instance, context) do
+    instance
+    |> FlowInstance.status_changeset("running", %{context: context})
+    |> Repo.update()
+  end
+
   def complete_instance(instance) do
     now = DateTime.utc_now() |> DateTime.truncate(:second)
 
