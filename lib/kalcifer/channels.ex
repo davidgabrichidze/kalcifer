@@ -1,6 +1,8 @@
 defmodule Kalcifer.Channels do
   @moduledoc false
 
+  import Ecto.Query
+
   alias Kalcifer.Channels.Delivery
   alias Kalcifer.Repo
 
@@ -28,12 +30,17 @@ defmodule Kalcifer.Channels do
   def append_delivery_event(delivery, event) when is_map(event) do
     stamped = Map.put_new(event, "at", DateTime.utc_now() |> DateTime.to_iso8601())
 
-    delivery
-    |> Ecto.Changeset.change(events: delivery.events ++ [stamped])
-    |> Repo.update()
-  end
+    # Append at the DB level (array_append) instead of a read-modify-write on
+    # the in-memory struct: concurrent provider callbacks (open, click, read...)
+    # would otherwise each load the same `events` list and clobber each other,
+    # silently dropping every event but the last writer's.
+    query = from(d in Delivery, where: d.id == ^delivery.id)
 
-  import Ecto.Query
+    case Repo.update_all(query, push: [events: stamped]) do
+      {1, _} -> {:ok, get_delivery(delivery.id)}
+      {0, _} -> {:error, :not_found}
+    end
+  end
 
   @doc "List deliveries for a flow's instances, newest first."
   def list_deliveries(opts \\ []) do

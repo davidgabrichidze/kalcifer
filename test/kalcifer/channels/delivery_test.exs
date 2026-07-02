@@ -64,6 +64,51 @@ defmodule Kalcifer.Channels.DeliveryTest do
     refute changeset.valid?
   end
 
+  describe "append_delivery_event/2" do
+    defp new_delivery do
+      tenant = insert(:tenant)
+      instance = insert(:flow_instance, tenant: tenant)
+
+      {:ok, delivery} =
+        Channels.create_delivery(%{
+          channel: "email",
+          recipient: %{"email" => "x@y.z"},
+          instance_id: instance.id,
+          tenant_id: tenant.id
+        })
+
+      delivery
+    end
+
+    test "appends the event and stamps it with a timestamp" do
+      delivery = new_delivery()
+
+      {:ok, updated} = Channels.append_delivery_event(delivery, %{"type" => "open"})
+
+      assert [%{"type" => "open", "at" => at}] = updated.events
+      assert is_binary(at)
+    end
+
+    test "appends atomically — a stale struct does not clobber prior events" do
+      delivery = new_delivery()
+
+      # Simulate two provider callbacks that both loaded the delivery while its
+      # events list was still empty. A read-modify-write would drop the first.
+      {:ok, _} = Channels.append_delivery_event(delivery, %{"type" => "open"})
+      {:ok, _} = Channels.append_delivery_event(delivery, %{"type" => "click"})
+
+      types = Channels.get_delivery(delivery.id).events |> Enum.map(& &1["type"])
+      assert "open" in types
+      assert "click" in types
+      assert length(types) == 2
+    end
+
+    test "returns {:error, :not_found} for a missing delivery" do
+      ghost = %Delivery{id: Ecto.UUID.generate(), events: []}
+      assert {:error, :not_found} = Channels.append_delivery_event(ghost, %{"type" => "open"})
+    end
+  end
+
   describe "terminal status protection" do
     test "cannot transition out of a terminal status" do
       for terminal <- ~w(delivered bounced failed) do
