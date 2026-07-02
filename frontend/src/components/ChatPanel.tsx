@@ -56,6 +56,10 @@ export default function ChatPanel({
     msgsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
 
+  // Abort any in-flight stream when the panel unmounts, so a navigated-away
+  // conversation doesn't keep an SSE fetch (and its callbacks) alive.
+  useEffect(() => () => abortRef.current?.abort(), [])
+
   const appendToMessage = useCallback((id: string, text: string) => {
     setMessages(prev =>
       prev.map(m => (m.id === id ? { ...m, content: m.content + text } : m)),
