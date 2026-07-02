@@ -189,19 +189,23 @@ defmodule Kalcifer.Engine.EventRouterTest do
       assert [{:not_alive, _}] = result
     end
 
-    test "routes to multiple matching instances for same customer" do
-      flow = insert(:flow)
+    test "routes to a customer's active instances across different flows" do
+      # A customer can be active in only one instance per flow (dedup), but
+      # in several flows at once — an event should reach all of them.
+      tenant = insert(:tenant)
+      flow1 = insert(:flow, tenant: tenant)
+      flow2 = insert(:flow, tenant: tenant)
 
       {pid1, _ref1, _args1} =
-        start_server(wait_for_event_graph(), customer_id: "cust_multi", flow: flow)
+        start_server(wait_for_event_graph(), customer_id: "cust_multi", flow: flow1)
 
       {pid2, _ref2, _args2} =
-        start_server(wait_for_event_graph(), customer_id: "cust_multi", flow: flow)
+        start_server(wait_for_event_graph(), customer_id: "cust_multi", flow: flow2)
 
       wait_for_waiting(pid1)
       wait_for_waiting(pid2)
 
-      result = EventRouter.route_event(flow.tenant_id, "cust_multi", "email_opened", %{})
+      result = EventRouter.route_event(tenant.id, "cust_multi", "email_opened", %{})
       ok_results = Enum.filter(result, fn {status, _} -> status == :ok end)
 
       assert length(ok_results) == 2

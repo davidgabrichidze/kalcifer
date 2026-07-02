@@ -23,6 +23,58 @@ defmodule Kalcifer.Engine.Persistence.InstanceStoreTest do
       assert instance.current_nodes == ["entry_1"]
       assert instance.entered_at != nil
     end
+
+    test "rejects a second active instance for the same flow and customer" do
+      flow = insert(:flow)
+
+      attrs = %{
+        flow_id: flow.id,
+        version_number: 1,
+        customer_id: "dup_cust",
+        tenant_id: flow.tenant.id,
+        current_nodes: ["entry_1"]
+      }
+
+      assert {:ok, _first} = InstanceStore.create_instance(attrs)
+      assert {:error, changeset} = InstanceStore.create_instance(attrs)
+      assert %{flow_id: [_msg]} = errors_on(changeset)
+    end
+
+    test "allows a new active instance after the previous one is no longer active" do
+      flow = insert(:flow)
+
+      attrs = %{
+        flow_id: flow.id,
+        version_number: 1,
+        customer_id: "seq_cust",
+        tenant_id: flow.tenant.id,
+        current_nodes: ["entry_1"]
+      }
+
+      assert {:ok, first} = InstanceStore.create_instance(attrs)
+
+      first
+      |> Kalcifer.Flows.FlowInstance.status_changeset("completed")
+      |> Kalcifer.Repo.update!()
+
+      assert {:ok, _second} = InstanceStore.create_instance(attrs)
+    end
+
+    test "allows concurrent dry-run instances for the same customer" do
+      flow = insert(:flow)
+
+      attrs = %{
+        flow_id: flow.id,
+        version_number: 1,
+        customer_id: "dry_cust",
+        tenant_id: flow.tenant.id,
+        current_nodes: ["entry_1"],
+        dry_run: true
+      }
+
+      assert {:ok, _a} = InstanceStore.create_instance(attrs)
+      assert {:ok, _b} = InstanceStore.create_instance(attrs)
+    end
   end
 
   describe "get_instance/1" do
