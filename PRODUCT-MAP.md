@@ -20,7 +20,7 @@ kalcifer
 │
 ├── engine                          # Flow execution core (OTP)
 │   ├── executor                    # ✅ FlowServer, NodeExecutor, GraphWalker, DryRun
-│   ├── nodes                       # ✅ 22 built-in node types (see Node Map below)
+│   ├── nodes                       # ✅ 31 built-in node types (see Node Map below)
 │   ├── events                      # ✅ EventRouter, EventBroadcaster
 │   ├── recovery                    # ✅ RecoveryManager, crash recovery on boot
 │   ├── persistence                 # ✅ InstanceStore, StepStore
@@ -35,13 +35,13 @@ kalcifer
 │   └── instances                   # ✅ FlowInstance, timeline, cancel
 │
 ├── channels                        # Message delivery infrastructure
-│   ├── providers                   # ⚠️ ProviderRegistry + Log/Webhook only (no real providers)
-│   ├── delivery                    # ✅ ChannelSender, Delivery tracking, status callbacks
-│   └── webhooks                    # ✅ Inbound webhook processing (SendGrid, Twilio stubs)
+│   ├── providers                   # ✅ Log, Webhook, SendGrid, Twilio + ProviderRegistry
+│   ├── delivery                    # ✅ ChannelSender, Delivery tracking + events, CircuitBreaker
+│   └── webhooks                    # ✅ Inbound webhooks with signature verification
 │
 ├── customers                       # Customer data layer
 │   ├── profiles                    # ✅ Customer CRUD, tags, preferences
-│   └── segments                    # ✅ Segment definitions, SegmentEvaluator
+│   └── segments                    # ✅ Segment CRUD API, DB-level evaluation, engine wiring
 │
 ├── analytics                       # Metrics & insights
 │   ├── stats                       # ✅ FlowStats, NodeStats, Collector, rollup
@@ -67,33 +67,33 @@ kalcifer
 │
 ├── ws                              # WebSocket layer (Phoenix Channels)
 │   ├── monitoring                  # ✅ FlowChannel — real-time instance/step events
-│   └── presence                    # ❌ Online operators, live cursors
+│   └── presence                    # ✅ Online operators (Phoenix.Presence, editor indicator)
 │
 ├── ai                              # AI core — კალციფერის ტვინი
 │   ├── chat                        # ✅ Claude API client (Finch streaming), SSE endpoint
-│   ├── tools                       # ⚠️ 7 tools (classify_session, list/get/create_flow, node_types, remember, recall)
+│   ├── tools                       # ✅ 13 tools (flow CRUD, graph editing, analysis, debug, memory)
 │   ├── context                     # ✅ Conversations (persistent, classified), Memory (CRUD, auto-load)
 │   └── prompts                     # ✅ System prompt with Calcifer personality (Georgian)
 │
 ├── simulators                      # Provider simulators (before real providers)
-│   ├── email                       # ❌ Email simulator (delays, bounces, opens, clicks)
-│   ├── sms                         # ❌ SMS simulator (delivery, failures)
-│   ├── push                        # ❌ Push notification simulator
-│   ├── whatsapp                    # ❌ WhatsApp simulator (read receipts, replies)
-│   └── in-app                      # ❌ In-app message simulator
+│   ├── email                       # ✅ Email simulator (delays, bounces, opens, clicks)
+│   ├── sms                         # ✅ SMS simulator (delivery, carrier failures)
+│   ├── push                        # ✅ Push simulator (delivery, taps, invalid tokens)
+│   ├── whatsapp                    # ✅ WhatsApp simulator (read receipts, replies)
+│   └── in-app                      # ✅ In-app simulator (session delivery, seen, expiry)
 │
 ├── fe                              # Frontend (React SPA)
 │   ├── shell                       # ✅ App shell, routing, TopBar, splash screen
-│   ├── design                      # ⚠️ 6 themes (hearth/ocean/forest/sunset/storm/minimal), tokens, dark mode
-│   ├── chat                        # ⚠️ ChatPanel (streaming SSE, markdown, tool badges) — no persistence
-│   ├── work                        # 🔨 Work page layout (sidebar + chat) — no context panel yet
-│   ├── editor                      # ❌ Flow editor — visual canvas + node palette
-│   ├── engine-room                 # ❌ Engine monitoring — live instances, logs
-│   └── browse                      # ❌ Flow library — search, templates, import/export
+│   ├── design                      # ✅ Themes, tokens, dark mode
+│   ├── chat                        # ✅ ChatPanel (streaming, markdown, activity, persistence)
+│   ├── work                        # ✅ Work page (sidebar, chat, context panel, inline editor)
+│   ├── editor                      # ✅ Flow editor (canvas, palette, groups, sim/live modes)
+│   ├── engine-room                 # ✅ Engine Room (stats, logs, channels, API keys)
+│   └── browse                      # ✅ Browse (flows, instances, timelines, export/import)
 │
 └── infra                           # Infrastructure & operations
-    ├── docker                      # ✅ docker-compose.dev.yml (app + db + frontend)
-    ├── ci                          # ⚠️ mix precommit (no GitHub Actions yet)
+    ├── docker                      # ✅ docker-compose.yml one-command + dev/prod variants
+    ├── ci                          # ✅ GitHub Actions (CI, release, docker publish)
     └── release                     # ✅ Release tasks (migrations)
 ```
 
@@ -103,7 +103,7 @@ kalcifer
 
 ## Node Map
 
-> `engine/nodes` scope — 25 registered types across 5 categories (includes 3 AI nodes)
+> `engine/nodes` scope — 31 registered types across 5 categories (includes 4 AI + 4 orchestration nodes)
 
 ```
 engine/nodes
@@ -136,7 +136,14 @@ engine/nodes
 ├── action/ai
 │   ├── ai_think                    # ✅ AI generates text/analysis from flow context
 │   ├── ai_decide                   # ✅ AI-powered branching (condition via Claude)
-│   └── ai_notify                   # ✅ AI-summarized operator notifications (PubSub)
+│   ├── ai_notify                   # ✅ AI-summarized operator notifications (PubSub)
+│   ├── agent                       # ✅ Multi-round tool-using agent node
+│   └── flow_router                 # ✅ AI picks a route to a sub-flow
+│
+├── action/orchestration
+│   ├── parallel_group              # ✅ Run branches in parallel (Task.async_stream)
+│   ├── sub_flow                    # ✅ Run another flow as a child instance
+│   └── memory_recall               # ✅ Recall operator memories into context
 │
 ├── wait
 │   ├── wait                        # ✅ Delay for duration (e.g. "3d", "2h")
