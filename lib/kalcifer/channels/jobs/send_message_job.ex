@@ -12,44 +12,33 @@ defmodule Kalcifer.Channels.Jobs.SendMessageJob do
   @circuit_snooze_seconds 30
 
   @impl true
-  def perform(%Oban.Job{
-        args: %{
-          "delivery_id" => delivery_id,
-          "channel" => channel,
-          "recipient" => recipient,
-          "message" => message,
-          "provider_opts" => provider_opts
-        }
-      }) do
-    channel_atom = String.to_existing_atom(channel)
+  def perform(%Oban.Job{args: args} = job) do
+    channel_atom = String.to_existing_atom(args["channel"])
 
     if CircuitBreaker.allow?(channel_atom) do
-      deliver(channel_atom, delivery_id, recipient, message, provider_opts)
+      deliver(channel_atom, args, final_attempt?(job))
     else
       {:snooze, @circuit_snooze_seconds}
     end
   end
 
-  defp deliver(channel_atom, delivery_id, recipient, message, provider_opts) do
+  defp final_attempt?(%Oban.Job{attempt: attempt, max_attempts: max}), do: attempt >= max
+
+  defp deliver(channel_atom, args, final?) do
+    %{
+      "delivery_id" => delivery_id,
+      "recipient" => recipient,
+      "message" => message,
+      "provider_opts" => provider_opts
+    } = args
+
     with {:ok, provider} <- lookup_provider(channel_atom),
          {:ok, delivery} <- fetch_delivery(delivery_id) do
-      case provider.send_message(channel_atom, recipient, message, provider_opts) do
-        {:ok, provider_message_id} ->
-          CircuitBreaker.record_success(channel_atom)
-
-          Channels.update_delivery_status(delivery, "sent", %{
-            provider_message_id: provider_message_id,
-            sent_at: now()
-          })
-
-          :ok
-
-        {:error, reason} ->
-          CircuitBreaker.record_failure(channel_atom)
-          mark_failed(delivery, reason)
-          {:error, reason}
-      end
+      provider.send_message(channel_atom, recipient, message, provider_opts)
+      |> handle_send_result(channel_atom, delivery, final?)
     else
+      # Setup errors (no provider registered, delivery row missing) are
+      # permanent — retrying won't help, so mark failed right away.
       {:error, reason} ->
         with delivery when not is_nil(delivery) <- Channels.get_delivery(delivery_id) do
           mark_failed(delivery, reason)
@@ -57,6 +46,26 @@ defmodule Kalcifer.Channels.Jobs.SendMessageJob do
 
         {:error, reason}
     end
+  end
+
+  defp handle_send_result({:ok, provider_message_id}, channel_atom, delivery, _final?) do
+    CircuitBreaker.record_success(channel_atom)
+
+    Channels.update_delivery_status(delivery, "sent", %{
+      provider_message_id: provider_message_id,
+      sent_at: now()
+    })
+
+    :ok
+  end
+
+  defp handle_send_result({:error, reason}, channel_atom, delivery, final?) do
+    CircuitBreaker.record_failure(channel_atom)
+    # Only mark the delivery failed on the last attempt, so a transient error
+    # followed by a successful retry isn't left as a (now terminal) "failed"
+    # that the retry-success can't overwrite.
+    if final?, do: mark_failed(delivery, reason)
+    {:error, reason}
   end
 
   defp mark_failed(delivery, reason) do
