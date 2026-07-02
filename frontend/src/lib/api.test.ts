@@ -1,5 +1,52 @@
-import { describe, it, expect } from 'vitest'
-import { parseNodeWarnings } from './api'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { fetchTenants, parseNodeWarnings, setActiveTenantId, setAuthToken } from './api'
+
+describe('apiFetch auth injection', () => {
+  afterEach(() => {
+    setAuthToken(null)
+    setActiveTenantId(null)
+    vi.restoreAllMocks()
+  })
+
+  function stubFetch() {
+    const spy = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [] }),
+    } as Response)
+    vi.stubGlobal('fetch', spy)
+    return spy
+  }
+
+  it('adds the Bearer token to every request when signed in', async () => {
+    const spy = stubFetch()
+    setAuthToken('tok-123')
+
+    await fetchTenants()
+
+    const headers = (spy.mock.calls[0]![1] as RequestInit).headers as Headers
+    expect(headers.get('Authorization')).toBe('Bearer tok-123')
+  })
+
+  it('adds the tenant header when a tenant is selected', async () => {
+    const spy = stubFetch()
+    setActiveTenantId('tenant-abc')
+
+    await fetchTenants()
+
+    const headers = (spy.mock.calls[0]![1] as RequestInit).headers as Headers
+    expect(headers.get('X-Tenant-Id')).toBe('tenant-abc')
+  })
+
+  it('omits auth headers when neither token nor tenant is set', async () => {
+    const spy = stubFetch()
+
+    await fetchTenants()
+
+    const headers = (spy.mock.calls[0]![1] as RequestInit).headers as Headers
+    expect(headers.get('Authorization')).toBeNull()
+    expect(headers.get('X-Tenant-Id')).toBeNull()
+  })
+})
 
 describe('parseNodeWarnings', () => {
   it('parses node warnings from preflight format', () => {
