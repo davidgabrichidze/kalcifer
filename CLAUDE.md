@@ -75,7 +75,7 @@ test/support/factory.ex          # ExMachina factories
 ### Node system
 - NodeBehaviour callbacks: `execute/2`, `resume/3` (optional), `validate/1` (optional), `config_schema/0`, `category/0`
 - Execute returns: `{:completed, result}` | `{:branched, branch_key, result}` | `{:waiting, wait_config}` | `{:failed, reason}`
-- 23 built-in nodes across 5 categories
+- 31 registered nodes across 5 categories (incl. AI + orchestration)
 - Registry keys are snake_case strings matching graph JSON type field (e.g. `"send_email"`, `"condition"`)
 
 ## Git conventions
