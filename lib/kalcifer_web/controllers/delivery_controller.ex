@@ -62,21 +62,17 @@ defmodule KalciferWeb.DeliveryController do
 
   @doc "POST /api/v1/deliveries/:id/status — update delivery status (webhook callback)"
   def update_status(conn, %{"id" => id, "status" => new_status} = params) do
+    tenant_id = KalciferWeb.TenantResolver.resolve_id(conn)
+
     case Channels.get_delivery(id) do
+      %{tenant_id: tid} when tid != tenant_id ->
+        conn |> put_status(404) |> json(%{error: "Delivery not found"})
+
       nil ->
         conn |> put_status(404) |> json(%{error: "Delivery not found"})
 
       delivery ->
-        now = DateTime.utc_now() |> DateTime.truncate(:second)
-
-        attrs =
-          case new_status do
-            "sent" -> %{sent_at: now, provider_message_id: params["provider_message_id"]}
-            "delivered" -> %{delivered_at: now}
-            "failed" -> %{failed_at: now, error: params["error"]}
-            "bounced" -> %{failed_at: now, error: params["error"] || "bounced"}
-            _ -> %{}
-          end
+        attrs = status_timestamps(new_status, params)
 
         case Channels.update_delivery_status(delivery, new_status, attrs) do
           {:ok, updated} ->
@@ -85,6 +81,18 @@ defmodule KalciferWeb.DeliveryController do
           {:error, _changeset} ->
             conn |> put_status(422) |> json(%{error: "Invalid status update"})
         end
+    end
+  end
+
+  defp status_timestamps(status, params) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    case status do
+      "sent" -> %{sent_at: now, provider_message_id: params["provider_message_id"]}
+      "delivered" -> %{delivered_at: now}
+      "failed" -> %{failed_at: now, error: params["error"]}
+      "bounced" -> %{failed_at: now, error: params["error"] || "bounced"}
+      _ -> %{}
     end
   end
 

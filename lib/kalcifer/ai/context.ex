@@ -24,10 +24,24 @@ defmodule Kalcifer.AI.Context do
     Repo.get(Conversation, id)
   end
 
+  def get_conversation(tenant_id, id) do
+    Repo.get_by(Conversation, id: id, tenant_id: tenant_id)
+  end
+
   def get_conversation_with_messages(id) do
     Conversation
     |> Repo.get(id)
     |> Repo.preload(messages: from(m in ConversationMessage, order_by: m.inserted_at))
+  end
+
+  def get_conversation_with_messages(tenant_id, id) do
+    case Repo.get_by(Conversation, id: id, tenant_id: tenant_id) do
+      nil ->
+        nil
+
+      conv ->
+        Repo.preload(conv, messages: from(m in ConversationMessage, order_by: m.inserted_at))
+    end
   end
 
   def list_conversations(tenant_id, opts \\ []) do

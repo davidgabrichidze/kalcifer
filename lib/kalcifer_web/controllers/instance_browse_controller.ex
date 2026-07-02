@@ -11,9 +11,11 @@ defmodule KalciferWeb.InstanceBrowseController do
   alias Kalcifer.Repo
 
   def index(conn, %{"flow_id" => flow_id} = params) do
+    tenant = KalciferWeb.TenantResolver.resolve(conn)
+
     query =
       from(i in FlowInstance,
-        where: i.flow_id == ^flow_id,
+        where: i.flow_id == ^flow_id and i.tenant_id == ^tenant.id,
         order_by: [desc: i.entered_at]
       )
 
@@ -48,8 +50,13 @@ defmodule KalciferWeb.InstanceBrowseController do
   end
 
   def timeline(conn, %{"id" => id}) do
+    tenant = KalciferWeb.TenantResolver.resolve(conn)
+
     case Repo.get(FlowInstance, id) do
       nil ->
+        conn |> put_status(404) |> json(%{error: "not_found"})
+
+      %{tenant_id: tid} when tid != tenant.id ->
         conn |> put_status(404) |> json(%{error: "not_found"})
 
       _instance ->
