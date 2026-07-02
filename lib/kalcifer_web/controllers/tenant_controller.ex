@@ -7,6 +7,9 @@ defmodule KalciferWeb.TenantController do
 
   use KalciferWeb, :controller
 
+  # Exposes the full tenant roster — dev switcher only, never prod.
+  plug KalciferWeb.Plugs.DevOnly
+
   alias Kalcifer.Tenants
   alias KalciferWeb.TenantResolver
 
