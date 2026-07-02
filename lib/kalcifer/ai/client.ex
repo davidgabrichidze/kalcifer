@@ -204,7 +204,9 @@ defmodule Kalcifer.AI.Client do
         callback.({:error, "API error #{status}"})
         {:error, {:api_error, status}}
 
-      {:error, reason} ->
+      # Finch.stream returns a 3-tuple on transport failure ({:error, exception, acc}) —
+      # e.g. the connection dropping mid-stream.
+      {:error, reason, _partial} ->
         Logger.error("AI API stream failed (#{provider_name(opts)}): #{inspect(reason)}")
         callback.({:error, inspect(reason)})
         {:error, reason}

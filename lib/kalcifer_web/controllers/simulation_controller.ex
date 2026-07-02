@@ -174,7 +174,6 @@ defmodule KalciferWeb.SimulationController do
   defp error_message(:not_found), do: "Flow not found"
   defp error_message(:no_version), do: "Flow has no versions"
   defp error_message(:no_active_version), do: "Flow has no active version"
-  defp error_message(reason), do: inspect(reason)
 
   defp chunk_sse(conn, event, data) do
     payload = "event: #{event}\ndata: #{Jason.encode!(data)}\n\n"
