@@ -13,20 +13,20 @@ defmodule Kalcifer.Flows.FlowInstance do
   @statuses ~w(running waiting paused completed failed exited)
 
   # Valid status transitions: {from, to}
-  @valid_transitions MapSet.new([
-                       {"running", "waiting"},
-                       {"running", "paused"},
-                       {"running", "completed"},
-                       {"running", "failed"},
-                       {"running", "exited"},
-                       {"waiting", "running"},
-                       {"waiting", "paused"},
-                       {"waiting", "completed"},
-                       {"waiting", "failed"},
-                       {"waiting", "exited"},
-                       {"paused", "running"},
-                       {"paused", "exited"}
-                     ])
+  @valid_transitions [
+    {"running", "waiting"},
+    {"running", "paused"},
+    {"running", "completed"},
+    {"running", "failed"},
+    {"running", "exited"},
+    {"waiting", "running"},
+    {"waiting", "paused"},
+    {"waiting", "completed"},
+    {"waiting", "failed"},
+    {"waiting", "exited"},
+    {"paused", "running"},
+    {"paused", "exited"}
+  ]
 
   schema "flow_instances" do
     field :version_number, :integer
@@ -72,7 +72,7 @@ defmodule Kalcifer.Flows.FlowInstance do
   defp validate_transition(changeset, same, same), do: changeset
 
   defp validate_transition(changeset, from, to) do
-    if MapSet.member?(@valid_transitions, {from, to}) do
+    if {from, to} in @valid_transitions do
       changeset
     else
       add_error(changeset, :status, "invalid transition from #{from} to #{to}")

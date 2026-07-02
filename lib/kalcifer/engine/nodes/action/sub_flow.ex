@@ -111,15 +111,19 @@ defmodule Kalcifer.Engine.Nodes.Action.SubFlow do
     child_context = build_child_context(parent_context, context_mapping)
 
     customer_id = parent_context["_customer_id"] || "sub_flow"
-    _tenant_id = parent_context["_tenant_id"]
+    tenant_id = parent_context["_tenant_id"]
 
     case Flows.get_flow(flow_id) do
       nil ->
         {:failed, %{reason: "Sub-flow not found: #{flow_id}"}}
 
+      # Never execute another tenant's flow as a sub-flow
+      %{tenant_id: flow_tenant} when not is_nil(tenant_id) and flow_tenant != tenant_id ->
+        {:failed, %{reason: "Sub-flow not found: #{flow_id}"}}
+
       flow ->
         case FlowTrigger.trigger(flow.id, customer_id, child_context) do
-          {:ok, instance_id, _pid} ->
+          {:ok, instance_id} ->
             if wait do
               wait_for_completion(instance_id, timeout)
             else
