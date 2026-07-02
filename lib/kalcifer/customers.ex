@@ -152,39 +152,36 @@ defmodule Kalcifer.Customers do
   Returns `%{field_name => float()}` where float is 0.0–100.0.
   """
   def field_coverage(tenant_id, field_names) when is_list(field_names) do
-    total =
+    # Single scan with one COUNT(*) FILTER (WHERE ...) per field instead of
+    # a total query plus one count per field (N+1 over the customer table).
+    selections =
+      Enum.reduce(field_names, %{total: dynamic([c], count(c.id))}, fn field, acc ->
+        Map.put(acc, field, non_null_count_expr(field))
+      end)
+
+    counts =
       Customer
       |> where(tenant_id: ^tenant_id)
-      |> select([c], count(c.id))
+      |> select(^selections)
       |> Repo.one()
 
-    if total == 0 do
+    if counts.total == 0 do
       Map.new(field_names, fn f -> {f, 0.0} end)
     else
       Map.new(field_names, fn field ->
-        non_null_count = count_non_null(tenant_id, field, total)
-        {field, Float.round(non_null_count / total * 100, 1)}
+        {field, Float.round(Map.fetch!(counts, field) / counts.total * 100, 1)}
       end)
     end
   end
 
   @top_level_fields ~w(email phone name external_id)
 
-  defp count_non_null(tenant_id, field, _total) when field in @top_level_fields do
+  defp non_null_count_expr(field) when field in @top_level_fields do
     field_atom = String.to_existing_atom(field)
-
-    Customer
-    |> where(tenant_id: ^tenant_id)
-    |> where([c], not is_nil(field(c, ^field_atom)))
-    |> select([c], count(c.id))
-    |> Repo.one()
+    dynamic([c], filter(count(c.id), not is_nil(field(c, ^field_atom))))
   end
 
-  defp count_non_null(tenant_id, field, _total) do
-    Customer
-    |> where(tenant_id: ^tenant_id)
-    |> where([c], fragment("? -> ? IS NOT NULL", c.properties, ^field))
-    |> select([c], count(c.id))
-    |> Repo.one()
+  defp non_null_count_expr(field) do
+    dynamic([c], filter(count(c.id), fragment("? -> ? IS NOT NULL", c.properties, ^field)))
   end
 end
