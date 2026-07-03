@@ -1328,7 +1328,11 @@ defmodule Kalcifer.AI.ToolsTest do
       {:ok, result} =
         Tools.execute(
           "modify_node",
-          %{"flow_id" => flow.id, "node_id" => "entry_1", "config" => %{"event_type" => "clicked"}},
+          %{
+            "flow_id" => flow.id,
+            "node_id" => "entry_1",
+            "config" => %{"event_type" => "clicked"}
+          },
           tenant.id
         )
 
