@@ -12,21 +12,22 @@ defmodule Kalcifer.AI.FlowSnapshotTest do
   end
 
   test "returns nil for nil conversation id" do
-    assert FlowSnapshot.for_conversation(nil) == nil
+    tenant = insert(:tenant)
+    assert FlowSnapshot.for_conversation(tenant.id, nil) == nil
   end
 
   test "returns nil when conversation has no linked flow" do
     tenant = insert(:tenant)
     {:ok, conv} = Context.create_conversation(tenant.id)
 
-    assert FlowSnapshot.for_conversation(conv.id) == nil
+    assert FlowSnapshot.for_conversation(tenant.id, conv.id) == nil
   end
 
   test "returns nil when the linked flow has no versions" do
     flow = insert(:flow)
     conv = conversation_linked_to(flow)
 
-    assert FlowSnapshot.for_conversation(conv.id) == nil
+    assert FlowSnapshot.for_conversation(flow.tenant_id, conv.id) == nil
   end
 
   test "renders flow name, version, nodes and edges for a linked draft flow" do
@@ -34,7 +35,7 @@ defmodule Kalcifer.AI.FlowSnapshotTest do
     insert(:flow_version, flow: flow, version_number: 1, status: "draft")
     conv = conversation_linked_to(flow)
 
-    snapshot = FlowSnapshot.for_conversation(conv.id)
+    snapshot = FlowSnapshot.for_conversation(flow.tenant_id, conv.id)
 
     assert snapshot =~ "Onboarding"
     assert snapshot =~ "Version: 1 (draft)"
@@ -48,7 +49,7 @@ defmodule Kalcifer.AI.FlowSnapshotTest do
     insert(:flow_version, flow: flow, version_number: 2, status: "draft")
     conv = conversation_linked_to(flow)
 
-    assert FlowSnapshot.for_conversation(conv.id) =~ "Version: 2 (draft)"
+    assert FlowSnapshot.for_conversation(flow.tenant_id, conv.id) =~ "Version: 2 (draft)"
   end
 
   test "falls back to the latest version when no draft exists" do
@@ -57,7 +58,7 @@ defmodule Kalcifer.AI.FlowSnapshotTest do
     insert(:flow_version, flow: flow, version_number: 2, status: "published")
     conv = conversation_linked_to(flow)
 
-    assert FlowSnapshot.for_conversation(conv.id) =~ "Version: 2 (published)"
+    assert FlowSnapshot.for_conversation(flow.tenant_id, conv.id) =~ "Version: 2 (published)"
   end
 
   test "truncates long config values" do
@@ -75,7 +76,7 @@ defmodule Kalcifer.AI.FlowSnapshotTest do
     insert(:flow_version, flow: flow, version_number: 1, status: "draft", graph: graph)
     conv = conversation_linked_to(flow)
 
-    snapshot = FlowSnapshot.for_conversation(conv.id)
+    snapshot = FlowSnapshot.for_conversation(flow.tenant_id, conv.id)
 
     refute snapshot =~ long_value
     assert snapshot =~ "…"
@@ -93,10 +94,28 @@ defmodule Kalcifer.AI.FlowSnapshotTest do
     insert(:flow_version, flow: flow, version_number: 1, status: "draft", graph: graph)
     conv = conversation_linked_to(flow)
 
-    snapshot = FlowSnapshot.for_conversation(conv.id)
+    snapshot = FlowSnapshot.for_conversation(flow.tenant_id, conv.id)
 
     assert snapshot =~ "n1 (wait)"
     refute snapshot =~ "duration"
     assert snapshot =~ "get_flow_graph"
+  end
+
+  test "returns nil when the conversation belongs to another tenant" do
+    flow = insert(:flow)
+    conv = conversation_linked_to(flow)
+    other_tenant = insert(:tenant)
+
+    assert FlowSnapshot.for_conversation(other_tenant.id, conv.id) == nil
+  end
+
+  test "returns nil when the linked flow belongs to a different tenant than the conversation" do
+    flow = insert(:flow)
+    insert(:flow_version, flow: flow, version_number: 1, status: "draft")
+    other_tenant = insert(:tenant)
+    {:ok, conv} = Context.create_conversation(other_tenant.id)
+    {:ok, conv} = Context.link_entity(conv, "flow", flow.id)
+
+    assert FlowSnapshot.for_conversation(other_tenant.id, conv.id) == nil
   end
 end

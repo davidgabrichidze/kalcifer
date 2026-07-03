@@ -4,9 +4,12 @@ defmodule Kalcifer.AI.FlowSnapshot do
   injection into the AI system prompt. Read-only — never creates versions.
 
   Returns nil when the conversation has no linked flow, the flow or its
-  versions are missing, or anything fails to load — the chat must keep
-  working without a snapshot.
+  versions are missing, the flow belongs to a different tenant, or anything
+  fails to load — the chat must keep working without a snapshot. Snapshot
+  build failures are logged and skipped.
   """
+
+  require Logger
 
   alias Kalcifer.AI.Context
   alias Kalcifer.Flows
@@ -16,20 +19,23 @@ defmodule Kalcifer.AI.FlowSnapshot do
   # Above this many nodes, configs are omitted entirely (ids/types/edges kept).
   @config_node_limit 30
 
-  @spec for_conversation(String.t() | nil) :: String.t() | nil
-  def for_conversation(nil), do: nil
+  @spec for_conversation(String.t(), String.t() | nil) :: String.t() | nil
+  def for_conversation(_tenant_id, nil), do: nil
 
-  def for_conversation(conversation_id) do
+  def for_conversation(tenant_id, conversation_id) do
     with %{entity_type: "flow", entity_id: flow_id} when not is_nil(flow_id) <-
-           Context.get_conversation(conversation_id),
+           Context.get_conversation(tenant_id, conversation_id),
          %{} = flow <- Flows.get_flow(flow_id),
+         true <- flow.tenant_id == tenant_id,
          %{} = version <- current_working_version(flow.id) do
       render(flow, version)
     else
       _ -> nil
     end
   rescue
-    _ -> nil
+    e ->
+      Logger.warning("flow snapshot failed: #{Exception.message(e)}")
+      nil
   end
 
   # The version the AI and the editor both work on: the latest draft,

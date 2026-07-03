@@ -13,7 +13,7 @@ defmodule Kalcifer.AI.SystemPrompt do
     [
       Client.default_system_prompt(),
       memory_block(tenant_id),
-      FlowSnapshot.for_conversation(conversation_id)
+      FlowSnapshot.for_conversation(tenant_id, conversation_id)
     ]
     |> Enum.reject(&is_nil/1)
     |> Enum.join("\n")
