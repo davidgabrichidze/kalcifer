@@ -28,6 +28,8 @@ interface ChatPanelProps {
   onContextContent?: (content: ContextContent) => void
   /** Called when a new artifact is produced (flow created, analysis done, etc.) */
   onArtifact?: (artifact: Artifact) => void
+  /** Called when the AI mutates a flow graph via a tool call */
+  onFlowMutated?: (flowId: string) => void
 }
 
 export default function ChatPanel({
@@ -40,6 +42,7 @@ export default function ChatPanel({
   onInitialMessageSent,
   onContextContent,
   onArtifact,
+  onFlowMutated,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -231,6 +234,13 @@ export default function ChatPanel({
   function detectFlowGraph(tool: string, result: string) {
     try {
       const parsed = JSON.parse(result)
+
+      // Notify parent that the AI changed the graph so the editor can refresh
+      const MUTATING_TOOLS = ['create_flow', 'add_node', 'modify_node', 'remove_node']
+      const mutatedFlowId = tool === 'create_flow' ? parsed.id : parsed.flow_id
+      if (MUTATING_TOOLS.includes(tool) && mutatedFlowId) {
+        onFlowMutated?.(mutatedFlowId)
+      }
 
       // Emit artifacts for the panel
       if (tool === 'create_flow' && parsed.id) {

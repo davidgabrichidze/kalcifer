@@ -152,3 +152,63 @@ describe('ChatPanel', () => {
     expect(abortSpy).not.toHaveBeenCalled()
   })
 })
+
+describe('ChatPanel — flow mutation notifications', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  function streamWithToolDone(tool: string, result: unknown) {
+    vi.mocked(streamChat).mockImplementation((_messages, callbacks) => {
+      setTimeout(() => {
+        callbacks.onToolDone?.(tool, JSON.stringify(result))
+        callbacks.onDone?.('done')
+      }, 10)
+      return new AbortController()
+    })
+  }
+
+  async function sendMessage() {
+    const textarea = screen.getByPlaceholderText('მიამბე რა გინდა გააკეთო...')
+    fireEvent.change(textarea, { target: { value: 'დაამატე ნაბიჯი' } })
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false })
+  }
+
+  it('fires onFlowMutated when add_node completes', async () => {
+    const onFlowMutated = vi.fn()
+    streamWithToolDone('add_node', { flow_id: 'flow-42', added_node: 'wait_1' })
+
+    render(<ChatPanel {...defaultProps} onFlowMutated={onFlowMutated} />)
+    await sendMessage()
+
+    await waitFor(() => {
+      expect(onFlowMutated).toHaveBeenCalledWith('flow-42')
+    })
+  })
+
+  it('fires onFlowMutated with the new flow id when create_flow completes', async () => {
+    const onFlowMutated = vi.fn()
+    streamWithToolDone('create_flow', { id: 'flow-77', name: 'ახალი', graph: { nodes: [], edges: [] } })
+
+    render(<ChatPanel {...defaultProps} onFlowMutated={onFlowMutated} />)
+    await sendMessage()
+
+    await waitFor(() => {
+      expect(onFlowMutated).toHaveBeenCalledWith('flow-77')
+    })
+  })
+
+  it('does not fire onFlowMutated for read-only tools', async () => {
+    const onFlowMutated = vi.fn()
+    streamWithToolDone('get_flow_graph', { flow_id: 'flow-42', nodes: [], edges: [] })
+
+    render(<ChatPanel {...defaultProps} onFlowMutated={onFlowMutated} />)
+    await sendMessage()
+
+    // Wait for the stream to settle (tool badge summary confirms onToolDone fired)
+    await waitFor(() => {
+      expect(screen.getByText(/სამუშაო შესრულდა/)).toBeInTheDocument()
+    })
+    expect(onFlowMutated).not.toHaveBeenCalled()
+  })
+})
