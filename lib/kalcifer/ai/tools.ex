@@ -763,20 +763,15 @@ defmodule Kalcifer.AI.Tools do
           |> Ecto.Changeset.change(graph: updated_graph)
           |> Kalcifer.Repo.update()
 
-        # Include current node list so AI knows full state
-        all_node_ids =
-          (nodes ++ [node_map])
-          |> Enum.map(fn n -> %{id: n["id"], type: n["type"]} end)
-
-        result = %{
-          flow_id: flow_id,
-          added_node: node_map["id"],
-          added_edges: length(edge_maps),
-          total_nodes: length(nodes) + 1,
-          version_number: version.version_number,
-          validation_warnings: warnings,
-          current_nodes: all_node_ids
-        }
+        result =
+          %{
+            flow_id: flow_id,
+            added_node: node_map["id"],
+            added_edges: length(edge_maps),
+            version_number: version.version_number,
+            validation_warnings: warnings
+          }
+          |> Map.merge(graph_summary(updated_graph))
 
         {:ok, Jason.encode!(result, pretty: true)}
       end
@@ -812,12 +807,14 @@ defmodule Kalcifer.AI.Tools do
             |> Ecto.Changeset.change(graph: updated_graph)
             |> Kalcifer.Repo.update()
 
-          result = %{
-            flow_id: flow_id,
-            modified_node: node_id,
-            node_type: old_node["type"],
-            version_number: version.version_number
-          }
+          result =
+            %{
+              flow_id: flow_id,
+              modified_node: node_id,
+              node_type: old_node["type"],
+              version_number: version.version_number
+            }
+            |> Map.merge(graph_summary(updated_graph))
 
           {:ok, Jason.encode!(result, pretty: true)}
       end
@@ -853,13 +850,14 @@ defmodule Kalcifer.AI.Tools do
           |> Ecto.Changeset.change(graph: updated_graph)
           |> Kalcifer.Repo.update()
 
-        result = %{
-          flow_id: flow_id,
-          removed_node: node_id,
-          removed_edges: length(edges) - length(updated_edges),
-          total_nodes: length(updated_nodes),
-          version_number: version.version_number
-        }
+        result =
+          %{
+            flow_id: flow_id,
+            removed_node: node_id,
+            removed_edges: length(edges) - length(updated_edges),
+            version_number: version.version_number
+          }
+          |> Map.merge(graph_summary(updated_graph))
 
         {:ok, Jason.encode!(result, pretty: true)}
       else
@@ -1189,6 +1187,19 @@ defmodule Kalcifer.AI.Tools do
         {:error, _} -> nil
       end
     end
+  end
+
+  # Post-mutation graph state, merged into mutating tool results so the AI
+  # always knows the exact resulting structure without a follow-up fetch.
+  defp graph_summary(graph) do
+    nodes = Map.get(graph, "nodes", [])
+    edges = Map.get(graph, "edges", [])
+
+    %{
+      total_nodes: length(nodes),
+      total_edges: length(edges),
+      current_nodes: Enum.map(nodes, fn n -> %{id: n["id"], type: n["type"]} end)
+    }
   end
 
   # Idempotency: look up the flow linked to this conversation.
