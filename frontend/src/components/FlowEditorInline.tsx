@@ -34,6 +34,10 @@ interface FlowEditorInlineProps {
   flowId: string
   /** Bumped by the parent when the AI mutates the graph — triggers a re-fetch */
   refreshToken?: number
+  /** Id of the flow that caused the last refreshToken bump. When present and
+   *  different from `flowId`, the bump is ignored — it belongs to an
+   *  unrelated flow (e.g. AI mutated flow B while this editor shows flow A). */
+  refreshFlowId?: string | null
   /** Called when the user clicks the "open in editor" button */
   onOpenFullEditor?: (flowId: string) => void
 }
@@ -51,7 +55,7 @@ function pickWorkingVersion(versions: FlowVersion[]): FlowVersion | null {
  * Inline flow editor for the WorkPage context panel.
  * A compact version of FlowEditorPage — no standalone topbar, fits inside a panel.
  */
-export default function FlowEditorInline({ flowId, refreshToken, onOpenFullEditor }: FlowEditorInlineProps) {
+export default function FlowEditorInline({ flowId, refreshToken, refreshFlowId, onOpenFullEditor }: FlowEditorInlineProps) {
   // Flow data
   const [flow, setFlow] = useState<Flow | null>(null)
   const [flowVersion, setFlowVersion] = useState<FlowVersion | null>(null)
@@ -159,16 +163,19 @@ export default function FlowEditorInline({ flowId, refreshToken, onOpenFullEdito
     loadFlow()
   }, [loadFlow])
 
-  // AI edited the graph: refresh if safe, otherwise warn (never clobber local edits)
+  // AI edited the graph: refresh if safe, otherwise warn (never clobber local edits).
+  // Ignore bumps for an unrelated flow — the mutation happened to a different
+  // flow than the one this editor instance is showing.
   useEffect(() => {
     if (refreshToken === undefined || refreshToken === prevRefreshRef.current) return
     prevRefreshRef.current = refreshToken
+    if (refreshFlowId != null && refreshFlowId !== flowId) return
     if (hasChangesRef.current) {
       setStaleNotice(true)
     } else {
       loadFlow()
     }
-  }, [refreshToken, loadFlow])
+  }, [refreshToken, refreshFlowId, flowId, loadFlow])
 
   // Node selection
   const handleNodeSelect = useCallback(
@@ -180,12 +187,19 @@ export default function FlowEditorInline({ flowId, refreshToken, onOpenFullEdito
     [],
   )
 
-  // Graph changes
+  // Graph state sync — counts/refs only. Fires on mount and any programmatic
+  // setNodes (e.g. flowGraph load, sim overlay), so it must NOT set the dirty
+  // flag — see handleUserEdit for that.
   const handleGraphChange = useCallback((nodes: Node[], edges: Edge[]) => {
     setNodeCount(nodes.length)
     setEdgeCount(edges.length)
     latestNodesRef.current = nodes
     latestEdgesRef.current = edges
+  }, [])
+
+  // Real user edit (drag, add, remove, connect) — this is the only signal
+  // that should mark the graph dirty / trigger the stale-refresh banner.
+  const handleUserEdit = useCallback(() => {
     setHasChanges(true)
     hasChangesRef.current = true
   }, [])
@@ -541,6 +555,7 @@ export default function FlowEditorInline({ flowId, refreshToken, onOpenFullEdito
           editable={mode === 'edit'}
           onNodeSelect={handleNodeSelect}
           onGraphChange={handleGraphChange}
+          onUserEdit={handleUserEdit}
           showMiniMap={true}
           showControls={true}
           simCompletedNodes={

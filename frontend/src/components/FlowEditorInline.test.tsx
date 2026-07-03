@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import FlowEditorInline from './FlowEditorInline'
@@ -46,22 +47,34 @@ vi.mock('../lib/useFlowSocket', () => ({
   })),
 }))
 
-// Mock FlowCanvas
+// Mock FlowCanvas — mimics reality: onGraphChange fires on mount (graph state
+// sync), while onUserEdit only fires on a genuine user interaction.
 vi.mock('./FlowCanvas', () => ({
   default: ({
     flowGraph,
     onGraphChange,
+    onUserEdit,
   }: {
     flowGraph: { nodes: unknown[] } | null
     onGraphChange?: (nodes: unknown[], edges: unknown[]) => void
-  }) => (
-    <div data-testid="flow-canvas">
-      <button data-testid="simulate-local-edit" onClick={() => onGraphChange?.([{ id: 'n1' }], [])}>
-        edit
-      </button>
-      {flowGraph ? `${flowGraph.nodes.length} nodes` : 'no graph'}
-    </div>
-  ),
+    onUserEdit?: () => void
+  }) => {
+    // Real FlowCanvas notifies the parent of graph state on every mount/sync,
+    // independent of whether the user actually touched anything.
+    useEffect(() => {
+      onGraphChange?.(flowGraph ? [{ id: 'n1' }] : [], [])
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flowGraph])
+
+    return (
+      <div data-testid="flow-canvas">
+        <button data-testid="simulate-local-edit" onClick={() => onUserEdit?.()}>
+          edit
+        </button>
+        {flowGraph ? `${flowGraph.nodes.length} nodes` : 'no graph'}
+      </div>
+    )
+  },
 }))
 
 // Mock editor sub-components
@@ -201,11 +214,14 @@ describe('FlowEditorInline — version selection and refresh', () => {
       expect(vi.mocked(fetchFlow)).toHaveBeenCalledTimes(1)
     })
 
+    // No user interaction happened — only the initial mount/sync notify from
+    // FlowCanvas (onGraphChange), which must NOT count as a dirty edit.
     rerender(<FlowEditorInline flowId="flow-123" refreshToken={1} />)
 
     await waitFor(() => {
       expect(vi.mocked(fetchFlow)).toHaveBeenCalledTimes(2)
     })
+    expect(screen.queryByText(/AI-მ განაახლა გრაფი/)).not.toBeInTheDocument()
   })
 
   it('shows a stale banner instead of clobbering unsaved local edits', async () => {
@@ -229,5 +245,25 @@ describe('FlowEditorInline — version selection and refresh', () => {
     await waitFor(() => {
       expect(vi.mocked(fetchFlow)).toHaveBeenCalledTimes(2)
     })
+  })
+
+  it('ignores a refreshToken bump that belongs to a different flow', async () => {
+    const { rerender } = render(
+      <FlowEditorInline flowId="flow-123" refreshToken={0} refreshFlowId={null} />,
+    )
+
+    await waitFor(() => {
+      expect(vi.mocked(fetchFlow)).toHaveBeenCalledTimes(1)
+    })
+
+    // AI mutated a different flow ("flow-999") — this editor shows flow-123.
+    rerender(<FlowEditorInline flowId="flow-123" refreshToken={1} refreshFlowId="flow-999" />)
+
+    // Give any effects a chance to run, then assert nothing happened.
+    await waitFor(() => {
+      expect(screen.getByTestId('flow-canvas')).toBeInTheDocument()
+    })
+    expect(vi.mocked(fetchFlow)).toHaveBeenCalledTimes(1)
+    expect(screen.queryByText(/AI-მ განაახლა გრაფი/)).not.toBeInTheDocument()
   })
 })
