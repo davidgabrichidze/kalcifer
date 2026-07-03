@@ -32,15 +32,26 @@ import './flow-editor-inline.css'
 
 interface FlowEditorInlineProps {
   flowId: string
+  /** Bumped by the parent when the AI mutates the graph — triggers a re-fetch */
+  refreshToken?: number
   /** Called when the user clicks the "open in editor" button */
   onOpenFullEditor?: (flowId: string) => void
+}
+
+// Backend returns versions ascending, so versions[0] is the oldest — pick the
+// working version the AI edits (latest draft, or latest version when no draft).
+function pickWorkingVersion(versions: FlowVersion[]): FlowVersion | null {
+  if (!versions || versions.length === 0) return null
+  const drafts = versions.filter(v => v.status === 'draft')
+  const pool = drafts.length > 0 ? drafts : versions
+  return pool.reduce((a, b) => (b.version_number > a.version_number ? b : a))
 }
 
 /**
  * Inline flow editor for the WorkPage context panel.
  * A compact version of FlowEditorPage — no standalone topbar, fits inside a panel.
  */
-export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEditorInlineProps) {
+export default function FlowEditorInline({ flowId, refreshToken, onOpenFullEditor }: FlowEditorInlineProps) {
   // Flow data
   const [flow, setFlow] = useState<Flow | null>(null)
   const [flowVersion, setFlowVersion] = useState<FlowVersion | null>(null)
@@ -69,6 +80,12 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
   const latestNodesRef = useRef<Node[]>([])
   const latestEdgesRef = useRef<Edge[]>([])
   const canvasRef = useRef<FlowCanvasHandle>(null)
+
+  // Refresh / stale state
+  const [staleNotice, setStaleNotice] = useState(false)
+  const [canvasKey, setCanvasKey] = useState(0)
+  const hasChangesRef = useRef(false)
+  const prevRefreshRef = useRef(refreshToken)
 
   // Undo/redo
   const [canUndo, setCanUndo] = useState(false)
@@ -112,7 +129,7 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
   const simAbortRef = useRef<AbortController | null>(null)
 
   // Load flow data
-  useEffect(() => {
+  const loadFlow = useCallback(() => {
     if (!flowId) {
       setLoading(false)
       return
@@ -124,9 +141,11 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
     Promise.all([fetchFlow(flowId), fetchFlowVersions(flowId)])
       .then(([flowData, versions]) => {
         setFlow(flowData)
-        if (versions && versions.length > 0) {
-          setFlowVersion(versions[0] || null)
-        }
+        setFlowVersion(pickWorkingVersion(versions))
+        setHasChanges(false)
+        hasChangesRef.current = false
+        setStaleNotice(false)
+        setCanvasKey(k => k + 1)
       })
       .catch(err => {
         setError(err.message)
@@ -135,6 +154,21 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
         setLoading(false)
       })
   }, [flowId])
+
+  useEffect(() => {
+    loadFlow()
+  }, [loadFlow])
+
+  // AI edited the graph: refresh if safe, otherwise warn (never clobber local edits)
+  useEffect(() => {
+    if (refreshToken === undefined || refreshToken === prevRefreshRef.current) return
+    prevRefreshRef.current = refreshToken
+    if (hasChangesRef.current) {
+      setStaleNotice(true)
+    } else {
+      loadFlow()
+    }
+  }, [refreshToken, loadFlow])
 
   // Node selection
   const handleNodeSelect = useCallback(
@@ -153,6 +187,7 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
     latestNodesRef.current = nodes
     latestEdgesRef.current = edges
     setHasChanges(true)
+    hasChangesRef.current = true
   }, [])
 
   // Suggestions
@@ -220,6 +255,7 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
       )
       await updateFlowVersion(flowId, flowVersion.version_number, graph)
       setHasChanges(false)
+      hasChangesRef.current = false
     } catch (err) {
       console.error('Save failed:', err)
     } finally {
@@ -491,7 +527,15 @@ export default function FlowEditorInline({ flowId, onOpenFullEditor }: FlowEdito
 
       {/* Canvas area */}
       <div className="fei-canvas-area">
+        {staleNotice && (
+          <div className="fei-stale-banner">
+            <span>AI-მ განაახლა გრაფი — ხელახლა ჩატვირთვა წაშლის შენს შეუნახავ ცვლილებებს.</span>
+            <button type="button" onClick={loadFlow}>ჩატვირთე ხელახლა</button>
+            <button type="button" onClick={() => setStaleNotice(false)}>დარჩი ჩემს ვერსიაზე</button>
+          </div>
+        )}
         <FlowCanvas
+          key={canvasKey}
           ref={canvasRef}
           flowGraph={flowVersion?.graph || null}
           editable={mode === 'edit'}
