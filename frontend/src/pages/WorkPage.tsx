@@ -52,6 +52,7 @@ export default function WorkPage() {
   const [rightMode, setRightMode] = useState<RightMode>('hidden')
   const [splitRatio, setSplitRatio] = useState(0.45)
   const [contextContent, setContextContent] = useState<ContextContent>(null)
+  const [editorRefreshToken, setEditorRefreshToken] = useState(0)
   const mainRef = useRef<HTMLDivElement>(null)
 
   // Artifacts — collected from tool results during conversation
@@ -204,6 +205,11 @@ export default function WorkPage() {
     setRightMode('editor')
   }, [])
 
+  // AI mutated a flow graph → tell the inline editor to refresh
+  const handleFlowMutated = useCallback(() => {
+    setEditorRefreshToken(n => n + 1)
+  }, [])
+
   // Editor: back → return to sidebar mode
   const handleBack = useCallback(() => {
     setRightMode('sidebar')
@@ -313,6 +319,7 @@ export default function WorkPage() {
               onInitialMessageSent={handleInitialMessageSent}
               onContextContent={handleContextContent}
               onArtifact={handleArtifact}
+              onFlowMutated={handleFlowMutated}
             />
           </div>
         )}
@@ -333,6 +340,7 @@ export default function WorkPage() {
           onArtifactClick={handleArtifactClick}
           isWorking={isWorking}
           editorContent={contextContent}
+          editorRefreshToken={editorRefreshToken}
           onBack={handleBack}
           onClose={handleClose}
           onOpenFullEditor={handleOpenFullEditor}

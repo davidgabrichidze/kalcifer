@@ -15,6 +15,8 @@ interface RightPanelProps {
   isWorking?: boolean
   // Editor props
   editorContent: ContextContent
+  /** Bumped when the AI mutates a flow graph — forwarded to the inline editor */
+  editorRefreshToken?: number
   onBack: () => void
   onClose: () => void
   onOpenFullEditor?: (flowId: string) => void
@@ -28,6 +30,7 @@ export default function RightPanel({
   onArtifactClick,
   isWorking = false,
   editorContent,
+  editorRefreshToken,
   onBack,
   onClose,
   onOpenFullEditor,
@@ -88,6 +91,7 @@ export default function RightPanel({
         {editorContent?.type === 'flow-editor' && (
           <FlowEditorInline
             flowId={editorContent.flowId}
+            refreshToken={editorRefreshToken}
             onOpenFullEditor={onOpenFullEditor}
           />
         )}
