@@ -257,8 +257,9 @@ defmodule KalciferWeb.SettingsController do
   defp provider_order(_), do: 9
 
   defp model_display_name("claude-haiku-4-5-20251001"), do: "Claude Haiku 4.5"
-  defp model_display_name("claude-sonnet-4-5-20250514"), do: "Claude Sonnet 4.5"
   defp model_display_name("claude-sonnet-4-6"), do: "Claude Sonnet 4.6"
+  defp model_display_name("claude-sonnet-5"), do: "Claude Sonnet 5"
+  defp model_display_name("claude-opus-4-8"), do: "Claude Opus 4.8"
   defp model_display_name("gpt-4o"), do: "GPT-4o"
   defp model_display_name("gpt-4o-mini"), do: "GPT-4o Mini"
   defp model_display_name("o3-mini"), do: "o3-mini"

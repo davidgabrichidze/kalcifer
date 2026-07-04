@@ -18,8 +18,9 @@ defmodule Kalcifer.Tenants.Tenant do
   @valid_ai_models %{
     "anthropic" => ~w(
       claude-haiku-4-5-20251001
-      claude-sonnet-4-5-20250514
       claude-sonnet-4-6
+      claude-sonnet-5
+      claude-opus-4-8
     ),
     "openai" => ~w(
       gpt-4o
