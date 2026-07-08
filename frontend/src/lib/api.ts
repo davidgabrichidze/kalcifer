@@ -123,6 +123,8 @@ export interface Conversation {
   title: string | null
   kind: string | null
   status: string
+  entity_type: string | null
+  entity_id: string | null
   inserted_at: string
   updated_at: string
 }

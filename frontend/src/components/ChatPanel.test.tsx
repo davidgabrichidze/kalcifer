@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useState } from 'react'
 import ChatPanel from './ChatPanel'
-import { streamChat } from '../lib/api'
+import { streamChat, fetchConversation } from '../lib/api'
 
 // Mock the API module
 vi.mock('../lib/api', () => ({
@@ -210,5 +210,66 @@ describe('ChatPanel — flow mutation notifications', () => {
       expect(screen.getByText(/სამუშაო შესრულდა/)).toBeInTheDocument()
     })
     expect(onFlowMutated).not.toHaveBeenCalled()
+  })
+})
+
+describe('ChatPanel — reopening a flow-linked conversation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('restores the flow editor when a flow-linked conversation loads', async () => {
+    vi.mocked(fetchConversation).mockResolvedValueOnce({
+      id: 'conv-1',
+      title: 'A/B ტესტი',
+      kind: 'campaign',
+      status: 'active',
+      entity_type: 'flow',
+      entity_id: 'flow-55',
+      inserted_at: '2026-07-08T13:12:12Z',
+      updated_at: '2026-07-08T13:47:45Z',
+      messages: [],
+    })
+    const onContextContent = vi.fn()
+
+    render(
+      <ChatPanel
+        {...defaultProps}
+        conversationId="conv-1"
+        onContextContent={onContextContent}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(onContextContent).toHaveBeenCalledWith({ type: 'flow-editor', flowId: 'flow-55' })
+    })
+  })
+
+  it('does not open the editor for a conversation with no linked flow', async () => {
+    vi.mocked(fetchConversation).mockResolvedValueOnce({
+      id: 'conv-2',
+      title: 'ჩვეულებრივი საუბარი',
+      kind: 'analysis',
+      status: 'active',
+      entity_type: null,
+      entity_id: null,
+      inserted_at: '2026-07-08T13:12:12Z',
+      updated_at: '2026-07-08T13:47:45Z',
+      messages: [],
+    })
+    const onContextContent = vi.fn()
+
+    render(
+      <ChatPanel
+        {...defaultProps}
+        conversationId="conv-2"
+        onContextContent={onContextContent}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(fetchConversation).toHaveBeenCalledWith('conv-2')
+    })
+    expect(onContextContent).not.toHaveBeenCalled()
   })
 })

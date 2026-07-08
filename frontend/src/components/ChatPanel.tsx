@@ -419,6 +419,13 @@ export default function ChatPanel({
           createMessage(m.role === 'user' ? 'user' : 'ai', m.content),
         )
         setMessages(loaded)
+
+        // Reopening a conversation already linked to a flow — restore the
+        // editor. The live session_classified SSE event only fires once,
+        // during classification, so it can't do this on a resumed session.
+        if (detail.entity_type === 'flow' && detail.entity_id) {
+          onContextContent?.({ type: 'flow-editor', flowId: detail.entity_id })
+        }
       } catch {
         // Ignore — conversation might not exist yet
       }
