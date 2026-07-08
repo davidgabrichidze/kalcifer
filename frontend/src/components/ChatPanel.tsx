@@ -262,6 +262,18 @@ export default function ChatPanel({
           data: parsed,
           timestamp: Date.now(),
         })
+      } else if (['add_node', 'modify_node', 'remove_node'].includes(tool) && parsed.flow_id) {
+        // No flow name in these results — keep the card's node count fresh
+        // without stomping a nicer title an earlier create_flow/get_flow set.
+        onArtifact?.({
+          id: `flow-${parsed.flow_id}`,
+          type: 'flow',
+          title: 'ფლოუ',
+          subtitle: typeof parsed.total_nodes === 'number' ? `${parsed.total_nodes} ნაბიჯი` : undefined,
+          resourceId: parsed.flow_id,
+          data: parsed,
+          timestamp: Date.now(),
+        })
       } else if (tool === 'analyze_flow') {
         onArtifact?.({
           id: `analysis-${Date.now()}`,
@@ -291,17 +303,8 @@ export default function ChatPanel({
           timestamp: Date.now(),
         })
       }
-
-      // Also open context panel
-      if (!onContextContent || !FLOW_TOOLS.includes(tool)) return
-
-      if (parsed.id && parsed.graph) {
-        onContextContent({ type: 'flow-editor', flowId: parsed.id })
-      } else if (parsed.flow_id) {
-        onContextContent({ type: 'flow-editor', flowId: parsed.flow_id })
-      } else if (parsed.graph?.nodes && parsed.graph?.edges) {
-        onContextContent({ type: 'flow-canvas', flowGraph: parsed.graph })
-      }
+      // Opening the editor is the user's call — see the artifact card's own
+      // click handler and the inline per-message card below. No auto-open here.
     } catch { /* not JSON, ignore */ }
   }
 
@@ -420,11 +423,19 @@ export default function ChatPanel({
         )
         setMessages(loaded)
 
-        // Reopening a conversation already linked to a flow — restore the
-        // editor. The live session_classified SSE event only fires once,
-        // during classification, so it can't do this on a resumed session.
+        // Reopening a conversation already linked to a flow — show it as an
+        // artifact card. Opening the editor stays the user's call (click the
+        // card); the session_classified SSE event that would otherwise do
+        // this only fires once, during classification, so a resumed
+        // conversation needs its own way to surface the link.
         if (detail.entity_type === 'flow' && detail.entity_id) {
-          onContextContent?.({ type: 'flow-editor', flowId: detail.entity_id })
+          onArtifact?.({
+            id: `flow-${detail.entity_id}`,
+            type: 'flow',
+            title: 'ფლოუ',
+            resourceId: detail.entity_id,
+            timestamp: Date.now(),
+          })
         }
       } catch {
         // Ignore — conversation might not exist yet

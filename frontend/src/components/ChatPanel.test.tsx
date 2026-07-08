@@ -211,6 +211,42 @@ describe('ChatPanel — flow mutation notifications', () => {
     })
     expect(onFlowMutated).not.toHaveBeenCalled()
   })
+
+  it('never force-opens the editor on a tool call — only emits an artifact card', async () => {
+    const onContextContent = vi.fn()
+    const onArtifact = vi.fn()
+    streamWithToolDone('create_flow', { id: 'flow-77', name: 'ახალი', graph: { nodes: [], edges: [] } })
+
+    render(<ChatPanel {...defaultProps} onContextContent={onContextContent} onArtifact={onArtifact} />)
+    await sendMessage()
+
+    await waitFor(() => {
+      expect(onArtifact).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'flow', resourceId: 'flow-77' }),
+      )
+    })
+    expect(onContextContent).not.toHaveBeenCalled()
+  })
+
+  it('emits a flow artifact when add_node completes, so the card stays fresh', async () => {
+    const onArtifact = vi.fn()
+    streamWithToolDone('add_node', {
+      flow_id: 'flow-42',
+      added_node: 'wait_1',
+      total_nodes: 4,
+      total_edges: 3,
+      current_nodes: [],
+    })
+
+    render(<ChatPanel {...defaultProps} onArtifact={onArtifact} />)
+    await sendMessage()
+
+    await waitFor(() => {
+      expect(onArtifact).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'flow-flow-42', type: 'flow', resourceId: 'flow-42', subtitle: '4 ნაბიჯი' }),
+      )
+    })
+  })
 })
 
 describe('ChatPanel — reopening a flow-linked conversation', () => {
@@ -218,7 +254,7 @@ describe('ChatPanel — reopening a flow-linked conversation', () => {
     vi.clearAllMocks()
   })
 
-  it('restores the flow editor when a flow-linked conversation loads', async () => {
+  it('shows the linked flow as an artifact card — does not force-open the editor', async () => {
     vi.mocked(fetchConversation).mockResolvedValueOnce({
       id: 'conv-1',
       title: 'A/B ტესტი',
@@ -231,21 +267,26 @@ describe('ChatPanel — reopening a flow-linked conversation', () => {
       messages: [],
     })
     const onContextContent = vi.fn()
+    const onArtifact = vi.fn()
 
     render(
       <ChatPanel
         {...defaultProps}
         conversationId="conv-1"
         onContextContent={onContextContent}
+        onArtifact={onArtifact}
       />,
     )
 
     await waitFor(() => {
-      expect(onContextContent).toHaveBeenCalledWith({ type: 'flow-editor', flowId: 'flow-55' })
+      expect(onArtifact).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'flow', resourceId: 'flow-55' }),
+      )
     })
+    expect(onContextContent).not.toHaveBeenCalled()
   })
 
-  it('does not open the editor for a conversation with no linked flow', async () => {
+  it('does not emit an artifact for a conversation with no linked flow', async () => {
     vi.mocked(fetchConversation).mockResolvedValueOnce({
       id: 'conv-2',
       title: 'ჩვეულებრივი საუბარი',
@@ -257,19 +298,19 @@ describe('ChatPanel — reopening a flow-linked conversation', () => {
       updated_at: '2026-07-08T13:47:45Z',
       messages: [],
     })
-    const onContextContent = vi.fn()
+    const onArtifact = vi.fn()
 
     render(
       <ChatPanel
         {...defaultProps}
         conversationId="conv-2"
-        onContextContent={onContextContent}
+        onArtifact={onArtifact}
       />,
     )
 
     await waitFor(() => {
       expect(fetchConversation).toHaveBeenCalledWith('conv-2')
     })
-    expect(onContextContent).not.toHaveBeenCalled()
+    expect(onArtifact).not.toHaveBeenCalled()
   })
 })
