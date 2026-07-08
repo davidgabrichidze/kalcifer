@@ -65,7 +65,7 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Think do
       "include_context" => %{"type" => "boolean", "default" => true},
       "model" => %{
         "type" => "string",
-        "description" => "Override AI model for this node (e.g. 'gpt-4o', 'claude-sonnet-5')"
+        "description" => "Override AI model for this node (e.g. 'gpt-5.5', 'claude-sonnet-5')"
       }
     }
   end

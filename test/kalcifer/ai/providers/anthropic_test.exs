@@ -31,6 +31,12 @@ defmodule Kalcifer.AI.Providers.AnthropicTest do
   end
 
   describe "build_body/2" do
+    test "defaults to claude-sonnet-5 when no model is given" do
+      body = Anthropic.build_body([%{role: "user", content: "hi"}], [])
+
+      assert body.model == "claude-sonnet-5"
+    end
+
     test "does not send sampling or thinking parameters" do
       body = Anthropic.build_body([%{role: "user", content: "hi"}], [])
 

@@ -23,13 +23,13 @@ defmodule Kalcifer.Tenants.Tenant do
       claude-opus-4-8
     ),
     "openai" => ~w(
-      gpt-4o
-      gpt-4o-mini
-      o3-mini
+      gpt-5.5
+      gpt-5.4-mini
+      gpt-5.4-nano
     ),
     "google" => ~w(
-      gemini-2.5-pro
-      gemini-2.5-flash
+      gemini-3.1-pro-preview
+      gemini-3.5-flash
     )
   }
 

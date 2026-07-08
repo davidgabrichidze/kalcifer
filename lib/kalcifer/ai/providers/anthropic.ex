@@ -28,7 +28,7 @@ defmodule Kalcifer.AI.Providers.Anthropic do
 
   def build_body(messages, opts) do
     %{
-      model: Keyword.get(opts, :model, "claude-haiku-4-5-20251001"),
+      model: Keyword.get(opts, :model, "claude-sonnet-5"),
       max_tokens: Keyword.get(opts, :max_tokens, 4096),
       system: Keyword.get(opts, :system, ""),
       messages: messages

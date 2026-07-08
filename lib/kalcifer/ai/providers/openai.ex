@@ -42,7 +42,7 @@ defmodule Kalcifer.AI.Providers.OpenAI do
       end)
 
     %{
-      model: Keyword.get(opts, :model, "gpt-4o-mini"),
+      model: Keyword.get(opts, :model, "gpt-5.4-mini"),
       max_completion_tokens: Keyword.get(opts, :max_tokens, 4096),
       messages: system_msgs ++ converted
     }

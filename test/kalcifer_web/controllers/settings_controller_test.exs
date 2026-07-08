@@ -16,7 +16,7 @@ defmodule KalciferWeb.SettingsControllerTest do
       conn = get(conn, "/api/v1/settings")
       result = json_response(conn, 200)
 
-      assert result["ai_model"] == "claude-haiku-4-5-20251001"
+      assert result["ai_model"] == "claude-sonnet-5"
       assert result["ai_api_key_set"] == false
       assert is_list(result["available_models"])
       assert length(result["available_models"]) >= 3
