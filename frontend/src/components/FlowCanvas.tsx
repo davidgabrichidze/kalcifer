@@ -52,6 +52,8 @@ export interface FlowCanvasProps {
   flowGraph: FlowGraph | null
   editable?: boolean
   onGraphChange?: (nodes: Node[], edges: Edge[]) => void
+  /** Fired ONLY on real user interactions (drag, add, remove, connect) — never on mount/sync. */
+  onUserEdit?: () => void
   onNodeSelect?: (nodeId: string, nodeData: {
     type: string
     label: string
@@ -79,6 +81,7 @@ const FlowCanvasInner = forwardRef<FlowCanvasHandle, FlowCanvasProps>(function F
   flowGraph,
   editable = false,
   onGraphChange,
+  onUserEdit,
   onNodeSelect,
   showMiniMap = true,
   showControls = true,
@@ -116,6 +119,7 @@ const FlowCanvasInner = forwardRef<FlowCanvasHandle, FlowCanvasProps>(function F
             : n,
         ),
       )
+      onUserEdit?.()
     },
     deleteNode: (id) => {
       takeSnapshot(getNodes(), getEdges())
@@ -133,6 +137,7 @@ const FlowCanvasInner = forwardRef<FlowCanvasHandle, FlowCanvasProps>(function F
           }),
       )
       setEdges(eds => eds.filter(e => e.source !== id && e.target !== id))
+      onUserEdit?.()
     },
     addNode: (type) => {
       takeSnapshot(getNodes(), getEdges())
@@ -143,8 +148,9 @@ const FlowCanvasInner = forwardRef<FlowCanvasHandle, FlowCanvasProps>(function F
         data: { label: type, type, description: '', config: {} },
       }
       setNodes(nds => [...nds, newNode])
+      onUserEdit?.()
     },
-  }), [setNodes, setEdges, takeSnapshot, getNodes, getEdges])
+  }), [setNodes, setEdges, takeSnapshot, getNodes, getEdges, onUserEdit])
 
   // Convert flowGraph prop → React Flow nodes/edges
   useEffect(() => {
@@ -190,7 +196,9 @@ const FlowCanvasInner = forwardRef<FlowCanvasHandle, FlowCanvasProps>(function F
     onUndoRedoChange?.(canUndo(), canRedo())
   })
 
-  // Wrap onNodesChange to snapshot before structural changes (add/remove)
+  // Wrap onNodesChange to snapshot before structural changes (add/remove) and
+  // to notify the parent of real user edits (position drags, remove, add —
+  // NOT selection/dimensions, which fire on mount/measure).
   const handleNodesChange = useCallback(
     (changes: Parameters<typeof onNodesChange>[0]) => {
       if (!editable) return
@@ -201,11 +209,21 @@ const FlowCanvasInner = forwardRef<FlowCanvasHandle, FlowCanvasProps>(function F
         takeSnapshot(getNodes(), getEdges())
       }
       onNodesChange(changes)
+      const isMeaningfulChange = changes.some(
+        c =>
+          c.type === 'remove' ||
+          c.type === 'add' ||
+          (c.type === 'position' && c.dragging === false),
+      )
+      if (isMeaningfulChange && !isRestoringRef.current) {
+        onUserEdit?.()
+      }
     },
-    [editable, onNodesChange, takeSnapshot, getNodes, getEdges],
+    [editable, onNodesChange, takeSnapshot, getNodes, getEdges, onUserEdit],
   )
 
-  // Wrap onEdgesChange to snapshot before structural changes
+  // Wrap onEdgesChange to snapshot before structural changes and notify the
+  // parent of real user edits (remove/add — NOT selection).
   const handleEdgesChange = useCallback(
     (changes: Parameters<typeof onEdgesChange>[0]) => {
       if (!editable) return
@@ -216,8 +234,11 @@ const FlowCanvasInner = forwardRef<FlowCanvasHandle, FlowCanvasProps>(function F
         takeSnapshot(getNodes(), getEdges())
       }
       onEdgesChange(changes)
+      if (hasStructuralChange && !isRestoringRef.current) {
+        onUserEdit?.()
+      }
     },
-    [editable, onEdgesChange, takeSnapshot, getNodes, getEdges],
+    [editable, onEdgesChange, takeSnapshot, getNodes, getEdges, onUserEdit],
   )
 
   const handleNodeClick = useCallback(
@@ -239,8 +260,9 @@ const FlowCanvasInner = forwardRef<FlowCanvasHandle, FlowCanvasProps>(function F
       if (!editable) return
       takeSnapshot(getNodes(), getEdges())
       setEdges(eds => addEdge(connection, eds))
+      onUserEdit?.()
     },
-    [editable, setEdges, takeSnapshot, getNodes, getEdges],
+    [editable, setEdges, takeSnapshot, getNodes, getEdges, onUserEdit],
   )
 
   const handleDragOver = useCallback(

@@ -9,11 +9,11 @@ defmodule Kalcifer.AI.Providers.Google do
 
   @base_url "https://generativelanguage.googleapis.com/v1beta"
 
-  def api_url(model \\ "gemini-2.5-flash") do
+  def api_url(model \\ "gemini-3.5-flash") do
     "#{@base_url}/models/#{model}:generateContent"
   end
 
-  def stream_url(model \\ "gemini-2.5-flash") do
+  def stream_url(model \\ "gemini-3.5-flash") do
     "#{@base_url}/models/#{model}:streamGenerateContent?alt=sse"
   end
 

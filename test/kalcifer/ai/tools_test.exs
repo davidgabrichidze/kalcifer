@@ -1315,4 +1315,67 @@ defmodule Kalcifer.AI.ToolsTest do
       assert msg =~ "not found"
     end
   end
+
+  describe "mutating tool results include graph summary" do
+    setup do
+      tenant = insert(:tenant)
+      flow = insert(:flow, tenant: tenant)
+      insert(:flow_version, flow: flow, version_number: 1, status: "draft")
+      %{tenant: tenant, flow: flow}
+    end
+
+    test "modify_node returns total counts and current node list", %{tenant: tenant, flow: flow} do
+      {:ok, result} =
+        Tools.execute(
+          "modify_node",
+          %{
+            "flow_id" => flow.id,
+            "node_id" => "entry_1",
+            "config" => %{"event_type" => "clicked"}
+          },
+          tenant.id
+        )
+
+      decoded = Jason.decode!(result)
+
+      assert decoded["total_nodes"] == 2
+      assert decoded["total_edges"] == 1
+
+      assert %{"id" => "entry_1", "type" => "event_entry"} in decoded["current_nodes"]
+    end
+
+    test "remove_node returns total counts and current node list", %{tenant: tenant, flow: flow} do
+      {:ok, result} =
+        Tools.execute(
+          "remove_node",
+          %{"flow_id" => flow.id, "node_id" => "exit_1"},
+          tenant.id
+        )
+
+      decoded = Jason.decode!(result)
+
+      assert decoded["total_nodes"] == 1
+      assert decoded["total_edges"] == 0
+      assert decoded["current_nodes"] == [%{"id" => "entry_1", "type" => "event_entry"}]
+    end
+
+    test "add_node returns total counts and current node list", %{tenant: tenant, flow: flow} do
+      {:ok, result} =
+        Tools.execute(
+          "add_node",
+          %{
+            "flow_id" => flow.id,
+            "node" => %{"id" => "wait_1", "type" => "wait", "config" => %{"duration" => "1d"}},
+            "edges" => [%{"source" => "entry_1", "target" => "wait_1"}]
+          },
+          tenant.id
+        )
+
+      decoded = Jason.decode!(result)
+
+      assert decoded["total_nodes"] == 3
+      assert decoded["total_edges"] == 2
+      assert Enum.count(decoded["current_nodes"]) == 3
+    end
+  end
 end

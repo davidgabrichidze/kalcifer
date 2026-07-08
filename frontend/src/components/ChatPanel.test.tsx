@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useState } from 'react'
 import ChatPanel from './ChatPanel'
-import { streamChat } from '../lib/api'
+import { streamChat, fetchConversation } from '../lib/api'
 
 // Mock the API module
 vi.mock('../lib/api', () => ({
@@ -150,5 +150,167 @@ describe('ChatPanel', () => {
     // The stream that produced the reply must not have been aborted by the
     // conversationId change it triggered.
     expect(abortSpy).not.toHaveBeenCalled()
+  })
+})
+
+describe('ChatPanel — flow mutation notifications', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  function streamWithToolDone(tool: string, result: unknown) {
+    vi.mocked(streamChat).mockImplementation((_messages, callbacks) => {
+      setTimeout(() => {
+        callbacks.onToolDone?.(tool, JSON.stringify(result))
+        callbacks.onDone?.('done')
+      }, 10)
+      return new AbortController()
+    })
+  }
+
+  async function sendMessage() {
+    const textarea = screen.getByPlaceholderText('მიამბე რა გინდა გააკეთო...')
+    fireEvent.change(textarea, { target: { value: 'დაამატე ნაბიჯი' } })
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false })
+  }
+
+  it('fires onFlowMutated when add_node completes', async () => {
+    const onFlowMutated = vi.fn()
+    streamWithToolDone('add_node', { flow_id: 'flow-42', added_node: 'wait_1' })
+
+    render(<ChatPanel {...defaultProps} onFlowMutated={onFlowMutated} />)
+    await sendMessage()
+
+    await waitFor(() => {
+      expect(onFlowMutated).toHaveBeenCalledWith('flow-42')
+    })
+  })
+
+  it('fires onFlowMutated with the new flow id when create_flow completes', async () => {
+    const onFlowMutated = vi.fn()
+    streamWithToolDone('create_flow', { id: 'flow-77', name: 'ახალი', graph: { nodes: [], edges: [] } })
+
+    render(<ChatPanel {...defaultProps} onFlowMutated={onFlowMutated} />)
+    await sendMessage()
+
+    await waitFor(() => {
+      expect(onFlowMutated).toHaveBeenCalledWith('flow-77')
+    })
+  })
+
+  it('does not fire onFlowMutated for read-only tools', async () => {
+    const onFlowMutated = vi.fn()
+    streamWithToolDone('get_flow_graph', { flow_id: 'flow-42', nodes: [], edges: [] })
+
+    render(<ChatPanel {...defaultProps} onFlowMutated={onFlowMutated} />)
+    await sendMessage()
+
+    // Wait for the stream to settle (tool badge summary confirms onToolDone fired)
+    await waitFor(() => {
+      expect(screen.getByText(/სამუშაო შესრულდა/)).toBeInTheDocument()
+    })
+    expect(onFlowMutated).not.toHaveBeenCalled()
+  })
+
+  it('never force-opens the editor on a tool call — only emits an artifact card', async () => {
+    const onContextContent = vi.fn()
+    const onArtifact = vi.fn()
+    streamWithToolDone('create_flow', { id: 'flow-77', name: 'ახალი', graph: { nodes: [], edges: [] } })
+
+    render(<ChatPanel {...defaultProps} onContextContent={onContextContent} onArtifact={onArtifact} />)
+    await sendMessage()
+
+    await waitFor(() => {
+      expect(onArtifact).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'flow', resourceId: 'flow-77' }),
+      )
+    })
+    expect(onContextContent).not.toHaveBeenCalled()
+  })
+
+  it('emits a flow artifact when add_node completes, so the card stays fresh', async () => {
+    const onArtifact = vi.fn()
+    streamWithToolDone('add_node', {
+      flow_id: 'flow-42',
+      added_node: 'wait_1',
+      total_nodes: 4,
+      total_edges: 3,
+      current_nodes: [],
+    })
+
+    render(<ChatPanel {...defaultProps} onArtifact={onArtifact} />)
+    await sendMessage()
+
+    await waitFor(() => {
+      expect(onArtifact).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'flow-flow-42', type: 'flow', resourceId: 'flow-42', subtitle: '4 ნაბიჯი' }),
+      )
+    })
+  })
+})
+
+describe('ChatPanel — reopening a flow-linked conversation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('shows the linked flow as an artifact card — does not force-open the editor', async () => {
+    vi.mocked(fetchConversation).mockResolvedValueOnce({
+      id: 'conv-1',
+      title: 'A/B ტესტი',
+      kind: 'campaign',
+      status: 'active',
+      entity_type: 'flow',
+      entity_id: 'flow-55',
+      inserted_at: '2026-07-08T13:12:12Z',
+      updated_at: '2026-07-08T13:47:45Z',
+      messages: [],
+    })
+    const onContextContent = vi.fn()
+    const onArtifact = vi.fn()
+
+    render(
+      <ChatPanel
+        {...defaultProps}
+        conversationId="conv-1"
+        onContextContent={onContextContent}
+        onArtifact={onArtifact}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(onArtifact).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'flow', resourceId: 'flow-55' }),
+      )
+    })
+    expect(onContextContent).not.toHaveBeenCalled()
+  })
+
+  it('does not emit an artifact for a conversation with no linked flow', async () => {
+    vi.mocked(fetchConversation).mockResolvedValueOnce({
+      id: 'conv-2',
+      title: 'ჩვეულებრივი საუბარი',
+      kind: 'analysis',
+      status: 'active',
+      entity_type: null,
+      entity_id: null,
+      inserted_at: '2026-07-08T13:12:12Z',
+      updated_at: '2026-07-08T13:47:45Z',
+      messages: [],
+    })
+    const onArtifact = vi.fn()
+
+    render(
+      <ChatPanel
+        {...defaultProps}
+        conversationId="conv-2"
+        onArtifact={onArtifact}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(fetchConversation).toHaveBeenCalledWith('conv-2')
+    })
+    expect(onArtifact).not.toHaveBeenCalled()
   })
 })

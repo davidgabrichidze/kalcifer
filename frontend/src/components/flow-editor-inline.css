@@ -312,3 +312,25 @@
   color: var(--color-text-muted);
   flex-shrink: 0;
 }
+
+/* ─── Stale Banner (AI updated the graph while local edits are unsaved) ─── */
+.fei-stale-banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background: var(--color-warn-soft);
+  border-bottom: 1px solid var(--color-warn);
+}
+
+.fei-stale-banner button {
+  padding: 2px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}

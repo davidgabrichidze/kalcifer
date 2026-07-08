@@ -417,4 +417,26 @@ defmodule KalciferWeb.ChatControllerTest do
       assert Enum.any?(msgs, &(&1.content == "just a normal hello"))
     end
   end
+
+  # ── Linked-flow snapshot injection ────────────────────────────
+
+  describe "linked-flow snapshot" do
+    test "chat with a flow-linked conversation still streams SSE", %{conn: conn} do
+      tenant = ensure_demo_tenant()
+      flow = insert(:flow, tenant: tenant)
+      insert(:flow_version, flow: flow, version_number: 1, status: "draft")
+      {:ok, conversation} = Context.create_conversation(tenant.id)
+      {:ok, conversation} = Context.link_entity(conversation, "flow", flow.id)
+
+      conn =
+        post(conn, "/api/v1/chat", %{
+          "messages" => [%{"role" => "user", "content" => "რა მდგომარეობაშია ფლოუ?"}],
+          "conversation_id" => conversation.id
+        })
+
+      assert conn.status == 200
+      assert {"content-type", ct} = List.keyfind(conn.resp_headers, "content-type", 0)
+      assert String.contains?(ct, "text/event-stream")
+    end
+  end
 end

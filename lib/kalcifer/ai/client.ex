@@ -285,7 +285,7 @@ defmodule Kalcifer.AI.Client do
 
   # Non-streaming URL
   defp request_url(Google, opts) do
-    model = Keyword.get(opts, :model, "gemini-2.5-flash")
+    model = Keyword.get(opts, :model, "gemini-3.5-flash")
     Google.api_url(model)
   end
 
@@ -293,7 +293,7 @@ defmodule Kalcifer.AI.Client do
 
   # Streaming URL (Google has a different endpoint for streaming)
   defp stream_url(Google, opts) do
-    model = Keyword.get(opts, :model, "gemini-2.5-flash")
+    model = Keyword.get(opts, :model, "gemini-3.5-flash")
     Google.stream_url(model)
   end
 

@@ -66,8 +66,7 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.FlowRouter do
       },
       "model" => %{
         "type" => "string",
-        "description" =>
-          "Override AI model for this node (e.g. 'gpt-4o', 'claude-sonnet-4-5-20250514')"
+        "description" => "Override AI model for this node (e.g. 'gpt-5.5', 'claude-sonnet-5')"
       }
     }
   end

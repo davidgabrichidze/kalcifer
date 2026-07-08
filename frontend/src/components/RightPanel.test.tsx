@@ -8,8 +8,11 @@ vi.mock('./FlowCanvas', () => ({
 }))
 
 vi.mock('./FlowEditorInline', () => ({
-  default: ({ flowId }: { flowId: string }) => (
-    <div data-testid="flow-editor">FlowEditor: {flowId}</div>
+  default: ({ flowId, refreshFlowId }: { flowId: string; refreshFlowId?: string | null }) => (
+    <div data-testid="flow-editor">
+      FlowEditor: {flowId}
+      {refreshFlowId != null && <span data-testid="refresh-flow-id">{refreshFlowId}</span>}
+    </div>
   ),
 }))
 
@@ -85,6 +88,19 @@ describe('RightPanel', () => {
     )
     expect(screen.getByTestId('flow-canvas')).toBeInTheDocument()
     expect(screen.getByText('1 nodes')).toBeInTheDocument()
+  })
+
+  it('forwards refreshFlowId to the inline editor', () => {
+    render(
+      <RightPanel
+        mode="editor"
+        {...sidebarProps}
+        editorContent={{ type: 'flow-editor', flowId: 'test-123' }}
+        editorRefreshToken={1}
+        refreshFlowId="test-999"
+      />,
+    )
+    expect(screen.getByTestId('refresh-flow-id')).toHaveTextContent('test-999')
   })
 
   it('shows artifacts in sidebar mode', () => {

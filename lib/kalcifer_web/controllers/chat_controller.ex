@@ -1,7 +1,7 @@
 defmodule KalciferWeb.ChatController do
   use KalciferWeb, :controller
 
-  alias Kalcifer.AI.{AgentFlows, Client, Context, Tools}
+  alias Kalcifer.AI.{AgentFlows, Client, Context, SystemPrompt, Tools}
   alias Kalcifer.Engine.FlowServer
   alias Kalcifer.Tenants
 
@@ -57,8 +57,8 @@ defmodule KalciferWeb.ChatController do
           %{role: msg["role"], content: msg["content"]}
         end)
 
-    # Load operator memory into system prompt
-    system_prompt = build_system_prompt(tenant_id)
+    # Base prompt + operator memory + current linked-flow graph snapshot
+    system_prompt = SystemPrompt.build(tenant_id, conversation_id)
 
     # Try engine-based execution; fall back to direct chat on failure
     case start_agent_flow(conn, tenant_id, conversation_id, api_messages, system_prompt) do
@@ -222,8 +222,7 @@ defmodule KalciferWeb.ChatController do
       Tools.execute(name, input, tenant_id, tool_ctx)
     end
 
-    opts = if system_prompt, do: [system: system_prompt], else: []
-    opts = opts ++ tenant_ai_opts(tenant_id)
+    opts = [system: system_prompt] ++ tenant_ai_opts(tenant_id)
 
     case Client.chat_with_tools(
            api_messages,
@@ -261,32 +260,6 @@ defmodule KalciferWeb.ChatController do
 
       conv ->
         {conv.id, Context.recent_api_messages(conv.id, @history_limit)}
-    end
-  end
-
-  # ── System prompt with memory ────────────────────────────────
-
-  defp build_system_prompt(tenant_id) do
-    memories = Context.recall_all(tenant_id)
-
-    if Enum.empty?(memories) do
-      nil
-    else
-      memory_block =
-        memories
-        |> Enum.map(fn m -> "- #{m.key}: #{m.value}" end)
-        |> Enum.join("\n")
-
-      memory_block_text = """
-
-      ## რაც მახსოვს ამ მომხმარებლის შესახებ:
-      #{memory_block}
-
-      გამოიყენე ეს ინფორმაცია საუბარში ბუნებრივად — ნუ ჩამოთვლი რა გახსოვს,
-      უბრალოდ იცოდე და გაითვალისწინე.
-      """
-
-      Client.default_system_prompt() <> memory_block_text
     end
   end
 

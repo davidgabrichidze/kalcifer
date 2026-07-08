@@ -257,16 +257,17 @@ defmodule KalciferWeb.SettingsController do
   defp provider_order(_), do: 9
 
   defp model_display_name("claude-haiku-4-5-20251001"), do: "Claude Haiku 4.5"
-  defp model_display_name("claude-sonnet-4-5-20250514"), do: "Claude Sonnet 4.5"
   defp model_display_name("claude-sonnet-4-6"), do: "Claude Sonnet 4.6"
-  defp model_display_name("gpt-4o"), do: "GPT-4o"
-  defp model_display_name("gpt-4o-mini"), do: "GPT-4o Mini"
-  defp model_display_name("o3-mini"), do: "o3-mini"
-  defp model_display_name("gemini-2.5-pro"), do: "Gemini 2.5 Pro"
-  defp model_display_name("gemini-2.5-flash"), do: "Gemini 2.5 Flash"
+  defp model_display_name("claude-sonnet-5"), do: "Claude Sonnet 5"
+  defp model_display_name("claude-opus-4-8"), do: "Claude Opus 4.8"
+  defp model_display_name("gpt-5.5"), do: "GPT-5.5"
+  defp model_display_name("gpt-5.4-mini"), do: "GPT-5.4 Mini"
+  defp model_display_name("gpt-5.4-nano"), do: "GPT-5.4 Nano"
+  defp model_display_name("gemini-3.1-pro-preview"), do: "Gemini 3.1 Pro"
+  defp model_display_name("gemini-3.5-flash"), do: "Gemini 3.5 Flash"
   defp model_display_name(other), do: other
 
-  defp default_model, do: "claude-haiku-4-5-20251001"
+  defp default_model, do: "claude-sonnet-5"
 
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)

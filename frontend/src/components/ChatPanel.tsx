@@ -28,6 +28,8 @@ interface ChatPanelProps {
   onContextContent?: (content: ContextContent) => void
   /** Called when a new artifact is produced (flow created, analysis done, etc.) */
   onArtifact?: (artifact: Artifact) => void
+  /** Called when the AI mutates a flow graph via a tool call */
+  onFlowMutated?: (flowId: string) => void
 }
 
 export default function ChatPanel({
@@ -40,6 +42,7 @@ export default function ChatPanel({
   onInitialMessageSent,
   onContextContent,
   onArtifact,
+  onFlowMutated,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -232,6 +235,13 @@ export default function ChatPanel({
     try {
       const parsed = JSON.parse(result)
 
+      // Notify parent that the AI changed the graph so the editor can refresh
+      const MUTATING_TOOLS = ['create_flow', 'add_node', 'modify_node', 'remove_node']
+      const mutatedFlowId = tool === 'create_flow' ? parsed.id : parsed.flow_id
+      if (MUTATING_TOOLS.includes(tool) && mutatedFlowId) {
+        onFlowMutated?.(mutatedFlowId)
+      }
+
       // Emit artifacts for the panel
       if (tool === 'create_flow' && parsed.id) {
         onArtifact?.({
@@ -249,6 +259,18 @@ export default function ChatPanel({
           type: 'flow',
           title: parsed.name || 'ფლოუ',
           resourceId: parsed.id,
+          data: parsed,
+          timestamp: Date.now(),
+        })
+      } else if (['add_node', 'modify_node', 'remove_node'].includes(tool) && parsed.flow_id) {
+        // No flow name in these results — keep the card's node count fresh
+        // without stomping a nicer title an earlier create_flow/get_flow set.
+        onArtifact?.({
+          id: `flow-${parsed.flow_id}`,
+          type: 'flow',
+          title: 'ფლოუ',
+          subtitle: typeof parsed.total_nodes === 'number' ? `${parsed.total_nodes} ნაბიჯი` : undefined,
+          resourceId: parsed.flow_id,
           data: parsed,
           timestamp: Date.now(),
         })
@@ -281,17 +303,8 @@ export default function ChatPanel({
           timestamp: Date.now(),
         })
       }
-
-      // Also open context panel
-      if (!onContextContent || !FLOW_TOOLS.includes(tool)) return
-
-      if (parsed.id && parsed.graph) {
-        onContextContent({ type: 'flow-editor', flowId: parsed.id })
-      } else if (parsed.flow_id) {
-        onContextContent({ type: 'flow-editor', flowId: parsed.flow_id })
-      } else if (parsed.graph?.nodes && parsed.graph?.edges) {
-        onContextContent({ type: 'flow-canvas', flowGraph: parsed.graph })
-      }
+      // Opening the editor is the user's call — see the artifact card's own
+      // click handler and the inline per-message card below. No auto-open here.
     } catch { /* not JSON, ignore */ }
   }
 
@@ -409,6 +422,21 @@ export default function ChatPanel({
           createMessage(m.role === 'user' ? 'user' : 'ai', m.content),
         )
         setMessages(loaded)
+
+        // Reopening a conversation already linked to a flow — show it as an
+        // artifact card. Opening the editor stays the user's call (click the
+        // card); the session_classified SSE event that would otherwise do
+        // this only fires once, during classification, so a resumed
+        // conversation needs its own way to surface the link.
+        if (detail.entity_type === 'flow' && detail.entity_id) {
+          onArtifact?.({
+            id: `flow-${detail.entity_id}`,
+            type: 'flow',
+            title: 'ფლოუ',
+            resourceId: detail.entity_id,
+            timestamp: Date.now(),
+          })
+        }
       } catch {
         // Ignore — conversation might not exist yet
       }

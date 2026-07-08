@@ -28,15 +28,29 @@ defmodule Kalcifer.AI.Providers.Anthropic do
 
   def build_body(messages, opts) do
     %{
-      model: Keyword.get(opts, :model, "claude-haiku-4-5-20251001"),
+      model: Keyword.get(opts, :model, "claude-sonnet-5"),
       max_tokens: Keyword.get(opts, :max_tokens, 4096),
       system: Keyword.get(opts, :system, ""),
       messages: messages
     }
   end
 
-  # Extract text from Anthropic response format
-  def extract_text(%{"content" => [%{"text" => text} | _]}), do: {:ok, text}
+  # Extract text from Anthropic response format. Newer models (Sonnet 5+)
+  # run adaptive thinking by default, so the first content block may be a
+  # thinking block — find the first text block instead of assuming position.
+  def extract_text(%{"content" => content} = body) when is_list(content) do
+    content
+    |> Enum.find_value(fn
+      %{"type" => "text", "text" => text} -> {:ok, text}
+      %{"text" => text} = block when not is_map_key(block, "type") -> {:ok, text}
+      _ -> nil
+    end)
+    |> case do
+      nil -> {:error, {:unexpected_response, body}}
+      ok -> ok
+    end
+  end
+
   def extract_text(body), do: {:error, {:unexpected_response, body}}
 
   # Check if response wants tool use
