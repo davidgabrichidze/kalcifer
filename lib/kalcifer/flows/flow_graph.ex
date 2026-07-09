@@ -168,6 +168,28 @@ defmodule Kalcifer.Flows.FlowGraph do
     end
   end
 
+  @doc """
+  Guards against two specific, always-invalid node-authoring mistakes: an
+  unregistered node `type`, or a node missing a `config_schema`-required
+  field. Used at write time (creating/editing a graph via the AI tools) so
+  neither can ever reach the database.
+
+  Deliberately narrower than `preflight/2` — it does not run `validate/1`'s
+  structural checks (entry/end presence, orphans, branch completeness).
+  Those stay advisory at write time: an AI (or operator) legitimately adds
+  nodes one at a time, so a graph can be transiently unreachable-orphaned or
+  missing its end node between individual `add_node` calls without that
+  being a real error.
+
+  Returns `:ok` or `{:error, [String.t()]}`.
+  """
+  def validate_for_write(graph, registry) when is_map(graph) do
+    with :ok <- validate_node_types(graph, registry),
+         :ok <- analyze_config_completeness(graph, registry) do
+      :ok
+    end
+  end
+
   defp nodes(graph), do: Map.get(graph, "nodes", [])
   defp edges(graph), do: Map.get(graph, "edges", [])
 

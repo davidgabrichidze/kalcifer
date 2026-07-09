@@ -229,13 +229,17 @@ defmodule Kalcifer.AI.ToolsTest do
         "description" => "Welcome sequence",
         "graph" => %{
           "nodes" => [
-            %{"id" => "entry_1", "type" => "webhook_entry", "config" => %{}},
+            %{
+              "id" => "entry_1",
+              "type" => "webhook_entry",
+              "config" => %{"webhook_path" => "/onboarding"}
+            },
             %{
               "id" => "email_1",
               "type" => "send_email",
               "config" => %{"template" => "welcome", "subject" => "Welcome!"}
             },
-            %{"id" => "end_1", "type" => "end", "config" => %{}}
+            %{"id" => "end_1", "type" => "exit", "config" => %{}}
           ],
           "edges" => [
             %{"source" => "entry_1", "target" => "email_1"},
@@ -265,12 +269,21 @@ defmodule Kalcifer.AI.ToolsTest do
       assert length(version.graph["edges"]) == 2
     end
 
-    test "creates flow with graph and returns validation warnings", %{tenant_id: tid} do
+    test "creates flow when the graph is structurally incomplete but types/config are valid",
+         %{tenant_id: tid} do
+      # Single entry node, no end node, no edges — still allowed: the AI
+      # builds a flow up incrementally over multiple tool calls, so
+      # structural completeness (unlike node type / required config) isn't
+      # enforced at create/add time. See FlowGraph.validate_for_write/2.
       input = %{
-        "name" => "Broken Flow",
+        "name" => "In Progress Flow",
         "graph" => %{
           "nodes" => [
-            %{"id" => "entry_1", "type" => "webhook_entry", "config" => %{}}
+            %{
+              "id" => "entry_1",
+              "type" => "webhook_entry",
+              "config" => %{"webhook_path" => "/hook"}
+            }
           ],
           "edges" => []
         }
@@ -279,10 +292,45 @@ defmodule Kalcifer.AI.ToolsTest do
       assert {:ok, json} = Tools.execute("create_flow", input, tid)
       result = Jason.decode!(json)
 
-      # Flow created, graph stored, but validation warnings present
-      assert result["name"] == "Broken Flow"
+      assert result["name"] == "In Progress Flow"
       assert result["graph"] != nil
-      # Single entry node with no edges — likely has warnings
+    end
+
+    test "rejects a graph with an unregistered node type — no flow is created", %{tenant_id: tid} do
+      input = %{
+        "name" => "Bad Type Flow",
+        "graph" => %{
+          "nodes" => [
+            %{
+              "id" => "entry_1",
+              "type" => "webhook_entry",
+              "config" => %{"webhook_path" => "/hook"}
+            },
+            %{"id" => "end_1", "type" => "end", "config" => %{}}
+          ],
+          "edges" => [%{"source" => "entry_1", "target" => "end_1"}]
+        }
+      }
+
+      assert {:error, message} = Tools.execute("create_flow", input, tid)
+      assert message =~ "unknown node type"
+      refute Enum.any?(Flows.list_flows(tid), &(&1.name == "Bad Type Flow"))
+    end
+
+    test "rejects a graph missing a required config field — no flow is created", %{tenant_id: tid} do
+      input = %{
+        "name" => "Missing Config Flow",
+        "graph" => %{
+          "nodes" => [
+            %{"id" => "entry_1", "type" => "webhook_entry", "config" => %{}}
+          ],
+          "edges" => []
+        }
+      }
+
+      assert {:error, message} = Tools.execute("create_flow", input, tid)
+      assert message =~ "missing required config field"
+      refute Enum.any?(Flows.list_flows(tid), &(&1.name == "Missing Config Flow"))
     end
 
     test "creates flow without graph (backward compatible)", %{tenant_id: tid} do
@@ -304,8 +352,8 @@ defmodule Kalcifer.AI.ToolsTest do
         "name" => "Graph Flow",
         "graph" => %{
           "nodes" => [
-            %{"id" => "e1", "type" => "webhook_entry"},
-            %{"id" => "x1", "type" => "end"}
+            %{"id" => "e1", "type" => "webhook_entry", "config" => %{"webhook_path" => "/hook"}},
+            %{"id" => "x1", "type" => "exit"}
           ],
           "edges" => [%{"source" => "e1", "target" => "x1"}]
         }
@@ -538,7 +586,11 @@ defmodule Kalcifer.AI.ToolsTest do
             "type" => "event_entry",
             "config" => %{"event_type" => "signed_up"}
           },
-          %{"id" => "cond_1", "type" => "condition", "config" => %{"expression" => "age > 18"}}
+          %{
+            "id" => "cond_1",
+            "type" => "condition",
+            "config" => %{"field" => "age", "operator" => "greater_than", "value" => 18}
+          }
         ],
         "edges" => [%{"source" => "entry_1", "target" => "cond_1"}]
       }
@@ -612,6 +664,40 @@ defmodule Kalcifer.AI.ToolsTest do
       graph = Jason.decode!(graph_json)
       node = Enum.find(graph["nodes"], &(&1["id"] == "exit_2"))
       assert node["config"] == %{}
+    end
+
+    test "rejects a node with an unregistered type — graph unchanged", %{tenant: tenant} do
+      flow = insert(:flow, tenant: tenant)
+      insert(:flow_version, flow: flow, version_number: 1, status: "draft", graph: valid_graph())
+
+      input = %{
+        "flow_id" => flow.id,
+        "node" => %{"id" => "bad_1", "type" => "totally_made_up", "config" => %{}}
+      }
+
+      assert {:error, message} = Tools.execute("add_node", input, tenant.id)
+      assert message =~ "unknown node type"
+
+      {:ok, graph_json} = Tools.execute("get_flow_graph", %{"flow_id" => flow.id}, tenant.id)
+      graph = Jason.decode!(graph_json)
+      refute Enum.any?(graph["nodes"], &(&1["id"] == "bad_1"))
+    end
+
+    test "rejects a node missing a required config field — graph unchanged", %{tenant: tenant} do
+      flow = insert(:flow, tenant: tenant)
+      insert(:flow_version, flow: flow, version_number: 1, status: "draft", graph: valid_graph())
+
+      input = %{
+        "flow_id" => flow.id,
+        "node" => %{"id" => "wait_1", "type" => "wait_for_event", "config" => %{}}
+      }
+
+      assert {:error, message} = Tools.execute("add_node", input, tenant.id)
+      assert message =~ "missing required config field"
+
+      {:ok, graph_json} = Tools.execute("get_flow_graph", %{"flow_id" => flow.id}, tenant.id)
+      graph = Jason.decode!(graph_json)
+      refute Enum.any?(graph["nodes"], &(&1["id"] == "wait_1"))
     end
   end
 
@@ -734,6 +820,27 @@ defmodule Kalcifer.AI.ToolsTest do
       node = Enum.find(graph["nodes"], &(&1["id"] == "entry_1"))
       assert node["type"] == "event_entry"
       assert node["id"] == "entry_1"
+    end
+
+    test "rejects a config missing a required field — node unchanged", %{tenant: tenant} do
+      flow = insert(:flow, tenant: tenant)
+      insert(:flow_version, flow: flow, version_number: 1, status: "draft", graph: valid_graph())
+
+      input = %{
+        "flow_id" => flow.id,
+        "node_id" => "entry_1",
+        # event_entry requires "event_type" — this config omits it
+        "config" => %{}
+      }
+
+      assert {:error, message} = Tools.execute("modify_node", input, tenant.id)
+      assert message =~ "missing required config field"
+
+      # Original config untouched
+      {:ok, graph_json} = Tools.execute("get_flow_graph", %{"flow_id" => flow.id}, tenant.id)
+      graph = Jason.decode!(graph_json)
+      entry = Enum.find(graph["nodes"], &(&1["id"] == "entry_1"))
+      assert entry["config"]["event_type"] == "signed_up"
     end
   end
 

@@ -140,10 +140,14 @@ defmodule Kalcifer.AI.Tools do
       Each node needs: id (unique string), type (from list_node_types), config (object).
       Each edge needs: source (node id), target (node id), optional branch ("yes"/"no").
 
-      Node types for graph: webhook_entry, event_entry, scheduled_entry,
-      send_email, send_sms, send_push, condition, ab_split, wait, wait_for_event,
-      frequency_cap, set_attribute, add_to_segment, remove_from_segment,
-      fire_event, api_call, rate_limit, ai_think, ai_decide, agent, end.
+      Node types must be one of the registered types — call list_node_types
+      if unsure. Common ones: webhook_entry, event_entry, segment_entry
+      (triggers); exit, goal_reached (ends — every flow needs at least one,
+      there is no generic "end" type); condition, ab_split (branching);
+      wait, wait_for_event (delays); send_email, send_sms, send_push, agent
+      (actions). An unregistered type, or a node missing a field its type
+      requires (e.g. event_entry needs "event_type"), is rejected — check
+      the tool result for an error and fix the graph before retrying.
 
       IMPORTANT: Each session creates ONE flow. If a flow was already created
       in this session, this tool returns the existing one.
@@ -658,29 +662,32 @@ defmodule Kalcifer.AI.Tools do
 
       {:ok, Jason.encode!(result, pretty: true)}
     else
-      case Flows.create_flow(tenant_id, %{name: name, description: description}) do
-        {:ok, flow} ->
-          # Link flow to conversation — future create_flow calls return this one
-          if conversation_id do
-            link_flow_to_conversation(conversation_id, flow.id)
-          end
+      with :ok <- validate_graph_input(graph_input),
+           {:ok, flow} <- Flows.create_flow(tenant_id, %{name: name, description: description}) do
+        # Link flow to conversation — future create_flow calls return this one
+        if conversation_id do
+          link_flow_to_conversation(conversation_id, flow.id)
+        end
 
-          # If a graph was provided, create version 1 with it
-          {version_graph, warnings} = create_initial_version(flow, graph_input)
+        # If a graph was provided, create version 1 with it
+        {version_graph, warnings} = create_initial_version(flow, graph_input)
 
-          result = %{
-            id: flow.id,
-            name: flow.name,
-            status: flow.status,
-            message: "Flow created successfully"
-          }
+        result = %{
+          id: flow.id,
+          name: flow.name,
+          status: flow.status,
+          message: "Flow created successfully"
+        }
 
-          result = if version_graph, do: Map.put(result, :graph, version_graph), else: result
+        result = if version_graph, do: Map.put(result, :graph, version_graph), else: result
 
-          result =
-            if warnings != [], do: Map.put(result, :validation_warnings, warnings), else: result
+        result =
+          if warnings != [], do: Map.put(result, :validation_warnings, warnings), else: result
 
-          {:ok, Jason.encode!(result, pretty: true)}
+        {:ok, Jason.encode!(result, pretty: true)}
+      else
+        {:error, :invalid_graph, errors} ->
+          {:error, "Invalid flow graph: #{Enum.join(errors, "; ")}"}
 
         {:error, changeset} ->
           errors = format_changeset_errors(changeset)
@@ -750,20 +757,15 @@ defmodule Kalcifer.AI.Tools do
           "edges" => edges ++ edge_maps
         }
 
-        # Validate
-        warnings =
-          case FlowGraph.validate(updated_graph) do
-            :ok -> []
-            {:error, errors} -> errors
-          end
+        validate_and_persist(version, updated_graph, fn graph ->
+          # Structural completeness (entry/end/orphans/branches) stays
+          # advisory — the AI builds a graph up one node at a time.
+          warnings =
+            case FlowGraph.validate(graph) do
+              :ok -> []
+              {:error, errors} -> errors
+            end
 
-        # Persist
-        {:ok, _updated} =
-          version
-          |> Ecto.Changeset.change(graph: updated_graph)
-          |> Kalcifer.Repo.update()
-
-        result =
           %{
             flow_id: flow_id,
             added_node: node_map["id"],
@@ -771,9 +773,7 @@ defmodule Kalcifer.AI.Tools do
             version_number: version.version_number,
             validation_warnings: warnings
           }
-          |> Map.merge(graph_summary(updated_graph))
-
-        {:ok, Jason.encode!(result, pretty: true)}
+        end)
       end
     else
       {:flow, nil} -> {:error, "Flow not found: #{flow_id}"}
@@ -802,21 +802,14 @@ defmodule Kalcifer.AI.Tools do
           updated_nodes = List.replace_at(nodes, idx, updated_node)
           updated_graph = Map.put(graph, "nodes", updated_nodes)
 
-          {:ok, _} =
-            version
-            |> Ecto.Changeset.change(graph: updated_graph)
-            |> Kalcifer.Repo.update()
-
-          result =
+          validate_and_persist(version, updated_graph, fn _graph ->
             %{
               flow_id: flow_id,
               modified_node: node_id,
               node_type: old_node["type"],
               version_number: version.version_number
             }
-            |> Map.merge(graph_summary(updated_graph))
-
-          {:ok, Jason.encode!(result, pretty: true)}
+          end)
       end
     else
       {:flow, nil} -> {:error, "Flow not found: #{flow_id}"}
@@ -1086,7 +1079,30 @@ defmodule Kalcifer.AI.Tools do
   end
 
   defp create_initial_version(flow, graph_input) do
-    # Normalize the graph: ensure nodes have config, edges have proper structure
+    graph = normalize_graph(graph_input)
+    node_count = length(graph["nodes"])
+
+    # Structural completeness (entry/end/orphans/branches) stays advisory —
+    # node type and required config are already hard-enforced by
+    # validate_graph_input/1 before this is ever called.
+    warnings =
+      case FlowGraph.validate(graph) do
+        :ok -> []
+        {:error, errors} -> errors
+      end
+
+    case Flows.create_version(flow, %{
+           version_number: 1,
+           graph: graph,
+           changelog: "Created by AI tool with #{node_count} nodes"
+         }) do
+      {:ok, _version} -> {graph, warnings}
+      {:error, _} -> {nil, warnings}
+    end
+  end
+
+  # Ensure nodes have a config map and edges have the expected shape.
+  defp normalize_graph(graph_input) do
     nodes =
       Enum.map(Map.get(graph_input, "nodes", []), fn n ->
         %{
@@ -1102,22 +1118,16 @@ defmodule Kalcifer.AI.Tools do
         if e["branch"], do: Map.put(edge, "branch", e["branch"]), else: edge
       end)
 
-    graph = %{"nodes" => nodes, "edges" => edges}
+    %{"nodes" => nodes, "edges" => edges}
+  end
 
-    # Validate
-    warnings =
-      case FlowGraph.validate(graph) do
-        :ok -> []
-        {:error, errors} -> errors
-      end
+  # No graph provided — nothing to validate yet, build up via add_node.
+  defp validate_graph_input(nil), do: :ok
 
-    case Flows.create_version(flow, %{
-           version_number: 1,
-           graph: graph,
-           changelog: "Created by AI tool with #{length(nodes)} nodes"
-         }) do
-      {:ok, _version} -> {graph, warnings}
-      {:error, _} -> {nil, warnings}
+  defp validate_graph_input(graph_input) do
+    case FlowGraph.validate_for_write(normalize_graph(graph_input), NodeRegistry) do
+      :ok -> :ok
+      {:error, errors} -> {:error, :invalid_graph, errors}
     end
   end
 
@@ -1186,6 +1196,27 @@ defmodule Kalcifer.AI.Tools do
         {:ok, version} -> version
         {:error, _} -> nil
       end
+    end
+  end
+
+  # Shared by add_node/modify_node: rejects an unregistered node type or a
+  # node missing a config_schema-required field before persisting; on
+  # success, persists the graph and builds the JSON result. `build_result`
+  # receives the persisted graph and returns the tool-specific result map
+  # (graph_summary/1 is merged in for both).
+  defp validate_and_persist(version, updated_graph, build_result) do
+    case FlowGraph.validate_for_write(updated_graph, NodeRegistry) do
+      {:error, errors} ->
+        {:error, "Invalid graph: #{Enum.join(errors, "; ")}"}
+
+      :ok ->
+        {:ok, _updated} =
+          version
+          |> Ecto.Changeset.change(graph: updated_graph)
+          |> Kalcifer.Repo.update()
+
+        result = build_result.(updated_graph) |> Map.merge(graph_summary(updated_graph))
+        {:ok, Jason.encode!(result, pretty: true)}
     end
   end
 

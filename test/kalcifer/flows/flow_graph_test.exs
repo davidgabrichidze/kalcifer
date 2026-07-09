@@ -568,6 +568,106 @@ defmodule Kalcifer.Flows.FlowGraphTest do
     end
   end
 
+  describe "validate_for_write/2" do
+    test "returns :ok for a structurally valid graph with registered types and complete config" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "exit_1"}
+        ]
+      }
+
+      registry = stub_registry(%{"event_entry" => StubValidNode, "exit" => StubValidNode})
+
+      assert :ok = FlowGraph.validate_for_write(graph, registry)
+    end
+
+    test "hard-fails on an unregistered node type (preflight/2 also hard-fails here)" do
+      # "weird_1" sits between a real entry and a real exit so the graph is
+      # structurally sound — isolates the registry check from validate/1's
+      # own (unrelated) entry/end presence checks.
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "weird_1", "type" => "totally_made_up", "config" => %{}},
+          %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "weird_1"},
+          %{"id" => "e2", "source" => "weird_1", "target" => "exit_1"}
+        ]
+      }
+
+      registry = stub_registry(%{"event_entry" => StubValidNode, "exit" => StubValidNode})
+
+      assert {:error, errors} = FlowGraph.validate_for_write(graph, registry)
+      assert "unknown node type: totally_made_up" in errors
+    end
+
+    test "hard-fails on the real-world bug: an end node typed \"end\" instead of \"exit\"" do
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "end_1", "type" => "end", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "end_1"}
+        ]
+      }
+
+      registry = stub_registry(%{"event_entry" => StubValidNode})
+
+      assert {:error, _errors} = FlowGraph.validate_for_write(graph, registry)
+    end
+
+    test "hard-fails on a missing required config_schema field — preflight/2 only warns here" do
+      # entry_1 is registered to StubSchemaNode (config_schema requires
+      # "event_type") but given an empty config. wait_for_event is a
+      # branching type with its own edge requirements, so this uses a plain
+      # entry/exit pair to isolate the config-completeness check.
+      graph = %{
+        "nodes" => [
+          %{"id" => "entry_1", "type" => "event_entry", "config" => %{}},
+          %{"id" => "exit_1", "type" => "exit", "config" => %{}}
+        ],
+        "edges" => [
+          %{"id" => "e1", "source" => "entry_1", "target" => "exit_1"}
+        ]
+      }
+
+      registry =
+        stub_registry(%{
+          "event_entry" => __MODULE__.StubSchemaNode,
+          "exit" => StubValidNode
+        })
+
+      assert {:error, errors} = FlowGraph.validate_for_write(graph, registry)
+
+      assert Enum.any?(
+               errors,
+               &String.contains?(&1, ~s(missing required config field "event_type"))
+             )
+    end
+
+    test "passes a structurally incomplete graph as long as types/config are valid" do
+      # No end node, no edges — this graph would fail validate/1 and
+      # preflight/2. validate_for_write/2 deliberately doesn't check
+      # structure, so an AI (or operator) can add one valid node at a time
+      # without each intermediate state being rejected.
+      graph = %{
+        "nodes" => [%{"id" => "entry_1", "type" => "event_entry", "config" => %{}}],
+        "edges" => []
+      }
+
+      registry = stub_registry(%{"event_entry" => StubValidNode})
+
+      assert :ok = FlowGraph.validate_for_write(graph, registry)
+    end
+  end
+
   # --- Stub registry and node modules for testing ---
 
   defmodule StubRegistry do
