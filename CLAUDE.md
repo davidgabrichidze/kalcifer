@@ -48,7 +48,8 @@ lib/kalcifer/                    # Core business logic
     duration.ex                  # "3d", "2h" → seconds parser
     nodes/behaviour.ex           # NodeBehaviour callbacks
     nodes/{trigger,condition,wait,end}/  # Node implementations by category
-    nodes/action/{channel,data}/         # Action nodes split by subcategory
+    nodes/action/{channel,data,ai}/      # Action nodes split by subcategory
+                                         # (parallel_group, sub_flow sit directly in action/)
     jobs/resume_flow_job.ex      # Oban worker for delayed resume
     persistence/                 # InstanceStore, StepStore
 lib/kalcifer_web/                # Phoenix API layer
@@ -88,18 +89,20 @@ Scopes (from `docs/PRODUCT-MAP.md`):
 
 | scope | subscopes |
 |-------|-----------|
-| `engine` | `executor`, `nodes`, `events`, `recovery`, `persistence`, `jobs`, `errors`, `circuit-breaker` |
+| `engine` | `executor`, `nodes`, `events`, `recovery`, `persistence`, `jobs`, `errors`, `circuit-breaker`, `observability` |
 | `flows` | `lifecycle`, `versions`, `graph`, `instances` |
 | `channels` | `providers`, `delivery`, `webhooks` |
 | `customers` | `profiles`, `segments` |
 | `analytics` | `stats`, `funnel`, `conversions` |
 | `marketing` | `journeys` |
 | `tenants` | `auth` |
-| `api` | `flows`, `versions`, `instances`, `triggers`, `customers`, `analytics`, `journeys`, `health`, `middleware` |
+| `accounts` | `users`, `oauth` |
+| `audit` | `log` |
+| `api` | `flows`, `versions`, `instances`, `triggers`, `customers`, `segments`, `analytics`, `journeys`, `chat`, `conversations`, `settings`, `deliveries`, `audit`, `auth`, `webhooks`, `simulation`, `engine`, `tenants`, `health`, `middleware` |
 | `ws` | `monitoring`, `presence` |
-| `ai` | `chat`, `tools`, `context`, `prompts` |
+| `ai` | `chat`, `providers`, `tools`, `context`, `agents`, `prompts` |
 | `simulators` | `email`, `sms`, `push`, `whatsapp`, `in-app` |
-| `fe` | `shell`, `design`, `chat`, `work`, `editor`, `engine-room`, `browse` |
+| `fe` | `shell`, `auth`, `design`, `chat`, `work`, `editor`, `engine-room`, `browse` |
 | `infra` | `docker`, `ci`, `release` |
 
 Examples:
@@ -149,6 +152,6 @@ API key auth via Bearer token:
 
 ## Config highlights
 
-- Oban queues: `flow_triggers: 10`, `delayed_resume: 20`, `maintenance: 5`
+- Oban queues: `flow_triggers: 10`, `delayed_resume: 20`, `channel_delivery: 50`, `maintenance: 5`
 - Test config: Ecto SQL Sandbox, Oban manual mode, logger level `:warning`
 - Production: reads `DATABASE_URL`, `SECRET_KEY_BASE`, `PORT` from env vars
