@@ -82,8 +82,8 @@ kalcifer
 │   ├── engine                      # ✅ engine stats + recent logs (DevOnly-gated)
 │   ├── tenants                     # ✅ tenant roster for the dev switcher (DevOnly-gated)
 │   ├── health                      # ✅ health check, metrics
-│   └── middleware                  # ⚠️ ApiKeyAuth, RateLimiter, DevOnly, WebhookSignature, UserAuth
-│                                   #    (see Known Gaps — not every route is behind auth)
+│   └── middleware                  # ✅ ApiKeyAuth, UserAuth, ResolveTenant, RateLimiter,
+│                                   #    DevOnly, WebhookSignature
 │
 ├── ws                              # WebSocket layer (Phoenix Channels)
 │   ├── monitoring                  # ✅ FlowChannel — real-time instance/step events
@@ -132,14 +132,14 @@ notes), `ui-prototype/` (static HTML design prototypes), `docs/` (planning docum
 
 > Things the tree marks ⚠️ — shipped, but not finished.
 
-**`api/middleware`** — the router has an unauthenticated scope
-(`router.ex`) that `ApiKeyAuth` never sees. Controllers in it fall back to
-`KalciferWeb.TenantResolver`, whose last resort is a get-or-create **"Demo Tenant"**
-with no environment guard. `DevOnly` currently covers only `/tenants` and `/engine`.
-Everything else in that scope — including version updates, flow import, settings
-read/write, API key regeneration, audit and delivery listings, and `/chat` — is
-reachable without a Bearer token and resolves to the demo tenant. The dev frontend
-depends on this, so closing it means giving the frontend a real login path first.
+Nothing open right now.
+
+**`fe` writes need an API key.** Not a gap in the tree, but worth knowing: flow
+activate/pause/archive, customer, segment and journey mutations sit in the
+API-key-only `:authenticated` pipeline, while the frontend authenticates with a
+Google session token. Those calls have never worked from the UI. Deciding whether
+an operator session should carry write access to them is a design question, not a
+bug fix.
 
 ---
 
