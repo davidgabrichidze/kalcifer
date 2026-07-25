@@ -26,7 +26,8 @@ kalcifer
 │   ├── persistence                 # ✅ InstanceStore, StepStore
 │   ├── jobs                        # ✅ ResumeFlowJob, CleanupJob, StatsRollupJob
 │   ├── errors                      # ✅ ErrorCatalog, humanized error messages
-│   └── circuit-breaker             # ✅ CircuitBreaker for external calls
+│   ├── circuit-breaker             # ✅ CircuitBreaker for external calls
+│   └── observability               # ✅ LogCollector ring buffer, LogHandler (:logger sink)
 │
 ├── flows                           # Flow data model & lifecycle
 │   ├── lifecycle                   # ✅ CRUD, activate → pause → archive
@@ -36,7 +37,7 @@ kalcifer
 │
 ├── channels                        # Message delivery infrastructure
 │   ├── providers                   # ✅ Registry + Log/Webhook/SendGrid/Twilio, per-tenant selection
-│   ├── delivery                    # ✅ ChannelSender, Delivery tracking, status callbacks
+│   ├── delivery                    # ✅ ChannelSender, SendMessageJob, Delivery tracking, status callbacks
 │   └── webhooks                    # ✅ Inbound webhook processing (SendGrid, Twilio, SSRF-guarded)
 │
 ├── customers                       # Customer data layer
@@ -44,7 +45,7 @@ kalcifer
 │   └── segments                    # ✅ Segment definitions, SegmentEvaluator
 │
 ├── analytics                       # Metrics & insights
-│   ├── stats                       # ✅ FlowStats, NodeStats, Collector, rollup
+│   ├── stats                       # ✅ FlowStats, NodeStats, Collector, TelemetryForwarder, rollup
 │   ├── funnel                      # ✅ Funnel analysis
 │   └── conversions                 # ✅ Conversion tracking, A/B results
 │
@@ -54,25 +55,47 @@ kalcifer
 ├── tenants                         # Multi-tenancy
 │   └── auth                        # ✅ API key SHA256 hashing, Bearer token lookup
 │
+├── accounts                        # Operator accounts (people, not tenants)
+│   ├── users                       # ✅ Accounts.User, Google-linked, auto-provisions a tenant
+│   └── oauth                       # ✅ Google ID token verification, JWT session, UserAuth plug
+│
+├── audit                           # Audit trail
+│   └── log                         # ✅ Audit.Entry (actor/action/resource/details), query API
+│
 ├── api                             # REST API (Phoenix)
-│   ├── flows                       # ✅ CRUD + activate/pause/archive/preflight
-│   ├── versions                    # ✅ index/create/show + migrate/rollback/status
+│   ├── flows                       # ✅ CRUD + activate/pause/archive/preflight/export/import
+│   ├── versions                    # ✅ index/create/show/update + migrate/rollback/status
 │   ├── instances                   # ✅ index/show/timeline/cancel
 │   ├── triggers                    # ✅ trigger flow, send event
 │   ├── customers                   # ✅ CRUD + tags + preferences
+│   ├── segments                    # ✅ CRUD + members
 │   ├── analytics                   # ✅ summary/nodes/funnel/ab_results
 │   ├── journeys                    # ✅ CRUD + launch/pause/archive
+│   ├── chat                        # ✅ SSE chat endpoint streaming AI.Client
+│   ├── conversations               # ✅ index/show/update/archive/delete
+│   ├── settings                    # ✅ tenant settings, stats, API key regeneration
+│   ├── deliveries                  # ✅ index/stats + provider status callbacks
+│   ├── audit                       # ✅ audit log listing
+│   ├── auth                        # ✅ POST /auth/google, GET /auth/me
+│   ├── webhooks                    # ✅ inbound SendGrid/Twilio, signature-verified
+│   ├── simulation                  # ✅ POST /flows/:flow_id/simulate (dry-run)
+│   ├── engine                      # ✅ engine stats + recent logs (DevOnly-gated)
+│   ├── tenants                     # ✅ tenant roster for the dev switcher (DevOnly-gated)
 │   ├── health                      # ✅ health check, metrics
-│   └── middleware                  # ✅ ApiKeyAuth, RateLimiter
+│   └── middleware                  # ✅ ApiKeyAuth, UserAuth, ResolveTenant, RateLimiter,
+│                                   #    DevOnly, WebhookSignature
 │
 ├── ws                              # WebSocket layer (Phoenix Channels)
 │   ├── monitoring                  # ✅ FlowChannel — real-time instance/step events
 │   └── presence                    # ✅ Online operators per flow (Phoenix.Presence)
 │
 ├── ai                              # AI core — კალციფერის ტვინი
-│   ├── chat                        # ✅ Claude API client (Finch streaming), SSE endpoint
+│   ├── chat                        # ✅ Streaming client (Finch SSE), tool-use loop, SSE endpoint
+│   ├── providers                   # ✅ Anthropic (Claude), OpenAI (ChatGPT), Google (Gemini) adapters
 │   ├── tools                       # ✅ 13 tools (classify, flow CRUD, node edit, analyze, debug, memory)
-│   ├── context                     # ✅ Conversations (persistent, classified), Memory (CRUD, auto-load)
+│   ├── context                     # ✅ Conversations (persistent, classified), Memory (CRUD, auto-load),
+│   │                               #    FlowSnapshot — linked flow graph injected into the prompt
+│   ├── agents                      # ✅ AgentFlows — flow templates driving Kalcifer's own work cycles
 │   └── prompts                     # ✅ System prompt with Calcifer personality (Georgian)
 │
 ├── simulators                      # Provider simulators (emulate real callbacks)
@@ -83,8 +106,9 @@ kalcifer
 │   └── in-app                      # ✅ In-app message simulator
 │
 ├── fe                              # Frontend (React SPA)
-│   ├── shell                       # ✅ App shell, routing, TopBar, splash screen
-│   ├── design                      # ✅ 6 themes (hearth/ocean/forest/sunset/storm/minimal), tokens, dark mode
+│   ├── shell                       # ✅ App shell, routing, TopBar, tenant switcher
+│   ├── auth                        # ✅ LandingPage, Google sign-in, dev skip, token storage
+│   ├── design                      # ✅ 4 palettes (hearth/command/grove/calcifer) × light+dark = 8 themes
 │   ├── chat                        # ✅ ChatPanel (streaming SSE, markdown, tool badges, persistent)
 │   ├── work                        # ✅ Work page (sidebar + chat + context/editor panel)
 │   ├── editor                      # ✅ Flow editor — canvas, palette, node config, groups
@@ -92,18 +116,41 @@ kalcifer
 │   └── browse                      # ✅ Flow library — search, templates, import/export
 │
 └── infra                           # Infrastructure & operations
-    ├── docker                      # ✅ docker-compose.dev.yml (app + db + frontend)
-    ├── ci                          # ✅ GitHub Actions (ci, docker-publish, release, claude review)
+    ├── docker                      # ✅ docker-compose.yml + dev/prod variants (app + db + frontend)
+    ├── ci                          # ✅ GitHub Actions (ci, docker-publish, release, claude, claude-review)
     └── release                     # ✅ Release tasks (migrations)
 ```
 
 **Legend**: ✅ done — ⚠️ partial — 🔨 in progress — ❌ not started
 
+Outside the tree (supporting material, not product scopes): `learn/` (Elixir/OTP study
+notes), `ui-prototype/` (static HTML design prototypes), `docs/` (planning documents).
+
+---
+
+## Known Gaps
+
+> Things the tree marks ⚠️ — shipped, but not finished.
+
+Nothing open right now.
+
+**`fe` writes need an API key.** Not a gap in the tree, but worth knowing: flow
+activate/pause/archive, customer, segment and journey mutations sit in the
+API-key-only `:authenticated` pipeline, while the frontend authenticates with a
+Google session token. Those calls have never worked from the UI. Deciding whether
+an operator session should carry write access to them is a design question, not a
+bug fix.
+
 ---
 
 ## Node Map
 
-> `engine/nodes` scope — 31 registered types across 5 categories (includes 5 AI + 2 orchestration nodes)
+> `engine/nodes` scope — 31 registered types, grouped below by purpose. The engine's own
+> five categories come from each node's `category/0` (`:trigger | :condition | :wait |
+> :action | :end`) and do not always match the grouping — `flow_router` sits with the AI
+> nodes but reports `:condition`. Registry keys are the source of truth
+> (`Kalcifer.Engine.NodeRegistry`); the editor palette (`frontend/src/pages/editor/nodeTypes.ts`)
+> must carry the same 31 keys.
 
 ```
 engine/nodes
@@ -115,44 +162,44 @@ engine/nodes
 ├── condition
 │   ├── condition                   # ✅ If/else branching on context expressions
 │   ├── ab_split                    # ✅ Random A/B/N split with percentages
-│   ├── frequency_cap              # ✅ Skip if customer exceeded message limit
-│   ├── check_segment              # ✅ Branch based on segment membership
-│   └── preference_gate            # ✅ Branch based on customer preferences
+│   ├── frequency_cap               # ✅ Skip if customer exceeded message limit
+│   ├── check_segment               # ✅ Branch based on segment membership
+│   └── preference_gate             # ✅ Branch based on customer preferences
 │
 ├── action/channel
 │   ├── send_email                  # ✅ Send email via provider
 │   ├── send_sms                    # ✅ Send SMS via provider
 │   ├── send_push                   # ✅ Send push notification via provider
-│   ├── send_whatsapp              # ✅ Send WhatsApp message via provider
-│   ├── send_in_app                # ✅ Send in-app message via provider
-│   └── call_webhook               # ✅ HTTP call to external service
+│   ├── send_whatsapp               # ✅ Send WhatsApp message via provider
+│   ├── send_in_app                 # ✅ Send in-app message via provider
+│   └── call_webhook                # ✅ HTTP call to external service
 │
 ├── action/data
 │   ├── update_profile              # ✅ Update customer profile fields
 │   ├── add_tag                     # ✅ Add tags to customer
 │   ├── custom_code                 # ✅ Execute custom Elixir expression
-│   ├── track_conversion           # ✅ Record conversion event
-│   └── memory_recall              # ✅ Recall stored tenant memory into context
+│   ├── track_conversion            # ✅ Record conversion event
+│   └── memory_recall               # ✅ Recall stored tenant memory into context
 │
 ├── action/ai
 │   ├── ai_think                    # ✅ AI generates text/analysis from flow context
-│   ├── ai_decide                   # ✅ AI-powered branching (condition via Claude)
+│   ├── ai_decide                   # ✅ AI-powered branching (category :condition)
 │   ├── ai_notify                   # ✅ AI-summarized operator notifications (PubSub)
-│   ├── agent                       # ✅ Autonomous AI agent step (tool-using)
-│   └── flow_router                 # ✅ AI routes to a downstream branch
+│   ├── agent                       # ✅ Autonomous AI agent step (tool-using, multi-round)
+│   └── flow_router                 # ✅ AI routes to a downstream branch (category :condition)
 │
-├── action/orchestration
-│   ├── parallel_group             # ✅ Run child tasks concurrently, join results
+├── orchestration                   # (lives directly under nodes/action/)
+│   ├── parallel_group              # ✅ Run child tasks concurrently, join results
 │   └── sub_flow                    # ✅ Invoke another flow (optionally wait for it)
 │
 ├── wait
 │   ├── wait                        # ✅ Delay for duration (e.g. "3d", "2h")
 │   ├── wait_until                  # ✅ Wait until specific datetime
-│   └── wait_for_event             # ✅ Pause until matching event arrives
+│   └── wait_for_event              # ✅ Pause until matching event arrives
 │
 └── end
     ├── exit                        # ✅ Normal flow termination
-    └── goal_reached               # ✅ Flow completed with goal conversion
+    └── goal_reached                # ✅ Flow completed with goal conversion
 ```
 
 ---
@@ -163,19 +210,24 @@ engine/nodes
 
 | scope | subscopes |
 |-------|-----------|
-| `engine` | `executor`, `nodes`, `events`, `recovery`, `persistence`, `jobs`, `errors`, `circuit-breaker` |
+| `engine` | `executor`, `nodes`, `events`, `recovery`, `persistence`, `jobs`, `errors`, `circuit-breaker`, `observability` |
 | `flows` | `lifecycle`, `versions`, `graph`, `instances` |
 | `channels` | `providers`, `delivery`, `webhooks` |
 | `customers` | `profiles`, `segments` |
 | `analytics` | `stats`, `funnel`, `conversions` |
 | `marketing` | `journeys` |
 | `tenants` | `auth` |
-| `api` | `flows`, `versions`, `instances`, `triggers`, `customers`, `analytics`, `journeys`, `health`, `middleware` |
+| `accounts` | `users`, `oauth` |
+| `audit` | `log` |
+| `api` | `flows`, `versions`, `instances`, `triggers`, `customers`, `segments`, `analytics`, `journeys`, `chat`, `conversations`, `settings`, `deliveries`, `audit`, `auth`, `webhooks`, `simulation`, `engine`, `tenants`, `health`, `middleware` |
 | `ws` | `monitoring`, `presence` |
-| `ai` | `chat`, `tools`, `context`, `prompts` |
+| `ai` | `chat`, `providers`, `tools`, `context`, `agents`, `prompts` |
 | `simulators` | `email`, `sms`, `push`, `whatsapp`, `in-app` |
-| `fe` | `shell`, `design`, `chat`, `work`, `editor`, `engine-room`, `browse` |
+| `fe` | `shell`, `auth`, `design`, `chat`, `work`, `editor`, `engine-room`, `browse` |
 | `infra` | `docker`, `ci`, `release` |
+
+Note: `instances` is a **`flows`** subscope (and an `api` one) — never `engine/instances`.
+Always commit with a subscope; bare `feat(ai): ...` has slipped in before.
 
 Examples:
 ```

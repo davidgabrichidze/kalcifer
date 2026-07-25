@@ -55,21 +55,19 @@ defmodule Kalcifer.Tenants.Tenant do
 
   defp validate_ai_model(changeset) do
     case get_change(changeset, :settings) do
-      nil ->
-        changeset
+      nil -> changeset
+      settings -> validate_model_id(changeset, Map.get(settings, "ai_model"))
+    end
+  end
 
-      settings ->
-        case Map.get(settings, "ai_model") do
-          nil ->
-            changeset
+  # No "ai_model" key means the tenant isn't choosing a model — nothing to validate.
+  defp validate_model_id(changeset, nil), do: changeset
 
-          model ->
-            if model in all_model_ids() do
-              changeset
-            else
-              add_error(changeset, :settings, "invalid AI model: #{model}")
-            end
-        end
+  defp validate_model_id(changeset, model) do
+    if model in all_model_ids() do
+      changeset
+    else
+      add_error(changeset, :settings, "invalid AI model: #{model}")
     end
   end
 end

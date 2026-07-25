@@ -8,6 +8,7 @@ defmodule KalciferWeb.FlowChannel do
 
   use Phoenix.Channel
 
+  alias Kalcifer.Engine.Persistence.InstanceStore
   alias KalciferWeb.Presence
 
   @impl true
@@ -84,7 +85,7 @@ defmodule KalciferWeb.FlowChannel do
   # Confirm the instance belongs to the socket's tenant — otherwise any
   # tenant could subscribe to another's live engine events by instance id.
   defp instance_authorized?(socket, instance_id) do
-    case Kalcifer.Engine.Persistence.InstanceStore.get_instance(instance_id) do
+    case InstanceStore.get_instance(instance_id) do
       %{tenant_id: tid} -> tid == socket.assigns.tenant_id
       _ -> false
     end

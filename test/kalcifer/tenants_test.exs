@@ -2,6 +2,7 @@ defmodule Kalcifer.TenantsTest do
   use Kalcifer.DataCase, async: true
 
   alias Kalcifer.Tenants
+  alias Kalcifer.Tenants.Tenant
 
   import Kalcifer.Factory
 
@@ -91,7 +92,7 @@ defmodule Kalcifer.TenantsTest do
     test "accepts all valid models" do
       tenant = insert(:tenant)
 
-      for model <- Kalcifer.Tenants.Tenant.all_model_ids() do
+      for model <- Tenant.all_model_ids() do
         {:ok, updated} = Tenants.update_settings(tenant, %{"ai_model" => model})
         assert updated.settings["ai_model"] == model
       end

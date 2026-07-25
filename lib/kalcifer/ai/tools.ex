@@ -553,37 +553,10 @@ defmodule Kalcifer.AI.Tools do
   defp do_execute("classify_session", input, _tenant_id, ctx) do
     conversation_id = Map.get(ctx, :conversation_id)
 
-    unless conversation_id do
-      {:error, "No active conversation to classify"}
+    if conversation_id do
+      classify_session(conversation_id, input)
     else
-      kind = Map.fetch!(input, "kind")
-      title = Map.get(input, "title")
-      reason = Map.get(input, "reason", "")
-      flow_id = Map.get(input, "flow_id")
-
-      case Context.get_conversation(conversation_id) do
-        nil ->
-          {:error, "Conversation not found"}
-
-        conv ->
-          case Context.classify_conversation(conv, kind, title) do
-            {:ok, classified} ->
-              result = %{
-                classified: true,
-                kind: classified.kind,
-                title: classified.title,
-                reason: reason,
-                needs_confirmation: true
-              }
-
-              result = if flow_id, do: Map.put(result, :flow_id, flow_id), else: result
-
-              {:ok, Jason.encode!(result, pretty: true)}
-
-            {:error, changeset} ->
-              {:error, "Classification failed: #{format_changeset_errors(changeset)}"}
-          end
-      end
+      {:error, "No active conversation to classify"}
     end
   end
 
@@ -660,27 +633,7 @@ defmodule Kalcifer.AI.Tools do
     else
       case Flows.create_flow(tenant_id, %{name: name, description: description}) do
         {:ok, flow} ->
-          # Link flow to conversation — future create_flow calls return this one
-          if conversation_id do
-            link_flow_to_conversation(conversation_id, flow.id)
-          end
-
-          # If a graph was provided, create version 1 with it
-          {version_graph, warnings} = create_initial_version(flow, graph_input)
-
-          result = %{
-            id: flow.id,
-            name: flow.name,
-            status: flow.status,
-            message: "Flow created successfully"
-          }
-
-          result = if version_graph, do: Map.put(result, :graph, version_graph), else: result
-
-          result =
-            if warnings != [], do: Map.put(result, :validation_warnings, warnings), else: result
-
-          {:ok, Jason.encode!(result, pretty: true)}
+          created_flow_result(flow, graph_input, conversation_id)
 
         {:error, changeset} ->
           errors = format_changeset_errors(changeset)
@@ -725,55 +678,12 @@ defmodule Kalcifer.AI.Tools do
            {:version, get_or_create_draft_version(flow)} do
       graph = version.graph || %{"nodes" => [], "edges" => []}
       nodes = Map.get(graph, "nodes", [])
-      edges = Map.get(graph, "edges", [])
 
       # Check for duplicate node ID
       if Enum.any?(nodes, &(&1["id"] == new_node["id"])) do
         {:error, "Node with id '#{new_node["id"]}' already exists"}
       else
-        # Build the node map
-        node_map = %{
-          "id" => Map.fetch!(new_node, "id"),
-          "type" => Map.fetch!(new_node, "type"),
-          "config" => Map.get(new_node, "config", %{})
-        }
-
-        # Build edge maps
-        edge_maps =
-          Enum.map(new_edges, fn e ->
-            edge = %{"source" => e["source"], "target" => e["target"]}
-            if e["branch"], do: Map.put(edge, "branch", e["branch"]), else: edge
-          end)
-
-        updated_graph = %{
-          "nodes" => nodes ++ [node_map],
-          "edges" => edges ++ edge_maps
-        }
-
-        # Validate
-        warnings =
-          case FlowGraph.validate(updated_graph) do
-            :ok -> []
-            {:error, errors} -> errors
-          end
-
-        # Persist
-        {:ok, _updated} =
-          version
-          |> Ecto.Changeset.change(graph: updated_graph)
-          |> Kalcifer.Repo.update()
-
-        result =
-          %{
-            flow_id: flow_id,
-            added_node: node_map["id"],
-            added_edges: length(edge_maps),
-            version_number: version.version_number,
-            validation_warnings: warnings
-          }
-          |> Map.merge(graph_summary(updated_graph))
-
-        {:ok, Jason.encode!(result, pretty: true)}
+        append_node(flow_id, version, graph, new_node, new_edges)
       end
     else
       {:flow, nil} -> {:error, "Flow not found: #{flow_id}"}
@@ -833,33 +743,9 @@ defmodule Kalcifer.AI.Tools do
            {:version, get_or_create_draft_version(flow)} do
       graph = version.graph || %{"nodes" => [], "edges" => []}
       nodes = Map.get(graph, "nodes", [])
-      edges = Map.get(graph, "edges", [])
 
       if Enum.any?(nodes, &(&1["id"] == node_id)) do
-        updated_nodes = Enum.reject(nodes, &(&1["id"] == node_id))
-
-        updated_edges =
-          Enum.reject(edges, fn e ->
-            e["source"] == node_id || e["target"] == node_id
-          end)
-
-        updated_graph = %{"nodes" => updated_nodes, "edges" => updated_edges}
-
-        {:ok, _} =
-          version
-          |> Ecto.Changeset.change(graph: updated_graph)
-          |> Kalcifer.Repo.update()
-
-        result =
-          %{
-            flow_id: flow_id,
-            removed_node: node_id,
-            removed_edges: length(edges) - length(updated_edges),
-            version_number: version.version_number
-          }
-          |> Map.merge(graph_summary(updated_graph))
-
-        {:ok, Jason.encode!(result, pretty: true)}
+        delete_node(flow_id, version, graph, node_id)
       else
         {:error, "Node '#{node_id}' not found in graph"}
       end
@@ -894,18 +780,7 @@ defmodule Kalcifer.AI.Tools do
       # Node stats by category
       category_counts =
         Enum.reduce(nodes, %{}, fn node, acc ->
-          category =
-            case NodeRegistry.lookup(node["type"]) do
-              {:ok, mod} ->
-                if function_exported?(mod, :category, 0),
-                  do: to_string(mod.category()),
-                  else: "unknown"
-
-              :error ->
-                "unknown"
-            end
-
-          Map.update(acc, category, 1, &(&1 + 1))
+          Map.update(acc, node_category(node["type"]), 1, &(&1 + 1))
         end)
 
       # Entry & end nodes
@@ -957,24 +832,7 @@ defmodule Kalcifer.AI.Tools do
         # Load execution steps
         steps =
           StepStore.list_steps(instance_id)
-          |> Enum.map(fn s ->
-            step = %{
-              node_id: s.node_id,
-              node_type: s.node_type,
-              status: s.status,
-              started_at: s.started_at,
-              completed_at: s.completed_at
-            }
-
-            step =
-              if s.status == "failed" and s.error,
-                do: Map.put(step, :error, s.error),
-                else: step
-
-            if s.output,
-              do: Map.put(step, :output_keys, Map.keys(s.output)),
-              else: step
-          end)
+          |> Enum.map(&summarize_step/1)
 
         result = %{
           instance_id: instance.id,
@@ -1069,6 +927,66 @@ defmodule Kalcifer.AI.Tools do
   end
 
   # ── Helpers ─────────────────────────────────────────────────
+
+  # Classify the conversation behind this session.
+  defp classify_session(conversation_id, input) do
+    kind = Map.fetch!(input, "kind")
+    title = Map.get(input, "title")
+    reason = Map.get(input, "reason", "")
+    flow_id = Map.get(input, "flow_id")
+
+    case Context.get_conversation(conversation_id) do
+      nil ->
+        {:error, "Conversation not found"}
+
+      conv ->
+        classified_session_result(conv, kind, title, reason, flow_id)
+    end
+  end
+
+  # The classification suggestion shown to the user, awaiting their confirmation.
+  defp classified_session_result(conv, kind, title, reason, flow_id) do
+    case Context.classify_conversation(conv, kind, title) do
+      {:ok, classified} ->
+        result = %{
+          classified: true,
+          kind: classified.kind,
+          title: classified.title,
+          reason: reason,
+          needs_confirmation: true
+        }
+
+        result = if flow_id, do: Map.put(result, :flow_id, flow_id), else: result
+
+        {:ok, Jason.encode!(result, pretty: true)}
+
+      {:error, changeset} ->
+        {:error, "Classification failed: #{format_changeset_errors(changeset)}"}
+    end
+  end
+
+  # Finish create_flow: link the flow to its conversation, seed version 1, build the result.
+  defp created_flow_result(flow, graph_input, conversation_id) do
+    # Link flow to conversation — future create_flow calls return this one
+    if conversation_id do
+      link_flow_to_conversation(conversation_id, flow.id)
+    end
+
+    # If a graph was provided, create version 1 with it
+    {version_graph, warnings} = create_initial_version(flow, graph_input)
+
+    result = %{
+      id: flow.id,
+      name: flow.name,
+      status: flow.status,
+      message: "Flow created successfully"
+    }
+
+    result = if version_graph, do: Map.put(result, :graph, version_graph), else: result
+    result = if warnings != [], do: Map.put(result, :validation_warnings, warnings), else: result
+
+    {:ok, Jason.encode!(result, pretty: true)}
+  end
 
   # Create version 1 with the provided graph (or empty graph if nil)
   defp create_initial_version(flow, nil) do
@@ -1187,6 +1105,114 @@ defmodule Kalcifer.AI.Tools do
         {:error, _} -> nil
       end
     end
+  end
+
+  # add_node: append the node and its edges to the graph, validate, persist.
+  defp append_node(flow_id, version, graph, new_node, new_edges) do
+    nodes = Map.get(graph, "nodes", [])
+    edges = Map.get(graph, "edges", [])
+
+    # Build the node map
+    node_map = %{
+      "id" => Map.fetch!(new_node, "id"),
+      "type" => Map.fetch!(new_node, "type"),
+      "config" => Map.get(new_node, "config", %{})
+    }
+
+    # Build edge maps
+    edge_maps =
+      Enum.map(new_edges, fn e ->
+        edge = %{"source" => e["source"], "target" => e["target"]}
+        if e["branch"], do: Map.put(edge, "branch", e["branch"]), else: edge
+      end)
+
+    updated_graph = %{
+      "nodes" => nodes ++ [node_map],
+      "edges" => edges ++ edge_maps
+    }
+
+    # Validate
+    warnings =
+      case FlowGraph.validate(updated_graph) do
+        :ok -> []
+        {:error, errors} -> errors
+      end
+
+    # Persist
+    {:ok, _updated} =
+      version
+      |> Ecto.Changeset.change(graph: updated_graph)
+      |> Kalcifer.Repo.update()
+
+    result =
+      %{
+        flow_id: flow_id,
+        added_node: node_map["id"],
+        added_edges: length(edge_maps),
+        version_number: version.version_number,
+        validation_warnings: warnings
+      }
+      |> Map.merge(graph_summary(updated_graph))
+
+    {:ok, Jason.encode!(result, pretty: true)}
+  end
+
+  # remove_node: drop the node together with every edge touching it, then persist.
+  defp delete_node(flow_id, version, graph, node_id) do
+    nodes = Map.get(graph, "nodes", [])
+    edges = Map.get(graph, "edges", [])
+
+    updated_nodes = Enum.reject(nodes, &(&1["id"] == node_id))
+
+    updated_edges =
+      Enum.reject(edges, fn e ->
+        e["source"] == node_id || e["target"] == node_id
+      end)
+
+    updated_graph = %{"nodes" => updated_nodes, "edges" => updated_edges}
+
+    {:ok, _} =
+      version
+      |> Ecto.Changeset.change(graph: updated_graph)
+      |> Kalcifer.Repo.update()
+
+    result =
+      %{
+        flow_id: flow_id,
+        removed_node: node_id,
+        removed_edges: length(edges) - length(updated_edges),
+        version_number: version.version_number
+      }
+      |> Map.merge(graph_summary(updated_graph))
+
+    {:ok, Jason.encode!(result, pretty: true)}
+  end
+
+  # Category of a node type as a string — unregistered types count as "unknown"
+  defp node_category(type) do
+    case NodeRegistry.lookup(type) do
+      {:ok, mod} ->
+        if function_exported?(mod, :category, 0), do: to_string(mod.category()), else: "unknown"
+
+      :error ->
+        "unknown"
+    end
+  end
+
+  # debug_instance: compact view of one execution step — error only when it failed,
+  # output reduced to its keys so large payloads never reach the model.
+  defp summarize_step(s) do
+    step = %{
+      node_id: s.node_id,
+      node_type: s.node_type,
+      status: s.status,
+      started_at: s.started_at,
+      completed_at: s.completed_at
+    }
+
+    step = if s.status == "failed" and s.error, do: Map.put(step, :error, s.error), else: step
+
+    if s.output, do: Map.put(step, :output_keys, Map.keys(s.output)), else: step
   end
 
   # Post-mutation graph state, merged into mutating tool results so the AI

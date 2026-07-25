@@ -3,6 +3,8 @@ defmodule Kalcifer.Engine.Nodes.Wait.Wait do
 
   use Kalcifer.Engine.NodeBehaviour
 
+  alias Kalcifer.Engine.Duration
+
   @impl true
   def execute(config, context) do
     if context["_dry_run"] do
@@ -25,7 +27,7 @@ defmodule Kalcifer.Engine.Nodes.Wait.Wait do
   # in :waiting with no resume job ever scheduled.
   @impl true
   def validate(config) do
-    case Kalcifer.Engine.Duration.to_seconds(config["duration"]) do
+    case Duration.to_seconds(config["duration"]) do
       {:ok, _seconds} -> :ok
       _ -> {:error, ["duration must be a value like \"3d\", \"2h\", \"30m\""]}
     end

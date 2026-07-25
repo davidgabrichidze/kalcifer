@@ -16,7 +16,7 @@ defmodule KalciferWeb.EngineControllerTest do
       assert is_map(categories)
 
       # Each node has required fields
-      if length(nodes) > 0 do
+      if nodes != [] do
         node = hd(nodes)
         assert Map.has_key?(node, "type")
         assert Map.has_key?(node, "module")
@@ -28,7 +28,7 @@ defmodule KalciferWeb.EngineControllerTest do
       assert is_list(queues)
       assert is_integer(tc)
 
-      if length(queues) > 0 do
+      if queues != [] do
         q = hd(queues)
         assert Map.has_key?(q, "name")
         assert Map.has_key?(q, "concurrency")

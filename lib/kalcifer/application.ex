@@ -3,6 +3,8 @@ defmodule Kalcifer.Application do
 
   use Application
 
+  alias Kalcifer.Analytics.TelemetryForwarder
+
   @impl true
   def start(_type, _args) do
     children = [
@@ -30,7 +32,7 @@ defmodule Kalcifer.Application do
     )
 
     # Forward engine telemetry into batched analytics stats
-    Kalcifer.Analytics.TelemetryForwarder.attach()
+    TelemetryForwarder.attach()
 
     result
   end

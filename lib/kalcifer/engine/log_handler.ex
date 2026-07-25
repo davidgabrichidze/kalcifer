@@ -4,6 +4,8 @@ defmodule Kalcifer.Engine.LogHandler do
   Attached in Application.start/2.
   """
 
+  alias Kalcifer.Engine.LogCollector
+
   @doc "Handler callback invoked by :logger for each log event"
   def log(%{level: level, msg: msg, meta: meta}, _config) do
     message = format_message(msg)
@@ -13,7 +15,7 @@ defmodule Kalcifer.Engine.LogHandler do
       module: Map.get(meta, :mfa, nil) |> extract_module()
     }
 
-    Kalcifer.Engine.LogCollector.push(level, message, metadata)
+    LogCollector.push(level, message, metadata)
   end
 
   defp format_message({:string, msg}), do: IO.chardata_to_string(msg)

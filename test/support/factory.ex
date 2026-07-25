@@ -3,6 +3,7 @@ defmodule Kalcifer.Factory do
 
   use ExMachina.Ecto, repo: Kalcifer.Repo
 
+  alias Kalcifer.Accounts.User
   alias Kalcifer.AI.Conversation
   alias Kalcifer.AI.ConversationMessage
   alias Kalcifer.AI.Memory
@@ -20,6 +21,15 @@ defmodule Kalcifer.Factory do
       name: sequence(:tenant_name, &"Tenant #{&1}"),
       api_key_hash: sequence(:api_key_hash, &"hashed_key_#{&1}"),
       settings: %{}
+    }
+  end
+
+  def user_factory do
+    %User{
+      email: sequence(:user_email, &"operator#{&1}@example.com"),
+      name: sequence(:user_name, &"Operator #{&1}"),
+      google_uid: sequence(:google_uid, &"google-uid-#{&1}"),
+      tenant: build(:tenant)
     }
   end
 

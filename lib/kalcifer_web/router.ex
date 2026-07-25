@@ -5,11 +5,28 @@ defmodule KalciferWeb.Router do
     plug :accepts, ["json"]
   end
 
+  # Optional user auth: assigns current_user/current_tenant when a Google
+  # session token is present, passes through untouched when it is not.
+  pipeline :session do
+    plug KalciferWeb.Plugs.UserAuth
+  end
+
+  # Operator frontend routes. Accepts a session token or an API key; in
+  # dev/test also the x-tenant-id header and the Demo Tenant fallback.
+  # Without any of those, ResolveTenant halts with 401.
+  pipeline :tenant_scoped do
+    plug KalciferWeb.Plugs.UserAuth
+    plug KalciferWeb.Plugs.ResolveTenant
+  end
+
+  # Machine-to-machine routes. API key only — a session token is not enough.
   pipeline :authenticated do
     plug KalciferWeb.Plugs.ApiKeyAuth
     plug KalciferWeb.Plugs.RateLimiter, action: :default
   end
 
+  # Public — no tenant needed, or authenticated by other means (webhook
+  # signatures, Google ID token).
   scope "/api/v1", KalciferWeb do
     pipe_through :api
 
@@ -19,11 +36,19 @@ defmodule KalciferWeb.Router do
     post "/webhooks/sendgrid", WebhookController, :sendgrid
     post "/webhooks/twilio", WebhookController, :twilio
 
-    post "/chat", ChatController, :create
-
-    # Auth
     post "/auth/google", AuthController, :google
+  end
+
+  scope "/api/v1", KalciferWeb do
+    pipe_through [:api, :session]
+
     get "/auth/me", AuthController, :me
+  end
+
+  scope "/api/v1", KalciferWeb do
+    pipe_through [:api, :tenant_scoped]
+
+    post "/chat", ChatController, :create
 
     get "/settings", SettingsController, :show
     put "/settings", SettingsController, :update
@@ -41,7 +66,7 @@ defmodule KalciferWeb.Router do
     # Dev frontend tenant switcher
     get "/tenants", TenantController, :index
 
-    # Browse mode — read-only flow/journey/version listing (dev frontend)
+    # Browse mode — flow/journey/version listing for the frontend
     get "/flows", FlowController, :index
     get "/flows/:id", FlowController, :show
     get "/flows/:flow_id/versions", FlowVersionController, :index
@@ -54,12 +79,12 @@ defmodule KalciferWeb.Router do
     post "/flows/:flow_id/simulate", SimulationController, :create
     post "/flows/:id/preflight", FlowController, :preflight
 
-    # Instance browsing (dev frontend, uses resolve_tenant fallback)
+    # Instance browsing
     get "/flows/:flow_id/instances", InstanceBrowseController, :index
     get "/instances/:id", InstanceBrowseController, :show
     get "/instances/:id/timeline", InstanceBrowseController, :timeline
 
-    # Analytics (dev frontend, unauthenticated)
+    # Analytics
     get "/flows/:flow_id/analytics/summary", AnalyticsController, :summary
     get "/flows/:flow_id/analytics/nodes", AnalyticsController, :nodes
     get "/flows/:flow_id/analytics/funnel", AnalyticsController, :funnel

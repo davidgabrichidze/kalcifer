@@ -3,8 +3,8 @@ defmodule KalciferWeb.InstanceBrowseControllerTest do
 
   import Kalcifer.Factory
 
-  alias Kalcifer.Flows
   alias Kalcifer.Engine.Persistence.{InstanceStore, StepStore}
+  alias Kalcifer.Flows
 
   @raw_api_key "test_key_for_instance_browse"
 
@@ -48,7 +48,7 @@ defmodule KalciferWeb.InstanceBrowseControllerTest do
 
       conn = get(conn, "/api/v1/flows/#{flow.id}/instances")
       body = json_response(conn, 200)
-      assert length(body["data"]) >= 1
+      refute Enum.empty?(body["data"])
 
       inst = Enum.find(body["data"], &(&1["id"] == instance.id))
       assert inst

@@ -52,69 +52,68 @@ defmodule KalciferWeb.SettingsController do
   end
 
   defp build_settings_update(tenant, params) do
-    settings = %{}
-    settings = maybe_put(settings, "ai_model", params["ai_model"])
+    %{}
+    |> maybe_put("ai_model", params["ai_model"])
     # Legacy single key support
-    settings = maybe_put(settings, "ai_api_key", params["ai_api_key"])
-
-    # Per-provider key: {"provider" => "anthropic", "key" => "sk-..."}
-    settings =
-      case params["provider_key"] do
-        %{"provider" => provider, "key" => key} when is_binary(provider) ->
-          existing_keys = Map.get(tenant.settings || %{}, "ai_keys", %{})
-          updated_keys = Map.put(existing_keys, provider, key)
-          Map.put(settings, "ai_keys", updated_keys)
-
-        _ ->
-          settings
-      end
-
-    # Remove provider key: "anthropic"
-    settings =
-      case params["remove_provider_key"] do
-        provider when is_binary(provider) ->
-          existing_keys = Map.get(tenant.settings || %{}, "ai_keys", %{})
-          updated_keys = Map.delete(existing_keys, provider)
-          Map.put(settings, "ai_keys", updated_keys)
-
-        _ ->
-          settings
-      end
-
-    # Channel provider config: {"channel" => "email", "provider" => "sendgrid", "config" => {...}}
-    settings =
-      case params["channel_provider"] do
-        %{"channel" => channel, "provider" => provider} = cp when is_binary(channel) ->
-          existing = Map.get(tenant.settings || %{}, "channel_providers", %{})
-          config = Map.get(cp, "config", %{})
-
-          updated =
-            Map.put(existing, channel, %{
-              "provider" => provider,
-              "config" => config,
-              "enabled" => Map.get(cp, "enabled", true)
-            })
-
-          Map.put(settings, "channel_providers", updated)
-
-        _ ->
-          settings
-      end
-
-    # Remove channel provider: "email"
-    settings =
-      case params["remove_channel_provider"] do
-        channel when is_binary(channel) ->
-          existing = Map.get(tenant.settings || %{}, "channel_providers", %{})
-          updated = Map.delete(existing, channel)
-          Map.put(settings, "channel_providers", updated)
-
-        _ ->
-          settings
-      end
-
-    settings
+    |> maybe_put("ai_api_key", params["ai_api_key"])
+    |> put_provider_key(tenant, params["provider_key"])
+    |> remove_provider_key(tenant, params["remove_provider_key"])
+    |> put_channel_provider(tenant, params["channel_provider"])
+    |> remove_channel_provider(tenant, params["remove_channel_provider"])
   end
+
+  # Per-provider key: {"provider" => "anthropic", "key" => "sk-..."}
+  defp put_provider_key(settings, tenant, %{"provider" => provider, "key" => key})
+       when is_binary(provider) do
+    Map.put(settings, "ai_keys", Map.put(existing_ai_keys(tenant), provider, key))
+  end
+
+  defp put_provider_key(settings, _tenant, _param), do: settings
+
+  # Remove provider key: "anthropic"
+  defp remove_provider_key(settings, tenant, provider) when is_binary(provider) do
+    Map.put(settings, "ai_keys", Map.delete(existing_ai_keys(tenant), provider))
+  end
+
+  defp remove_provider_key(settings, _tenant, _param), do: settings
+
+  # Channel provider config: {"channel" => "email", "provider" => "sendgrid", "config" => {...}}
+  defp put_channel_provider(
+         settings,
+         tenant,
+         %{"channel" => channel, "provider" => provider} = cp
+       )
+       when is_binary(channel) do
+    entry = %{
+      "provider" => provider,
+      "config" => Map.get(cp, "config", %{}),
+      "enabled" => Map.get(cp, "enabled", true)
+    }
+
+    Map.put(
+      settings,
+      "channel_providers",
+      Map.put(existing_channel_providers(tenant), channel, entry)
+    )
+  end
+
+  defp put_channel_provider(settings, _tenant, _param), do: settings
+
+  # Remove channel provider: "email"
+  defp remove_channel_provider(settings, tenant, channel) when is_binary(channel) do
+    Map.put(
+      settings,
+      "channel_providers",
+      Map.delete(existing_channel_providers(tenant), channel)
+    )
+  end
+
+  defp remove_channel_provider(settings, _tenant, _param), do: settings
+
+  defp existing_ai_keys(tenant), do: Map.get(tenant.settings || %{}, "ai_keys", %{})
+
+  defp existing_channel_providers(tenant),
+    do: Map.get(tenant.settings || %{}, "channel_providers", %{})
 
   defp settings_response(tenant) do
     ai = Tenants.ai_config(tenant)
