@@ -10,7 +10,20 @@ defmodule Kalcifer.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
+      dialyzer: dialyzer(),
       listeners: [Phoenix.CodeReloader]
+    ]
+  end
+
+  # In :test, elixirc_paths pulls test/support into the app, and those files call
+  # ExUnit — which is not a dependency, so it is absent from the PLT unless asked
+  # for. plt_*_path matches the priv/plts that .gitignore and the CI cache step
+  # already expect; without it dialyxir writes to _build and the cache never hits.
+  defp dialyzer do
+    [
+      plt_add_apps: [:ex_unit],
+      plt_core_path: "priv/plts",
+      plt_local_path: "priv/plts"
     ]
   end
 
