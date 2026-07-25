@@ -110,16 +110,17 @@ defmodule Kalcifer.Engine.Nodes.Action.AI.Notify do
 
   defp get_nested_value(map, key) when is_map(map) do
     case Map.get(map, key) do
-      nil ->
-        # Try to find in nested node results
-        Enum.find_value(map, key, fn {_node_id, result} ->
-          if is_map(result), do: Map.get(result, key)
-        end)
-
-      value ->
-        value
+      nil -> find_in_node_results(map, key)
+      value -> value
     end
   end
 
   defp get_nested_value(_, key), do: "{{#{key}}}"
+
+  # Try to find in nested node results, falling back to the key itself
+  defp find_in_node_results(map, key) do
+    Enum.find_value(map, key, fn {_node_id, result} ->
+      if is_map(result), do: Map.get(result, key)
+    end)
+  end
 end

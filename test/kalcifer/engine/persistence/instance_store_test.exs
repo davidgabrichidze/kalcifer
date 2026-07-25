@@ -2,6 +2,7 @@ defmodule Kalcifer.Engine.Persistence.InstanceStoreTest do
   use Kalcifer.DataCase, async: true
 
   alias Kalcifer.Engine.Persistence.InstanceStore
+  alias Kalcifer.Flows.FlowInstance
 
   import Kalcifer.Factory
 
@@ -54,7 +55,7 @@ defmodule Kalcifer.Engine.Persistence.InstanceStoreTest do
       assert {:ok, first} = InstanceStore.create_instance(attrs)
 
       first
-      |> Kalcifer.Flows.FlowInstance.status_changeset("completed")
+      |> FlowInstance.status_changeset("completed")
       |> Kalcifer.Repo.update!()
 
       assert {:ok, _second} = InstanceStore.create_instance(attrs)

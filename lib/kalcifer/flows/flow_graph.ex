@@ -432,7 +432,7 @@ defmodule Kalcifer.Flows.FlowGraph do
   defp suggest_missing_entry(acc, nodes) do
     has_entry = Enum.any?(nodes, &(&1["type"] in @entry_types))
 
-    if not has_entry and length(nodes) > 0 do
+    if not has_entry and nodes != [] do
       ["ფლოუს არ აქვს შესასვლელი (entry) — დაამატე trigger node" | acc]
     else
       acc
@@ -448,7 +448,7 @@ defmodule Kalcifer.Flows.FlowGraph do
       |> Enum.reject(&(&1["id"] |> then(fn id -> MapSet.member?(connected, id) end)))
       |> Enum.map(& &1["id"])
 
-    if length(orphans) > 0 and length(nodes) > 1 do
+    if orphans != [] and length(nodes) > 1 do
       ids = Enum.join(orphans, ", ")
       ["იზოლირებული ნაბიჯები: #{ids} — შეაერთე სხვა ნაბიჯებთან" | acc]
     else
@@ -457,19 +457,21 @@ defmodule Kalcifer.Flows.FlowGraph do
   end
 
   defp suggest_incomplete_branches(acc, nodes, edges) do
-    Enum.reduce(nodes, acc, fn node, suggestions ->
-      if node["type"] in @branching_types do
-        outgoing = Enum.filter(edges, &(&1["source"] == node["id"]))
-
-        if length(outgoing) < 2 do
-          ["#{node["id"]} (#{node["type"]}) — ორივე branch უნდა იყოს დაკავშირებული" | suggestions]
-        else
-          suggestions
-        end
+    nodes
+    |> Enum.filter(&(&1["type"] in @branching_types))
+    |> Enum.reduce(acc, fn node, suggestions ->
+      if incomplete_branching?(node, edges) do
+        ["#{node["id"]} (#{node["type"]}) — ორივე branch უნდა იყოს დაკავშირებული" | suggestions]
       else
         suggestions
       end
     end)
+  end
+
+  # A branching node needs at least two outgoing edges — one per branch.
+  defp incomplete_branching?(node, edges) do
+    outgoing = Enum.filter(edges, &(&1["source"] == node["id"]))
+    not match?([_, _ | _], outgoing)
   end
 
   defp suggest_single_node(acc, nodes) do

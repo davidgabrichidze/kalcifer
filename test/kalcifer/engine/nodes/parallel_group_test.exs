@@ -57,7 +57,7 @@ defmodule Kalcifer.Engine.Nodes.Action.ParallelGroupTest do
       }
 
       assert {:failed, %{parallel_errors: errors}} = ParallelGroup.execute(config, %{"x" => 1})
-      assert length(errors) > 0
+      refute Enum.empty?(errors)
     end
 
     test "continues on error when on_error=continue (default)" do

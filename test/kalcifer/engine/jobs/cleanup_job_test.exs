@@ -4,6 +4,7 @@ defmodule Kalcifer.Engine.Jobs.CleanupJobTest do
   import Kalcifer.Factory
 
   alias Kalcifer.Engine.Jobs.CleanupJob
+  alias Kalcifer.Engine.Jobs.ResumeFlowJob
   alias Kalcifer.Flows.FlowInstance
   alias Kalcifer.Repo
 
@@ -85,7 +86,7 @@ defmodule Kalcifer.Engine.Jobs.CleanupJobTest do
 
       {:ok, _job} =
         %{"instance_id" => instance.id, "node_id" => "w1", "trigger" => "timer_expired"}
-        |> Kalcifer.Engine.Jobs.ResumeFlowJob.new(schedule_in: 3600)
+        |> ResumeFlowJob.new(schedule_in: 3600)
         |> Oban.insert()
 
       assert {:ok, _} = CleanupJob.perform(%Oban.Job{args: %{}})

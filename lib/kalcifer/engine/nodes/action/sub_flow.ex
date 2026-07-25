@@ -18,6 +18,7 @@ defmodule Kalcifer.Engine.Nodes.Action.SubFlow do
   use Kalcifer.Engine.NodeBehaviour
 
   alias Kalcifer.Engine.FlowTrigger
+  alias Kalcifer.Engine.Persistence.InstanceStore
   alias Kalcifer.Flows
 
   @default_timeout 60_000
@@ -122,24 +123,29 @@ defmodule Kalcifer.Engine.Nodes.Action.SubFlow do
         {:failed, %{reason: "Sub-flow not found: #{flow_id}"}}
 
       flow ->
-        case FlowTrigger.trigger(flow.id, customer_id, child_context) do
-          {:ok, instance_id} ->
-            if wait do
-              wait_for_completion(instance_id, timeout)
-            else
-              {:completed,
-               %{
-                 sub_flow: true,
-                 instance_id: instance_id,
-                 flow_id: flow_id,
-                 async: true
-               }}
-            end
-
-          {:error, reason} ->
-            {:failed, %{reason: "Failed to start sub-flow: #{inspect(reason)}"}}
-        end
+        flow.id
+        |> FlowTrigger.trigger(customer_id, child_context)
+        |> handle_trigger_result(flow_id, wait, timeout)
     end
+  end
+
+  # Blocks on the child instance when wait=true, otherwise returns its id immediately
+  defp handle_trigger_result({:ok, instance_id}, flow_id, wait, timeout) do
+    if wait do
+      wait_for_completion(instance_id, timeout)
+    else
+      {:completed,
+       %{
+         sub_flow: true,
+         instance_id: instance_id,
+         flow_id: flow_id,
+         async: true
+       }}
+    end
+  end
+
+  defp handle_trigger_result({:error, reason}, _flow_id, _wait, _timeout) do
+    {:failed, %{reason: "Failed to start sub-flow: #{inspect(reason)}"}}
   end
 
   defp build_child_context(parent_context, mapping) when map_size(mapping) == 0 do
@@ -175,7 +181,7 @@ defmodule Kalcifer.Engine.Nodes.Action.SubFlow do
          message: "Sub-flow did not complete within timeout"
        }}
     else
-      case Kalcifer.Engine.Persistence.InstanceStore.get_instance(instance_id) do
+      case InstanceStore.get_instance(instance_id) do
         %{status: "completed", context: ctx} ->
           {:completed,
            %{

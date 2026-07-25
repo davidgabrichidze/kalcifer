@@ -35,12 +35,17 @@ defmodule Kalcifer.Channels.UrlGuard do
     else
       case resolve(host) do
         {:ok, addrs} ->
-          if Enum.any?(addrs, &blocked?/1), do: {:error, :blocked_address}, else: :ok
+          validate_addresses(addrs)
 
         {:error, _} ->
           {:error, :unresolvable_host}
       end
     end
+  end
+
+  # A host is only safe if every address it resolves to is public.
+  defp validate_addresses(addrs) do
+    if Enum.any?(addrs, &blocked?/1), do: {:error, :blocked_address}, else: :ok
   end
 
   defp resolve(host) do
@@ -49,13 +54,18 @@ defmodule Kalcifer.Channels.UrlGuard do
         {:ok, [addr]}
 
       {:error, _} ->
-        with {:ok, v4} <- lookup(host, :inet) |> collect(),
-             {:ok, v6} <- lookup(host, :inet6) |> collect() do
-          case v4 ++ v6 do
-            [] -> {:error, :nxdomain}
-            addrs -> {:ok, addrs}
-          end
-        end
+        resolve_via_dns(host)
+    end
+  end
+
+  # Both families are looked up: a host with only an AAAA record must still be checked.
+  defp resolve_via_dns(host) do
+    with {:ok, v4} <- lookup(host, :inet) |> collect(),
+         {:ok, v6} <- lookup(host, :inet6) |> collect() do
+      case v4 ++ v6 do
+        [] -> {:error, :nxdomain}
+        addrs -> {:ok, addrs}
+      end
     end
   end
 

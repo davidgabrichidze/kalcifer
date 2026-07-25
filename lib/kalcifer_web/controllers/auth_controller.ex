@@ -139,31 +139,47 @@ defmodule KalciferWeb.AuthController do
   Token expires after 30 days.
   """
   def verify_session_token(token) do
+    with {:ok, user_id, timestamp_str, signature} <- split_token(token),
+         :ok <- verify_signature(user_id, timestamp_str, signature),
+         {:ok, timestamp} <- parse_timestamp(timestamp_str),
+         :ok <- check_not_expired(timestamp) do
+      {:ok, user_id}
+    end
+  end
+
+  defp split_token(token) do
     case String.split(token, ".", parts: 3) do
-      [user_id, timestamp_str, signature] ->
-        payload = "#{user_id}.#{timestamp_str}"
+      [user_id, timestamp_str, signature] -> {:ok, user_id, timestamp_str, signature}
+      _ -> {:error, :malformed}
+    end
+  end
 
-        if Plug.Crypto.secure_compare(sign(payload), signature) do
-          case Integer.parse(timestamp_str) do
-            {timestamp, _} ->
-              now = System.system_time(:second)
-              max_age = 30 * 24 * 3600
+  # Runs before the timestamp is read, so an unsigned payload is never trusted.
+  defp verify_signature(user_id, timestamp_str, signature) do
+    payload = "#{user_id}.#{timestamp_str}"
 
-              if now - timestamp < max_age do
-                {:ok, user_id}
-              else
-                {:error, :expired}
-              end
+    if Plug.Crypto.secure_compare(sign(payload), signature) do
+      :ok
+    else
+      {:error, :invalid_signature}
+    end
+  end
 
-            _ ->
-              {:error, :invalid}
-          end
-        else
-          {:error, :invalid_signature}
-        end
+  defp parse_timestamp(timestamp_str) do
+    case Integer.parse(timestamp_str) do
+      {timestamp, _} -> {:ok, timestamp}
+      _ -> {:error, :invalid}
+    end
+  end
 
-      _ ->
-        {:error, :malformed}
+  defp check_not_expired(timestamp) do
+    now = System.system_time(:second)
+    max_age = 30 * 24 * 3600
+
+    if now - timestamp < max_age do
+      :ok
+    else
+      {:error, :expired}
     end
   end
 

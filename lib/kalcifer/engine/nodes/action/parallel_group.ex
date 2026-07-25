@@ -158,7 +158,7 @@ defmodule Kalcifer.Engine.Nodes.Action.ParallelGroup do
     # Check if any failed
     failed = Enum.filter(results, fn {_, r} -> r.status == "failed" end)
 
-    if on_error == "fail_all" and length(failed) > 0 do
+    if on_error == "fail_all" and failed != [] do
       {:failed, %{parallel_errors: Enum.map(failed, fn {id, r} -> "#{id}: #{r.error}" end)}}
     else
       {:completed, results}

@@ -58,18 +58,7 @@ defmodule KalciferWeb.ConversationController do
         conn |> put_status(404) |> json(%{error: "Conversation not found"})
 
       conv ->
-        title = params["title"] || ""
-
-        case Context.rename_conversation(conv, title) do
-          {:ok, renamed} ->
-            json(conn, %{conversation: serialize(renamed)})
-
-          {:error, changeset} ->
-            errors =
-              Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
-
-            conn |> put_status(422) |> json(%{errors: errors})
-        end
+        apply_rename(conn, conv, params["title"] || "")
     end
   end
 
@@ -99,6 +88,19 @@ defmodule KalciferWeb.ConversationController do
       conv ->
         {:ok, _} = Context.delete_conversation(conv)
         conn |> put_status(200) |> json(%{ok: true})
+    end
+  end
+
+  defp apply_rename(conn, conv, title) do
+    case Context.rename_conversation(conv, title) do
+      {:ok, renamed} ->
+        json(conn, %{conversation: serialize(renamed)})
+
+      {:error, changeset} ->
+        errors =
+          Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
+
+        conn |> put_status(422) |> json(%{errors: errors})
     end
   end
 

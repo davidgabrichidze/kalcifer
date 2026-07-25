@@ -3,9 +3,9 @@ defmodule Kalcifer.Channels.ProviderResolverTest do
 
   import Kalcifer.Factory
 
+  alias Kalcifer.Channels.ProviderResolver
   alias Kalcifer.Channels.Providers.LogProvider
   alias Kalcifer.Channels.Providers.SendgridProvider
-  alias Kalcifer.Channels.ProviderResolver
 
   defp with_provider(channel, entry) do
     insert(:tenant, settings: %{"channel_providers" => %{channel => entry}})

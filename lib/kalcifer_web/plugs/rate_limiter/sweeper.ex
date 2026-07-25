@@ -34,17 +34,15 @@ defmodule KalciferWeb.Plugs.RateLimiter.Sweeper do
     cutoff = now - retention_seconds()
 
     # {key, timestamps} — delete keys whose newest timestamp is stale.
-    :ets.foldl(
-      fn {key, timestamps}, acc ->
-        if Enum.max(timestamps, fn -> 0 end) <= cutoff do
-          :ets.delete(@table, key)
-        end
+    :ets.foldl(&drop_stale_bucket(&1, &2, cutoff), :ok, @table)
+  end
 
-        acc
-      end,
-      :ok,
-      @table
-    )
+  defp drop_stale_bucket({key, timestamps}, acc, cutoff) do
+    if Enum.max(timestamps, fn -> 0 end) <= cutoff do
+      :ets.delete(@table, key)
+    end
+
+    acc
   end
 
   defp retention_seconds do
